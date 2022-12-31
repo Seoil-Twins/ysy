@@ -11,7 +11,7 @@ const app: Application = express();
 const port = 3000;
 
 app.get("/", (req: Request, res: Response) => {
-    res.send("welcome!!!~");
+    res.send("welcome!");
 });
 
 app.listen(port, () => {
