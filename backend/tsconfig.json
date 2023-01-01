@@ -1,7 +1,8 @@
 {
     "include": ["src/**/*"] /* 컴파일할 디렉터리 경로를 지정한다. */,
     "exclude": [
-        "node_modules"
+        "node_modules",
+        "src/public"
     ] /* 컴파일에서 제외할 디렉터리 경로를 지정한다. */,
     "compilerOptions": {
         /* Visit https://aka.ms/tsconfig to read more about this file */
