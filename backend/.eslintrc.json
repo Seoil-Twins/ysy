@@ -17,7 +17,7 @@
         "browser": true,
         "node": true
     },
-    "ignorePatterns": ["node_modules/"],
+    "ignorePatterns": ["node_modules/", "tsconfig.json"],
     "rules": {
         /**
             console을 사용할 수 있게 해주는 기능
