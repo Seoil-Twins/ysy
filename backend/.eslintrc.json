@@ -7,7 +7,8 @@
         "plugin:import/warnings",
         "plugin:@typescript-eslint/recommended",
         "plugin:prettier/recommended",
-        "eslint:recommended"
+        "eslint:recommended",
+        "prettier"
     ],
     "parserOptions": {
         "ecmaVersion": 6,
@@ -31,10 +32,7 @@
             dependencies : 앱을 배포할 때 사용되는 패키지
             devDependencies : 개발단계에서만 사용되는 패키지
         */
-        "import/no-extraneous-dependencies": [
-            "error",
-            { "devDependencies": true }
-        ],
+        "import/no-extraneous-dependencies": ["error", { "devDependencies": true }],
         "prettier/prettier": [
             "error",
             {
@@ -54,7 +52,13 @@
                 "ts": "never",
                 "tsx": "never"
             }
-        ]
+        ],
+        /*
+            class member(변수, 함수)는 무조건 한 줄 씩 띄워져야 한다.
+            exceptAfterSingleLine => 한 줄은 허용 (memeber variable 때문에)
+        */
+        "lines-between-class-members": ["error", "always", { "exceptAfterSingleLine": true }],
+        "no-explicit-any": false
     },
     "settings": {
         "import/resolver": {
