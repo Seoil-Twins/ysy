@@ -1,11 +1,13 @@
 import { RowDataPacket } from "mysql2";
 import randomString from "randomstring";
 
-import { CreateUserModel, OptionType, UserColumn, createUserSql, selectUserSql } from "../model/user";
+import { CreateUserModel, OptionType, UserColumn, createUserSql, selectUserSql } from "../model/user.model";
 import { insert, select } from "../util/sql";
+import { createDigest } from "../util/password";
 
 const controller = {
     createUser: async (data: JSON) => {
+        // 암호화 pw
         let isNot = true;
         let code = "";
         
@@ -29,7 +31,10 @@ const controller = {
         }
         
         const user: CreateUserModel = Object.assign(data);
+        const hash: string = await createDigest(user.password);
+
         user.code = code;
+        user.password = hash;
 
         const sql = createUserSql(user);
         const response = await insert(sql);

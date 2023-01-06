@@ -4,7 +4,7 @@ import joi, { ValidationResult } from "joi";
 import validator from "../util/validator";
 import StatusCode from "../util/statusCode";
 
-import userController from "../controller/user";
+import userController from "../controller/user.controller";
 
 import BadRequestError from "../error/badRequest";
 
