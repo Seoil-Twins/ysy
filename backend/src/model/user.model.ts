@@ -35,7 +35,7 @@ export interface UserModel {
     event_nofi: boolean;
     created_time: Date;
     deleted: boolean;
-    deleted_time: Date;
+    deleted_time: Date | null;
 }
 
 export interface CreateUserModel {
@@ -49,61 +49,19 @@ export interface CreateUserModel {
     event_nofi: boolean;
 }
 
-const optionNames = {
-    COLUMN: "column",
-    WHERE: "where",
-    ORDER_BY: "orderBy",
-    LIMIT: "limit" 
-} as const;
-
-interface Option {
-    column?: Array<string> | undefined;
-    where?: string | undefined;
-    orderBy?: string | undefined;
-    limit?: number | undefined;
-}
-
-export type OptionType = Option;
-
 export const createUserSql = (model: CreateUserModel): string => {
     const sql = `
-        INSERT INTO ${TABLE_NAME}(sns_id, code, name, password, email, phone, birthday, event_nofi)
-        VALUES ("${model.sns_id}", "${model.code}", "${model.name}", "${model.password}", "${model.email}", "${model.phone}",
-        "${model.birthday.getFullYear()}-${model.birthday.getMonth() + 1}-${model.birthday.getUTCDate()}", ${model.event_nofi});
+        INSERT INTO ${TABLE_NAME} 
+            (
+                ${UserColumn.snsId}, ${UserColumn.code}, ${UserColumn.name}, ${UserColumn.password}, ${UserColumn.email}, 
+                ${UserColumn.phone}, ${UserColumn.birthday}, ${UserColumn.eventNofi}
+            )
+        VALUES 
+            (
+                "${model.sns_id}", "${model.code}", "${model.name}", "${model.password}", "${model.email}", "${model.phone}",
+                "${model.birthday.getFullYear()}-${model.birthday.getMonth() + 1}-${model.birthday.getUTCDate()}", ${model.event_nofi}
+            );
     `;
-
-    return sql;
-};
-
-export const selectUserSql = (options?: OptionType): string => {
-    let column: string = "*", 
-        where: string = "", 
-        orderBy: string = "", 
-        limit: string = "";
-
-    if (options) {
-        for (const [key, value] of Object.entries(options)) {
-
-            switch (key) {
-                case optionNames.COLUMN:
-                    if (value instanceof Array<string>) column = value.join(', ');
-                    break;
-                case optionNames.WHERE:
-                    where = `where ${value}`;
-                    break;
-                case optionNames.ORDER_BY:
-                    orderBy = `order by ${value}`;
-                    break;
-                case optionNames.LIMIT:
-                    limit = `limit ${value}`;
-                    break;
-                default:
-                    break;
-            }
-        }
-    }
-
-    const sql = `SELECT ${column} FROM ${TABLE_NAME} ${where} ${orderBy} ${limit};`;
 
     return sql;
 };

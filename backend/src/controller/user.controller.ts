@@ -1,8 +1,8 @@
 import { RowDataPacket } from "mysql2";
 import randomString from "randomstring";
 
-import { CreateUserModel, OptionType, UserColumn, createUserSql, selectUserSql } from "../model/user.model";
-import { insert, select } from "../util/sql";
+import { TABLE_NAME, CreateUserModel, UserColumn, createUserSql } from "../model/user.model";
+import { insert, select, OptionType } from "../util/sql";
 import { createDigest } from "../util/password";
 
 const controller = {
@@ -19,14 +19,13 @@ const controller = {
             });
 
             const options: OptionType = {
+                table: TABLE_NAME,
                 column: [UserColumn.code],
                 limit: 1,
                 where: `${UserColumn.code} = "${code}"`
             };
 
-            let sql: string = selectUserSql(options);
-            let response: RowDataPacket[] = await select(sql);
-
+            let response: RowDataPacket[] = await select(options);
             if (response.length <= 0) isNot = false;
         }
         
