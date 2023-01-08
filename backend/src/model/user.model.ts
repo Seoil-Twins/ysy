@@ -1,4 +1,4 @@
-export const TABLE_NAME = "user";
+export const USER_TABLE_NAME = "user";
 
 export const UserColumn = {
     userId: "user_id",
@@ -49,21 +49,9 @@ export interface CreateUserModel {
     event_nofi: boolean;
 }
 
-export interface LoginModel {
-    email: string;
-    password: string;
-}
-
-export interface LoginResponseModel {
-    accessToken: string;
-    accessTokenExpiredAt: number; // unix timestamp
-    refreshToken: string;
-    refreshTokenExpiredAt: number; // unix timestamp
-}
-
 export const createUserSql = (model: CreateUserModel): string => {
     const sql = `
-        INSERT INTO ${TABLE_NAME} 
+        INSERT INTO ${USER_TABLE_NAME} 
             (
                 ${UserColumn.snsId}, ${UserColumn.code}, ${UserColumn.name}, ${UserColumn.password}, ${UserColumn.email}, 
                 ${UserColumn.phone}, ${UserColumn.birthday}, ${UserColumn.eventNofi}

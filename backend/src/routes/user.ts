@@ -60,18 +60,4 @@ router.delete("/", (req: Request, res: Response) => {
     res.send("Delete!");
 });
 
-router.post("/login", async (req: Request, res: Response, next: NextFunction) => {
-    const { value, error }: ValidationResult = validator(req.body, loginSchema);
-
-    try {
-        if (error) throw new BadRequestError("Bad Request Error");
-
-        await userController.login(value);
-
-        return res.status(StatusCode.OK).json({});
-    } catch (_error) {
-        next(_error);
-    }
-});
-
 export default router;
