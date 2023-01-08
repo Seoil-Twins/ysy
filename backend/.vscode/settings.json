@@ -3,9 +3,5 @@
         "source.fixAll.eslint": true
     },
     "editor.defaultFormatter": "esbenp.prettier-vscode",
-    "editor.formatOnSave": true,
-    "[typescript]": {
-        "editor.formatOnPaste": false,
-        "editor.formatOnSave": false
-    }
+    "editor.formatOnSave": true
 }
