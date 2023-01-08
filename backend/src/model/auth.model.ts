@@ -1,11 +1,10 @@
-export interface LoginModel {
+export interface Login {
     email: string;
     password: string;
 }
 
-export interface LoginResponseModel {
+export interface LoginResponse {
     accessToken: string;
     accessTokenExpiredAt: number; // unix timestamp
-    refreshToken: string;
-    refreshTokenExpiredAt: number; // unix timestamp
+    refreshToken?: string;
 }

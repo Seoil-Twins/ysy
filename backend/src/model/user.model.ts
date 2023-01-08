@@ -22,7 +22,7 @@ export const UserColumn = {
     deletedTime: "deleted_time"
 } as const;
 
-export interface UserModel {
+export interface User {
     userId: string;
     cupId: string | null;
     snsId: string;
@@ -41,7 +41,7 @@ export interface UserModel {
     deletedTime: Date | null;
 }
 
-export interface CreateUserModel {
+export interface CreateUser {
     sns_id: string;
     code: string;
     name: string;
@@ -52,7 +52,7 @@ export interface CreateUserModel {
     event_nofi: boolean;
 }
 
-export const createUserSql = (model: CreateUserModel): string => {
+export const createUserSql = (model: CreateUser): string => {
     const birthday = dayjs(model.birthday.valueOf());
 
     const sql = `
@@ -71,8 +71,8 @@ export const createUserSql = (model: CreateUserModel): string => {
     return sql;
 };
 
-export const rowDataToModel = (data: RowDataPacket[]): Array<UserModel> => {
-    const result: Array<UserModel> = [];
+export const rowDataToModel = (data: RowDataPacket[]): Array<User> => {
+    const result: Array<User> = [];
 
     data.forEach((item) => result.push(Object.assign(item)));
 

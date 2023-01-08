@@ -1,7 +1,7 @@
 import { RowDataPacket } from "mysql2";
 import randomString from "randomstring";
 
-import { USER_TABLE_NAME, CreateUserModel, UserColumn, createUserSql } from "../model/user.model";
+import { USER_TABLE_NAME, CreateUser, UserColumn, createUserSql } from "../model/user.model";
 import { insert, select, OptionType } from "../util/sql";
 import { createDigest } from "../util/password";
 
@@ -29,7 +29,7 @@ const controller = {
             if (response.length <= 0) isNot = false;
         }
 
-        const user: CreateUserModel = Object.assign(data);
+        const user: CreateUser = Object.assign(data);
         const hash: string = await createDigest(user.password);
 
         user.code = code;

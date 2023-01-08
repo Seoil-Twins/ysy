@@ -1,5 +1,5 @@
 import dotenv from "dotenv";
-import { UserModel } from "../model/user.model";
+import { User } from "../model/user.model";
 import jwt from "jsonwebtoken";
 
 dotenv.config();
@@ -17,7 +17,7 @@ const refreshTokenexpiresIn: object = {
 };
 
 export default {
-    createAccessToken: (user: UserModel): string => {
+    createAccessToken: (user: User): string => {
         const payload = {
             userId: user.userId,
             email: user.email
