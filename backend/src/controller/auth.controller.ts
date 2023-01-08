@@ -1,4 +1,5 @@
 import { RowDataPacket } from "mysql2";
+import dayjs from "dayjs";
 
 import { USER_TABLE_NAME, UserColumn, UserModel, rowDataToModel } from "../model/user.model";
 import { LoginModel } from "../model/auth.model";
@@ -10,6 +11,7 @@ import UnauthorizedError from "../error/unauthorized";
 
 interface ResponseModel {
     accessToken: string;
+    accessTokenExpiredAt: number;
     refreshToken?: string;
 }
 
@@ -35,8 +37,11 @@ const controller = {
 
         // redis database에 refreshToken 저장
         const isOk = await set(String(user[0].userId), refreshToken);
+        const now = dayjs();
+
         const result: ResponseModel = {
-            accessToken: accessToken
+            accessToken: accessToken,
+            accessTokenExpiredAt: now.add(2, "hour").valueOf()
         };
 
         if (isOk == "OK") result.refreshToken = refreshToken;

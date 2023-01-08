@@ -1,4 +1,5 @@
 import { RowDataPacket } from "mysql2";
+import dayjs from "dayjs";
 
 export const USER_TABLE_NAME = "user";
 
@@ -41,17 +42,19 @@ export interface UserModel {
 }
 
 export interface CreateUserModel {
-    snsId: string;
+    sns_id: string;
     code: string;
     name: string;
     password: string;
     email: string;
     birthday: Date;
     phone: string;
-    eventNofi: boolean;
+    event_nofi: boolean;
 }
 
 export const createUserSql = (model: CreateUserModel): string => {
+    const birthday = dayjs(model.birthday.valueOf());
+
     const sql = `
         INSERT INTO ${USER_TABLE_NAME} 
             (
@@ -60,8 +63,8 @@ export const createUserSql = (model: CreateUserModel): string => {
             )
         VALUES 
             (
-                "${model.snsId}", "${model.code}", "${model.name}", "${model.password}", "${model.email}", "${model.phone}",
-                "${model.birthday.getFullYear()}-${model.birthday.getMonth() + 1}-${model.birthday.getUTCDate()}", ${model.eventNofi}
+                "${model.sns_id}", "${model.code}", "${model.name}", "${model.password}", "${model.email}", "${model.phone}",
+                "${birthday.format("YYYY-MM-DD")}", ${model.event_nofi}
             );
     `;
 
