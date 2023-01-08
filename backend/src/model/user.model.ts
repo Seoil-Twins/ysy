@@ -16,7 +16,7 @@ export const UserColumn = {
     eventNofi: "event_nofi",
     createdTime: "created_time",
     deleted: "deleted",
-    deletedTime: "deleted_time",
+    deletedTime: "deleted_time"
 } as const;
 
 export interface UserModel {
@@ -47,6 +47,18 @@ export interface CreateUserModel {
     birthday: Date;
     phone: string;
     event_nofi: boolean;
+}
+
+export interface LoginModel {
+    email: string;
+    password: string;
+}
+
+export interface LoginResponseModel {
+    accessToken: string;
+    accessTokenExpiredAt: number; // unix timestamp
+    refreshToken: string;
+    refreshTokenExpiredAt: number; // unix timestamp
 }
 
 export const createUserSql = (model: CreateUserModel): string => {

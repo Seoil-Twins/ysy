@@ -26,6 +26,11 @@ const signupSchema: joi.Schema = joi.object({
     event_nofi: joi.bool().default(false)
 });
 
+const loginSchema: joi.Schema = joi.object({
+    email: joi.string().trim().email().required(),
+    password: joi.string().trim().min(8).max(15).regex(RegExp(pwPattern)).required()
+});
+
 // Get User Info
 router.get("/", (req: Request, res: Response) => {
     res.send("Get User");
@@ -34,7 +39,7 @@ router.get("/", (req: Request, res: Response) => {
 // Signup User
 router.post("/", async (req: Request, res: Response, next: NextFunction) => {
     const { value, error }: ValidationResult = validator(req.body, signupSchema);
-    
+
     try {
         if (error) throw new BadRequestError("Bad Request Error");
         await userController.createUser(value);
@@ -53,6 +58,20 @@ router.put("/", (req: Request, res: Response) => {
 // Delete User Info
 router.delete("/", (req: Request, res: Response) => {
     res.send("Delete!");
+});
+
+router.post("/login", async (req: Request, res: Response, next: NextFunction) => {
+    const { value, error }: ValidationResult = validator(req.body, loginSchema);
+
+    try {
+        if (error) throw new BadRequestError("Bad Request Error");
+
+        await userController.login(value);
+
+        return res.status(StatusCode.OK).json({});
+    } catch (_error) {
+        next(_error);
+    }
 });
 
 export default router;

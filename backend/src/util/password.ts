@@ -10,9 +10,7 @@ export const createDigest = async (password: string): Promise<string> => {
     return hash;
 };
 
-export const checkPassword = async (password: string): Promise<string> => {
-    // db에서 password 가져와서 compare
-    // result => true or false
-    // const result = await bcrypt.compare(password, hash);
-    return "";
+export const checkPassword = async (inputPassword: string, dbPassword: string): Promise<boolean> => {
+    const result = await bcrypt.compare(inputPassword, dbPassword);
+    return result;
 };

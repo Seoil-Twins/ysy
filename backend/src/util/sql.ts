@@ -5,11 +5,11 @@ const optionNames = {
     COLUMN: "column",
     WHERE: "where",
     ORDER_BY: "orderBy",
-    LIMIT: "limit" 
+    LIMIT: "limit"
 } as const;
 
 interface Option {
-    table: string,
+    table: string;
     column?: Array<string> | undefined;
     where?: string | undefined;
     orderBy?: string | undefined;
@@ -19,7 +19,7 @@ interface Option {
 export type OptionType = Option;
 
 export const select = async (options?: Option): Promise<RowDataPacket[]> => {
-    const sql: string = await createSelectSql(options);
+    const sql: string = createSelectSql(options);
     const conn = await db.getConnection();
     const [row] = await conn.query<RowDataPacket[]>(sql);
     conn.release();
@@ -40,17 +40,16 @@ export const remove = (sql: string) => {
 };
 
 const createSelectSql = (options?: OptionType): string => {
-    let column: string = "*", 
-        where: string = "", 
-        orderBy: string = "", 
+    let column: string = "*",
+        where: string = "",
+        orderBy: string = "",
         limit: string = "";
 
     if (options) {
         for (const [key, value] of Object.entries(options)) {
-
             switch (key) {
                 case optionNames.COLUMN:
-                    if (value instanceof Array<string>) column = value.join(', ');
+                    if (value instanceof Array<string>) column = value.join(", ");
                     break;
                 case optionNames.WHERE:
                     where = `where ${value}`;
