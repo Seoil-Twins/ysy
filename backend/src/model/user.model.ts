@@ -1,3 +1,5 @@
+import { RowDataPacket } from "mysql2";
+
 export const USER_TABLE_NAME = "user";
 
 export const UserColumn = {
@@ -20,33 +22,33 @@ export const UserColumn = {
 } as const;
 
 export interface UserModel {
-    user_id: string;
-    cup_id: string | null;
-    sns_id: string;
+    userId: string;
+    cupId: string | null;
+    snsId: string;
     code: string;
     name: string;
     password: string;
     email: string;
     birthday: Date;
     phone: string;
-    profile: string;
-    primary_nofi: boolean;
-    date_nofi: boolean;
-    event_nofi: boolean;
-    created_time: Date;
+    profile: string | null;
+    primaryNofi: boolean;
+    dateNofi: boolean;
+    eventNofi: boolean;
+    createdTime: Date;
     deleted: boolean;
-    deleted_time: Date | null;
+    deletedTime: Date | null;
 }
 
 export interface CreateUserModel {
-    sns_id: string;
+    snsId: string;
     code: string;
     name: string;
     password: string;
     email: string;
     birthday: Date;
     phone: string;
-    event_nofi: boolean;
+    eventNofi: boolean;
 }
 
 export const createUserSql = (model: CreateUserModel): string => {
@@ -58,10 +60,18 @@ export const createUserSql = (model: CreateUserModel): string => {
             )
         VALUES 
             (
-                "${model.sns_id}", "${model.code}", "${model.name}", "${model.password}", "${model.email}", "${model.phone}",
-                "${model.birthday.getFullYear()}-${model.birthday.getMonth() + 1}-${model.birthday.getUTCDate()}", ${model.event_nofi}
+                "${model.snsId}", "${model.code}", "${model.name}", "${model.password}", "${model.email}", "${model.phone}",
+                "${model.birthday.getFullYear()}-${model.birthday.getMonth() + 1}-${model.birthday.getUTCDate()}", ${model.eventNofi}
             );
     `;
 
     return sql;
+};
+
+export const rowDataToModel = (data: RowDataPacket[]): Array<UserModel> => {
+    const result: Array<UserModel> = [];
+
+    data.forEach((item) => result.push(Object.assign(item)));
+
+    return result;
 };

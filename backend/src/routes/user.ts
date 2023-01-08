@@ -26,11 +26,6 @@ const signupSchema: joi.Schema = joi.object({
     event_nofi: joi.bool().default(false)
 });
 
-const loginSchema: joi.Schema = joi.object({
-    email: joi.string().trim().email().required(),
-    password: joi.string().trim().min(8).max(15).regex(RegExp(pwPattern)).required()
-});
-
 // Get User Info
 router.get("/", (req: Request, res: Response) => {
     res.send("Get User");

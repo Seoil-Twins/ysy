@@ -3,8 +3,7 @@ import randomString from "randomstring";
 
 import { USER_TABLE_NAME, CreateUserModel, UserColumn, createUserSql } from "../model/user.model";
 import { insert, select, OptionType } from "../util/sql";
-import { createDigest, checkPassword } from "../util/password";
-import UnauthorizedError from "../error/unauthorized";
+import { createDigest } from "../util/password";
 
 const controller = {
     createUser: async (data: JSON) => {

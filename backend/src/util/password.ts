@@ -1,9 +1,8 @@
 import dotenv from "dotenv";
 import bcrypt from "bcrypt";
 
-dotenv.config();
-
 export const createDigest = async (password: string): Promise<string> => {
+    dotenv.config();
     const saltRounds: number = Number(process.env.PASSWORD_SALT_ROUNDS);
     const hash: string = await bcrypt.hash(password, saltRounds);
 

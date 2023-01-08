@@ -7,7 +7,7 @@
 
 import express, { Application } from "express";
 import routes from "./routes/index";
-import errorHandler from "./error/errorHandler";
+import errorHandlerMiddleware from "./middlewares/errorHandler.middleware";
 
 const app: Application = express();
 const port = 3000;
@@ -16,7 +16,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use("/", routes);
 // middleware 적용
-app.use(errorHandler);
+app.use(errorHandlerMiddleware);
 
 app.listen(port, () => {
     console.log("Server Listen on port : 3000!");

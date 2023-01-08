@@ -23,9 +23,9 @@ router.post("/login", async (req: Request, res: Response, next: NextFunction) =>
     try {
         if (error) throw new BadRequestError("Bad Request Error");
 
-        await authController.login(value);
+        const result = await authController.login(value);
 
-        return res.status(StatusCode.OK).json({});
+        return res.status(StatusCode.OK).json(result);
     } catch (_error) {
         next(_error);
     }

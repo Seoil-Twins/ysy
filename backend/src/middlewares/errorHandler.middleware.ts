@@ -1,5 +1,5 @@
 import { ErrorRequestHandler, Request, Response, NextFunction } from "express";
-import AbstractError from "./abstractError";
+import AbstractError from "../error/abstractError";
 import StatusCode from "../util/statusCode";
 
 const globalErrorHandler: ErrorRequestHandler = (e: any, req: Request, res: Response, next: NextFunction) => {
