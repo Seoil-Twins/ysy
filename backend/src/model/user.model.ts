@@ -1,5 +1,6 @@
 import { RowDataPacket } from "mysql2";
 import dayjs from "dayjs";
+import jsConvert from "js-convert-case";
 
 export const USER_TABLE_NAME = "user";
 
@@ -42,14 +43,14 @@ export interface User {
 }
 
 export interface CreateUser {
-    sns_id: string;
+    snsId: string;
     code: string;
     name: string;
     password: string;
     email: string;
     birthday: Date;
     phone: string;
-    event_nofi: boolean;
+    eventNofi: boolean;
 }
 
 export const createUserSql = (model: CreateUser): string => {
@@ -63,8 +64,8 @@ export const createUserSql = (model: CreateUser): string => {
             )
         VALUES 
             (
-                "${model.sns_id}", "${model.code}", "${model.name}", "${model.password}", "${model.email}", "${model.phone}",
-                "${birthday.format("YYYY-MM-DD")}", ${model.event_nofi}
+                "${model.snsId}", "${model.code}", "${model.name}", "${model.password}", "${model.email}", "${model.phone}",
+                "${birthday.format("YYYY-MM-DD")}", ${model.eventNofi}
             );
     `;
 
@@ -74,7 +75,11 @@ export const createUserSql = (model: CreateUser): string => {
 export const rowDataToModel = (data: RowDataPacket[]): Array<User> => {
     const result: Array<User> = [];
 
-    data.forEach((item) => result.push(Object.assign(item)));
+    data.forEach((item: any) => {
+        const convertData: object | null = jsConvert.camelKeys(item, { recursive: true });
+
+        if (convertData) result.push(Object.assign(convertData));
+    });
 
     return result;
 };

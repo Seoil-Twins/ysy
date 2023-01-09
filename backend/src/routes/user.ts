@@ -13,7 +13,7 @@ const router: Router = express.Router();
 const pwPattern = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[$@$!%*#?&])[A-Za-z\d$@$!%*#?&]{8,15}$/;
 const phonePattern = /^[0-9]+$/;
 const signupSchema: joi.Schema = joi.object({
-    sns_id: joi.string().length(4).required(),
+    snsId: joi.string().length(4).required(),
     name: joi.string().trim().required(),
     password: joi.string().trim().min(8).max(15).regex(RegExp(pwPattern)).required(),
     email: joi.string().trim().email().required(),
@@ -23,7 +23,7 @@ const signupSchema: joi.Schema = joi.object({
         .greater(new Date("1980-01-01")) // 1980-01-01보다 더 큰 날짜여야 함.
         .less(new Date("2023-12-31")) // 2023-12-31보다 낮은 날짜여야 함.
         .required(),
-    event_nofi: joi.bool().default(false)
+    eventNofi: joi.bool().default(false)
 });
 
 // Get User Info
