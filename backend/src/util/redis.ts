@@ -31,3 +31,10 @@ export const get = async (key: string): Promise<string | null> => {
 
     return data;
 };
+
+export const del = async (key: string): Promise<number | null> => {
+    const data: number | null = await redisClient.v4.del(key);
+    console.log(data);
+
+    return data;
+};

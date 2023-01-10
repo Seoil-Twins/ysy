@@ -7,6 +7,7 @@ import StatusCode from "../util/statusCode";
 import authController from "../controller/auth.controller";
 
 import BadRequestError from "../error/badRequest";
+import UnauthorizedError from "../error/unauthorized";
 
 const router: Router = express.Router();
 
@@ -24,6 +25,21 @@ router.post("/login", async (req: Request, res: Response, next: NextFunction) =>
         if (error) throw new BadRequestError("Bad Request Error");
 
         const result = await authController.login(value);
+
+        return res.status(StatusCode.OK).json(result);
+    } catch (_error) {
+        next(_error);
+    }
+});
+
+router.post("/refresh", async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const accessToken = req.header("Authorization");
+        const refreshToken = req.header("Refresh");
+
+        if (!accessToken || !refreshToken) throw new UnauthorizedError("Invalida Token");
+
+        const result = await authController.updateToken(accessToken, refreshToken);
 
         return res.status(StatusCode.OK).json(result);
     } catch (_error) {

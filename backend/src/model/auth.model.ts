@@ -3,8 +3,8 @@ export interface Login {
     password: string;
 }
 
-export interface LoginResponse {
+export interface tokenResponse {
     accessToken: string;
-    accessTokenExpiredAt: number; // unix timestamp
+    // accessTokenExpiredAt: number; // unix timestamp
     refreshToken?: string;
 }
