@@ -43,11 +43,12 @@ const controller = {
             if (refreshToken === refreshTokenWithRedis) {
                 const newAccessToken = jwt.createAccessToken(userId);
                 const newRefreshToken = jwt.createRefreshToken();
+                const expiresIn = jwt.getExpired();
                 const result: tokenResponse = {
                     accessToken: newAccessToken
                 };
 
-                const isOk = await set(userId, newRefreshToken);
+                const isOk = await set(userId, newRefreshToken, expiresIn);
 
                 if (isOk == "OK") result.refreshToken = newRefreshToken;
                 else result.refreshToken = "";
@@ -81,9 +82,10 @@ const controller = {
 
         const accessToken: string = jwt.createAccessToken(user[0].userId);
         const refreshToken: string = jwt.createRefreshToken();
+        const expiresIn = jwt.getExpired();
 
         // redis database에 refreshToken 저장
-        const isOk = await set(String(user[0].userId), refreshToken);
+        const isOk = await set(String(user[0].userId), refreshToken, expiresIn);
 
         const result: tokenResponse = {
             accessToken: accessToken

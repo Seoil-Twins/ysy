@@ -20,8 +20,8 @@ redisClient.on("connect : ", () => console.log("Connect!"));
 redisClient.on("error : ", (err: any) => console.log("Error! : ", err));
 redisClient.connect();
 
-export const set = async (key: string, value: any): Promise<string | null> => {
-    const isOk: string | null = await redisClient.v4.set(key, value);
+export const set = async (key: string, value: any, expiresIn: number): Promise<string | null> => {
+    const isOk: string | null = await redisClient.v4.setEx(key, expiresIn, value);
 
     return isOk;
 };
@@ -34,7 +34,6 @@ export const get = async (key: string): Promise<string | null> => {
 
 export const del = async (key: string): Promise<number | null> => {
     const data: number | null = await redisClient.v4.del(key);
-    console.log(data);
 
     return data;
 };
