@@ -1,12 +1,47 @@
 import { RowDataPacket } from "mysql2";
 import randomString from "randomstring";
 
-import { USER_TABLE_NAME, CreateUser, UserColumn, createUserSql } from "../model/user.model";
+import { USER_TABLE_NAME, CreateUser, UserColumn, createUserSql, User } from "../model/user.model";
 import { insert, select, OptionType } from "../util/sql";
 import { createDigest } from "../util/password";
+import InternalServerError from "../error/internalServer";
+import NotFoundError from "../error/notFound";
 
 const controller = {
-    createUser: async (data: JSON) => {
+    getUser: async (userId: string): Promise<User> => {
+        const options: OptionType = {
+            table: USER_TABLE_NAME,
+            column: [
+                UserColumn.userId,
+                UserColumn.cupId,
+                UserColumn.snsId,
+                UserColumn.code,
+                UserColumn.name,
+                UserColumn.email,
+                UserColumn.birthday,
+                UserColumn.phone,
+                UserColumn.profile,
+                UserColumn.primaryNofi,
+                UserColumn.dateNofi,
+                UserColumn.eventNofi
+            ],
+            limit: 1,
+            where: `${UserColumn.userId} = "${userId}"`
+        };
+
+        const response: RowDataPacket[] = await select(options);
+
+        if (response.length <= 0) throw new NotFoundError("Not Found User");
+
+        const user: User = Object.assign(response[0]);
+
+        if (user.cupId !== null) {
+            // Couple Select
+        }
+
+        return user;
+    },
+    createUser: async (data: JSON): Promise<void> => {
         // 암호화 pw
         let isNot = true;
         let code = "";
@@ -25,7 +60,7 @@ const controller = {
                 where: `${UserColumn.code} = "${code}"`
             };
 
-            let response: RowDataPacket[] = await select(options);
+            const response: RowDataPacket[] = await select(options);
             if (response.length <= 0) isNot = false;
         }
 
@@ -38,7 +73,7 @@ const controller = {
         const sql = createUserSql(user);
         const response = await insert(sql);
 
-        return response;
+        if (response.affectedRows <= 0) throw new InternalServerError("DB Error");
     }
 };
 

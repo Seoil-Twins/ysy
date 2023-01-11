@@ -7,6 +7,7 @@ import StatusCode from "../util/statusCode";
 import userController from "../controller/user.controller";
 
 import BadRequestError from "../error/badRequest";
+import { User } from "../model/user.model";
 
 const router: Router = express.Router();
 
@@ -27,8 +28,17 @@ const signupSchema: joi.Schema = joi.object({
 });
 
 // Get User Info
-router.get("/", (req: Request, res: Response) => {
-    res.send("Get User");
+router.get("/:user_id", async (req: Request, res: Response, next: NextFunction) => {
+    const userId: string = req.params.user_id;
+
+    try {
+        if (isNaN(Number(userId))) throw new BadRequestError("Invalid User Id");
+        const user: User = await userController.getUser(userId);
+
+        return res.status(StatusCode.OK).json(user);
+    } catch (_error) {
+        next(_error);
+    }
 });
 
 // Signup User

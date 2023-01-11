@@ -1,4 +1,4 @@
-import { RowDataPacket } from "mysql2";
+import { ResultSetHeader, RowDataPacket } from "mysql2";
 import db from "./database";
 
 const optionNames = {
@@ -29,7 +29,7 @@ export const select = async (options?: Option): Promise<RowDataPacket[]> => {
 
 export const insert = async (sql: string) => {
     const conn = await db.getConnection();
-    const response = await conn.query(sql);
+    const [response] = await conn.query<ResultSetHeader>(sql);
     conn.release();
 
     return response;
