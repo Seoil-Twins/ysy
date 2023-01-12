@@ -17,8 +17,7 @@ const checkToken = (req: Request, res: Response, next: NextFunction) => {
 
         if (typeof user === "string") throw new UnauthorizedError("Invalida Token");
 
-        req.body.userId = user.userId;
-        req.body.email = user.email;
+        req.body.userId = String(user.userId);
 
         return next();
     } catch (error) {

@@ -1,17 +1,17 @@
-import { RowDataPacket } from "mysql2";
+import { ResultSetHeader, RowDataPacket } from "mysql2";
 import randomString from "randomstring";
 
-import { USER_TABLE_NAME, CreateUser, UserColumn, createUserSql, User } from "../model/user.model";
-import { insert, select, OptionType } from "../util/sql";
+import { UserColumn, UserSQL, User, ICreateUser, IUpdateUser, UpdateOption } from "../model/user.model";
+import { SelectOption } from "../util/sql";
 import { createDigest } from "../util/password";
 import InternalServerError from "../error/internalServer";
 import NotFoundError from "../error/notFound";
 
 const controller = {
     getUser: async (userId: string): Promise<User> => {
-        const options: OptionType = {
-            table: USER_TABLE_NAME,
-            column: [
+        const userSQL = new UserSQL();
+        const options: SelectOption = {
+            columns: [
                 UserColumn.userId,
                 UserColumn.cupId,
                 UserColumn.snsId,
@@ -29,20 +29,21 @@ const controller = {
             where: `${UserColumn.userId} = "${userId}"`
         };
 
-        const response: RowDataPacket[] = await select(options);
+        const result: User[] = await userSQL.find(options);
 
-        if (response.length <= 0) throw new NotFoundError("Not Found User");
+        if (result.length <= 0) throw new NotFoundError("Not Found User");
 
-        const user: User = Object.assign(response[0]);
-
-        if (user.cupId !== null) {
+        if (result[0].cupId !== null) {
             // Couple Select
         }
 
-        return user;
+        for (let i = 0; i < result.length; i++) delete result[i].password;
+
+        return result[0];
     },
-    createUser: async (data: JSON): Promise<void> => {
+    createUser: async (data: ICreateUser): Promise<void> => {
         // 암호화 pw
+        const userSQL = new UserSQL();
         let isNot = true;
         let code = "";
 
@@ -53,27 +54,34 @@ const controller = {
                 charset: "alphanumeric"
             });
 
-            const options: OptionType = {
-                table: USER_TABLE_NAME,
-                column: [UserColumn.code],
+            const options: SelectOption = {
+                columns: [UserColumn.code],
                 limit: 1,
                 where: `${UserColumn.code} = "${code}"`
             };
 
-            const response: RowDataPacket[] = await select(options);
-            if (response.length <= 0) isNot = false;
+            const result: User[] = await userSQL.find(options);
+            if (result.length <= 0) isNot = false;
         }
 
-        const user: CreateUser = Object.assign(data);
-        const hash: string = await createDigest(user.password);
+        const hash: string = await createDigest(data.password);
 
-        user.code = code;
-        user.password = hash;
+        data.code = code;
+        data.password = hash;
 
-        const sql = createUserSql(user);
-        const response = await insert(sql);
+        const result: boolean = await userSQL.add(data);
 
-        if (response.affectedRows <= 0) throw new InternalServerError("DB Error");
+        if (!result) throw new InternalServerError("DB Error");
+    },
+    updateUser: async (data: IUpdateUser): Promise<void> => {
+        const userSQL = new UserSQL();
+        const options: UpdateOption = {
+            where: `${UserColumn.userId} = "${data.userId}"`
+        };
+
+        const result: boolean = await userSQL.update(data, options);
+
+        if (!result) throw new InternalServerError("DB Error");
     }
 };
 

@@ -17,7 +17,7 @@ const refreshTokenexpiresIn: object = {
 };
 
 export default {
-    createAccessToken: (userId: string): string => {
+    createAccessToken: (userId: number): string => {
         let payload = { userId: userId };
 
         return jwt.sign(payload, SECRET_KEY, accessTokenOptions);

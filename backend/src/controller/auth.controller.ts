@@ -1,15 +1,15 @@
-import { RowDataPacket } from "mysql2";
 import dayjs from "dayjs";
 import isSameOrBefore from "dayjs/plugin/isSameOrBefore";
 
-import { USER_TABLE_NAME, UserColumn, User, rowDataToModel } from "../model/user.model";
+import { UserColumn, User } from "../model/user.model";
 import { Login, tokenResponse } from "../model/auth.model";
-import { select, OptionType } from "../util/sql";
+import { SelectOption } from "../util/sql";
 import { checkPassword } from "../util/password";
 import jwt from "../util/jwt";
 import { set, get, del } from "../util/redis";
 import UnauthorizedError from "../error/unauthorized";
 import { JwtPayload } from "jsonwebtoken";
+import { UserSQL } from "../model/user.model";
 
 // dayjs에 isSameOrBefore 함수 추가
 dayjs.extend(isSameOrBefore);
@@ -41,7 +41,7 @@ const controller = {
             const refreshTokenWithRedis: string | null = await get(userId);
 
             if (refreshToken === refreshTokenWithRedis) {
-                const newAccessToken = jwt.createAccessToken(userId);
+                const newAccessToken = jwt.createAccessToken(Number(userId));
                 const newRefreshToken = jwt.createRefreshToken();
                 const expiresIn = jwt.getExpired();
                 const result: tokenResponse = {
@@ -66,26 +66,26 @@ const controller = {
     },
     login: async (data: JSON) => {
         const loginRequest: Login = Object.assign(data);
-        const options: OptionType = {
-            table: USER_TABLE_NAME,
+        const userSQL = new UserSQL();
+
+        const options: SelectOption = {
             where: `${UserColumn.email} = "${loginRequest.email}"`
         };
 
-        const response: RowDataPacket[] = await select(options);
+        const response: User[] = await userSQL.find(options);
 
         if (response.length <= 0) throw new UnauthorizedError("Invalid Email");
 
-        const user: Array<User> = rowDataToModel(response);
-        const isCheck: boolean = await checkPassword(loginRequest.password, user[0].password);
+        const isCheck: boolean = await checkPassword(loginRequest.password, response[0].password!);
 
         if (!isCheck) throw new UnauthorizedError("Invalid Password");
 
-        const accessToken: string = jwt.createAccessToken(user[0].userId);
+        const accessToken: string = jwt.createAccessToken(response[0].userId!);
         const refreshToken: string = jwt.createRefreshToken();
         const expiresIn = jwt.getExpired();
 
         // redis database에 refreshToken 저장
-        const isOk = await set(String(user[0].userId), refreshToken, expiresIn);
+        const isOk = await set(String(response[0].userId), refreshToken, expiresIn);
 
         const result: tokenResponse = {
             accessToken: accessToken
