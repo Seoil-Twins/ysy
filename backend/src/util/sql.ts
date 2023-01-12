@@ -1,5 +1,6 @@
 import jsConvert from "js-convert-case";
 import { ResultSetHeader, RowDataPacket } from "mysql2";
+import InternalServerError from "../error/internalServer";
 import db from "./database";
 
 const optionNames = {
@@ -17,23 +18,23 @@ export interface SelectOption {
     limit?: number | undefined;
 }
 
-export const select = async (tableName: string, options: SelectOption): Promise<Array<any>> => {
+export const select = async (tableName: string, options: SelectOption): Promise<Array<RowDataPacket>> => {
     const sql: string = createSelectSql(tableName, options);
     const conn = await db.getConnection();
     const [row] = await conn.query<RowDataPacket[]>(sql);
     conn.release();
 
-    const result = rowDataToModel(row);
+    const result: Array<RowDataPacket> = rowDataToModel(row);
 
     return result;
 };
 
-export const editWithSQL = async (sql: string): Promise<ResultSetHeader> => {
+export const editWithSQL = async (sql: string): Promise<void> => {
     const conn = await db.getConnection();
     const [response] = await conn.query<ResultSetHeader>(sql);
     conn.release();
 
-    return response;
+    if (response.affectedRows <= 0) throw new InternalServerError("DB Error");
 };
 
 const createSelectSql = (tableName: string, options: SelectOption): string => {
@@ -66,10 +67,10 @@ const createSelectSql = (tableName: string, options: SelectOption): string => {
     return sql;
 };
 
-const rowDataToModel = (data: RowDataPacket[]): Array<any> => {
-    const result: Array<any> = [];
+const rowDataToModel = (data: RowDataPacket[]): Array<RowDataPacket> => {
+    const result: Array<RowDataPacket> = [];
 
-    data.forEach((item: any) => {
+    data.forEach((item: RowDataPacket) => {
         const convertData: object | null = jsConvert.camelKeys(item, { recursive: true });
 
         if (convertData) result.push(Object.assign(convertData));

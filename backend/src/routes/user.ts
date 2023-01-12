@@ -29,12 +29,16 @@ const signupSchema: joi.Schema = joi.object({
 });
 
 const updateSchema: joi.Schema = joi.object({
-    userId: joi.string().required(),
+    userId: joi.number().required(),
     name: joi.string().max(8).trim(),
     profile: joi.string().trim(),
     primaryNofi: joi.boolean(),
     dateNofi: joi.boolean(),
     eventNofi: joi.boolean()
+});
+
+const deleteSchema: joi.Schema = joi.object({
+    userId: joi.number().required()
 });
 
 // Get User Info
@@ -70,21 +74,33 @@ router.patch("/:user_id", async (req: Request, res: Response, next: NextFunction
     const { value, error }: ValidationResult = validator(req.body, updateSchema);
 
     try {
-        if (req.params.user_id !== req.body.userId) throw new ForbiddenError("Forbidden Error");
+        if (req.params.user_id != req.body.userId) throw new ForbiddenError("Forbidden Error");
         else if (error) throw new BadRequestError("Bad Request Error");
         else if (value.name && value.name.length <= 1) throw new BadRequestError("Bad Request Error");
 
         await userController.updateUser(value);
 
-        return res.status(200).json({});
+        return res.status(204).json({});
     } catch (_error) {
         next(_error);
     }
 });
 
 // Delete User Info
-router.delete("/", (req: Request, res: Response) => {
-    res.send("Delete!");
+router.delete("/:user_id", async (req: Request, res: Response, next: NextFunction) => {
+    const { value, error }: ValidationResult = validator(req.body, deleteSchema);
+
+    try {
+        console.log(req.params.user_id, req.body.userId);
+        if (req.params.user_id != req.body.userId) throw new ForbiddenError("Forbidden Error");
+        else if (error) throw new BadRequestError("Bad Request Error");
+
+        await userController.deleteUser(value);
+
+        return res.status(204).json({});
+    } catch (_error) {
+        next(_error);
+    }
 });
 
 export default router;

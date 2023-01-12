@@ -61,6 +61,10 @@ export interface IUpdateUser {
     dateNofi: boolean | undefined;
     eventNofi: boolean | undefined;
 }
+
+export interface IDeleteUser {
+    userId: number;
+}
 // ------------------------------------------ Interface End ---------------------------------------- //
 
 // -------------------------------------------- Options -------------------------------------------- //
@@ -105,11 +109,11 @@ export class User implements IUser {
         this.birthday = data.birthday;
         this.phone = data.phone;
         this.profile = data.profile;
-        this.primaryNofi = data.primaryNofi;
-        this.dateNofi = data.dateNofi;
-        this.eventNofi = data.eventNofi;
+        this.primaryNofi = Boolean(data.primaryNofi);
+        this.dateNofi = Boolean(data.dateNofi);
+        this.eventNofi = Boolean(data.eventNofi);
         this.createdTime = data.createdTime;
-        this.deleted = data.deleted;
+        this.deleted = Boolean(data.deleted);
         this.deletedTime = data.deletedTime;
     }
 }
@@ -134,7 +138,7 @@ export class UserSQL {
         return result;
     }
 
-    async add(user: ICreateUser): Promise<boolean> {
+    async add(user: ICreateUser) {
         const birthday = dayjs(user.birthday.valueOf()).format("YYYY-MM-DD");
         const sql = `
             INSERT INTO ${this.#tableName}
@@ -149,14 +153,10 @@ export class UserSQL {
                 );
         `;
 
-        const result: ResultSetHeader = await editWithSQL(sql);
-
-        if (result.affectedRows <= 0) throw new InternalServerError("DB Error");
-
-        return true;
+        await editWithSQL(sql);
     }
 
-    async update(user: IUpdateUser, options: UpdateOption): Promise<boolean> {
+    async update(user: IUpdateUser, options: UpdateOption) {
         let sql = `UPDATE ${this.#tableName} SET `;
 
         if (user.name) sql += `${UserColumn.name} = "${user.name}", `;
@@ -168,12 +168,17 @@ export class UserSQL {
         sql = sql.substring(0, sql.lastIndexOf(",")) + " ";
         sql += `WHERE ${options.where};`;
 
-        const result: ResultSetHeader = await editWithSQL(sql);
-
-        if (result.affectedRows <= 0) throw new InternalServerError("DB Error");
-
-        return true;
+        await editWithSQL(sql);
     }
 
-    async delete() {}
+    async delete(user: IDeleteUser): Promise<void> {
+        const now = dayjs();
+
+        const sql = `
+            UPDATE ${this.#tableName} 
+                SET ${UserColumn.deleted} = ${true}, ${UserColumn.deletedTime} = "${now.format("YYYY-MM-DD")}"
+                WHERE ${UserColumn.userId} =  ${user.userId}`;
+
+        await editWithSQL(sql);
+    }
 }

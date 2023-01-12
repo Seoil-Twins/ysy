@@ -1,11 +1,11 @@
-import { ResultSetHeader, RowDataPacket } from "mysql2";
 import randomString from "randomstring";
 
-import { UserColumn, UserSQL, User, ICreateUser, IUpdateUser, UpdateOption } from "../model/user.model";
+import { UserColumn, UserSQL, User, ICreateUser, IUpdateUser, UpdateOption, IDeleteUser } from "../model/user.model";
 import { SelectOption } from "../util/sql";
 import { createDigest } from "../util/password";
-import InternalServerError from "../error/internalServer";
+import { del } from "../util/redis";
 import NotFoundError from "../error/notFound";
+import ForbiddenError from "../error/forbidden";
 
 const controller = {
     getUser: async (userId: string): Promise<User> => {
@@ -69,19 +69,31 @@ const controller = {
         data.code = code;
         data.password = hash;
 
-        const result: boolean = await userSQL.add(data);
-
-        if (!result) throw new InternalServerError("DB Error");
+        await userSQL.add(data);
     },
     updateUser: async (data: IUpdateUser): Promise<void> => {
         const userSQL = new UserSQL();
-        const options: UpdateOption = {
+        let selectOptions: SelectOption = {
+            columns: [UserColumn.deleted],
+            limit: 1,
             where: `${UserColumn.userId} = "${data.userId}"`
         };
 
-        const result: boolean = await userSQL.update(data, options);
+        const result: Array<User> = await userSQL.find(selectOptions);
 
-        if (!result) throw new InternalServerError("DB Error");
+        if (result.length >= 1 && result[0].deleted) throw new ForbiddenError("Forbidden Error");
+
+        const updateOptions: UpdateOption = {
+            where: `${UserColumn.userId} = "${data.userId}"`
+        };
+
+        await userSQL.update(data, updateOptions);
+    },
+    deleteUser: async (data: IDeleteUser): Promise<void> => {
+        const userSQL = new UserSQL();
+
+        await userSQL.delete(data);
+        await del(String(data.userId));
     }
 };
 
