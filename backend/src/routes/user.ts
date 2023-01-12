@@ -8,6 +8,7 @@ import userController from "../controller/user.controller";
 
 import BadRequestError from "../error/badRequest";
 import { User } from "../model/user.model";
+import ForbiddenError from "../error/forbidden";
 
 const router: Router = express.Router();
 
@@ -15,7 +16,7 @@ const pwPattern = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[$@$!%*#?&])[A-Za-z\d$@$!%*#?&]{8
 const phonePattern = /^[0-9]+$/;
 const signupSchema: joi.Schema = joi.object({
     snsId: joi.string().length(4).required(),
-    name: joi.string().trim().required(),
+    name: joi.string().max(8).trim().required(),
     password: joi.string().trim().min(8).max(15).regex(RegExp(pwPattern)).required(),
     email: joi.string().trim().email().required(),
     phone: joi.string().trim().length(11).regex(RegExp(phonePattern)).required(),
@@ -25,6 +26,15 @@ const signupSchema: joi.Schema = joi.object({
         .less(new Date("2023-12-31")) // 2023-12-31보다 낮은 날짜여야 함.
         .required(),
     eventNofi: joi.bool().default(false)
+});
+
+const updateSchema: joi.Schema = joi.object({
+    userId: joi.string().required(),
+    name: joi.string().max(8).trim(),
+    profile: joi.string().trim(),
+    primaryNofi: joi.boolean(),
+    dateNofi: joi.boolean(),
+    eventNofi: joi.boolean()
 });
 
 // Get User Info
@@ -56,8 +66,20 @@ router.post("/", async (req: Request, res: Response, next: NextFunction) => {
 });
 
 // Update User Info
-router.put("/", (req: Request, res: Response) => {
-    res.send("Update!");
+router.patch("/:user_id", async (req: Request, res: Response, next: NextFunction) => {
+    const { value, error }: ValidationResult = validator(req.body, updateSchema);
+
+    try {
+        if (req.params.user_id !== req.body.userId) throw new ForbiddenError("Forbidden Error");
+        else if (error) throw new BadRequestError("Bad Request Error");
+        else if (value.name && value.name.length <= 1) throw new BadRequestError("Bad Request Error");
+
+        await userController.updateUser(value);
+
+        return res.status(200).json({});
+    } catch (_error) {
+        next(_error);
+    }
 });
 
 // Delete User Info

@@ -11,7 +11,8 @@ const pool: Pool = createPool({
     database: process.env.MYSQL_DB,
     connectionLimit: 10,
     connectTimeout: 30,
-    dateStrings: true
+    dateStrings: true,
+    multipleStatements: true
 });
 
 const db = {
