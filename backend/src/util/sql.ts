@@ -12,19 +12,19 @@ const optionNames = {
 } as const;
 
 export interface SelectOption {
-    columns?: Array<string> | undefined;
+    columns?: string[] | undefined;
     where?: string | undefined;
     orderBy?: string | undefined;
     limit?: number | undefined;
 }
 
-export const select = async (tableName: string, options: SelectOption): Promise<Array<RowDataPacket>> => {
+export const select = async (tableName: string, options: SelectOption): Promise<RowDataPacket[]> => {
     const sql: string = createSelectSql(tableName, options);
     const conn = await db.getConnection();
     const [row] = await conn.query<RowDataPacket[]>(sql);
     conn.release();
 
-    const result: Array<RowDataPacket> = rowDataToModel(row);
+    const result: RowDataPacket[] = rowDataToModel(row);
 
     return result;
 };
@@ -67,8 +67,8 @@ const createSelectSql = (tableName: string, options: SelectOption): string => {
     return sql;
 };
 
-const rowDataToModel = (data: RowDataPacket[]): Array<RowDataPacket> => {
-    const result: Array<RowDataPacket> = [];
+const rowDataToModel = (data: RowDataPacket[]): RowDataPacket[] => {
+    const result: RowDataPacket[] = [];
 
     data.forEach((item: RowDataPacket) => {
         const convertData: object | null = jsConvert.camelKeys(item, { recursive: true });

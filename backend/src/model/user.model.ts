@@ -1,6 +1,5 @@
 import dayjs from "dayjs";
-import { ResultSetHeader } from "mysql2";
-import InternalServerError from "../error/internalServer";
+import AbstractSQL from "./abstractSQL.model";
 import { select, editWithSQL } from "../util/sql";
 
 export const UserColumn = {
@@ -69,7 +68,7 @@ export interface IDeleteUser {
 
 // -------------------------------------------- Options -------------------------------------------- //
 export interface SelectOption {
-    columns?: Array<string> | undefined;
+    columns?: string[] | undefined;
     where?: string | undefined;
     orderBy?: string | undefined;
     limit?: number | undefined;
@@ -118,16 +117,18 @@ export class User implements IUser {
     }
 }
 
-export class UserSQL {
-    #tableName = "user";
+export class UserSQL extends AbstractSQL {
+    constructor() {
+        super("user");
+    }
 
     create(data: IUser): User {
         return new User(data);
     }
 
     async find(options: SelectOption): Promise<User[]> {
-        const response: Array<any> = await select(this.#tableName, options);
-        let result: Array<User> = [];
+        const response: any[] = await select(this.tableName, options);
+        let result: User[] = [];
 
         if (response.length > 0) {
             for (let i = 0; i < response.length; i++) {
@@ -138,10 +139,10 @@ export class UserSQL {
         return result;
     }
 
-    async add(user: ICreateUser) {
+    async add(user: ICreateUser): Promise<void> {
         const birthday = dayjs(user.birthday.valueOf()).format("YYYY-MM-DD");
         const sql = `
-            INSERT INTO ${this.#tableName}
+            INSERT INTO ${this.tableName}
                 (
                     ${UserColumn.snsId}, ${UserColumn.code}, ${UserColumn.name}, ${UserColumn.password}, ${UserColumn.email}, ${UserColumn.phone},
                     ${UserColumn.birthday}, ${UserColumn.eventNofi}
@@ -156,8 +157,8 @@ export class UserSQL {
         await editWithSQL(sql);
     }
 
-    async update(user: IUpdateUser, options: UpdateOption) {
-        let sql = `UPDATE ${this.#tableName} SET `;
+    async update(user: IUpdateUser, options: UpdateOption): Promise<void> {
+        let sql = `UPDATE ${this.tableName} SET `;
 
         if (user.name) sql += `${UserColumn.name} = "${user.name}", `;
         if (user.profile) sql += `${UserColumn.profile} = "${user.profile}", `;
@@ -175,7 +176,7 @@ export class UserSQL {
         const now = dayjs();
 
         const sql = `
-            UPDATE ${this.#tableName} 
+            UPDATE ${this.tableName} 
                 SET ${UserColumn.deleted} = ${true}, ${UserColumn.deletedTime} = "${now.format("YYYY-MM-DD")}"
                 WHERE ${UserColumn.userId} =  ${user.userId}`;
 

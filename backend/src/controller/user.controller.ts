@@ -79,7 +79,7 @@ const controller = {
             where: `${UserColumn.userId} = "${data.userId}"`
         };
 
-        const result: Array<User> = await userSQL.find(selectOptions);
+        const result: User[] = await userSQL.find(selectOptions);
 
         if (result.length >= 1 && result[0].deleted) throw new ForbiddenError("Forbidden Error");
 
