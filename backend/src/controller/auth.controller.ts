@@ -27,7 +27,7 @@ const controller = {
         const accessTokenPayload: JwtPayload | string = jwt.verify(accessToken, true);
         const refreshTokenPayload: JwtPayload | string = jwt.verify(refreshToken, true);
 
-        if (typeof accessTokenPayload === "string" || typeof refreshTokenPayload === "string") throw new UnauthorizedError("Invalida Token");
+        if (typeof accessTokenPayload === "string" || typeof refreshTokenPayload === "string") throw new UnauthorizedError("Invalid Token");
 
         const now = dayjs();
         const accessTokenExpiresIn = dayjs.unix(Number(accessTokenPayload.exp));
@@ -39,6 +39,7 @@ const controller = {
         if (accessTokenIsBefore && !refreshTokenIsBefore) {
             const userId = String(accessTokenPayload.userId);
             const refreshTokenWithRedis: string | null = await get(userId);
+            refreshToken = refreshToken.replace("Bearer ", "");
 
             if (refreshToken === refreshTokenWithRedis) {
                 const newAccessToken = jwt.createAccessToken(Number(userId));
