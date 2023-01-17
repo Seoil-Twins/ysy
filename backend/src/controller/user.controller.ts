@@ -1,53 +1,31 @@
+import dayjs from "dayjs";
 import randomString from "randomstring";
 
-import { UserColumn, UserSQL, User, ICreateData, IUpdateData, UpdateOption, IDeleteData } from "../model/user.model";
-import { SelectOption } from "../util/sql";
+import { User, ICreateData, IUpdateData, IDeleteData } from "../model/user.model";
+
 import { createDigest } from "../util/password";
-import { del } from "../util/redis";
+
 import NotFoundError from "../error/notFound";
 import ForbiddenError from "../error/forbidden";
-import { PoolConnection } from "mysql2/promise";
-import db from "../util/database";
 
 const controller = {
     getUser: async (userId: string): Promise<User> => {
-        const conn: PoolConnection = await db.getConnection();
-        const userSQL = new UserSQL();
-        const options: SelectOption = {
-            columns: [
-                UserColumn.userId,
-                UserColumn.cupId,
-                UserColumn.snsId,
-                UserColumn.code,
-                UserColumn.name,
-                UserColumn.email,
-                UserColumn.birthday,
-                UserColumn.phone,
-                UserColumn.profile,
-                UserColumn.primaryNofi,
-                UserColumn.dateNofi,
-                UserColumn.eventNofi
-            ],
-            limit: 1,
-            where: `${UserColumn.userId} = "${userId}"`
-        };
+        const user: User | null = await User.findOne({
+            attributes: { exclude: ["password"] },
+            where: {
+                userId: userId
+            }
+        });
 
-        const result: User[] = await userSQL.find(conn, options);
+        if (!user) throw new NotFoundError("Not Found User");
 
-        if (result.length <= 0) throw new NotFoundError("Not Found User");
-
-        if (result[0].cupId !== null) {
+        if (user.cupId !== null) {
             // Couple Select
         }
 
-        for (let i = 0; i < result.length; i++) delete result[i].password;
-
-        conn.release();
-        return result[0];
+        return user;
     },
     createUser: async (data: ICreateData): Promise<void> => {
-        const conn: PoolConnection = await db.getConnection();
-        const userSQL = new UserSQL();
         let isNot = true;
         let code = "";
 
@@ -58,52 +36,63 @@ const controller = {
                 charset: "alphanumeric"
             });
 
-            const options: SelectOption = {
-                columns: [UserColumn.code],
-                limit: 1,
-                where: `${UserColumn.code} = "${code}"`
-            };
-
-            const result: User[] = await userSQL.find(conn, options);
-            if (result.length <= 0) isNot = false;
+            const user: User | null = await User.findOne({
+                where: {
+                    code: code
+                }
+            });
+            if (!user) isNot = false;
         }
 
         const hash: string = await createDigest(data.password);
-
         data.code = code;
         data.password = hash;
 
-        await userSQL.add(conn, data);
-        conn.release();
+        await User.create({
+            snsId: data.snsId,
+            code: code,
+            name: data.name,
+            email: data.email,
+            birthday: new Date(data.birthday),
+            password: hash,
+            phone: data.phone,
+            eventNofi: data.eventNofi
+        });
     },
     updateUser: async (data: IUpdateData): Promise<void> => {
-        const conn: PoolConnection = await db.getConnection();
-        const userSQL = new UserSQL();
-        let selectOptions: SelectOption = {
-            columns: [UserColumn.deleted],
-            limit: 1,
-            where: `${UserColumn.userId} = "${data.userId}"`
+        const user: User | null = await User.findOne({
+            where: {
+                userId: data.userId
+            }
+        });
+
+        if (!user) throw new NotFoundError("Not Found User");
+        else if (user.deleted) throw new ForbiddenError("Forbidden Error");
+
+        const updateData: any = {
+            userId: data.userId
         };
 
-        const result: User[] = await userSQL.find(conn, selectOptions);
+        if (data.name) updateData.name = data.name;
+        if (data.profile) updateData.profile = data.profile;
+        if (data.primaryNofi !== undefined) updateData.primaryNofi = data.primaryNofi;
+        if (data.dateNofi !== undefined) updateData.dateNofi = data.dateNofi;
+        if (data.eventNofi !== undefined) updateData.eventNofi = data.eventNofi;
 
-        if (result.length >= 1 && result[0].deleted) throw new ForbiddenError("Forbidden Error");
-
-        const updateOptions: UpdateOption = {
-            where: `${UserColumn.userId} = "${data.userId}"`
-        };
-
-        await userSQL.update(conn, data, updateOptions);
-        conn.release();
+        await user.update(updateData);
     },
     deleteUser: async (data: IDeleteData): Promise<void> => {
-        const conn: PoolConnection = await db.getConnection();
-        const userSQL = new UserSQL();
-
-        await userSQL.delete(conn, data);
-        await del(String(data.userId));
-
-        conn.release();
+        await User.update(
+            {
+                deleted: true,
+                deletedTime: new Date(dayjs().valueOf())
+            },
+            {
+                where: {
+                    userId: data.userId
+                }
+            }
+        );
     }
 };
 

@@ -1,6 +1,5 @@
 import * as redis from "redis";
 import dotenv from "dotenv";
-import ConflictError from "../error/conflict";
 
 dotenv.config();
 
@@ -16,7 +15,6 @@ const redisClient = redis.createClient({
     }
 });
 
-redisClient.on("connect : ", () => console.log("Connect!"));
 redisClient.on("error : ", (err: any) => console.log("Error! : ", err));
 redisClient.connect();
 

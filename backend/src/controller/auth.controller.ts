@@ -1,16 +1,15 @@
+import jwt from "../util/jwt";
 import dayjs from "dayjs";
+import { JwtPayload } from "jsonwebtoken";
 import isSameOrBefore from "dayjs/plugin/isSameOrBefore";
 
-import { UserColumn, User } from "../model/user.model";
-import { Login, tokenResponse } from "../model/auth.model";
-import { SelectOption } from "../util/sql";
+import { User } from "../model/user.model";
+import { ILogin, tokenResponse } from "../model/auth.model";
+
 import { checkPassword } from "../util/password";
-import jwt from "../util/jwt";
 import { set, get, del } from "../util/redis";
+
 import UnauthorizedError from "../error/unauthorized";
-import { JwtPayload } from "jsonwebtoken";
-import { UserSQL } from "../model/user.model";
-import db from "../util/database";
 
 // dayjs에 isSameOrBefore 함수 추가
 dayjs.extend(isSameOrBefore);
@@ -66,30 +65,23 @@ const controller = {
             throw new UnauthorizedError("Re Login");
         }
     },
-    login: async (data: JSON) => {
-        const conn = await db.getConnection();
-        const loginRequest: Login = Object.assign(data);
-        const userSQL = new UserSQL();
+    login: async (data: ILogin) => {
+        const users: User | null = await User.findOne({
+            where: {
+                email: data.email
+            }
+        });
 
-        const options: SelectOption = {
-            where: `${UserColumn.email} = "${loginRequest.email}"`
-        };
+        if (!users) throw new UnauthorizedError("Invalid Email");
 
-        const response: User[] = await userSQL.find(conn, options);
-
-        if (response.length <= 0) throw new UnauthorizedError("Invalid Email");
-
-        const isCheck: boolean = await checkPassword(loginRequest.password, response[0].password!);
-
+        const isCheck: boolean = await checkPassword(data.password, users.password!);
         if (!isCheck) throw new UnauthorizedError("Invalid Password");
 
-        const accessToken: string = jwt.createAccessToken(response[0].userId!);
+        const accessToken: string = jwt.createAccessToken(users.userId);
         const refreshToken: string = jwt.createRefreshToken();
         const expiresIn = jwt.getExpired();
-
         // redis database에 refreshToken 저장
-        const isOk = await set(String(response[0].userId), refreshToken, expiresIn);
-
+        const isOk = await set(String(users.userId), refreshToken, expiresIn);
         const result: tokenResponse = {
             accessToken: accessToken
         };
@@ -97,7 +89,6 @@ const controller = {
         if (isOk == "OK") result.refreshToken = refreshToken;
         else result.refreshToken = "";
 
-        conn.release();
         return result;
     }
 };

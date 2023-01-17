@@ -1,18 +1,17 @@
 import randomString from "randomstring";
-import { CoupleColumn, CoupleSQL, ICreateData, SelectOption, UpdateOption } from "../model/couple.model";
-import { IUpdateWithCupIdData, User, UserColumn, UserSQL } from "../model/user.model";
-import db from "../util/database";
 
-const userSQL = new UserSQL();
-const coupleSQL = new CoupleSQL();
+import BadRequestError from "../error/badRequest";
+import ConflictError from "../error/conflict";
+
+import sequelize from "../model";
+import { Couple, IRequestData } from "../model/couple.model";
+import { User } from "../model/user.model";
 
 const controller = {
-    createCouple: async (data: ICreateData): Promise<void> => {
-        const conn = await db.getConnection();
+    createCouple: async (data: IRequestData): Promise<void> => {
+        const t = await sequelize.transaction();
 
         try {
-            await conn.beginTransaction();
-
             let isNot = true;
             let cupId = "";
 
@@ -23,33 +22,54 @@ const controller = {
                     charset: "alphanumeric"
                 });
 
-                const options: SelectOption = {
-                    columns: [UserColumn.cupId],
-                    limit: 1,
-                    where: `${CoupleColumn.cupId} = "${cupId}"`
-                };
+                const user: User | null = await User.findOne({
+                    where: { cupId: cupId }
+                });
 
-                const result: User[] = await userSQL.find(conn, options);
-                if (result.length <= 0) isNot = false;
+                if (!user) isNot = false;
             }
 
-            data.cupId = cupId;
-            await coupleSQL.add(conn, data);
+            await Couple.create(
+                {
+                    cupId: cupId,
+                    cupDay: data.cupDay,
+                    title: data.title,
+                    thumbnail: data.thumbnail
+                },
+                { transaction: t }
+            );
 
-            const sqlData: IUpdateWithCupIdData = { cupId: cupId };
+            const user1: User | null = await User.findOne({
+                where: { userId: data.userId }
+            });
 
-            let options: UpdateOption = { where: `${UserColumn.userId} = ${data.userId}` };
-            await userSQL.updateWithCupId(conn, sqlData, options);
+            const user2: User | null = await User.findOne({
+                where: { userId: data.userId2 }
+            });
 
-            options = { where: `${UserColumn.userId} = ${data.userId2}` };
-            await userSQL.updateWithCupId(conn, sqlData, options);
+            if (!user1 || !user2) throw new BadRequestError("Bad Request");
+            else if (user1.cupId || user2.cupId) throw new ConflictError("Duplicated Cup Id");
 
-            await conn.commit();
+            await user1.update(
+                { cupId: cupId },
+                {
+                    where: { userId: data.userId },
+                    transaction: t
+                }
+            );
+
+            await user2.update(
+                { cupId: cupId },
+                {
+                    where: { userId: data.userId2 },
+                    transaction: t
+                }
+            );
+
+            await t.commit();
         } catch (error) {
-            await conn.rollback();
+            await t.rollback();
             throw error;
-        } finally {
-            conn.release();
         }
     }
 };

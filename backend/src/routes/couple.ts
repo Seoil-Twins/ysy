@@ -7,7 +7,6 @@ import validator from "../util/validator";
 import StatusCode from "../util/statusCode";
 
 import BadRequestError from "../error/badRequest";
-import ForbiddenError from "../error/forbidden";
 
 const router: Router = express.Router();
 

@@ -1,13 +1,14 @@
 import express, { Router, Request, Response, NextFunction } from "express";
 import joi, { ValidationResult } from "joi";
 
-import validator from "../util/validator";
-import StatusCode from "../util/statusCode";
+import { User } from "../model/user.model";
 
 import userController from "../controller/user.controller";
 
+import validator from "../util/validator";
+import StatusCode from "../util/statusCode";
+
 import BadRequestError from "../error/badRequest";
-import { User } from "../model/user.model";
 import ForbiddenError from "../error/forbidden";
 
 const router: Router = express.Router();
@@ -91,7 +92,6 @@ router.delete("/:user_id", async (req: Request, res: Response, next: NextFunctio
     const { value, error }: ValidationResult = validator(req.body, deleteSchema);
 
     try {
-        console.log(req.params.user_id, req.body.userId);
         if (req.params.user_id != req.body.userId) throw new ForbiddenError("Forbidden Error");
         else if (error) throw new BadRequestError("Bad Request Error");
 

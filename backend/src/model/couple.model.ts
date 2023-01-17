@@ -1,16 +1,6 @@
-import dayjs from "dayjs";
-import AbstractSQL from "./abstractSQL.model";
-import { select, edit } from "../util/sql";
-import { PoolConnection } from "mysql2/promise";
+import { DataTypes, Model, literal } from "sequelize";
 
-export const CoupleColumn = {
-    cupId: "cup_id",
-    cupDay: "cup_day",
-    title: "title",
-    thumbnail: "thumbnail",
-    deleted: "deleted",
-    deletedTime: "deleted_time"
-} as const;
+import sequelize from ".";
 
 // -------------------------------------------- Interface ------------------------------------------ //
 export interface ICouple {
@@ -18,95 +8,75 @@ export interface ICouple {
     cupDay: Date;
     title: string;
     thumbnail: string;
+    createdTime: Date;
     deleted: boolean;
     deletedTime: Date | null;
 }
 
-export interface ICreateData {
+export interface IRequestData {
     // Auth Middleware User Id
     userId: number;
     userId2: number;
-    cupId: string;
+    cupDay: Date;
     title: string;
     thumbnail: string;
+}
+
+interface ICreateData {
+    cupId: string;
     cupDay: Date;
+    title: string;
+    thumbnail: string;
 }
 // ------------------------------------------ Interface End ---------------------------------------- //
 
-// -------------------------------------------- Options -------------------------------------------- //
-export interface SelectOption {
-    columns?: string[] | undefined;
-    where?: string | undefined;
-    orderBy?: string | undefined;
-    limit?: number | undefined;
+export class Couple extends Model<ICouple, ICreateData> {
+    declare cupId: string | null;
+    declare cupDay: Date;
+    declare title: string;
+    declare thumbnail: string;
+    declare deleted: boolean;
+    declare deletedTime: Date | null;
 }
 
-export interface UpdateOption {
-    where: string;
-}
-// ------------------------------------------ Options End ------------------------------------------ //
-
-export class Couple implements ICouple {
-    cupId: string;
-    cupDay: Date;
-    title: string;
-    thumbnail: string;
-    deleted: boolean = false;
-    deletedTime: Date | null = null;
-
-    constructor(data: ICouple) {
-        this.cupId = data.cupId;
-        this.cupDay = data.cupDay;
-        this.title = data.title;
-        this.thumbnail = data.thumbnail;
-        this.deleted = Boolean(data.deleted);
-        this.deletedTime = data.deletedTime;
-    }
-}
-
-export class CoupleSQL extends AbstractSQL {
-    constructor() {
-        super("couple");
-    }
-
-    create(data: ICouple): Couple {
-        return new Couple(data);
-    }
-
-    async find(conn: PoolConnection, options: SelectOption): Promise<any[]> {
-        const response: any[] = await select(conn, this.tableName, options);
-        let result: Couple[] = [];
-
-        if (response.length > 0) {
-            for (let i = 0; i < response.length; i++) {
-                result.push(this.create(response[i]));
-            }
+Couple.init(
+    {
+        cupId: {
+            field: "cup_id",
+            type: DataTypes.STRING(8),
+            primaryKey: true
+        },
+        cupDay: {
+            field: "cup_day",
+            type: DataTypes.DATE,
+            allowNull: false
+        },
+        title: {
+            type: DataTypes.STRING(15),
+            allowNull: false
+        },
+        thumbnail: {
+            type: DataTypes.STRING(30),
+            allowNull: false
+        },
+        createdTime: {
+            field: "created_time",
+            type: "TIMESTAMP",
+            defaultValue: literal("CURRENT_TIMESTAMP")
+        },
+        deleted: {
+            type: DataTypes.BOOLEAN,
+            allowNull: false,
+            defaultValue: false
+        },
+        deletedTime: {
+            field: "deleted_time",
+            type: "TIMESTAMP"
         }
-
-        return result;
+    },
+    {
+        sequelize: sequelize,
+        tableName: "couple",
+        timestamps: false
     }
-
-    async add(conn: PoolConnection, data: ICreateData): Promise<void> {
-        const cupDay = dayjs(data.cupDay.valueOf()).format("YYYY-MM-DD");
-        const sql = `
-            INSERT INTO ${this.tableName}
-                (
-                    ${CoupleColumn.cupId}, ${CoupleColumn.cupDay}, ${CoupleColumn.title}, ${CoupleColumn.thumbnail}
-                )
-                VALUES
-                (
-                    "${data.cupId}", "${cupDay}", "${data.title}", "${data.thumbnail}"
-                );
-        `;
-
-        await edit(conn, sql);
-    }
-
-    update(conn: PoolConnection, iData: any, options: any): Promise<void> {
-        throw new Error("Method not implemented.");
-    }
-
-    delete(conn: PoolConnection, iData: any): Promise<void> {
-        throw new Error("Method not implemented.");
-    }
-}
+);
