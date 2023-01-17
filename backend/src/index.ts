@@ -6,7 +6,9 @@
  */
 
 import express, { Application } from "express";
+
 import routes from "./routes/index";
+
 import errorHandlerMiddleware from "./middlewares/errorHandler.middleware";
 
 const app: Application = express();

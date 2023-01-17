@@ -2,6 +2,8 @@ import dayjs from "dayjs";
 import dotenv from "dotenv";
 import jwt, { JwtPayload } from "jsonwebtoken";
 
+import UnauthorizedError from "../error/unauthorized";
+
 dotenv.config();
 
 const SECRET_KEY: string = String(process.env.AUTH_SECRET_KEY);
@@ -17,7 +19,7 @@ const refreshTokenexpiresIn: object = {
 };
 
 export default {
-    createAccessToken: (userId: string): string => {
+    createAccessToken: (userId: number): string => {
         let payload = { userId: userId };
 
         return jwt.sign(payload, SECRET_KEY, accessTokenOptions);
@@ -32,7 +34,11 @@ export default {
         return expiresIn.diff(now, "second");
     },
     verify: (token: string, ignoreExpiration: boolean = false): JwtPayload | string => {
-        const result: JwtPayload | string = jwt.verify(token, SECRET_KEY, { ignoreExpiration: ignoreExpiration });
+        const [bearer, separatedToken] = token.split(" ");
+        if (bearer !== "Bearer") throw new UnauthorizedError("Invalid Token");
+
+        const result: JwtPayload | string = jwt.verify(separatedToken, SECRET_KEY, { ignoreExpiration: ignoreExpiration });
+
         return result;
     }
 };

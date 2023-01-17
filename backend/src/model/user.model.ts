@@ -1,35 +1,15 @@
-import { RowDataPacket } from "mysql2";
-import dayjs from "dayjs";
-import jsConvert from "js-convert-case";
+import { DataTypes, Model, literal } from "sequelize";
 
-export const USER_TABLE_NAME = "user";
+import sequelize from ".";
 
-export const UserColumn = {
-    userId: "user_id",
-    cupId: "cup_id",
-    snsId: "sns_id",
-    code: "code",
-    name: "name",
-    password: "password",
-    email: "email",
-    birthday: "birthday",
-    phone: "phone",
-    profile: "profile",
-    primaryNofi: "primary_nofi",
-    dateNofi: "date_nofi",
-    eventNofi: "event_nofi",
-    createdTime: "created_time",
-    deleted: "deleted",
-    deletedTime: "deleted_time"
-} as const;
-
-export interface User {
-    userId: string;
+// -------------------------------------------- Interface ------------------------------------------ //
+export interface IUser {
+    userId: number;
     cupId: string | null;
     snsId: string;
     code: string;
     name: string;
-    password: string;
+    password?: string;
     email: string;
     birthday: Date;
     phone: string;
@@ -42,44 +22,135 @@ export interface User {
     deletedTime: Date | null;
 }
 
-export interface CreateUser {
+export interface ICreateData {
     snsId: string;
     code: string;
     name: string;
     password: string;
     email: string;
-    birthday: Date;
     phone: string;
+    birthday: Date;
     eventNofi: boolean;
 }
 
-export const createUserSql = (model: CreateUser): string => {
-    const birthday = dayjs(model.birthday.valueOf());
+export interface IUpdateData {
+    userId: number;
+    name: string | undefined;
+    profile: string | undefined;
+    primaryNofi: boolean | undefined;
+    dateNofi: boolean | undefined;
+    eventNofi: boolean | undefined;
+}
 
-    const sql = `
-        INSERT INTO ${USER_TABLE_NAME} 
-            (
-                ${UserColumn.snsId}, ${UserColumn.code}, ${UserColumn.name}, ${UserColumn.password}, ${UserColumn.email}, 
-                ${UserColumn.phone}, ${UserColumn.birthday}, ${UserColumn.eventNofi}
-            )
-        VALUES 
-            (
-                "${model.snsId}", "${model.code}", "${model.name}", "${model.password}", "${model.email}", "${model.phone}",
-                "${birthday.format("YYYY-MM-DD")}", ${model.eventNofi}
-            );
-    `;
+export interface IDeleteData {
+    userId: number;
+}
+// ------------------------------------------ Interface End ---------------------------------------- //
 
-    return sql;
-};
+export class User extends Model<IUser, ICreateData> {
+    declare userId: number;
+    declare cupId: string | null;
+    declare snsId: string;
+    declare code: string;
+    declare name: string;
+    declare password?: string;
+    declare email: string;
+    declare birthday: Date;
+    declare phone: string;
+    declare profile: string | null;
+    declare primaryNofi: boolean;
+    declare dateNofi: boolean;
+    declare eventNofi: boolean;
+    declare createdTime: Date;
+    declare deleted: boolean;
+    declare deletedTime: Date | null;
+}
 
-export const rowDataToModel = (data: RowDataPacket[]): Array<User> => {
-    const result: Array<User> = [];
-
-    data.forEach((item: any) => {
-        const convertData: object | null = jsConvert.camelKeys(item, { recursive: true });
-
-        if (convertData) result.push(Object.assign(convertData));
-    });
-
-    return result;
-};
+User.init(
+    {
+        userId: {
+            field: "user_id",
+            type: DataTypes.INTEGER,
+            autoIncrement: true,
+            primaryKey: true
+        },
+        cupId: {
+            field: "cup_id",
+            type: DataTypes.STRING(8),
+            allowNull: true,
+            defaultValue: null
+        },
+        snsId: {
+            field: "sns_id",
+            type: DataTypes.STRING(4),
+            allowNull: false
+        },
+        code: {
+            type: DataTypes.STRING(6),
+            unique: true,
+            allowNull: false
+        },
+        name: {
+            type: DataTypes.STRING(10),
+            allowNull: false
+        },
+        email: {
+            type: DataTypes.STRING(30),
+            unique: true,
+            allowNull: false
+        },
+        birthday: {
+            type: DataTypes.DATE,
+            allowNull: false
+        },
+        password: {
+            type: DataTypes.STRING(100),
+            allowNull: false
+        },
+        phone: {
+            type: DataTypes.STRING(11),
+            unique: true,
+            allowNull: false
+        },
+        profile: {
+            type: DataTypes.STRING(30)
+        },
+        primaryNofi: {
+            field: "primary_nofi",
+            type: DataTypes.BOOLEAN,
+            allowNull: false,
+            defaultValue: true
+        },
+        dateNofi: {
+            field: "date_nofi",
+            type: DataTypes.BOOLEAN,
+            allowNull: false,
+            defaultValue: true
+        },
+        eventNofi: {
+            field: "event_nofi",
+            type: DataTypes.BOOLEAN,
+            allowNull: false,
+            defaultValue: false
+        },
+        createdTime: {
+            field: "created_time",
+            type: "TIMESTAMP",
+            defaultValue: literal("CURRENT_TIMESTAMP")
+        },
+        deleted: {
+            type: DataTypes.BOOLEAN,
+            allowNull: false,
+            defaultValue: false
+        },
+        deletedTime: {
+            field: "deleted_time",
+            type: "TIMESTAMP"
+        }
+    },
+    {
+        sequelize: sequelize,
+        timestamps: false,
+        tableName: "user"
+    }
+);

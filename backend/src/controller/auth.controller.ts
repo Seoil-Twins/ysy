@@ -1,15 +1,15 @@
-import { RowDataPacket } from "mysql2";
+import jwt from "../util/jwt";
 import dayjs from "dayjs";
+import { JwtPayload } from "jsonwebtoken";
 import isSameOrBefore from "dayjs/plugin/isSameOrBefore";
 
-import { USER_TABLE_NAME, UserColumn, User, rowDataToModel } from "../model/user.model";
-import { Login, tokenResponse } from "../model/auth.model";
-import { select, OptionType } from "../util/sql";
+import { User } from "../model/user.model";
+import { ILogin, tokenResponse } from "../model/auth.model";
+
 import { checkPassword } from "../util/password";
-import jwt from "../util/jwt";
 import { set, get, del } from "../util/redis";
+
 import UnauthorizedError from "../error/unauthorized";
-import { JwtPayload } from "jsonwebtoken";
 
 // dayjs에 isSameOrBefore 함수 추가
 dayjs.extend(isSameOrBefore);
@@ -27,7 +27,7 @@ const controller = {
         const accessTokenPayload: JwtPayload | string = jwt.verify(accessToken, true);
         const refreshTokenPayload: JwtPayload | string = jwt.verify(refreshToken, true);
 
-        if (typeof accessTokenPayload === "string" || typeof refreshTokenPayload === "string") throw new UnauthorizedError("Invalida Token");
+        if (typeof accessTokenPayload === "string" || typeof refreshTokenPayload === "string") throw new UnauthorizedError("Invalid Token");
 
         const now = dayjs();
         const accessTokenExpiresIn = dayjs.unix(Number(accessTokenPayload.exp));
@@ -39,9 +39,10 @@ const controller = {
         if (accessTokenIsBefore && !refreshTokenIsBefore) {
             const userId = String(accessTokenPayload.userId);
             const refreshTokenWithRedis: string | null = await get(userId);
+            refreshToken = refreshToken.replace("Bearer ", "");
 
             if (refreshToken === refreshTokenWithRedis) {
-                const newAccessToken = jwt.createAccessToken(userId);
+                const newAccessToken = jwt.createAccessToken(Number(userId));
                 const newRefreshToken = jwt.createRefreshToken();
                 const expiresIn = jwt.getExpired();
                 const result: tokenResponse = {
@@ -64,29 +65,23 @@ const controller = {
             throw new UnauthorizedError("Re Login");
         }
     },
-    login: async (data: JSON) => {
-        const loginRequest: Login = Object.assign(data);
-        const options: OptionType = {
-            table: USER_TABLE_NAME,
-            where: `${UserColumn.email} = "${loginRequest.email}"`
-        };
+    login: async (data: ILogin) => {
+        const users: User | null = await User.findOne({
+            where: {
+                email: data.email
+            }
+        });
 
-        const response: RowDataPacket[] = await select(options);
+        if (!users) throw new UnauthorizedError("Invalid Email");
 
-        if (response.length <= 0) throw new UnauthorizedError("Invalid Email");
-
-        const user: Array<User> = rowDataToModel(response);
-        const isCheck: boolean = await checkPassword(loginRequest.password, user[0].password);
-
+        const isCheck: boolean = await checkPassword(data.password, users.password!);
         if (!isCheck) throw new UnauthorizedError("Invalid Password");
 
-        const accessToken: string = jwt.createAccessToken(user[0].userId);
+        const accessToken: string = jwt.createAccessToken(users.userId);
         const refreshToken: string = jwt.createRefreshToken();
         const expiresIn = jwt.getExpired();
-
         // redis database에 refreshToken 저장
-        const isOk = await set(String(user[0].userId), refreshToken, expiresIn);
-
+        const isOk = await set(String(users.userId), refreshToken, expiresIn);
         const result: tokenResponse = {
             accessToken: accessToken
         };

@@ -37,7 +37,7 @@ router.post("/refresh", async (req: Request, res: Response, next: NextFunction) 
         const accessToken = req.header("Authorization");
         const refreshToken = req.header("Refresh");
 
-        if (!accessToken || !refreshToken) throw new UnauthorizedError("Invalida Token");
+        if (!accessToken || !refreshToken) throw new UnauthorizedError("Invalid Token");
 
         const result = await authController.updateToken(accessToken, refreshToken);
 
