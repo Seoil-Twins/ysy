@@ -1,6 +1,7 @@
 import dayjs from "dayjs";
 import AbstractSQL from "./abstractSQL.model";
-import { select, editWithSQL } from "../util/sql";
+import { select, edit } from "../util/sql";
+import { PoolConnection } from "mysql2/promise";
 
 export const UserColumn = {
     userId: "user_id",
@@ -41,7 +42,7 @@ export interface IUser {
     deletedTime: Date | null;
 }
 
-export interface ICreateUser {
+export interface ICreateData {
     snsId: string;
     code: string;
     name: string;
@@ -52,7 +53,7 @@ export interface ICreateUser {
     eventNofi: boolean;
 }
 
-export interface IUpdateUser {
+export interface IUpdateData {
     userId: number;
     name: string | undefined;
     profile: string | undefined;
@@ -61,7 +62,11 @@ export interface IUpdateUser {
     eventNofi: boolean | undefined;
 }
 
-export interface IDeleteUser {
+export interface IUpdateWithCupIdData {
+    cupId: string;
+}
+
+export interface IDeleteData {
     userId: number;
 }
 // ------------------------------------------ Interface End ---------------------------------------- //
@@ -126,8 +131,8 @@ export class UserSQL extends AbstractSQL {
         return new User(data);
     }
 
-    async find(options: SelectOption): Promise<User[]> {
-        const response: any[] = await select(this.tableName, options);
+    async find(conn: PoolConnection, options: SelectOption): Promise<User[]> {
+        const response: any[] = await select(conn, this.tableName, options);
         let result: User[] = [];
 
         if (response.length > 0) {
@@ -139,8 +144,8 @@ export class UserSQL extends AbstractSQL {
         return result;
     }
 
-    async add(user: ICreateUser): Promise<void> {
-        const birthday = dayjs(user.birthday.valueOf()).format("YYYY-MM-DD");
+    async add(conn: PoolConnection, data: ICreateData): Promise<void> {
+        const birthday = dayjs(data.birthday.valueOf()).format("YYYY-MM-DD");
         const sql = `
             INSERT INTO ${this.tableName}
                 (
@@ -149,37 +154,48 @@ export class UserSQL extends AbstractSQL {
                 )
                 VALUES
                 (
-                    "${user.snsId}", "${user.code}", "${user.name}", "${user.password}",  "${user.email}", "${user.phone}",
-                    "${birthday}", ${user.eventNofi}
+                    "${data.snsId}", "${data.code}", "${data.name}", "${data.password}",  "${data.email}", "${data.phone}",
+                    "${birthday}", ${data.eventNofi}
                 );
         `;
 
-        await editWithSQL(sql);
+        await edit(conn, sql);
     }
 
-    async update(user: IUpdateUser, options: UpdateOption): Promise<void> {
+    async update(conn: PoolConnection, data: IUpdateData, options: UpdateOption): Promise<void> {
         let sql = `UPDATE ${this.tableName} SET `;
 
-        if (user.name) sql += `${UserColumn.name} = "${user.name}", `;
-        if (user.profile) sql += `${UserColumn.profile} = "${user.profile}", `;
-        if (user.primaryNofi !== undefined) sql += `${UserColumn.primaryNofi} = ${user.primaryNofi}, `;
-        if (user.dateNofi !== undefined) sql += `${UserColumn.dateNofi} = ${user.dateNofi}, `;
-        if (user.eventNofi !== undefined) sql += `${UserColumn.eventNofi} = ${user.eventNofi}, `;
+        if (data.name) sql += `${UserColumn.name} = "${data.name}", `;
+        if (data.profile) sql += `${UserColumn.profile} = "${data.profile}", `;
+        if (data.primaryNofi !== undefined) sql += `${UserColumn.primaryNofi} = ${data.primaryNofi}, `;
+        if (data.dateNofi !== undefined) sql += `${UserColumn.dateNofi} = ${data.dateNofi}, `;
+        if (data.eventNofi !== undefined) sql += `${UserColumn.eventNofi} = ${data.eventNofi}, `;
 
         sql = sql.substring(0, sql.lastIndexOf(",")) + " ";
         sql += `WHERE ${options.where};`;
 
-        await editWithSQL(sql);
+        await edit(conn, sql);
     }
 
-    async delete(user: IDeleteUser): Promise<void> {
+    async delete(conn: PoolConnection, data: IDeleteData): Promise<void> {
         const now = dayjs();
 
         const sql = `
             UPDATE ${this.tableName} 
                 SET ${UserColumn.deleted} = ${true}, ${UserColumn.deletedTime} = "${now.format("YYYY-MM-DD")}"
-                WHERE ${UserColumn.userId} =  ${user.userId}`;
+                WHERE ${UserColumn.userId} =  ${data.userId}`;
 
-        await editWithSQL(sql);
+        await edit(conn, sql);
+    }
+
+    async updateWithCupId(conn: PoolConnection, data: IUpdateWithCupIdData, options: UpdateOption): Promise<void> {
+        let sql = `
+            UPDATE ${this.tableName} SET
+                ${UserColumn.cupId} = "${data.cupId}" 
+        `;
+
+        sql += `WHERE ${options.where};`;
+
+        await edit(conn, sql);
     }
 }

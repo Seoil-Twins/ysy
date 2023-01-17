@@ -10,6 +10,7 @@ import { set, get, del } from "../util/redis";
 import UnauthorizedError from "../error/unauthorized";
 import { JwtPayload } from "jsonwebtoken";
 import { UserSQL } from "../model/user.model";
+import db from "../util/database";
 
 // dayjs에 isSameOrBefore 함수 추가
 dayjs.extend(isSameOrBefore);
@@ -66,6 +67,7 @@ const controller = {
         }
     },
     login: async (data: JSON) => {
+        const conn = await db.getConnection();
         const loginRequest: Login = Object.assign(data);
         const userSQL = new UserSQL();
 
@@ -73,7 +75,7 @@ const controller = {
             where: `${UserColumn.email} = "${loginRequest.email}"`
         };
 
-        const response: User[] = await userSQL.find(options);
+        const response: User[] = await userSQL.find(conn, options);
 
         if (response.length <= 0) throw new UnauthorizedError("Invalid Email");
 
@@ -95,6 +97,7 @@ const controller = {
         if (isOk == "OK") result.refreshToken = refreshToken;
         else result.refreshToken = "";
 
+        conn.release();
         return result;
     }
 };

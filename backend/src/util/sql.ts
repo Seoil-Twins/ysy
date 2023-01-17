@@ -1,5 +1,6 @@
 import jsConvert from "js-convert-case";
 import { ResultSetHeader, RowDataPacket } from "mysql2";
+import { PoolConnection } from "mysql2/promise";
 import InternalServerError from "../error/internalServer";
 import db from "./database";
 
@@ -18,23 +19,22 @@ export interface SelectOption {
     limit?: number | undefined;
 }
 
-export const select = async (tableName: string, options: SelectOption): Promise<RowDataPacket[]> => {
+export const select = async (conn: PoolConnection, tableName: string, options: SelectOption): Promise<RowDataPacket[]> => {
     const sql: string = createSelectSql(tableName, options);
-    const conn = await db.getConnection();
     const [row] = await conn.query<RowDataPacket[]>(sql);
-    conn.release();
 
     const result: RowDataPacket[] = rowDataToModel(row);
 
     return result;
 };
 
-export const editWithSQL = async (sql: string): Promise<void> => {
-    const conn = await db.getConnection();
+export const edit = async (conn: PoolConnection, sql: string): Promise<void> => {
+    const count = sql.split(";").length - 1;
     const [response] = await conn.query<ResultSetHeader>(sql);
-    conn.release();
 
-    if (response.affectedRows <= 0) throw new InternalServerError("DB Error");
+    if (response.affectedRows < count) {
+        throw new InternalServerError("DB Error");
+    }
 };
 
 const createSelectSql = (tableName: string, options: SelectOption): string => {
