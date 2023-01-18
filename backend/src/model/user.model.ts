@@ -1,3 +1,4 @@
+import { File } from "formidable";
 import { DataTypes, Model, literal } from "sequelize";
 
 import sequelize from ".";
@@ -33,10 +34,10 @@ export interface ICreateData {
     eventNofi: boolean;
 }
 
-export interface IUpdateData {
+export interface IRequestUpdateData {
     userId: number;
     name: string | undefined;
-    profile: string | undefined;
+    profile: File | undefined;
     primaryNofi: boolean | undefined;
     dateNofi: boolean | undefined;
     eventNofi: boolean | undefined;

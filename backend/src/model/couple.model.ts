@@ -8,7 +8,7 @@ export interface ICouple {
     cupId: string;
     cupDay: Date;
     title: string;
-    thumbnail: string;
+    thumbnail: string | null;
     createdTime: Date;
     deleted: boolean;
     deletedTime: Date | null;
@@ -20,22 +20,22 @@ export interface IRequestData {
     userId2: number;
     cupDay: Date;
     title: string;
-    thumbnail: File;
+    thumbnail?: File;
 }
 
 interface ICreateData {
     cupId: string;
     cupDay: Date;
     title: string;
-    thumbnail: string;
+    thumbnail: string | null;
 }
 // ------------------------------------------ Interface End ---------------------------------------- //
 
 export class Couple extends Model<ICouple, ICreateData> {
-    declare cupId: string | null;
+    declare cupId: string;
     declare cupDay: Date;
     declare title: string;
-    declare thumbnail: string;
+    declare thumbnail: string | null;
     declare deleted: boolean;
     declare deletedTime: Date | null;
 }
@@ -57,8 +57,7 @@ Couple.init(
             allowNull: false
         },
         thumbnail: {
-            type: DataTypes.STRING(30),
-            allowNull: false
+            type: DataTypes.STRING(30)
         },
         createdTime: {
             field: "created_time",

@@ -1,12 +1,17 @@
 import dayjs from "dayjs";
 import randomString from "randomstring";
+import { getStorage, ref, uploadBytes, deleteObject } from "firebase/storage";
+import * as fs from "fs";
 
-import { User, ICreateData, IUpdateData, IDeleteData } from "../model/user.model";
+import { User, ICreateData, IDeleteData, IRequestUpdateData } from "../model/user.model";
 
+import firebaseApp from "../util/firebase";
 import { createDigest } from "../util/password";
 
 import NotFoundError from "../error/notFound";
 import ForbiddenError from "../error/forbidden";
+
+const storage = getStorage(firebaseApp);
 
 const controller = {
     getUser: async (userId: string): Promise<User> => {
@@ -59,27 +64,65 @@ const controller = {
             eventNofi: data.eventNofi
         });
     },
-    updateUser: async (data: IUpdateData): Promise<void> => {
-        const user: User | null = await User.findOne({
-            where: {
-                userId: data.userId
+    updateUser: async (data: IRequestUpdateData): Promise<void> => {
+        let isUpload = false;
+        let fileName: string | null = "";
+
+        try {
+            const user: User | null = await User.findOne({
+                where: {
+                    userId: data.userId
+                }
+            });
+
+            if (!user) throw new NotFoundError("Not Found User");
+            else if (user.deleted) throw new ForbiddenError("Forbidden Error");
+
+            if (data.profile) {
+                // 이미 profile이 있다면 Firebase에서 삭제
+                if (user.profile) {
+                    const delRef = ref(storage, `profiles/${user.profile}`);
+                    await deleteObject(delRef);
+                }
+
+                const reqFileName = data.profile.originalFilename;
+
+                /**
+                 * Frontend에선 static으로 default.jpg,png,svg 셋 중 하나 갖고있다가
+                 * 사용자가 profile을 내리면 그걸로 넣고 요청
+                 */
+                if (reqFileName === "default.jpg" || reqFileName === "default.png" || reqFileName === "default.svg") {
+                    fileName = null;
+                } else {
+                    fileName = `${dayjs().valueOf()}.${data.userId}.${data.profile.originalFilename!}`;
+                    const storageRef = ref(storage, `profiles/${fileName}`);
+                    const srcToFile = await fs.readFileSync(data.profile.filepath);
+
+                    await uploadBytes(storageRef, srcToFile);
+                    isUpload = true;
+                }
             }
-        });
 
-        if (!user) throw new NotFoundError("Not Found User");
-        else if (user.deleted) throw new ForbiddenError("Forbidden Error");
+            const updateData: any = {
+                userId: data.userId
+            };
 
-        const updateData: any = {
-            userId: data.userId
-        };
+            if (data.name) updateData.name = data.name;
+            if (data.profile) updateData.profile = fileName;
+            if (data.primaryNofi !== undefined) updateData.primaryNofi = data.primaryNofi;
+            if (data.dateNofi !== undefined) updateData.dateNofi = data.dateNofi;
+            if (data.eventNofi !== undefined) updateData.eventNofi = data.eventNofi;
 
-        if (data.name) updateData.name = data.name;
-        if (data.profile) updateData.profile = data.profile;
-        if (data.primaryNofi !== undefined) updateData.primaryNofi = data.primaryNofi;
-        if (data.dateNofi !== undefined) updateData.dateNofi = data.dateNofi;
-        if (data.eventNofi !== undefined) updateData.eventNofi = data.eventNofi;
+            await user.update(updateData);
+        } catch (error) {
+            // Firebase에는 업로드 되었지만 DB 오류가 발생했다면 Firebase Profile 삭제
+            if (data.profile && isUpload) {
+                const delRef = ref(storage, `profiles/${fileName}`);
+                await deleteObject(delRef);
+            }
 
-        await user.update(updateData);
+            throw error;
+        }
     },
     deleteUser: async (data: IDeleteData): Promise<void> => {
         await User.update(

@@ -1,6 +1,6 @@
 import randomString from "randomstring";
 import dayjs from "dayjs";
-import { getStorage, ref, uploadBytes } from "firebase/storage";
+import { getStorage, ref, uploadBytes, deleteObject } from "firebase/storage";
 import * as fs from "fs";
 
 import BadRequestError from "../error/badRequest";
@@ -16,28 +16,28 @@ const storage = getStorage(firebaseApp);
 
 const controller = {
     createCouple: async (data: IRequestData): Promise<void> => {
-        let fileName = "";
-
-        if (data.thumbnail) {
-            fileName = dayjs().valueOf() + "." + data.thumbnail.originalFilename!;
-            const storageRef = ref(storage, `couples/${fileName}`);
-
-            /**
-             * Formidable PersistentFile Type은 File Type이 아니기 때문에
-             * fs를 통해 해당 file path를 가져와 Buffer로 변경
-             */
-            const srcToFile = await fs.readFileSync(data.thumbnail.filepath);
-
-            await uploadBytes(storageRef, srcToFile);
-        } else {
-            fileName = "couples/default.jpg";
-        }
+        let fileName = null;
+        let isUpload = false;
 
         const t = await sequelize.transaction();
 
         try {
             let isNot = true;
             let cupId = "";
+
+            if (data.thumbnail) {
+                fileName = dayjs().valueOf() + "." + data.thumbnail.originalFilename!;
+                const storageRef = ref(storage, `couples/${fileName}`);
+
+                /**
+                 * Formidable PersistentFile Type은 File Type이 아니기 때문에
+                 * fs를 통해 해당 file path를 가져와 Buffer로 변경
+                 */
+                const srcToFile = await fs.readFileSync(data.thumbnail.filepath);
+
+                await uploadBytes(storageRef, srcToFile);
+                isUpload = true;
+            }
 
             // 중복된 Id인지 검사
             while (isNot) {
@@ -93,6 +93,12 @@ const controller = {
             await t.commit();
         } catch (error) {
             await t.rollback();
+
+            // Firebase에는 업로드 되었지만 DB 오류가 발생했다면 Firebase Profile 삭제
+            if (data.thumbnail && isUpload) {
+                const delRef = ref(storage, `couples/${fileName}`);
+                await deleteObject(delRef);
+            }
 
             throw error;
         }

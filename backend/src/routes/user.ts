@@ -1,5 +1,6 @@
 import express, { Router, Request, Response, NextFunction } from "express";
 import joi, { ValidationResult } from "joi";
+import formidable from "formidable";
 
 import { User } from "../model/user.model";
 
@@ -10,6 +11,7 @@ import StatusCode from "../util/statusCode";
 
 import BadRequestError from "../error/badRequest";
 import ForbiddenError from "../error/forbidden";
+import InternalServerError from "../error/internalServer";
 
 const router: Router = express.Router();
 
@@ -32,7 +34,6 @@ const signupSchema: joi.Schema = joi.object({
 const updateSchema: joi.Schema = joi.object({
     userId: joi.number().required(),
     name: joi.string().max(8).trim(),
-    profile: joi.string().trim(),
     primaryNofi: joi.boolean(),
     dateNofi: joi.boolean(),
     eventNofi: joi.boolean()
@@ -72,19 +73,29 @@ router.post("/", async (req: Request, res: Response, next: NextFunction) => {
 
 // Update User Info
 router.patch("/:user_id", async (req: Request, res: Response, next: NextFunction) => {
-    const { value, error }: ValidationResult = validator(req.body, updateSchema);
+    const form = formidable({ multiples: false });
 
-    try {
-        if (req.params.user_id != req.body.userId) throw new ForbiddenError("Forbidden Error");
-        else if (error) throw new BadRequestError("Bad Request Error");
-        else if (value.name && value.name.length <= 1) throw new BadRequestError("Bad Request Error");
+    form.parse(req, async (err, fields, files) => {
+        try {
+            if (err) throw new InternalServerError("Image Server Error.");
 
-        await userController.updateUser(value);
+            req.body = Object.assign({}, req.body, fields);
 
-        return res.status(204).json({});
-    } catch (_error) {
-        next(_error);
-    }
+            const { value, error }: ValidationResult = validator(req.body, updateSchema);
+
+            if (req.params.user_id != req.body.userId) throw new ForbiddenError("Forbidden Error");
+            else if (error) throw new BadRequestError("Bad Request Error");
+            else if (value.name && value.name.length <= 1) throw new BadRequestError("Bad Request Error");
+
+            if (Object.keys(files).length === 1) req.body.profile = files.file;
+
+            await userController.updateUser(req.body);
+
+            return res.status(204).json({});
+        } catch (_error) {
+            next(_error);
+        }
+    });
 });
 
 // Delete User Info
