@@ -1,4 +1,7 @@
 import randomString from "randomstring";
+import dayjs from "dayjs";
+import { getStorage, ref, uploadBytes } from "firebase/storage";
+import * as fs from "fs";
 
 import BadRequestError from "../error/badRequest";
 import ConflictError from "../error/conflict";
@@ -7,8 +10,29 @@ import sequelize from "../model";
 import { Couple, IRequestData } from "../model/couple.model";
 import { User } from "../model/user.model";
 
+import firebaseApp from "../util/firebase";
+
+const storage = getStorage(firebaseApp);
+
 const controller = {
     createCouple: async (data: IRequestData): Promise<void> => {
+        let fileName = "";
+
+        if (data.thumbnail) {
+            fileName = dayjs().valueOf() + "." + data.thumbnail.originalFilename!;
+            const storageRef = ref(storage, `couples/${fileName}`);
+
+            /**
+             * Formidable PersistentFile Type은 File Type이 아니기 때문에
+             * fs를 통해 해당 file path를 가져와 Buffer로 변경
+             */
+            const srcToFile = await fs.readFileSync(data.thumbnail.filepath);
+
+            await uploadBytes(storageRef, srcToFile);
+        } else {
+            fileName = "couples/default.jpg";
+        }
+
         const t = await sequelize.transaction();
 
         try {
@@ -34,7 +58,7 @@ const controller = {
                     cupId: cupId,
                     cupDay: data.cupDay,
                     title: data.title,
-                    thumbnail: data.thumbnail
+                    thumbnail: fileName
                 },
                 { transaction: t }
             );
@@ -69,6 +93,7 @@ const controller = {
             await t.commit();
         } catch (error) {
             await t.rollback();
+
             throw error;
         }
     }

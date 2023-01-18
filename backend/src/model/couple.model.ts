@@ -1,4 +1,5 @@
 import { DataTypes, Model, literal } from "sequelize";
+import { File } from "formidable";
 
 import sequelize from ".";
 
@@ -19,7 +20,7 @@ export interface IRequestData {
     userId2: number;
     cupDay: Date;
     title: string;
-    thumbnail: string;
+    thumbnail: File;
 }
 
 interface ICreateData {
