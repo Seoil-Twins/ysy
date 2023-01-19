@@ -1,17 +1,15 @@
 import dayjs from "dayjs";
 import randomString from "randomstring";
-import { getStorage, ref, uploadBytes, deleteObject } from "firebase/storage";
-import * as fs from "fs";
 
 import { User, ICreateData, IDeleteData, IRequestUpdateData } from "../model/user.model";
 
-import firebaseApp from "../util/firebase";
+import { deleteFile, uploadFile } from "../util/firebase";
 import { createDigest } from "../util/password";
 
 import NotFoundError from "../error/notFound";
 import ForbiddenError from "../error/forbidden";
 
-const storage = getStorage(firebaseApp);
+const folderName = "profiles";
 
 const controller = {
     getUser: async (userId: string): Promise<User> => {
@@ -80,10 +78,7 @@ const controller = {
 
             if (data.profile) {
                 // 이미 profile이 있다면 Firebase에서 삭제
-                if (user.profile) {
-                    const delRef = ref(storage, `profiles/${user.profile}`);
-                    await deleteObject(delRef);
-                }
+                if (user.profile) await deleteFile(user.profile, folderName);
 
                 const reqFileName = data.profile.originalFilename;
 
@@ -94,11 +89,9 @@ const controller = {
                 if (reqFileName === "default.jpg" || reqFileName === "default.png" || reqFileName === "default.svg") {
                     fileName = null;
                 } else {
-                    fileName = `${dayjs().valueOf()}.${data.userId}.${data.profile.originalFilename!}`;
-                    const storageRef = ref(storage, `profiles/${fileName}`);
-                    const srcToFile = await fs.readFileSync(data.profile.filepath);
+                    fileName = `${data.userId}.${dayjs().valueOf()}.${data.profile.originalFilename!}`;
 
-                    await uploadBytes(storageRef, srcToFile);
+                    await uploadFile(fileName, folderName, data.profile.filepath);
                     isUpload = true;
                 }
             }
@@ -116,10 +109,7 @@ const controller = {
             await user.update(updateData);
         } catch (error) {
             // Firebase에는 업로드 되었지만 DB 오류가 발생했다면 Firebase Profile 삭제
-            if (data.profile && isUpload) {
-                const delRef = ref(storage, `profiles/${fileName}`);
-                await deleteObject(delRef);
-            }
+            if (data.profile && isUpload) await deleteFile(fileName!, folderName);
 
             throw error;
         }

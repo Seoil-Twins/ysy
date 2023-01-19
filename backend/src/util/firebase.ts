@@ -1,5 +1,7 @@
 import dotenv from "dotenv";
+import * as fs from "fs";
 import { initializeApp } from "firebase/app";
+import { deleteObject, getStorage, ref, uploadBytes } from "firebase/storage";
 
 dotenv.config();
 
@@ -20,5 +22,34 @@ const firebaseConfig = {
 
 // Initialize Firebase
 const firebaseApp = initializeApp(firebaseConfig);
+const storage = getStorage(firebaseApp);
+
+/**
+ * Firebase Storage를 통해 이미지를 업로드 합니다.
+ * @param fileName 이미지 파일 이름
+ * @param folderName Firebase Storage 폴더 이름
+ * @param filePath 이미지가 임시 저장된 경로
+ */
+export const uploadFile = async (fileName: string, folderName: string, filePath: string): Promise<void> => {
+    const storageRef = ref(storage, `${folderName}/${fileName}`);
+
+    /**
+     * Formidable PersistentFile Type은 File Type이 아니기 때문에
+     * fs를 통해 해당 file path를 가져와 Buffer로 변경
+     */
+    const srcToFile = await fs.readFileSync(filePath);
+
+    await uploadBytes(storageRef, srcToFile);
+};
+
+/**
+ * Firebase Storage를 통해 이미지를 삭제합니다.
+ * @param fileName 이미지 파일 이름
+ * @param folderName Firebase Storage 폴더 이름
+ */
+export const deleteFile = async (fileName: string, folderName: string): Promise<void> => {
+    const delRef = ref(storage, `${folderName}/${fileName}`);
+    await deleteObject(delRef);
+};
 
 export default firebaseApp;
