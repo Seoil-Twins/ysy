@@ -19,6 +19,9 @@ const checkToken = (req: Request, res: Response, next: NextFunction) => {
         if (typeof user === "string") throw new UnauthorizedError("Invalid Token");
 
         req.body.userId = user.userId;
+        req.body.cupId = user.cupId;
+
+        console.log(req.body);
 
         return next();
     } catch (error) {

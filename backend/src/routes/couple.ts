@@ -11,6 +11,7 @@ import BadRequestError from "../error/badRequest";
 
 import { ICoupleResponse } from "../model/couple.model";
 import InternalServerError from "../error/internalServer";
+import ForbiddenError from "../error/forbidden";
 
 const router: Router = express.Router();
 
@@ -36,9 +37,12 @@ const updateSchema: joi.Schema = joi.object({
 router.get("/", async (req: Request, res: Response, next: NextFunction) => {
     try {
         const userId = Number(req.body.userId);
+        const cupId = req.body.cupId;
 
         if (isNaN(userId)) throw new BadRequestError("Invalid User Id");
-        const response: ICoupleResponse = await coupleController.getCouple(userId);
+        else if (!cupId) throw new ForbiddenError("Invalid Couple Id");
+
+        const response: ICoupleResponse = await coupleController.getCouple(userId, cupId);
 
         return res.status(StatusCode.OK).json(response);
     } catch (_error) {
@@ -73,7 +77,6 @@ router.post("/", async (req: Request, res: Response, next: NextFunction) => {
 // Update Couple Info
 router.patch("/:cup_id", async (req: Request, res: Response, next: NextFunction) => {
     const form = formidable({ multiples: false });
-    req.body.cupId = req.params.cup_id;
 
     form.parse(req, async (err, fields, files) => {
         try {
@@ -83,9 +86,9 @@ router.patch("/:cup_id", async (req: Request, res: Response, next: NextFunction)
 
             const { value, error }: ValidationResult = validator(req.body, updateSchema);
 
-            console.log(error);
-
             if (error) throw new BadRequestError("Bad Request Error");
+            else if (req.body.cupId !== req.params.cup_id) throw new ForbiddenError("Not Same Couple Id");
+
             if (Object.keys(files).length === 1) req.body.thumbnail = files.file;
 
             await coupleController.updateCouple(req.body);

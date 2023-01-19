@@ -38,11 +38,12 @@ const controller = {
         // AccessToken Expired
         if (accessTokenIsBefore && !refreshTokenIsBefore) {
             const userId = String(accessTokenPayload.userId);
+            const cupId = String(accessTokenPayload.cupId);
             const refreshTokenWithRedis: string | null = await get(userId);
             refreshToken = refreshToken.replace("Bearer ", "");
 
             if (refreshToken === refreshTokenWithRedis) {
-                const newAccessToken = jwt.createAccessToken(Number(userId));
+                const newAccessToken = jwt.createAccessToken(Number(userId), cupId);
                 const newRefreshToken = jwt.createRefreshToken();
                 const expiresIn = jwt.getExpired();
                 const result: tokenResponse = {
@@ -66,22 +67,22 @@ const controller = {
         }
     },
     login: async (data: ILogin) => {
-        const users: User | null = await User.findOne({
+        const user: User | null = await User.findOne({
             where: {
                 email: data.email
             }
         });
 
-        if (!users) throw new UnauthorizedError("Invalid Email");
+        if (!user) throw new UnauthorizedError("Invalid Email");
 
-        const isCheck: boolean = await checkPassword(data.password, users.password!);
+        const isCheck: boolean = await checkPassword(data.password, user.password!);
         if (!isCheck) throw new UnauthorizedError("Invalid Password");
 
-        const accessToken: string = jwt.createAccessToken(users.userId);
+        const accessToken: string = jwt.createAccessToken(user.userId, user.cupId);
         const refreshToken: string = jwt.createRefreshToken();
         const expiresIn = jwt.getExpired();
         // redis database에 refreshToken 저장
-        const isOk = await set(String(users.userId), refreshToken, expiresIn);
+        const isOk = await set(String(user.userId), refreshToken, expiresIn);
         const result: tokenResponse = {
             accessToken: accessToken
         };

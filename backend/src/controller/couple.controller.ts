@@ -18,27 +18,29 @@ import InternalServerError from "../error/internalServer";
 const folderName = "couples";
 
 const controller = {
-    getCouple: async (userId: number) => {
+    getCouple: async (userId: number, cupId: string): Promise<ICoupleResponse> => {
+        const excludeColumns = ["password", "primaryNofi", "dateNofi", "eventNofi", "createdTime", "deleted", "deletedTime"];
+
+        const couple = await Couple.findOne({
+            where: { cupId: cupId }
+        });
+
         const user1 = await User.findOne({
-            attributes: { exclude: ["password", "primaryNofi", "dateNofi", "eventNofi", "createdTime", "deleted", "deletedTime"] },
+            attributes: { exclude: excludeColumns },
             where: { userId: userId }
         });
 
-        if (!user1 || !user1.cupId) throw new NotFoundError("Not Found Couple");
-
-        const couple = await Couple.findOne({
-            where: { cupId: user1.cupId }
-        });
-
         const user2 = await User.findOne({
-            attributes: { exclude: ["password", "primaryNofi", "dateNofi", "eventNofi", "createdTime", "deleted", "deletedTime"] },
+            attributes: { exclude: excludeColumns },
             where: {
-                cupId: couple!.cupId,
+                cupId: cupId,
                 [Op.not]: {
-                    userId: userId
+                    userId: user1!.userId
                 }
             }
         });
+
+        if (!user1 || !user2 || !couple) throw new NotFoundError("Not Found Couple");
 
         const response: ICoupleResponse = {
             user1: user1,
@@ -126,7 +128,7 @@ const controller = {
             throw error;
         }
     },
-    updateCouple: async (data: IRequestUpdateData) => {
+    updateCouple: async (data: IRequestUpdateData): Promise<void> => {
         let isUpload = false;
         let fileName: string | null = null;
         const user = await User.findOne({
@@ -183,7 +185,8 @@ const controller = {
 
             throw error;
         }
-    }
+    },
+    deleteCouple: async (userId: number, cupId: string): Promise<void> => {}
 };
 
 export default controller;
