@@ -8,11 +8,12 @@ import { createDigest } from "../util/password";
 
 import NotFoundError from "../error/notFound";
 import ForbiddenError from "../error/forbidden";
+import UnauthorizedError from "../error/unauthorized";
 
 const folderName = "profiles";
 
 const controller = {
-    getUser: async (userId: string): Promise<User> => {
+    getUser: async (userId: number): Promise<User> => {
         const user: User | null = await User.findOne({
             attributes: { exclude: ["password"] },
             where: {
@@ -20,7 +21,7 @@ const controller = {
             }
         });
 
-        if (!user) throw new NotFoundError("Not Found User");
+        if (!user) throw new UnauthorizedError("Invalid Token (User not found using token)");
 
         if (user.cupId !== null) {
             // Couple Select
@@ -44,6 +45,7 @@ const controller = {
                     code: code
                 }
             });
+
             if (!user) isNot = false;
         }
 
@@ -66,20 +68,28 @@ const controller = {
         let isUpload = false;
         let fileName: string | null = "";
 
+        const user: User | null = await User.findOne({
+            where: {
+                userId: data.userId
+            }
+        });
+
+        if (!user) throw new NotFoundError("Not Found User");
+        else if (user.deleted) throw new ForbiddenError("Forbidden Error");
+
+        const updateData: any = {
+            userId: data.userId
+        };
+
+        if (data.name) updateData.name = data.name;
+        if (data.primaryNofi !== undefined) updateData.primaryNofi = data.primaryNofi;
+        if (data.dateNofi !== undefined) updateData.dateNofi = data.dateNofi;
+        if (data.eventNofi !== undefined) updateData.eventNofi = data.eventNofi;
+
+        let prevProfile: string | null = user.profile;
+
         try {
-            const user: User | null = await User.findOne({
-                where: {
-                    userId: data.userId
-                }
-            });
-
-            if (!user) throw new NotFoundError("Not Found User");
-            else if (user.deleted) throw new ForbiddenError("Forbidden Error");
-
             if (data.profile) {
-                // 이미 profile이 있다면 Firebase에서 삭제
-                if (user.profile) await deleteFile(user.profile, folderName);
-
                 const reqFileName = data.profile.originalFilename;
 
                 /**
@@ -94,19 +104,14 @@ const controller = {
                     await uploadFile(fileName, folderName, data.profile.filepath);
                     isUpload = true;
                 }
+
+                updateData.profile = fileName;
             }
 
-            const updateData: any = {
-                userId: data.userId
-            };
-
-            if (data.name) updateData.name = data.name;
-            if (data.profile) updateData.profile = fileName;
-            if (data.primaryNofi !== undefined) updateData.primaryNofi = data.primaryNofi;
-            if (data.dateNofi !== undefined) updateData.dateNofi = data.dateNofi;
-            if (data.eventNofi !== undefined) updateData.eventNofi = data.eventNofi;
-
             await user.update(updateData);
+
+            // 이미 profile이 있다면 Firebase에서 삭제
+            if (prevProfile) await deleteFile(prevProfile, folderName);
         } catch (error) {
             // Firebase에는 업로드 되었지만 DB 오류가 발생했다면 Firebase Profile 삭제
             if (data.profile && isUpload) await deleteFile(fileName!, folderName);

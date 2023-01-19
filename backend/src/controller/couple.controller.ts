@@ -1,19 +1,54 @@
 import randomString from "randomstring";
 import dayjs from "dayjs";
+import { Op } from "sequelize";
 
 import BadRequestError from "../error/badRequest";
 import ConflictError from "../error/conflict";
 
 import sequelize from "../model";
-import { Couple, IRequestData } from "../model/couple.model";
 import { User } from "../model/user.model";
+import { Couple, IRequestCreateData, ICoupleResponse, IRequestUpdateData } from "../model/couple.model";
 
 import { deleteFile, uploadFile } from "../util/firebase";
+import NotFoundError from "../error/notFound";
+import UnauthorizedError from "../error/unauthorized";
+import ForbiddenError from "../error/forbidden";
+import InternalServerError from "../error/internalServer";
 
 const folderName = "couples";
 
 const controller = {
-    createCouple: async (data: IRequestData): Promise<void> => {
+    getCouple: async (userId: number) => {
+        const user1 = await User.findOne({
+            attributes: { exclude: ["password", "primaryNofi", "dateNofi", "eventNofi", "createdTime", "deleted", "deletedTime"] },
+            where: { userId: userId }
+        });
+
+        if (!user1 || !user1.cupId) throw new NotFoundError("Not Found Couple");
+
+        const couple = await Couple.findOne({
+            where: { cupId: user1.cupId }
+        });
+
+        const user2 = await User.findOne({
+            attributes: { exclude: ["password", "primaryNofi", "dateNofi", "eventNofi", "createdTime", "deleted", "deletedTime"] },
+            where: {
+                cupId: couple!.cupId,
+                [Op.not]: {
+                    userId: userId
+                }
+            }
+        });
+
+        const response: ICoupleResponse = {
+            user1: user1,
+            user2: user2!,
+            couple: couple!
+        };
+
+        return response;
+    },
+    createCouple: async (data: IRequestCreateData): Promise<void> => {
         let fileName = null;
         let isUpload = false;
 
@@ -85,6 +120,64 @@ const controller = {
         } catch (error) {
             await t.rollback();
 
+            // Firebase에는 업로드 되었지만 DB 오류가 발생했다면 Firebase Profile 삭제
+            if (data.thumbnail && isUpload) await deleteFile(fileName!, folderName);
+
+            throw error;
+        }
+    },
+    updateCouple: async (data: IRequestUpdateData) => {
+        let isUpload = false;
+        let fileName: string | null = null;
+        const user = await User.findOne({
+            attributes: ["cupId"],
+            where: { userId: data.userId }
+        });
+
+        if (!user) throw new UnauthorizedError("Invalid Token (User not found using token)");
+        else if (user.cupId !== data.cupId) throw new ForbiddenError("Forbidden Error");
+
+        const couple = await Couple.findOne({
+            where: { cupId: data.cupId }
+        });
+
+        // User Table에는 있지만 Couple Table에 없다면
+        if (!couple) {
+            await user.update({
+                cupId: null
+            });
+
+            throw new InternalServerError("DB Error");
+        }
+
+        let updateData: any = { cupId: data.cupId };
+
+        if (data.title) updateData.title = data.title;
+        if (data.cupDay) updateData.cupDay = data.cupDay;
+
+        let prevThumbnail: string | null = couple.thumbnail;
+
+        try {
+            if (data.thumbnail) {
+                const reqFileName = data.thumbnail.originalFilename;
+
+                if (reqFileName === "default.jpg" || reqFileName === "default.png" || reqFileName === "default.svg") {
+                    fileName = null;
+                } else {
+                    fileName = `${data.cupId}.${dayjs().valueOf()}.${data.thumbnail.originalFilename!}`;
+
+                    await uploadFile(fileName, folderName, data.thumbnail.filepath);
+                    isUpload = true;
+                }
+
+                updateData.thumbnail = fileName;
+            }
+
+            await couple.update(updateData);
+
+            // Upload, DB Update를 하고나서 기존 이미지 지우기
+            if (prevThumbnail) await deleteFile(prevThumbnail, folderName);
+        } catch (error) {
             // Firebase에는 업로드 되었지만 DB 오류가 발생했다면 Firebase Profile 삭제
             if (data.thumbnail && isUpload) await deleteFile(fileName!, folderName);
 

@@ -43,12 +43,26 @@ const deleteSchema: joi.Schema = joi.object({
     userId: joi.number().required()
 });
 
-// Get User Info
-router.get("/:user_id", async (req: Request, res: Response, next: NextFunction) => {
-    const userId: string = req.params.user_id;
+// Get My Info
+router.get("/me", async (req: Request, res: Response, next: NextFunction) => {
+    const userId: number = Number(req.body.userId);
 
     try {
-        if (isNaN(Number(userId))) throw new BadRequestError("Invalid User Id");
+        if (isNaN(userId)) throw new BadRequestError("Invalid User Id");
+        const user: User = await userController.getUser(userId);
+
+        return res.status(StatusCode.OK).json(user);
+    } catch (_error) {
+        next(_error);
+    }
+});
+
+// Get User Info
+router.get("/:user_id", async (req: Request, res: Response, next: NextFunction) => {
+    const userId: number = Number(req.params.user_id);
+
+    try {
+        if (isNaN(userId)) throw new BadRequestError("Invalid User Id");
         const user: User = await userController.getUser(userId);
 
         return res.status(StatusCode.OK).json(user);
@@ -77,7 +91,7 @@ router.patch("/:user_id", async (req: Request, res: Response, next: NextFunction
 
     form.parse(req, async (err, fields, files) => {
         try {
-            if (err) throw new InternalServerError("Image Server Error.");
+            if (err) throw new InternalServerError("Image Server Error");
 
             req.body = Object.assign({}, req.body, fields);
 

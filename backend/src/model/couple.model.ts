@@ -2,6 +2,7 @@ import { DataTypes, Model, literal } from "sequelize";
 import { File } from "formidable";
 
 import sequelize from ".";
+import { User } from "./user.model";
 
 // -------------------------------------------- Interface ------------------------------------------ //
 export interface ICouple {
@@ -14,13 +15,27 @@ export interface ICouple {
     deletedTime: Date | null;
 }
 
-export interface IRequestData {
+export interface IRequestCreateData {
     // Auth Middleware User Id
     userId: number;
     userId2: number;
     cupDay: Date;
     title: string;
     thumbnail?: File;
+}
+
+export interface ICoupleResponse {
+    user1: User;
+    user2: User;
+    couple: Couple;
+}
+
+export interface IRequestUpdateData {
+    userId: number;
+    cupId: string;
+    title: string | undefined;
+    thumbnail: File | undefined;
+    cupDay: Date | undefined;
 }
 
 interface ICreateData {
@@ -57,7 +72,7 @@ Couple.init(
             allowNull: false
         },
         thumbnail: {
-            type: DataTypes.STRING(30)
+            type: DataTypes.STRING(60)
         },
         createdTime: {
             field: "created_time",
