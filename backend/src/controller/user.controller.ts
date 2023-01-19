@@ -1,7 +1,7 @@
 import dayjs from "dayjs";
 import randomString from "randomstring";
 
-import { User, ICreateData, IDeleteData, IRequestUpdateData } from "../model/user.model";
+import { User, ICreateData, IRequestUpdateData } from "../model/user.model";
 
 import { deleteFile, uploadFile } from "../util/firebase";
 import { createDigest } from "../util/password";
@@ -119,18 +119,21 @@ const controller = {
             throw error;
         }
     },
-    deleteUser: async (data: IDeleteData): Promise<void> => {
-        await User.update(
-            {
-                deleted: true,
-                deletedTime: new Date(dayjs().valueOf())
-            },
-            {
-                where: {
-                    userId: data.userId
-                }
-            }
-        );
+    /**
+     * 사용자 정보 삭제이며, Couple이 있는 경우 Frontend에서 연인 끊기 후 삭제를 요청.
+     * @param userId User Id
+     * @param cupId Couple Id
+     */
+    deleteUser: async (userId: number): Promise<void> => {
+        const user: User | null = await User.findOne({ where: { userId: userId } });
+
+        if (!user) throw new NotFoundError("Not Found User");
+        if (user.profile) await deleteFile(user.profile, folderName);
+
+        await user.update({
+            deleted: true,
+            deletedTime: new Date(dayjs().valueOf())
+        });
     }
 };
 

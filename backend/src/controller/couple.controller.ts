@@ -14,6 +14,8 @@ import NotFoundError from "../error/notFound";
 import UnauthorizedError from "../error/unauthorized";
 import ForbiddenError from "../error/forbidden";
 import InternalServerError from "../error/internalServer";
+import { ITokenResponse } from "../model/auth.model";
+import jwt from "../util/jwt";
 
 const folderName = "couples";
 
@@ -50,7 +52,7 @@ const controller = {
 
         return response;
     },
-    createCouple: async (data: IRequestCreateData): Promise<void> => {
+    createCouple: async (data: IRequestCreateData): Promise<ITokenResponse> => {
         let fileName = null;
         let isUpload = false;
 
@@ -59,13 +61,6 @@ const controller = {
         try {
             let isNot = true;
             let cupId = "";
-
-            if (data.thumbnail) {
-                fileName = `${dayjs().valueOf()}.${data.thumbnail.originalFilename!}`;
-
-                await uploadFile(fileName, folderName, data.thumbnail.filepath);
-                isUpload = true;
-            }
 
             // 중복된 Id인지 검사
             while (isNot) {
@@ -79,6 +74,13 @@ const controller = {
                 });
 
                 if (!user) isNot = false;
+            }
+
+            if (data.thumbnail) {
+                fileName = `${cupId}.${dayjs().valueOf()}.${data.thumbnail.originalFilename!}`;
+
+                await uploadFile(fileName, folderName, data.thumbnail.filepath);
+                isUpload = true;
             }
 
             await Couple.create(
@@ -119,6 +121,11 @@ const controller = {
             );
 
             await t.commit();
+
+            // token 재발급
+            const result: ITokenResponse = await jwt.createToken(data.userId, cupId);
+
+            return result;
         } catch (error) {
             await t.rollback();
 
@@ -150,6 +157,8 @@ const controller = {
             });
 
             throw new InternalServerError("DB Error");
+        } else if (couple.deleted) {
+            throw new ForbiddenError("Forbidden Error");
         }
 
         let updateData: any = { cupId: data.cupId };
@@ -186,7 +195,54 @@ const controller = {
             throw error;
         }
     },
-    deleteCouple: async (userId: number, cupId: string): Promise<void> => {}
+    deleteCouple: async (userId: number, cupId: string): Promise<ITokenResponse> => {
+        const couple = await Couple.findOne({
+            where: { cupId: cupId }
+        });
+
+        const user1 = await User.findOne({
+            where: { userId: userId }
+        });
+
+        const user2 = await User.findOne({
+            where: {
+                cupId: cupId,
+                [Op.not]: {
+                    userId: user1!.userId
+                }
+            }
+        });
+
+        if (!user1 || !user2 || !couple) throw new NotFoundError("Not Found");
+
+        const t = await sequelize.transaction();
+
+        try {
+            const currentTime = new Date(dayjs().valueOf());
+
+            await user1.update({ cupId: null }, { transaction: t });
+            await user2.update({ cupId: null }, { transaction: t });
+            await couple.update(
+                {
+                    deleted: true,
+                    deletedTime: currentTime
+                },
+                { transaction: t }
+            );
+
+            const result: ITokenResponse = await jwt.createToken(userId, null);
+
+            t.commit();
+
+            if (couple.thumbnail) await deleteFile(couple.thumbnail, folderName);
+
+            return result;
+        } catch (error) {
+            t.rollback();
+
+            throw error;
+        }
+    }
 };
 
 export default controller;

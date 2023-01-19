@@ -3,7 +3,7 @@ export interface ILogin {
     password: string;
 }
 
-export interface tokenResponse {
+export interface ITokenResponse {
     accessToken: string;
     // accessTokenExpiredAt: number; // unix timestamp
     refreshToken?: string;

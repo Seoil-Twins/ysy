@@ -12,6 +12,7 @@ import BadRequestError from "../error/badRequest";
 import { ICoupleResponse } from "../model/couple.model";
 import InternalServerError from "../error/internalServer";
 import ForbiddenError from "../error/forbidden";
+import { ITokenResponse } from "../model/auth.model";
 
 const router: Router = express.Router();
 
@@ -58,6 +59,7 @@ router.post("/", async (req: Request, res: Response, next: NextFunction) => {
         try {
             if (err) throw new err();
 
+            delete req.body.cupId;
             req.body = Object.assign({}, req.body, fields);
 
             const { value, error }: ValidationResult = validator(req.body, signupSchema);
@@ -65,9 +67,9 @@ router.post("/", async (req: Request, res: Response, next: NextFunction) => {
             if (error) throw new BadRequestError("Bad Request Error");
             if (Object.keys(files).length === 1) req.body.thumbnail = files.file;
 
-            await coupleController.createCouple(req.body);
+            const result: ITokenResponse = await coupleController.createCouple(req.body);
 
-            return res.status(StatusCode.CREATED).json({});
+            return res.status(StatusCode.CREATED).json(result);
         } catch (_error) {
             next(_error);
         }
@@ -101,6 +103,21 @@ router.patch("/:cup_id", async (req: Request, res: Response, next: NextFunction)
 });
 
 // Delete Couple
-router.delete("/", async (req: Request, res: Response, next: NextFunction) => {});
+router.delete("/:cup_id", async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const userId = Number(req.body.userId);
+        const cupId = req.body.cupId;
+
+        if (isNaN(userId)) throw new BadRequestError("Invalid User Id");
+        else if (!cupId) throw new ForbiddenError("Invalid Couple Id");
+        else if (req.body.cupId !== req.params.cup_id) throw new ForbiddenError("Not Same Couple Id");
+
+        const response: ITokenResponse = await coupleController.deleteCouple(userId, cupId);
+
+        return res.status(StatusCode.OK).json(response);
+    } catch (_error) {
+        next(_error);
+    }
+});
 
 export default router;

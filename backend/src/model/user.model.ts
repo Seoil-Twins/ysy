@@ -42,10 +42,6 @@ export interface IRequestUpdateData {
     dateNofi: boolean | undefined;
     eventNofi: boolean | undefined;
 }
-
-export interface IDeleteData {
-    userId: number;
-}
 // ------------------------------------------ Interface End ---------------------------------------- //
 
 export class User extends Model<IUser, ICreateData> {

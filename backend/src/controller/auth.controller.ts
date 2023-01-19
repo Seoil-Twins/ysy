@@ -4,7 +4,7 @@ import { JwtPayload } from "jsonwebtoken";
 import isSameOrBefore from "dayjs/plugin/isSameOrBefore";
 
 import { User } from "../model/user.model";
-import { ILogin, tokenResponse } from "../model/auth.model";
+import { ILogin, ITokenResponse } from "../model/auth.model";
 
 import { checkPassword } from "../util/password";
 import { set, get, del } from "../util/redis";
@@ -43,17 +43,7 @@ const controller = {
             refreshToken = refreshToken.replace("Bearer ", "");
 
             if (refreshToken === refreshTokenWithRedis) {
-                const newAccessToken = jwt.createAccessToken(Number(userId), cupId);
-                const newRefreshToken = jwt.createRefreshToken();
-                const expiresIn = jwt.getExpired();
-                const result: tokenResponse = {
-                    accessToken: newAccessToken
-                };
-
-                const isOk = await set(userId, newRefreshToken, expiresIn);
-
-                if (isOk == "OK") result.refreshToken = newRefreshToken;
-                else result.refreshToken = "";
+                const result: ITokenResponse = await jwt.createToken(Number(userId), cupId);
 
                 return result;
             } else {
@@ -78,17 +68,7 @@ const controller = {
         const isCheck: boolean = await checkPassword(data.password, user.password!);
         if (!isCheck) throw new UnauthorizedError("Invalid Password");
 
-        const accessToken: string = jwt.createAccessToken(user.userId, user.cupId);
-        const refreshToken: string = jwt.createRefreshToken();
-        const expiresIn = jwt.getExpired();
-        // redis database에 refreshToken 저장
-        const isOk = await set(String(user.userId), refreshToken, expiresIn);
-        const result: tokenResponse = {
-            accessToken: accessToken
-        };
-
-        if (isOk == "OK") result.refreshToken = refreshToken;
-        else result.refreshToken = "";
+        const result: ITokenResponse = await jwt.createToken(user.userId, user.cupId);
 
         return result;
     }
