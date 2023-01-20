@@ -59,7 +59,6 @@ router.post("/", async (req: Request, res: Response, next: NextFunction) => {
         try {
             if (err) throw new err();
 
-            delete req.body.cupId;
             req.body = Object.assign({}, req.body, fields);
 
             const { value, error }: ValidationResult = validator(req.body, signupSchema);
@@ -89,6 +88,7 @@ router.patch("/:cup_id", async (req: Request, res: Response, next: NextFunction)
             const { value, error }: ValidationResult = validator(req.body, updateSchema);
 
             if (error) throw new BadRequestError("Bad Request Error");
+            else if (!req.body.file && !req.body.title && !req.body.cupDay) throw new BadRequestError("Bad Request Error");
             else if (req.body.cupId !== req.params.cup_id) throw new ForbiddenError("Not Same Couple Id");
 
             if (Object.keys(files).length === 1) req.body.thumbnail = files.file;

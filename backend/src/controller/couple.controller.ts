@@ -187,7 +187,7 @@ const controller = {
             await couple.update(updateData);
 
             // Upload, DB Update를 하고나서 기존 이미지 지우기
-            if (prevThumbnail) await deleteFile(prevThumbnail, folderName);
+            if (prevThumbnail && data.thumbnail) await deleteFile(prevThumbnail, folderName);
         } catch (error) {
             // Firebase에는 업로드 되었지만 DB 오류가 발생했다면 Firebase Profile 삭제
             if (data.thumbnail && isUpload) await deleteFile(fileName!, folderName);

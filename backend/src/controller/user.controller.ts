@@ -111,7 +111,7 @@ const controller = {
             await user.update(updateData);
 
             // 이미 profile이 있다면 Firebase에서 삭제
-            if (prevProfile) await deleteFile(prevProfile, folderName);
+            if (prevProfile && data.profile) await deleteFile(prevProfile, folderName);
         } catch (error) {
             // Firebase에는 업로드 되었지만 DB 오류가 발생했다면 Firebase Profile 삭제
             if (data.profile && isUpload) await deleteFile(fileName!, folderName);
@@ -128,12 +128,13 @@ const controller = {
         const user: User | null = await User.findOne({ where: { userId: userId } });
 
         if (!user) throw new NotFoundError("Not Found User");
-        if (user.profile) await deleteFile(user.profile, folderName);
 
         await user.update({
             deleted: true,
             deletedTime: new Date(dayjs().valueOf())
         });
+
+        if (user.profile) await deleteFile(user.profile, folderName);
     }
 };
 

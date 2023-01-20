@@ -87,7 +87,6 @@ router.post("/", async (req: Request, res: Response, next: NextFunction) => {
 
 // Update User Info
 router.patch("/:user_id", async (req: Request, res: Response, next: NextFunction) => {
-    delete req.body.cupId;
     const form = formidable({ multiples: false });
 
     form.parse(req, async (err, fields, files) => {
@@ -100,6 +99,8 @@ router.patch("/:user_id", async (req: Request, res: Response, next: NextFunction
 
             if (req.params.user_id != req.body.userId) throw new ForbiddenError("Forbidden Error");
             else if (error) throw new BadRequestError("Bad Request Error");
+            else if (!value.name && value.dateNofi === undefined && !value.primaryNofi === undefined && !value.file)
+                throw new BadRequestError("Bad Request Error");
             else if (value.name && value.name.length <= 1) throw new BadRequestError("Bad Request Error");
 
             if (Object.keys(files).length === 1) req.body.profile = files.file;
@@ -115,13 +116,11 @@ router.patch("/:user_id", async (req: Request, res: Response, next: NextFunction
 
 // Delete User Info
 router.delete("/:user_id", async (req: Request, res: Response, next: NextFunction) => {
-    const cupId = req.body.cupId;
-    delete req.body.cupId;
     const { value, error }: ValidationResult = validator(req.body, deleteSchema);
 
     try {
         // Couple 정보를 삭제 후 요청
-        if (cupId) throw new BadRequestError("Bad Request Error");
+        if (req.body.cupId) throw new BadRequestError("Bad Request Error");
         else if (req.params.user_id != req.body.userId) throw new ForbiddenError("Forbidden Error");
         else if (error) throw new BadRequestError("Bad Request Error");
 
