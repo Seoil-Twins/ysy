@@ -2,70 +2,63 @@ import { DataTypes, Model, literal } from "sequelize";
 import { File } from "formidable";
 
 import sequelize from ".";
-import { User } from "./user.model";
+import { Couple } from "./couple.model";
 
 // -------------------------------------------- Interface ------------------------------------------ //
-export interface ICouple {
+export interface IAlbum {
+    albumId: number;
     cupId: string;
-    cupDay: Date;
     title: string;
     thumbnail: string | null;
     createdTime: Date;
-    deleted: boolean;
-    deletedTime: Date | null;
-}
-
-export interface ICoupleResponse {
-    user1: User;
-    user2: User;
-    couple: Couple;
 }
 
 export interface IRequestCreate {
-    // Auth Middleware User Id
-    userId: number;
-    userId2: number;
-    cupDay: Date;
+    cupId: string;
     title: string;
-    thumbnail?: File;
 }
 
-export interface IRequestUpdate {
-    userId: number;
+export interface IRequestUpadte {
     cupId: string;
     title: string | undefined;
     thumbnail: File | undefined;
-    cupDay: Date | undefined;
 }
 
 interface ICreate {
     cupId: string;
-    cupDay: Date;
     title: string;
-    thumbnail: string | null;
 }
 // ------------------------------------------ Interface End ---------------------------------------- //
 
-export class Couple extends Model<ICouple, ICreate> {
+export class Album extends Model<IAlbum, ICreate> {
+    declare albumId: number;
     declare cupId: string;
-    declare cupDay: Date;
     declare title: string;
     declare thumbnail: string | null;
-    declare deleted: boolean;
-    declare deletedTime: Date | null;
 }
 
-Couple.init(
+// N:1 관계
+// Album.belongsTo(Couple, {
+//     foreignKey: "cupId",
+//     onDelete: "SET NULL"
+// });
+
+Album.init(
     {
+        albumId: {
+            field: "album_id",
+            type: DataTypes.INTEGER.UNSIGNED,
+            autoIncrement: true,
+            primaryKey: true
+        },
         cupId: {
             field: "cup_id",
             type: DataTypes.STRING(8),
-            primaryKey: true
-        },
-        cupDay: {
-            field: "cup_day",
-            type: DataTypes.DATE,
-            allowNull: false
+            allowNull: false,
+            references: {
+                model: Couple,
+                key: "cup_id"
+            }
         },
         title: {
             type: DataTypes.STRING(15),
@@ -78,20 +71,11 @@ Couple.init(
             field: "created_time",
             type: "TIMESTAMP",
             defaultValue: literal("CURRENT_TIMESTAMP")
-        },
-        deleted: {
-            type: DataTypes.BOOLEAN,
-            allowNull: false,
-            defaultValue: false
-        },
-        deletedTime: {
-            field: "deleted_time",
-            type: "TIMESTAMP"
         }
     },
     {
         sequelize: sequelize,
-        tableName: "couple",
+        tableName: "album",
         timestamps: false
     }
 );

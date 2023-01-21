@@ -7,11 +7,11 @@ import coupleController from "../controller/couple.controller";
 import validator from "../util/validator";
 import StatusCode from "../util/statusCode";
 
+import InternalServerError from "../error/internalServer";
+import ForbiddenError from "../error/forbidden";
 import BadRequestError from "../error/badRequest";
 
 import { ICoupleResponse } from "../model/couple.model";
-import InternalServerError from "../error/internalServer";
-import ForbiddenError from "../error/forbidden";
 import { ITokenResponse } from "../model/auth.model";
 
 const router: Router = express.Router();
@@ -29,10 +29,6 @@ const updateSchema: joi.Schema = joi.object({
     title: joi.string(),
     cupDay: joi.date()
 });
-
-// const deleteSchema: joi.Schema = joi.object({
-//     userId: joi.number().required()
-// });
 
 // Get Couple Info
 router.get("/", async (req: Request, res: Response, next: NextFunction) => {
@@ -95,7 +91,7 @@ router.patch("/:cup_id", async (req: Request, res: Response, next: NextFunction)
 
             await coupleController.updateCouple(req.body);
 
-            return res.status(204).json({});
+            return res.status(StatusCode.NO_CONTENT).json({});
         } catch (_error) {
             next(_error);
         }
@@ -114,7 +110,7 @@ router.delete("/:cup_id", async (req: Request, res: Response, next: NextFunction
 
         const response: ITokenResponse = await coupleController.deleteCouple(userId, cupId);
 
-        return res.status(StatusCode.OK).json(response);
+        return res.status(StatusCode.NO_CONTENT).json(response);
     } catch (_error) {
         next(_error);
     }

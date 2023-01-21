@@ -2,20 +2,20 @@ import randomString from "randomstring";
 import dayjs from "dayjs";
 import { Op } from "sequelize";
 
-import BadRequestError from "../error/badRequest";
-import ConflictError from "../error/conflict";
-
 import sequelize from "../model";
 import { User } from "../model/user.model";
-import { Couple, IRequestCreateData, ICoupleResponse, IRequestUpdateData } from "../model/couple.model";
+import { ITokenResponse } from "../model/auth.model";
+import { Couple, IRequestCreate, ICoupleResponse, IRequestUpdate } from "../model/couple.model";
 
-import { deleteFile, uploadFile } from "../util/firebase";
 import NotFoundError from "../error/notFound";
 import UnauthorizedError from "../error/unauthorized";
 import ForbiddenError from "../error/forbidden";
 import InternalServerError from "../error/internalServer";
-import { ITokenResponse } from "../model/auth.model";
+import BadRequestError from "../error/badRequest";
+import ConflictError from "../error/conflict";
+
 import jwt from "../util/jwt";
+import { deleteFile, uploadFile } from "../util/firebase";
 
 const folderName = "couples";
 
@@ -52,7 +52,7 @@ const controller = {
 
         return response;
     },
-    createCouple: async (data: IRequestCreateData): Promise<ITokenResponse> => {
+    createCouple: async (data: IRequestCreate): Promise<ITokenResponse> => {
         let fileName = null;
         let isUpload = false;
 
@@ -135,7 +135,7 @@ const controller = {
             throw error;
         }
     },
-    updateCouple: async (data: IRequestUpdateData): Promise<void> => {
+    updateCouple: async (data: IRequestUpdate): Promise<void> => {
         let isUpload = false;
         let fileName: string | null = null;
         const user = await User.findOne({
@@ -195,6 +195,14 @@ const controller = {
             throw error;
         }
     },
+    /**
+     * Couple 삭제 하는 메소드
+     * Couple 삭제 시 thumbnail은 삭제하지 않으며, Admin API에서 Couple 삭제 시 처리
+     *
+     * @param userId User Id
+     * @param cupId Couple Id
+     * @returns ITokenResponse: Access, Refresh Token
+     */
     deleteCouple: async (userId: number, cupId: string): Promise<ITokenResponse> => {
         const couple = await Couple.findOne({
             where: { cupId: cupId }
@@ -233,8 +241,6 @@ const controller = {
             const result: ITokenResponse = await jwt.createToken(userId, null);
 
             t.commit();
-
-            if (couple.thumbnail) await deleteFile(couple.thumbnail, folderName);
 
             return result;
         } catch (error) {
