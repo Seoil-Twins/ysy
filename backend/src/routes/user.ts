@@ -2,7 +2,7 @@ import express, { Router, Request, Response, NextFunction } from "express";
 import joi, { ValidationResult } from "joi";
 import formidable from "formidable";
 
-import { User } from "../model/user.model";
+import { IUserResponse } from "../model/user.model";
 
 import userController from "../controller/user.controller";
 
@@ -49,7 +49,7 @@ router.get("/me", async (req: Request, res: Response, next: NextFunction) => {
 
     try {
         if (isNaN(userId)) throw new BadRequestError("Invalid User Id");
-        const user: User = await userController.getUser(userId);
+        const user: IUserResponse = await userController.getUser(userId);
 
         return res.status(StatusCode.OK).json(user);
     } catch (_error) {
@@ -63,7 +63,7 @@ router.get("/:user_id", async (req: Request, res: Response, next: NextFunction) 
 
     try {
         if (isNaN(userId)) throw new BadRequestError("Invalid User Id");
-        const user: User = await userController.getUser(userId);
+        const user: IUserResponse = await userController.getUser(userId);
 
         return res.status(StatusCode.OK).json(user);
     } catch (_error) {

@@ -37,12 +37,6 @@ export class Album extends Model<IAlbum, ICreate> {
     declare thumbnail: string | null;
 }
 
-// N:1 관계
-// Album.belongsTo(Couple, {
-//     foreignKey: "cupId",
-//     onDelete: "SET NULL"
-// });
-
 Album.init(
     {
         albumId: {
@@ -57,7 +51,7 @@ Album.init(
             allowNull: false,
             references: {
                 model: Couple,
-                key: "cup_id"
+                key: "cupId"
             }
         },
         title: {

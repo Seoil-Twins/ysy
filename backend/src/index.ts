@@ -11,8 +11,12 @@ import routes from "./routes/index";
 
 import errorHandlerMiddleware from "./middlewares/errorHandler.middleware";
 
+import association from "./model/association.config";
+
 const app: Application = express();
 const port = 3000;
+
+association.config();
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));

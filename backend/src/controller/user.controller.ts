@@ -1,7 +1,8 @@
 import dayjs from "dayjs";
 import randomString from "randomstring";
+import { Op } from "sequelize";
 
-import { User, ICreateData, IRequestUpdateData } from "../model/user.model";
+import { User, ICreate, IRequestUpdate, IUserResponse } from "../model/user.model";
 
 import { deleteFile, uploadFile } from "../util/firebase";
 import { createDigest } from "../util/password";
@@ -13,23 +14,37 @@ import UnauthorizedError from "../error/unauthorized";
 const folderName = "profiles";
 
 const controller = {
-    getUser: async (userId: number): Promise<User> => {
-        const user: User | null = await User.findOne({
+    getUser: async (userId: number): Promise<IUserResponse> => {
+        const user1: User | null = await User.findOne({
             attributes: { exclude: ["password"] },
             where: {
                 userId: userId
             }
         });
+        let user2: User | null = null;
 
-        if (!user) throw new UnauthorizedError("Invalid Token (User not found using token)");
+        if (!user1) throw new UnauthorizedError("Invalid Token (User not found using token)");
 
-        if (user.cupId !== null) {
-            // Couple Select
+        if (user1.cupId !== null) {
+            user2 = await User.findOne({
+                attributes: { exclude: ["password"] },
+                where: {
+                    cupId: user1.cupId,
+                    [Op.not]: {
+                        userId: user1.userId
+                    }
+                }
+            });
         }
 
-        return user;
+        const result: IUserResponse = {
+            ...user1.dataValues,
+            couple: user2
+        };
+
+        return result;
     },
-    createUser: async (data: ICreateData): Promise<void> => {
+    createUser: async (data: ICreate): Promise<void> => {
         let isNot = true;
         let code = "";
 
@@ -64,7 +79,7 @@ const controller = {
             eventNofi: data.eventNofi
         });
     },
-    updateUser: async (data: IRequestUpdateData): Promise<void> => {
+    updateUser: async (data: IRequestUpdate): Promise<void> => {
         let isUpload = false;
         let fileName: string | null = "";
 

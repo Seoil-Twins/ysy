@@ -5,7 +5,7 @@ import { Op } from "sequelize";
 import sequelize from "../model";
 import { User } from "../model/user.model";
 import { ITokenResponse } from "../model/auth.model";
-import { Couple, IRequestCreate, ICoupleResponse, IRequestUpdate } from "../model/couple.model";
+import { Couple, IRequestCreate, IRequestUpdate } from "../model/couple.model";
 
 import NotFoundError from "../error/notFound";
 import UnauthorizedError from "../error/unauthorized";
@@ -20,37 +20,19 @@ import { deleteFile, uploadFile } from "../util/firebase";
 const folderName = "couples";
 
 const controller = {
-    getCouple: async (userId: number, cupId: string): Promise<ICoupleResponse> => {
-        const excludeColumns = ["password", "primaryNofi", "dateNofi", "eventNofi", "createdTime", "deleted", "deletedTime"];
-
+    getCouple: async (userId: number, cupId: string): Promise<Couple> => {
         const couple = await Couple.findOne({
-            where: { cupId: cupId }
-        });
-
-        const user1 = await User.findOne({
-            attributes: { exclude: excludeColumns },
-            where: { userId: userId }
-        });
-
-        const user2 = await User.findOne({
-            attributes: { exclude: excludeColumns },
-            where: {
-                cupId: cupId,
-                [Op.not]: {
-                    userId: user1!.userId
-                }
+            where: { cupId: cupId },
+            include: {
+                model: User,
+                as: "users",
+                attributes: { exclude: ["password"] }
             }
         });
 
-        if (!user1 || !user2 || !couple) throw new NotFoundError("Not Found Couple");
+        if (!couple) throw new NotFoundError("Not Found Couple");
 
-        const response: ICoupleResponse = {
-            user1: user1,
-            user2: user2!,
-            couple: couple!
-        };
-
-        return response;
+        return couple;
     },
     createCouple: async (data: IRequestCreate): Promise<ITokenResponse> => {
         let fileName = null;

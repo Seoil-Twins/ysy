@@ -11,8 +11,8 @@ import InternalServerError from "../error/internalServer";
 import ForbiddenError from "../error/forbidden";
 import BadRequestError from "../error/badRequest";
 
-import { ICoupleResponse } from "../model/couple.model";
 import { ITokenResponse } from "../model/auth.model";
+import { Couple } from "../model/couple.model";
 
 const router: Router = express.Router();
 
@@ -31,15 +31,16 @@ const updateSchema: joi.Schema = joi.object({
 });
 
 // Get Couple Info
-router.get("/", async (req: Request, res: Response, next: NextFunction) => {
+router.get("/:cup_id", async (req: Request, res: Response, next: NextFunction) => {
     try {
         const userId = Number(req.body.userId);
         const cupId = req.body.cupId;
 
         if (isNaN(userId)) throw new BadRequestError("Invalid User Id");
         else if (!cupId) throw new ForbiddenError("Invalid Couple Id");
+        else if (cupId !== req.params.cup_id) throw new ForbiddenError("Not Same Couple Id");
 
-        const response: ICoupleResponse = await coupleController.getCouple(userId, cupId);
+        const response: Couple = await coupleController.getCouple(userId, cupId);
 
         return res.status(StatusCode.OK).json(response);
     } catch (_error) {

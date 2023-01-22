@@ -1,7 +1,8 @@
-import { DataTypes, Model, literal } from "sequelize";
+import { DataTypes, Model, literal, HasManyGetAssociationsMixin } from "sequelize";
 import { File } from "formidable";
 
 import sequelize from ".";
+import { Album } from "./album.model";
 import { User } from "./user.model";
 
 // -------------------------------------------- Interface ------------------------------------------ //
@@ -13,12 +14,6 @@ export interface ICouple {
     createdTime: Date;
     deleted: boolean;
     deletedTime: Date | null;
-}
-
-export interface ICoupleResponse {
-    user1: User;
-    user2: User;
-    couple: Couple;
 }
 
 export interface IRequestCreate {
@@ -53,6 +48,9 @@ export class Couple extends Model<ICouple, ICreate> {
     declare thumbnail: string | null;
     declare deleted: boolean;
     declare deletedTime: Date | null;
+
+    declare getUsers: HasManyGetAssociationsMixin<User>;
+    declare getAlbums: HasManyGetAssociationsMixin<Album>;
 }
 
 Couple.init(
