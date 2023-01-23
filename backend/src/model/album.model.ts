@@ -24,6 +24,15 @@ export interface IRequestUpadte {
     thumbnail: File | undefined;
 }
 
+export interface IResponse {
+    albumId: number;
+    cupId: string;
+    title: string;
+    thumbnail: string | null;
+    createdTime: Date;
+    items: string[];
+}
+
 interface ICreate {
     cupId: string;
     title: string;

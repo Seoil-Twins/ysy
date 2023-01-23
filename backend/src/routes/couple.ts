@@ -40,7 +40,7 @@ router.get("/:cup_id", async (req: Request, res: Response, next: NextFunction) =
         else if (!cupId) throw new ForbiddenError("Invalid Couple Id");
         else if (cupId !== req.params.cup_id) throw new ForbiddenError("Not Same Couple Id");
 
-        const response: Couple = await coupleController.getCouple(userId, cupId);
+        const response: Couple = await coupleController.getCouple(cupId);
 
         return res.status(StatusCode.OK).json(response);
     } catch (_error) {

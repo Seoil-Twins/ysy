@@ -14,7 +14,7 @@ import UnauthorizedError from "../error/unauthorized";
 const folderName = "profiles";
 
 const controller = {
-    getUser: async (userId: number): Promise<IUserResponse> => {
+    getUsers: async (userId: number): Promise<IUserResponse> => {
         const user1: User | null = await User.findOne({
             attributes: { exclude: ["password"] },
             where: {

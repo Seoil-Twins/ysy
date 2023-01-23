@@ -49,7 +49,7 @@ router.get("/me", async (req: Request, res: Response, next: NextFunction) => {
 
     try {
         if (isNaN(userId)) throw new BadRequestError("Invalid User Id");
-        const user: IUserResponse = await userController.getUser(userId);
+        const user: IUserResponse = await userController.getUsers(userId);
 
         return res.status(StatusCode.OK).json(user);
     } catch (_error) {
@@ -63,7 +63,7 @@ router.get("/:user_id", async (req: Request, res: Response, next: NextFunction) 
 
     try {
         if (isNaN(userId)) throw new BadRequestError("Invalid User Id");
-        const user: IUserResponse = await userController.getUser(userId);
+        const user: IUserResponse = await userController.getUsers(userId);
 
         return res.status(StatusCode.OK).json(user);
     } catch (_error) {

@@ -20,7 +20,7 @@ import { deleteFile, uploadFile, isDefaultFile } from "../util/firebase";
 const folderName = "couples";
 
 const controller = {
-    getCouple: async (userId: number, cupId: string): Promise<Couple> => {
+    getCouple: async (cupId: string): Promise<Couple> => {
         const couple = await Couple.findOne({
             where: { cupId: cupId },
             include: {
@@ -59,7 +59,7 @@ const controller = {
             }
 
             if (data.thumbnail) {
-                fileName = `${cupId}.${dayjs().valueOf()}.${data.thumbnail.originalFilename!}`;
+                fileName = `/${cupId}/thumbnail/${dayjs().valueOf()}.${data.thumbnail.originalFilename!}`;
 
                 await uploadFile(fileName, folderName, data.thumbnail.filepath);
                 isUpload = true;
@@ -158,7 +158,7 @@ const controller = {
                 if (isDefault) {
                     fileName = null;
                 } else {
-                    fileName = `${data.cupId}.${dayjs().valueOf()}.${reqFileName}`;
+                    fileName = `/${data.cupId}/thumbnail/${dayjs().valueOf()}.${reqFileName}`;
 
                     await uploadFile(fileName, folderName, data.thumbnail.filepath);
                     isUpload = true;

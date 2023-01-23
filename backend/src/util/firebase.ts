@@ -1,7 +1,7 @@
 import dotenv from "dotenv";
 import * as fs from "fs";
 import { initializeApp } from "firebase/app";
-import { deleteObject, getStorage, ref, uploadBytes } from "firebase/storage";
+import { getStorage, ref, uploadBytes, deleteObject, listAll, ListResult, StorageReference } from "firebase/storage";
 
 dotenv.config();
 
@@ -24,6 +24,11 @@ const firebaseConfig = {
 const firebaseApp = initializeApp(firebaseConfig);
 const storage = getStorage(firebaseApp);
 
+/**
+ * 이미지 파일 이름이 default로 변경하기 위한 이미지인지 확인합니다.
+ * @param fileName 이미지 파일 이름
+ * @returns default image : true else false
+ */
 export const isDefaultFile = (fileName: string): boolean => {
     let result = false;
 
@@ -34,8 +39,15 @@ export const isDefaultFile = (fileName: string): boolean => {
     return result;
 };
 
+export const getFiles = async (folderName: string): Promise<StorageReference[]> => {
+    const listRef = ref(storage, `${folderName}`);
+
+    const result: ListResult = await listAll(listRef);
+    return result.items;
+};
+
 /**
- * Firebase Storage를 통해 이미지를 업로드 합니다.
+ * Firebase Storage를 통해 하나의 이미지를 업로드 합니다.
  * @param fileName 이미지 파일 이름
  * @param folderName Firebase Storage 폴더 이름
  * @param filePath 이미지가 임시 저장된 경로
