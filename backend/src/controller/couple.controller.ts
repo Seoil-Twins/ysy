@@ -15,7 +15,7 @@ import BadRequestError from "../error/badRequest";
 import ConflictError from "../error/conflict";
 
 import jwt from "../util/jwt";
-import { deleteFile, uploadFile } from "../util/firebase";
+import { deleteFile, uploadFile, isDefaultFile } from "../util/firebase";
 
 const folderName = "couples";
 
@@ -152,12 +152,13 @@ const controller = {
 
         try {
             if (data.thumbnail) {
-                const reqFileName = data.thumbnail.originalFilename;
+                const reqFileName = data.thumbnail.originalFilename!;
+                const isDefault = isDefaultFile(reqFileName);
 
-                if (reqFileName === "default.jpg" || reqFileName === "default.png" || reqFileName === "default.svg") {
+                if (isDefault) {
                     fileName = null;
                 } else {
-                    fileName = `${data.cupId}.${dayjs().valueOf()}.${data.thumbnail.originalFilename!}`;
+                    fileName = `${data.cupId}.${dayjs().valueOf()}.${reqFileName}`;
 
                     await uploadFile(fileName, folderName, data.thumbnail.filepath);
                     isUpload = true;

@@ -24,6 +24,16 @@ const firebaseConfig = {
 const firebaseApp = initializeApp(firebaseConfig);
 const storage = getStorage(firebaseApp);
 
+export const isDefaultFile = (fileName: string): boolean => {
+    let result = false;
+
+    if (fileName === "default.jpg" || fileName === "default.png" || fileName === "default.svg") {
+        result = true;
+    }
+
+    return result;
+};
+
 /**
  * Firebase Storage를 통해 이미지를 업로드 합니다.
  * @param fileName 이미지 파일 이름

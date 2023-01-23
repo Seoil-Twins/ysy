@@ -4,7 +4,7 @@ import { Op } from "sequelize";
 
 import { User, ICreate, IRequestUpdate, IUserResponse } from "../model/user.model";
 
-import { deleteFile, uploadFile } from "../util/firebase";
+import { deleteFile, isDefaultFile, uploadFile } from "../util/firebase";
 import { createDigest } from "../util/password";
 
 import NotFoundError from "../error/notFound";
@@ -105,16 +105,17 @@ const controller = {
 
         try {
             if (data.profile) {
-                const reqFileName = data.profile.originalFilename;
+                const reqFileName = data.profile.originalFilename!;
+                const isDefault = isDefaultFile(reqFileName);
 
                 /**
                  * Frontend에선 static으로 default.jpg,png,svg 셋 중 하나 갖고있다가
                  * 사용자가 profile을 내리면 그걸로 넣고 요청
                  */
-                if (reqFileName === "default.jpg" || reqFileName === "default.png" || reqFileName === "default.svg") {
+                if (isDefault) {
                     fileName = null;
                 } else {
-                    fileName = `${data.userId}.${dayjs().valueOf()}.${data.profile.originalFilename!}`;
+                    fileName = `${data.userId}.${dayjs().valueOf()}.${reqFileName}`;
 
                     await uploadFile(fileName, folderName, data.profile.filepath);
                     isUpload = true;
