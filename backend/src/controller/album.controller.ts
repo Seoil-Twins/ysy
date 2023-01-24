@@ -2,10 +2,12 @@ import dayjs from "dayjs";
 import { ListResult, StorageReference } from "firebase/storage";
 import { File } from "formidable";
 import { Op } from "sequelize";
+import ForbiddenError from "../error/forbidden";
 import NotFoundError from "../error/notFound";
+import sequelize from "../model";
 
-import { Album, IRequestCreate, IRequestGet, IResponse } from "../model/album.model";
-import { getFiles, uploadFile } from "../util/firebase";
+import { Album, IRequestCreate, IRequestGet, IRequestUpadteThumbnail, IRequestUpadteTitle, IResponse } from "../model/album.model";
+import { deleteFile, deleteFolder, getFiles, uploadFile } from "../util/firebase";
 
 const folderName = "couples";
 
@@ -56,7 +58,12 @@ const controller = {
             title: data.title
         });
     },
-    addAlbums: async (cupId: string, albumId: number, files: File | File[]) => {
+    addAlbums: async (cupId: string, albumId: number, files: File | File[]): Promise<void> => {
+        const albumFolder = await Album.findByPk(albumId);
+
+        if (!albumFolder) throw new NotFoundError("Not Found Error");
+        else if (albumFolder.cupId !== cupId) throw new ForbiddenError("Forbidden Error");
+
         if (files instanceof Array<File>) {
             for (let i = 0; i < files.length; i++) {
                 try {
@@ -70,6 +77,57 @@ const controller = {
             const fileName = `/${cupId}/${albumId}/${dayjs().valueOf()}.${files.originalFilename}`;
             await uploadFile(fileName, folderName, files.filepath);
         }
+    },
+    updateTitle: async (data: IRequestUpadteTitle): Promise<void> => {
+        const albumFolder = await Album.findByPk(data.albumId);
+
+        if (!albumFolder) throw new NotFoundError("Not Found Error");
+        else if (albumFolder.cupId !== data.cupId) throw new ForbiddenError("Forbidden Error");
+
+        await albumFolder.update({
+            title: data.title
+        });
+    },
+    updateThumbnail: async (data: IRequestUpadteThumbnail): Promise<void> => {
+        let isUpload = false;
+        const path = `/${data.cupId}/${data.albumId}/thumbnail/${dayjs().valueOf()}.${data.thumbnail.originalFilename}`;
+        const albumFolder = await Album.findByPk(data.albumId);
+
+        if (!albumFolder) throw new NotFoundError("Not Found Error");
+        else if (albumFolder.cupId !== data.cupId) throw new ForbiddenError("Forbidden Error");
+
+        const prevThumbnail: string | null = albumFolder.thumbnail;
+        const t = await sequelize.transaction();
+
+        try {
+            await albumFolder.update(
+                {
+                    thumbnail: path
+                },
+                { transaction: t }
+            );
+            await uploadFile(path, folderName, data.thumbnail.filepath);
+            isUpload = true;
+
+            if (prevThumbnail) await deleteFile(prevThumbnail, folderName);
+            t.commit();
+        } catch (error) {
+            t.rollback();
+            if (isUpload) await deleteFile(path, folderName);
+        }
+    },
+    deleteAlbum: async (cupId: string, albumId: number): Promise<void> => {
+        const albumFolder = await Album.findByPk(albumId);
+
+        if (!albumFolder) throw new NotFoundError("Not Found Error");
+        else if (albumFolder.cupId !== cupId) throw new ForbiddenError("Forbidden Error");
+
+        await albumFolder.destroy();
+
+        if (albumFolder.thumbnail) await deleteFile(albumFolder.thumbnail, folderName);
+
+        const path = `/${cupId}/${albumId}`;
+        await deleteFolder(path, folderName);
     }
 };
 

@@ -148,7 +148,7 @@ const controller = {
         if (data.title) updateData.title = data.title;
         if (data.cupDay) updateData.cupDay = data.cupDay;
 
-        let prevThumbnail: string | null = couple.thumbnail;
+        const prevThumbnail: string | null = couple.thumbnail;
 
         try {
             if (data.thumbnail) {

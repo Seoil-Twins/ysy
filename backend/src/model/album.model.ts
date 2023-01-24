@@ -25,10 +25,18 @@ export interface IRequestCreate {
     title: string;
 }
 
-export interface IRequestUpadte {
+export interface IRequestUpadteTitle {
+    userId: number;
     cupId: string;
-    title: string | undefined;
-    thumbnail: File | undefined;
+    albumId: number;
+    title: string;
+}
+
+export interface IRequestUpadteThumbnail {
+    userId: number;
+    cupId: string;
+    albumId: number;
+    thumbnail: File;
 }
 
 export interface IResponse {

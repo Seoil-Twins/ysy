@@ -9,11 +9,11 @@ import StatusCode from "../util/statusCode";
 
 import BadRequestError from "../error/badRequest";
 import ForbiddenError from "../error/forbidden";
-import { Album, IRequestGet, IResponse } from "../model/album.model";
+import { Album, IRequestGet, IRequestUpadteThumbnail, IResponse } from "../model/album.model";
 
 const router: Router = express.Router();
 
-const addSchema: joi.Schema = joi.object({
+const titleSchema: joi.Schema = joi.object({
     userId: joi.number().required(),
     cupId: joi.string().required(),
     title: joi.string().required()
@@ -64,7 +64,7 @@ router.post("/:cup_id", async (req: Request, res: Response, next: NextFunction) 
 
             req.body = Object.assign({}, req.body, fields);
 
-            const { value, error }: ValidationResult = validator(req.body, addSchema);
+            const { value, error }: ValidationResult = validator(req.body, titleSchema);
 
             if (error) throw new BadRequestError("Bad Request Error");
             else if (req.body.cupId !== req.params.cup_id) throw new ForbiddenError("Not Same Couple Id");
@@ -101,6 +101,63 @@ router.post("/:cup_id/:album_id", async (req: Request, res: Response, next: Next
             next(_error);
         }
     });
+});
+
+router.patch("/:cup_id/:album_id/title", async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const albumId = Number(req.params.album_id);
+        const { value, error }: ValidationResult = validator(req.body, titleSchema);
+        if (error) throw new BadRequestError("Bad Request Error");
+
+        if (req.body.cupId !== req.params.cup_id) throw new ForbiddenError("Not Same Couple Id");
+        else if (isNaN(albumId)) throw new BadRequestError("Bad Request Error");
+
+        req.body.albumId = albumId;
+        await albumController.updateTitle(req.body);
+
+        return res.status(StatusCode.NO_CONTENT).json({});
+    } catch (_error) {
+        next(_error);
+    }
+});
+
+router.patch("/:cup_id/:album_id/thumbnail", async (req: Request, res: Response, next: NextFunction) => {
+    const form = formidable({ multiples: false });
+
+    form.parse(req, async (err, fields, files) => {
+        try {
+            if (err) throw new err();
+            const albumId = Number(req.params.album_id);
+
+            if (req.body.cupId !== req.params.cup_id) throw new ForbiddenError("Not Same Couple Id");
+            else if (isNaN(albumId)) throw new BadRequestError("Bad Request Error");
+
+            if (Object.keys(files).length === 1) req.body.thumbnail = files.file;
+            else throw new BadRequestError("Bad Request Error");
+
+            req.body.albumId = albumId;
+            await albumController.updateThumbnail(req.body);
+
+            return res.status(StatusCode.NO_CONTENT).json({});
+        } catch (_error) {
+            next(_error);
+        }
+    });
+});
+
+router.delete("/:cup_id/:album_id", async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const albumId = Number(req.params.album_id);
+
+        if (req.body.cupId !== req.params.cup_id) throw new ForbiddenError("Not Same Couple Id");
+        else if (isNaN(albumId)) throw new BadRequestError("Bad Request Error");
+
+        await albumController.deleteAlbum(req.body.cupId, albumId);
+
+        return res.status(StatusCode.NO_CONTENT).json({});
+    } catch (_error) {
+        next(_error);
+    }
 });
 
 export default router;
