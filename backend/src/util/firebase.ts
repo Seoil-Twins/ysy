@@ -1,7 +1,7 @@
 import dotenv from "dotenv";
 import * as fs from "fs";
-import { initializeApp } from "firebase/app";
-import { getStorage, ref, uploadBytes, deleteObject, listAll, ListResult, StorageReference } from "firebase/storage";
+import { initializeApp, FirebaseError } from "firebase/app";
+import { getStorage, ref, uploadBytes, deleteObject, ListResult, list } from "firebase/storage";
 
 dotenv.config();
 
@@ -39,11 +39,32 @@ export const isDefaultFile = (fileName: string): boolean => {
     return result;
 };
 
-export const getFiles = async (folderName: string): Promise<StorageReference[]> => {
+/**
+ * 해당 폴더의 모든 이미지를 가져옵니다.
+ * @param folderName Firebase Folder Name
+ * @returns 이미지 객체 리스트를 반환
+ */
+export const getFiles = async (folderName: string, count: number, nextPageToken?: string): Promise<ListResult> => {
     const listRef = ref(storage, `${folderName}`);
+    let result: ListResult | undefined = undefined;
 
-    const result: ListResult = await listAll(listRef);
-    return result.items;
+    try {
+        result = await list(listRef, {
+            maxResults: count,
+            pageToken: nextPageToken
+        });
+    } catch (error) {
+        // nextPageToken이 유효하지 않은 경우
+        if (error instanceof FirebaseError && error.code === "storage/unknown") {
+            result = await list(listRef, {
+                maxResults: count
+            });
+        } else {
+            throw error;
+        }
+    }
+
+    return result;
 };
 
 /**

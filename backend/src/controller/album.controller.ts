@@ -1,10 +1,10 @@
 import dayjs from "dayjs";
-import { StorageReference } from "firebase/storage";
+import { ListResult, StorageReference } from "firebase/storage";
 import { File } from "formidable";
 import { Op } from "sequelize";
 import NotFoundError from "../error/notFound";
 
-import { Album, IRequestCreate, IResponse } from "../model/album.model";
+import { Album, IRequestCreate, IRequestGet, IResponse } from "../model/album.model";
 import { getFiles, uploadFile } from "../util/firebase";
 
 const folderName = "couples";
@@ -19,18 +19,20 @@ const controller = {
 
         return albums;
     },
-    getAlbums: async (cupId: string, albumId: number): Promise<IResponse> => {
+    getAlbums: async (data: IRequestGet): Promise<IResponse> => {
         const album: Album | null = await Album.findOne({
             where: {
-                cupId: cupId,
-                albumId: albumId
+                cupId: data.cupId,
+                albumId: data.albumId
             }
         });
 
         if (!album) throw new NotFoundError("Not Found Albums");
 
-        const refName = `${folderName}/${cupId}/${albumId}`;
-        const files: StorageReference[] = await getFiles(refName);
+        const refName = `${folderName}/${data.cupId}/${data.albumId}`;
+        const firebaseResult: ListResult = await getFiles(refName, data.count, data.nextPageToken);
+        const files: StorageReference[] = firebaseResult.items;
+        const nextPageToken: string | undefined = firebaseResult.nextPageToken;
 
         if (files.length <= 0) throw new NotFoundError("Not Found Error");
 
@@ -42,7 +44,8 @@ const controller = {
 
         const result: IResponse = {
             ...album.dataValues,
-            items: items
+            items: items,
+            nextPageToken: nextPageToken
         };
 
         return result;

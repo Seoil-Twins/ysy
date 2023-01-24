@@ -9,7 +9,7 @@ import StatusCode from "../util/statusCode";
 
 import BadRequestError from "../error/badRequest";
 import ForbiddenError from "../error/forbidden";
-import { Album, IResponse } from "../model/album.model";
+import { Album, IRequestGet, IResponse } from "../model/album.model";
 
 const router: Router = express.Router();
 
@@ -34,11 +34,20 @@ router.get("/:cup_id", async (req: Request, res: Response, next: NextFunction) =
 router.get("/:cup_id/:album_id", async (req: Request, res: Response, next: NextFunction) => {
     try {
         const albumId = Number(req.params.album_id);
+        let count = Number(req.query.count);
+        const nextPageToken = req.query.nextPageToken ? String(req.query.nextPageToken) : undefined;
 
         if (req.body.cupId !== req.params.cup_id) throw new ForbiddenError("Not Same Couple Id");
         else if (isNaN(albumId)) throw new BadRequestError("Bad Request Error");
+        else if (isNaN(count)) count = 50;
 
-        const albums: IResponse = await albumController.getAlbums(req.body.cupId, albumId);
+        const data: IRequestGet = {
+            albumId: albumId,
+            cupId: req.body.cupId,
+            count: count,
+            nextPageToken: nextPageToken
+        };
+        const albums: IResponse = await albumController.getAlbums(data);
 
         return res.status(StatusCode.OK).json(albums);
     } catch (_error) {
