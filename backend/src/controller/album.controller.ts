@@ -127,7 +127,15 @@ const controller = {
         if (albumFolder.thumbnail) await deleteFile(albumFolder.thumbnail, folderName);
 
         const path = `/${cupId}/${albumId}`;
-        await deleteFolder(path, folderName);
+        const results = await deleteFolder(path, folderName);
+
+        results.forEach((result) => {
+            /**
+             * 지우지 못한 파일들은 로그를 남겨 나중에 어떠한 파일에 복붙해놓으면
+             * 파일을 이용하여 firebase storage를 삭제
+             */
+            if (result.status === "rejected") console.log("로그 남기기");
+        });
     }
 };
 
