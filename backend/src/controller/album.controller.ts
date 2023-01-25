@@ -7,7 +7,8 @@ import NotFoundError from "../error/notFound";
 import sequelize from "../model";
 
 import { Album, IRequestCreate, IRequestGet, IRequestUpadteThumbnail, IRequestUpadteTitle, IResponse } from "../model/album.model";
-import { deleteFile, deleteFolder, getFiles, uploadFile } from "../util/firebase";
+import { ErrorImage } from "../model/errorImage.model";
+import { deleteFile, deleteFolder, getAllFiles, getFiles, uploadFile } from "../util/firebase";
 
 const folderName = "couples";
 
@@ -127,15 +128,18 @@ const controller = {
         if (albumFolder.thumbnail) await deleteFile(albumFolder.thumbnail, folderName);
 
         const path = `/${cupId}/${albumId}`;
-        const results = await deleteFolder(path, folderName);
+        await deleteFolder(path, folderName);
+        const images = await getAllFiles(path, folderName);
 
-        results.forEach((result) => {
-            /**
-             * 지우지 못한 파일들은 로그를 남겨 나중에 어떠한 파일에 복붙해놓으면
-             * 파일을 이용하여 firebase storage를 삭제
-             */
-            if (result.status === "rejected") console.log("로그 남기기");
-        });
+        // 지워지지 않은 이미지가 존재할 시
+        if (images.items.length) {
+            images.items.forEach(async (image) => {
+                await ErrorImage.create({
+                    albumId: albumId,
+                    thumbnail: image.fullPath
+                });
+            });
+        }
     }
 };
 
