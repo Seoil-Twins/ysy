@@ -6,12 +6,11 @@
  */
 
 import express, { Application } from "express";
-
 import routes from "./routes/index";
-
 import errorHandlerMiddleware from "./middlewares/errorHandler.middleware";
-
+import morganMiddleware from "./middlewares/morgan.middleware";
 import association from "./model/association.config";
+import logger from "./logger/logger";
 
 const app: Application = express();
 const port = 3000;
@@ -20,10 +19,10 @@ association.config();
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+app.use(morganMiddleware);
 app.use("/", routes);
-// middleware 적용
 app.use(errorHandlerMiddleware);
 
 app.listen(port, () => {
-    console.log("Server Listen on port : 3000!");
+    logger.debug(`Server Listen on port : ${port}!`);
 });

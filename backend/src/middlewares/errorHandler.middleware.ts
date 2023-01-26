@@ -2,11 +2,12 @@ import { ErrorRequestHandler, Request, Response, NextFunction } from "express";
 
 import AbstractError from "../error/abstractError";
 import ConflictError from "../error/conflict";
+import logger from "../logger/logger";
 
 import StatusCode from "../util/statusCode";
 
 const globalErrorHandler: ErrorRequestHandler = (e: any, req: Request, res: Response, next: NextFunction) => {
-    console.log("Error?? : ", e);
+    logger.debug(`Error Handler => ${e}`);
 
     if (e instanceof AbstractError) {
         const { message, statusCode } = e;

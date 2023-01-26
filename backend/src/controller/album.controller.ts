@@ -1,13 +1,15 @@
 import dayjs from "dayjs";
 import { ListResult, StorageReference } from "firebase/storage";
 import { File } from "formidable";
-import { Op } from "sequelize";
+
 import ForbiddenError from "../error/forbidden";
 import NotFoundError from "../error/notFound";
-import sequelize from "../model";
 
+import sequelize from "../model";
 import { Album, IRequestCreate, IRequestGet, IRequestUpadteThumbnail, IRequestUpadteTitle, IResponse } from "../model/album.model";
 import { ErrorImage } from "../model/errorImage.model";
+
+import logger from "../logger/logger";
 import { deleteFile, deleteFolder, getAllFiles, getFiles, uploadFile } from "../util/firebase";
 
 const folderName = "couples";
@@ -134,6 +136,8 @@ const controller = {
         // 지워지지 않은 이미지가 존재할 시
         if (images.items.length) {
             images.items.forEach(async (image) => {
+                logger.warn(`Image not deleted : ${cupId} | ${albumId} => ${image.fullPath}`);
+
                 await ErrorImage.create({
                     albumId: albumId,
                     thumbnail: image.fullPath
