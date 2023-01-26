@@ -10,6 +10,7 @@ import { createDigest } from "../util/password";
 import NotFoundError from "../error/notFound";
 import ForbiddenError from "../error/forbidden";
 import UnauthorizedError from "../error/unauthorized";
+import ConflictError from "../error/conflict";
 
 const folderName = "profiles";
 
@@ -47,6 +48,13 @@ const controller = {
     createUser: async (data: ICreate): Promise<void> => {
         let isNot = true;
         let code = "";
+        const user: User | null = await User.findOne({
+            where: {
+                [Op.or]: [{ email: data.email }, { phone: data.phone }]
+            }
+        });
+
+        if (user) throw new ConflictError("Duplicated User");
 
         // 중복된 code가 있는지 검사
         while (isNot) {
