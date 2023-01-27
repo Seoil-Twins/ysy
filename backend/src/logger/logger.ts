@@ -14,9 +14,16 @@ const filterOnly = (level: any) => {
     })();
 };
 
+const consoleOpts = {
+    handleExceptions: true,
+    level: process.env.NODE_ENV === "production" ? "info" : "debug",
+    format: combine(colorize({ all: true }), timestamp({ format: "YYYY-MM-DD HH:mm:ss:ms" }))
+};
+
 const logger = winston.createLogger({
-    format: combine(splat(), colorize(), timestamp({ format: "YYYY-MM-DD HH:mm:ss" }), label({ label: "YSY" }), logFormat),
+    format: combine(splat(), timestamp({ format: "YYYY-MM-DD HH:mm:ss" }), label({ label: "YSY" }), logFormat),
     transports: [
+        new winston.transports.Console(consoleOpts),
         new winstonDaily({
             level: "info",
             datePattern: "YYYY-MM-DD",
@@ -56,14 +63,5 @@ const logger = winston.createLogger({
         })
     ]
 });
-
-if (process.env.NODE_ENV !== "production") {
-    logger.add(
-        new winston.transports.Console({
-            format: winston.format.combine(winston.format.colorize(), winston.format.splat()),
-            level: "debug"
-        })
-    );
-}
 
 export default logger;

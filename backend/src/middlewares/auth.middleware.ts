@@ -22,7 +22,7 @@ const checkToken = (req: Request, res: Response, next: NextFunction) => {
         req.body.userId = user.userId;
         req.body.cupId = user.cupId;
 
-        logger.debug(`Authorization : ${JSON.stringify(req.body)}`);
+        logger.debug(`Authorization : ${JSON.stringify(user)}`);
 
         return next();
     } catch (error) {
