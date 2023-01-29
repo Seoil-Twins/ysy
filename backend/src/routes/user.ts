@@ -6,6 +6,7 @@ import { IUserResponse } from "../model/user.model";
 
 import userController from "../controller/user.controller";
 
+import logger from "../logger/logger";
 import validator from "../util/validator";
 import StatusCode from "../util/statusCode";
 
@@ -49,9 +50,10 @@ router.get("/me", async (req: Request, res: Response, next: NextFunction) => {
 
     try {
         if (isNaN(userId)) throw new BadRequestError("Invalid User Id");
-        const user: IUserResponse = await userController.getUsers(userId);
+        const result: IUserResponse = await userController.getUsers(userId);
 
-        return res.status(StatusCode.OK).json(user);
+        logger.debug(`Response Data : ${JSON.stringify(result)}`);
+        return res.status(StatusCode.OK).json(result);
     } catch (_error) {
         next(_error);
     }
@@ -63,9 +65,10 @@ router.get("/:user_id", async (req: Request, res: Response, next: NextFunction) 
 
     try {
         if (isNaN(userId)) throw new BadRequestError("Invalid User Id");
-        const user: IUserResponse = await userController.getUsers(userId);
+        const result: IUserResponse = await userController.getUsers(userId);
 
-        return res.status(StatusCode.OK).json(user);
+        logger.debug(`Response Data : ${JSON.stringify(result)}`);
+        return res.status(StatusCode.OK).json(result);
     } catch (_error) {
         next(_error);
     }

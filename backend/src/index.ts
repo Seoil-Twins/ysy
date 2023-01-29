@@ -23,6 +23,7 @@ app.use(morganMiddleware);
 app.all("*", (request: Request, _response: Response, next: NextFunction) => {
     logger.debug(`Request Body Data : ${JSON.stringify(request.body)}`);
     logger.debug(`Request Params Data : ${JSON.stringify(request.params)}`);
+
     next();
 });
 app.use("/", routes);

@@ -4,12 +4,13 @@ import formidable from "formidable";
 
 import albumController from "../controller/album.controller";
 
+import logger from "../logger/logger";
 import validator from "../util/validator";
 import StatusCode from "../util/statusCode";
 
 import BadRequestError from "../error/badRequest";
 import ForbiddenError from "../error/forbidden";
-import { Album, IRequestGet, IRequestUpadteThumbnail, IResponse } from "../model/album.model";
+import { Album, IRequestGet, IResponse } from "../model/album.model";
 
 const router: Router = express.Router();
 
@@ -23,9 +24,10 @@ router.get("/:cup_id", async (req: Request, res: Response, next: NextFunction) =
     try {
         if (req.body.cupId !== req.params.cup_id) throw new ForbiddenError("Not Same Couple Id");
 
-        const albums: Album[] = await albumController.getAlbumsFolder(req.body.cupId);
+        const results: Album[] = await albumController.getAlbumsFolder(req.body.cupId);
 
-        return res.status(StatusCode.OK).json(albums);
+        logger.debug(`Response Data : ${JSON.stringify(results)}`);
+        return res.status(StatusCode.OK).json(results);
     } catch (_error) {
         next(_error);
     }
@@ -47,9 +49,10 @@ router.get("/:cup_id/:album_id", async (req: Request, res: Response, next: NextF
             count: count,
             nextPageToken: nextPageToken
         };
-        const albums: IResponse = await albumController.getAlbums(data);
+        const result: IResponse = await albumController.getAlbums(data);
 
-        return res.status(StatusCode.OK).json(albums);
+        logger.debug(`Response Data : ${JSON.stringify(result)}`);
+        return res.status(StatusCode.OK).json(result);
     } catch (_error) {
         next(_error);
     }

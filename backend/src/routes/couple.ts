@@ -4,6 +4,7 @@ import formidable from "formidable";
 
 import coupleController from "../controller/couple.controller";
 
+import logger from "../logger/logger";
 import validator from "../util/validator";
 import StatusCode from "../util/statusCode";
 
@@ -40,9 +41,10 @@ router.get("/:cup_id", async (req: Request, res: Response, next: NextFunction) =
         else if (!cupId) throw new ForbiddenError("Invalid Couple Id");
         else if (cupId !== req.params.cup_id) throw new ForbiddenError("Not Same Couple Id");
 
-        const response: Couple = await coupleController.getCouple(cupId);
+        const result: Couple = await coupleController.getCouple(cupId);
 
-        return res.status(StatusCode.OK).json(response);
+        logger.debug(`Response Data : ${JSON.stringify(result)}`);
+        return res.status(StatusCode.OK).json(result);
     } catch (_error) {
         next(_error);
     }
@@ -65,6 +67,7 @@ router.post("/", async (req: Request, res: Response, next: NextFunction) => {
 
             const result: ITokenResponse = await coupleController.createCouple(req.body);
 
+            logger.debug(`Response Data : ${JSON.stringify(result)}`);
             return res.status(StatusCode.CREATED).json(result);
         } catch (_error) {
             next(_error);
@@ -109,9 +112,10 @@ router.delete("/:cup_id", async (req: Request, res: Response, next: NextFunction
         else if (!cupId) throw new ForbiddenError("Invalid Couple Id");
         else if (req.body.cupId !== req.params.cup_id) throw new ForbiddenError("Not Same Couple Id");
 
-        const response: ITokenResponse = await coupleController.deleteCouple(userId, cupId);
+        const result: ITokenResponse = await coupleController.deleteCouple(userId, cupId);
 
-        return res.status(StatusCode.NO_CONTENT).json(response);
+        logger.debug(`Response Data : ${JSON.stringify(result)}`);
+        return res.status(StatusCode.NO_CONTENT).json(result);
     } catch (_error) {
         next(_error);
     }
