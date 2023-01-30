@@ -1,6 +1,7 @@
 import express, { Router, Request, Response, NextFunction } from "express";
 import joi, { ValidationResult } from "joi";
 
+import logger from "../logger/logger";
 import validator from "../util/validator";
 import StatusCode from "../util/statusCode";
 
@@ -26,6 +27,7 @@ router.post("/login", async (req: Request, res: Response, next: NextFunction) =>
 
         const result = await authController.login(value);
 
+        logger.debug(`Response Data : ${JSON.stringify(result)}`);
         return res.status(StatusCode.OK).json(result);
     } catch (_error) {
         next(_error);
@@ -41,6 +43,7 @@ router.post("/refresh", async (req: Request, res: Response, next: NextFunction) 
 
         const result = await authController.updateToken(accessToken, refreshToken);
 
+        logger.debug(`Response Data : ${JSON.stringify(result)}`);
         return res.status(StatusCode.OK).json(result);
     } catch (_error) {
         next(_error);

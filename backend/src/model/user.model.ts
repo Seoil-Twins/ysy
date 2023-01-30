@@ -1,6 +1,8 @@
+import { File } from "formidable";
 import { DataTypes, Model, literal } from "sequelize";
 
 import sequelize from ".";
+import { Couple } from "./couple.model";
 
 // -------------------------------------------- Interface ------------------------------------------ //
 export interface IUser {
@@ -22,7 +24,7 @@ export interface IUser {
     deletedTime: Date | null;
 }
 
-export interface ICreateData {
+export interface ICreate {
     snsId: string;
     code: string;
     name: string;
@@ -33,21 +35,36 @@ export interface ICreateData {
     eventNofi: boolean;
 }
 
-export interface IUpdateData {
+export interface IRequestUpdate {
     userId: number;
     name: string | undefined;
-    profile: string | undefined;
+    profile: File | undefined;
     primaryNofi: boolean | undefined;
     dateNofi: boolean | undefined;
     eventNofi: boolean | undefined;
 }
 
-export interface IDeleteData {
+export interface IUserResponse {
     userId: number;
+    cupId: string | null;
+    snsId: string;
+    code: string;
+    name: string;
+    email: string;
+    birthday: Date;
+    phone: string;
+    profile: string | null;
+    primaryNofi: boolean;
+    dateNofi: boolean;
+    eventNofi: boolean;
+    createdTime: Date;
+    deleted: boolean;
+    deletedTime: Date | null;
+    couple: User | null;
 }
 // ------------------------------------------ Interface End ---------------------------------------- //
 
-export class User extends Model<IUser, ICreateData> {
+export class User extends Model<IUser, ICreate> {
     declare userId: number;
     declare cupId: string | null;
     declare snsId: string;
@@ -70,7 +87,7 @@ User.init(
     {
         userId: {
             field: "user_id",
-            type: DataTypes.INTEGER,
+            type: DataTypes.INTEGER.UNSIGNED,
             autoIncrement: true,
             primaryKey: true
         },
@@ -78,7 +95,11 @@ User.init(
             field: "cup_id",
             type: DataTypes.STRING(8),
             allowNull: true,
-            defaultValue: null
+            defaultValue: null,
+            references: {
+                model: Couple,
+                key: "cupId"
+            }
         },
         snsId: {
             field: "sns_id",
@@ -113,7 +134,7 @@ User.init(
             allowNull: false
         },
         profile: {
-            type: DataTypes.STRING(30)
+            type: DataTypes.STRING(60)
         },
         primaryNofi: {
             field: "primary_nofi",

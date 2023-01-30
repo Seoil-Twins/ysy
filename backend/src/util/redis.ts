@@ -1,5 +1,6 @@
 import * as redis from "redis";
 import dotenv from "dotenv";
+import logger from "../logger/logger";
 
 dotenv.config();
 
@@ -15,7 +16,7 @@ const redisClient = redis.createClient({
     }
 });
 
-redisClient.on("error : ", (err: any) => console.log("Error! : ", err));
+redisClient.on("error : ", (err: any) => logger.error(`Redis Error : ${err}`));
 redisClient.connect();
 
 export const set = async (key: string, value: any, expiresIn: number): Promise<string | null> => {

@@ -1,9 +1,10 @@
 import { Request, Response, NextFunction } from "express";
 import { TokenExpiredError, JsonWebTokenError, JwtPayload } from "jsonwebtoken";
 
-import jwt from "../util/jwt";
-
 import UnauthorizedError from "../error/unauthorized";
+
+import logger from "../logger/logger";
+import jwt from "../util/jwt";
 
 const checkToken = (req: Request, res: Response, next: NextFunction) => {
     // 해당 URL은 검증을 하지 않아도 됨.
@@ -19,6 +20,9 @@ const checkToken = (req: Request, res: Response, next: NextFunction) => {
         if (typeof user === "string") throw new UnauthorizedError("Invalid Token");
 
         req.body.userId = user.userId;
+        req.body.cupId = user.cupId;
+
+        logger.debug(`Authorization : ${JSON.stringify(user)}`);
 
         return next();
     } catch (error) {

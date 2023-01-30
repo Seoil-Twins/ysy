@@ -26,7 +26,7 @@
             warn => warning으로 간주
             배포할 때는 error로 바꿔 console.log를 없애주자
         */
-        "no-console": "off",
+        "no-console": "error",
         /**
             express처럼 dependencies에 있어야하는 애들을 무시하는 기능
             dependencies : 앱을 배포할 때 사용되는 패키지
