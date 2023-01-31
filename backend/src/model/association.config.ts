@@ -1,4 +1,5 @@
 import { Album } from "./album.model";
+import { Calendar } from "./calendar.model";
 import { Couple } from "./couple.model";
 import { User } from "./user.model";
 
@@ -13,6 +14,7 @@ import { User } from "./user.model";
 
 export default {
     config: () => {
+        // ------------------------------------------ User to Couple ---------------------------------------- //
         Couple.hasMany(User, {
             foreignKey: "cupId",
             as: "users"
@@ -24,12 +26,25 @@ export default {
             as: "couples"
         });
 
+        // ------------------------------------------ Album to Couple ---------------------------------------- //
         Couple.hasMany(Album, {
             foreignKey: "cupId",
             as: "albums"
         });
 
         Album.belongsTo(Couple, {
+            foreignKey: "cupId",
+            onDelete: "CASCADE",
+            as: "couples"
+        });
+
+        // ------------------------------------------ Calendar to Couple ---------------------------------------- //
+        Couple.hasMany(Calendar, {
+            foreignKey: "cupId",
+            as: "calendars"
+        });
+
+        Calendar.belongsTo(Couple, {
             foreignKey: "cupId",
             onDelete: "CASCADE",
             as: "couples"
