@@ -9,8 +9,8 @@ export interface ICalendar {
     cupId: string;
     title: string;
     description: string;
-    fromTime: Date;
-    toTime: Date;
+    fromDate: Date;
+    toDate: Date;
     color: Date;
     createdTime: Date;
 }
@@ -19,9 +19,14 @@ export interface ICreate {
     cupId: string;
     title: string;
     description: string;
-    fromTime: Date;
-    toTime: Date;
+    fromDate: Date;
+    toDate: Date;
     color: Date;
+}
+
+export interface IResponse {
+    cupId: string;
+    calendars: Calendar[];
 }
 // ------------------------------------------ Interface End ---------------------------------------- //
 
@@ -30,8 +35,8 @@ export class Calendar extends Model<ICalendar, ICreate> {
     declare cupId: string;
     declare title: string;
     declare description: string;
-    declare fromTime: Date;
-    declare toTime: Date;
+    declare fromDate: Date;
+    declare toDate: Date;
     declare color: string;
 }
 
@@ -60,13 +65,13 @@ Calendar.init(
             type: DataTypes.STRING(60),
             allowNull: false
         },
-        fromTime: {
-            field: "from_time",
+        fromDate: {
+            field: "from_date",
             type: DataTypes.DATE,
             allowNull: false
         },
-        toTime: {
-            field: "to_time",
+        toDate: {
+            field: "to_date",
             type: DataTypes.DATE,
             allowNull: false
         },
