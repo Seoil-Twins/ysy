@@ -106,9 +106,11 @@ router.patch("/:user_id", async (req: Request, res: Response, next: NextFunction
                 throw new BadRequestError("Bad Request Error");
             else if (value.name && value.name.length <= 1) throw new BadRequestError("Bad Request Error");
 
-            if (Object.keys(files).length === 1) req.body.profile = files.file;
+            let file: any = undefined;
+            if (Object.keys(files).length === 1) file = files.file;
 
-            await userController.updateUser(req.body);
+            logger.debug(`${JSON.stringify(req.body)}`);
+            await userController.updateUser(req.body, file);
 
             return res.status(204).json({});
         } catch (_error) {

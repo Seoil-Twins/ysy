@@ -1,11 +1,12 @@
 import randomString from "randomstring";
 import dayjs from "dayjs";
 import { Op } from "sequelize";
+import { File } from "formidable";
 
 import sequelize from "../model";
 import { User } from "../model/user.model";
 import { ITokenResponse } from "../model/auth.model";
-import { Couple, IRequestCreate, IRequestUpdate } from "../model/couple.model";
+import { Couple, IRequestCreate, IUpdate } from "../model/couple.model";
 
 import NotFoundError from "../error/notFound";
 import UnauthorizedError from "../error/unauthorized";
@@ -117,7 +118,7 @@ const controller = {
             throw error;
         }
     },
-    updateCouple: async (data: IRequestUpdate): Promise<void> => {
+    updateCouple: async (data: IUpdate, thumbnail: File | undefined): Promise<void> => {
         let isUpload = false;
         let fileName: string | null = null;
         const user = await User.findOne({
@@ -143,16 +144,11 @@ const controller = {
             throw new ForbiddenError("Forbidden Error");
         }
 
-        let updateData: any = { cupId: data.cupId };
-
-        if (data.title) updateData.title = data.title;
-        if (data.cupDay) updateData.cupDay = data.cupDay;
-
         const prevThumbnail: string | null = couple.thumbnail;
 
         try {
-            if (data.thumbnail) {
-                const reqFileName = data.thumbnail.originalFilename!;
+            if (thumbnail) {
+                const reqFileName = thumbnail.originalFilename!;
                 const isDefault = isDefaultFile(reqFileName);
 
                 if (isDefault) {
@@ -160,14 +156,14 @@ const controller = {
                 } else {
                     fileName = `/${data.cupId}/thumbnail/${dayjs().valueOf()}.${reqFileName}`;
 
-                    await uploadFile(fileName, folderName, data.thumbnail.filepath);
+                    await uploadFile(fileName, folderName, thumbnail.filepath);
                     isUpload = true;
                 }
 
-                updateData.thumbnail = fileName;
+                data.thumbnail = fileName;
             }
 
-            await couple.update(updateData);
+            await couple.update(data);
 
             // Upload, DB Update를 하고나서 기존 이미지 지우기
             if (prevThumbnail && data.thumbnail) await deleteFile(prevThumbnail, folderName);

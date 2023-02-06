@@ -91,9 +91,10 @@ router.patch("/:cup_id", async (req: Request, res: Response, next: NextFunction)
             else if (!req.body.file && !req.body.title && !req.body.cupDay) throw new BadRequestError("Bad Request Error");
             else if (req.body.cupId !== req.params.cup_id) throw new ForbiddenError("Not Same Couple Id");
 
-            if (Object.keys(files).length === 1) req.body.thumbnail = files.file;
+            let file: any = undefined;
+            if (Object.keys(files).length === 1) file = files.file;
 
-            await coupleController.updateCouple(req.body);
+            await coupleController.updateCouple(req.body, file);
 
             return res.status(StatusCode.NO_CONTENT).json({});
         } catch (_error) {

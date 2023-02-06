@@ -68,7 +68,7 @@ router.post("/:cup_id", async (req: Request, res: Response, next: NextFunction) 
     }
 });
 
-router.put("/:cup_id/:calendar_id", async (req: Request, res: Response, next: NextFunction) => {
+router.patch("/:cup_id/:calendar_id", async (req: Request, res: Response, next: NextFunction) => {
     const { value, error }: ValidationResult = validator(req.body, updateSchema);
     const calendarId: number = Number(req.params.calendar_id);
 

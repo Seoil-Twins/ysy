@@ -26,11 +26,11 @@ export interface IRequestCreate {
     thumbnail?: File;
 }
 
-export interface IRequestUpdate {
+export interface IUpdate {
     userId: number;
     cupId: string;
     title: string | undefined;
-    thumbnail: File | undefined;
+    thumbnail: string | undefined | null;
     cupDay: Date | undefined;
 }
 

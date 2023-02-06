@@ -35,10 +35,10 @@ export interface ICreate {
     eventNofi: boolean;
 }
 
-export interface IRequestUpdate {
+export interface IUpdate {
     userId: number;
     name: string | undefined;
-    profile: File | undefined;
+    profile: string | undefined | null;
     primaryNofi: boolean | undefined;
     dateNofi: boolean | undefined;
     eventNofi: boolean | undefined;

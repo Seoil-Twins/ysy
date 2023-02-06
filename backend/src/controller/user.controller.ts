@@ -1,8 +1,9 @@
 import dayjs from "dayjs";
 import randomString from "randomstring";
 import { Op } from "sequelize";
+import { File } from "formidable";
 
-import { User, ICreate, IRequestUpdate, IUserResponse } from "../model/user.model";
+import { User, ICreate, IUpdate, IUserResponse } from "../model/user.model";
 
 import { deleteFile, isDefaultFile, uploadFile } from "../util/firebase";
 import { createDigest } from "../util/password";
@@ -87,7 +88,7 @@ const controller = {
             eventNofi: data.eventNofi
         });
     },
-    updateUser: async (data: IRequestUpdate): Promise<void> => {
+    updateUser: async (data: IUpdate, profile: File | undefined): Promise<void> => {
         let isUpload = false;
         let fileName: string | null = "";
 
@@ -100,20 +101,11 @@ const controller = {
         if (!user) throw new NotFoundError("Not Found User");
         else if (user.deleted) throw new ForbiddenError("Forbidden Error");
 
-        const updateData: any = {
-            userId: data.userId
-        };
-
-        if (data.name) updateData.name = data.name;
-        if (data.primaryNofi !== undefined) updateData.primaryNofi = data.primaryNofi;
-        if (data.dateNofi !== undefined) updateData.dateNofi = data.dateNofi;
-        if (data.eventNofi !== undefined) updateData.eventNofi = data.eventNofi;
-
         let prevProfile: string | null = user.profile;
 
         try {
-            if (data.profile) {
-                const reqFileName = data.profile.originalFilename!;
+            if (profile) {
+                const reqFileName = profile.originalFilename!;
                 const isDefault = isDefaultFile(reqFileName);
 
                 /**
@@ -125,14 +117,14 @@ const controller = {
                 } else {
                     fileName = `${data.userId}.${dayjs().valueOf()}.${reqFileName}`;
 
-                    await uploadFile(fileName, folderName, data.profile.filepath);
+                    await uploadFile(fileName, folderName, profile.filepath);
                     isUpload = true;
                 }
 
-                updateData.profile = fileName;
+                data.profile = fileName;
             }
 
-            await user.update(updateData);
+            await user.update(data);
 
             // 이미 profile이 있다면 Firebase에서 삭제
             if (prevProfile && data.profile) await deleteFile(prevProfile, folderName);
