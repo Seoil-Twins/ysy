@@ -15,12 +15,18 @@ import InternalServerError from "../error/internalServer";
 import BadRequestError from "../error/badRequest";
 import ConflictError from "../error/conflict";
 
+import logger from "../logger/logger";
 import jwt from "../util/jwt";
 import { deleteFile, uploadFile, isDefaultFile } from "../util/firebase";
 
 const folderName = "couples";
 
 const controller = {
+    /**
+     * 커플 정보를 가져옵니다.
+     * @param cupId Couple Id
+     * @returns A {@link Couple}
+     */
     getCouple: async (cupId: string): Promise<Couple> => {
         const couple = await Couple.findOne({
             where: { cupId: cupId },
@@ -35,6 +41,11 @@ const controller = {
 
         return couple;
     },
+    /**
+     * 커플를 생성하고 업데이트된 토큰 정보를 반환합니다.
+     * @param data A {@link IRequestCreate}
+     * @returns A {@link ITokenResponse}
+     */
     createCouple: async (data: IRequestCreate): Promise<ITokenResponse> => {
         let fileName = null;
         let isUpload = false;
@@ -104,6 +115,7 @@ const controller = {
             );
 
             await t.commit();
+            logger.debug(`Create Data => ${JSON.stringify(data)}`);
 
             // token 재발급
             const result: ITokenResponse = await jwt.createToken(data.userId, cupId);
@@ -112,12 +124,20 @@ const controller = {
         } catch (error) {
             await t.rollback();
 
-            // Firebase에는 업로드 되었지만 DB 오류가 발생했다면 Firebase Profile 삭제
-            if (data.thumbnail && isUpload) await deleteFile(fileName!, folderName);
+            // Firebase에는 업로드 되었지만 DB 오류가 발생했다면 Firebase thumbnail 삭제
+            if (data.thumbnail && isUpload) {
+                await deleteFile(fileName!, folderName);
+                logger.error(`After updating the firebase, a db error occurred and the firebase thumbnail is deleted => ${fileName}`);
+            }
 
             throw error;
         }
     },
+    /**
+     * 커플 정보를 수정합니다.
+     * @param data A {@link IUpdate}
+     * @param thumbnail 커플 대표사진
+     */
     updateCouple: async (data: IUpdate, thumbnail: File | undefined): Promise<void> => {
         let isUpload = false;
         let fileName: string | null = null;
@@ -164,12 +184,19 @@ const controller = {
             }
 
             await couple.update(data);
+            logger.debug(`Update Data => ${JSON.stringify(data)}`);
 
             // Upload, DB Update를 하고나서 기존 이미지 지우기
-            if (prevThumbnail && data.thumbnail) await deleteFile(prevThumbnail, folderName);
+            if (prevThumbnail && data.thumbnail) {
+                await deleteFile(prevThumbnail, folderName);
+                logger.debug(`Deleted already thumbnail => ${prevThumbnail}`);
+            }
         } catch (error) {
             // Firebase에는 업로드 되었지만 DB 오류가 발생했다면 Firebase Profile 삭제
-            if (data.thumbnail && isUpload) await deleteFile(fileName!, folderName);
+            if (data.thumbnail && isUpload) {
+                await deleteFile(fileName!, folderName);
+                logger.error(`After updating the firebase, a db error occurred and the firebase thumbnail is deleted => ${fileName}`);
+            }
 
             throw error;
         }
@@ -177,7 +204,6 @@ const controller = {
     /**
      * Couple 삭제 하는 메소드
      * Couple 삭제 시 thumbnail은 삭제하지 않으며, Admin API에서 Couple 삭제 시 처리
-     *
      * @param userId User Id
      * @param cupId Couple Id
      * @returns ITokenResponse: Access, Refresh Token
@@ -220,6 +246,7 @@ const controller = {
             const result: ITokenResponse = await jwt.createToken(userId, null);
 
             t.commit();
+            logger.debug(`Success Update and Delete couple => ${user1.userId}, ${user2.userId}, ${cupId}`);
 
             return result;
         } catch (error) {

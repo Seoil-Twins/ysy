@@ -15,6 +15,11 @@ import { deleteFile, deleteFolder, getAllFiles, getFiles, uploadFile } from "../
 const folderName = "couples";
 
 const controller = {
+    /**
+     * 앨범 폴더를 가져옵니다.
+     * @param cupId Couple Id
+     * @returns A {@link Album}
+     */
     getAlbumsFolder: async (cupId: string): Promise<Album[]> => {
         const albums: Album[] = await Album.findAll({
             where: { cupId: cupId }
@@ -24,6 +29,11 @@ const controller = {
 
         return albums;
     },
+    /**
+     * 한 앨범의 목록을 가져옵니다.
+     * @param data A {@link IRequestGet}
+     * @returns A {@link IResponse}
+     */
     getAlbums: async (data: IRequestGet): Promise<IResponse> => {
         const album: Album | null = await Album.findOne({
             where: {
@@ -55,12 +65,24 @@ const controller = {
 
         return result;
     },
+    /**
+     * 앨범 폴더를 만듭니다.
+     *
+     * @param data A {@link IRequestCreate}
+     */
     addAlbumFolder: async (data: IRequestCreate): Promise<void> => {
         await Album.create({
             cupId: data.cupId,
             title: data.title
         });
+        logger.debug(`Create Data => ${JSON.stringify(data)}`);
     },
+    /**
+     * 앨범 폴더에 하나 또는 여러 개의 이미지를 추가합니다.
+     * @param cupId Couple Id
+     * @param albumId Album Id
+     * @param files 앨범 이미지 파일
+     */
     addAlbums: async (cupId: string, albumId: number, files: File | File[]): Promise<void> => {
         const albumFolder = await Album.findByPk(albumId);
 
@@ -73,6 +95,7 @@ const controller = {
                     const fileName = `/${cupId}/${albumId}/${dayjs().valueOf()}.${files[i].originalFilename}`;
                     await uploadFile(fileName, folderName, files[i].filepath);
                 } catch (error) {
+                    logger.error(`Add album error and ignore => ${JSON.stringify(error)}`);
                     continue;
                 }
             }
@@ -80,7 +103,13 @@ const controller = {
             const fileName = `/${cupId}/${albumId}/${dayjs().valueOf()}.${files.originalFilename}`;
             await uploadFile(fileName, folderName, files.filepath);
         }
+
+        logger.debug(`Success add albums => ${cupId}, ${albumId}, ${JSON.stringify(files)}`);
     },
+    /**
+     * 앨범 폴더명을 수정합니다.
+     * @param data A {@link IRequestUpadteTitle}
+     */
     updateTitle: async (data: IRequestUpadteTitle): Promise<void> => {
         const albumFolder = await Album.findByPk(data.albumId);
 
@@ -90,7 +119,13 @@ const controller = {
         await albumFolder.update({
             title: data.title
         });
+
+        logger.debug(`Update Data => ${JSON.stringify(data)}`);
     },
+    /**
+     * 앨범 대표 사진을 수정 또는 추가합니다.
+     * @param data A {@link IRequestUpadteThumbnail}
+     */
     updateThumbnail: async (data: IRequestUpadteThumbnail): Promise<void> => {
         let isUpload = false;
         const path = `/${data.cupId}/${data.albumId}/thumbnail/${dayjs().valueOf()}.${data.thumbnail.originalFilename}`;
@@ -111,14 +146,28 @@ const controller = {
             );
             await uploadFile(path, folderName, data.thumbnail.filepath);
             isUpload = true;
+            logger.debug(`Update Data => ${JSON.stringify(data)}`);
 
-            if (prevThumbnail) await deleteFile(prevThumbnail, folderName);
+            if (prevThumbnail) {
+                await deleteFile(prevThumbnail, folderName);
+                logger.debug(`Deleted already image => ${prevThumbnail}`);
+            }
+
             t.commit();
         } catch (error) {
             t.rollback();
-            if (isUpload) await deleteFile(path, folderName);
+
+            if (isUpload) {
+                await deleteFile(path, folderName);
+                logger.error(`After updating the firebase, a db error occurred and the firebase image is deleted => ${path}`);
+            }
         }
     },
+    /**
+     * 앨범을 삭제합니다.
+     * @param cupId Couple ID
+     * @param albumId Album ID
+     */
     deleteAlbum: async (cupId: string, albumId: number): Promise<void> => {
         const albumFolder = await Album.findByPk(albumId);
 
@@ -144,6 +193,8 @@ const controller = {
                 });
             });
         }
+
+        logger.debug(`Success Deleted albums => ${cupId}, ${albumId}`);
     }
 };
 

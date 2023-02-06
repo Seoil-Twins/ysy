@@ -15,7 +15,13 @@ import UnauthorizedError from "../error/unauthorized";
 dayjs.extend(isSameOrBefore);
 
 const controller = {
-    updateToken: async (accessToken: string, refreshToken: string) => {
+    /**
+     * Access Token, Refresh Token을 새로 만듭니다.
+     * @param accessToken JWT Access Token
+     * @param refreshToken JWT Refresh Token
+     * @returns A {@link ITokenResponse}
+     */
+    updateToken: async (accessToken: string, refreshToken: string): Promise<ITokenResponse> => {
         /**
          * RTR : Refresh Token Rotation
          * Refresh Token이 Access Token을 발급했다면 Refresh Token도 재발행 (1회용)
@@ -56,7 +62,12 @@ const controller = {
             throw new UnauthorizedError("Re Login");
         }
     },
-    login: async (data: ILogin) => {
+    /**
+     * 사용자 로그인을 합니다.
+     * @param data A {@link ILogin}
+     * @returns A {@link ITokenResponse}
+     */
+    login: async (data: ILogin): Promise<ITokenResponse> => {
         const user: User | null = await User.findOne({
             where: {
                 email: data.email

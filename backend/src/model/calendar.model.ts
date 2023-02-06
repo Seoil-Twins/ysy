@@ -29,8 +29,7 @@ export interface IResponse {
     calendars: Calendar[];
 }
 
-export interface IRequestUpdate {
-    calendarId: number;
+export interface IUpdate {
     cupId: string;
     title: string | undefined;
     description: string | undefined;

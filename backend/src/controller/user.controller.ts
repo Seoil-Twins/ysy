@@ -5,6 +5,7 @@ import { File } from "formidable";
 
 import { User, ICreate, IUpdate, IUserResponse } from "../model/user.model";
 
+import logger from "../logger/logger";
 import { deleteFile, isDefaultFile, uploadFile } from "../util/firebase";
 import { createDigest } from "../util/password";
 
@@ -16,6 +17,11 @@ import ConflictError from "../error/conflict";
 const folderName = "profiles";
 
 const controller = {
+    /**
+     * 유저와 커플의 정보를 가져옵니다.
+     * @param userId User Id
+     * @returns A {@link IUserResponse}
+     */
     getUsers: async (userId: number): Promise<IUserResponse> => {
         const user1: User | null = await User.findOne({
             attributes: { exclude: ["password"] },
@@ -46,6 +52,10 @@ const controller = {
 
         return result;
     },
+    /**
+     * 유저 정보를 생성합니다.
+     * @param data A {@link ICreate}
+     */
     createUser: async (data: ICreate): Promise<void> => {
         let isNot = true;
         let code = "";
@@ -87,7 +97,14 @@ const controller = {
             phone: data.phone,
             eventNofi: data.eventNofi
         });
+
+        logger.debug(`Created User => ${data.email}`);
     },
+    /**
+     * 유저의 정보를 수정합니다.
+     * @param data A {@link IUpdate}
+     * @param profile User Profile
+     */
     updateUser: async (data: IUpdate, profile: File | undefined): Promise<void> => {
         let isUpload = false;
         let fileName: string | null = "";
@@ -125,12 +142,19 @@ const controller = {
             }
 
             await user.update(data);
+            logger.debug(`Update Data => ${JSON.stringify(data)}`);
 
             // 이미 profile이 있다면 Firebase에서 삭제
-            if (prevProfile && data.profile) await deleteFile(prevProfile, folderName);
+            if (prevProfile && data.profile) {
+                await deleteFile(prevProfile, folderName);
+                logger.debug(`Deleted already profile => ${prevProfile}`);
+            }
         } catch (error) {
             // Firebase에는 업로드 되었지만 DB 오류가 발생했다면 Firebase Profile 삭제
-            if (data.profile && isUpload) await deleteFile(fileName!, folderName);
+            if (data.profile && isUpload) {
+                await deleteFile(fileName!, folderName);
+                logger.error(`After updating the firebase, a db error occurred and the firebase profile is deleted => ${fileName}`);
+            }
 
             throw error;
         }
@@ -138,7 +162,6 @@ const controller = {
     /**
      * 사용자 정보 삭제이며, Couple이 있는 경우 Frontend에서 연인 끊기 후 삭제를 요청.
      * @param userId User Id
-     * @param cupId Couple Id
      */
     deleteUser: async (userId: number): Promise<void> => {
         const user: User | null = await User.findOne({ where: { userId: userId } });
@@ -151,6 +174,7 @@ const controller = {
         });
 
         if (user.profile) await deleteFile(user.profile, folderName);
+        logger.debug(`Success Deleted userId => ${userId}`);
     }
 };
 

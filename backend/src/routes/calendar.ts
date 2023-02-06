@@ -10,7 +10,7 @@ import StatusCode from "../util/statusCode";
 import BadRequestError from "../error/badRequest";
 import ForbiddenError from "../error/forbidden";
 
-import { IRequestUpdate, IResponse } from "../model/calendar.model";
+import { IUpdate, IResponse } from "../model/calendar.model";
 
 const router: Router = express.Router();
 
@@ -59,9 +59,7 @@ router.post("/:cup_id", async (req: Request, res: Response, next: NextFunction) 
             throw new BadRequestError("Bad Request Error");
         } else if (req.body.cupId !== req.params.cup_id) throw new ForbiddenError("Forbidden Error");
 
-        const data: IRequestUpdate = value;
-
-        await calendarController.addCalendar(value.userId, value);
+        await calendarController.addCalendar(value);
         res.status(StatusCode.CREATED).json({});
     } catch (_error) {
         next(_error);
@@ -79,7 +77,7 @@ router.patch("/:cup_id/:calendar_id", async (req: Request, res: Response, next: 
         } else if (req.body.cupId !== req.params.cup_id) throw new ForbiddenError("Forbidden Error");
         else if (isNaN(calendarId)) throw new BadRequestError("Bad Request Error");
 
-        await calendarController.updateCalendar(value.userId, calendarId, value);
+        await calendarController.updateCalendar(calendarId, value);
         res.status(StatusCode.NO_CONTENT).json({});
     } catch (_error) {
         next(_error);
@@ -93,7 +91,7 @@ router.delete("/:cup_id/:calendar_id", async (req: Request, res: Response, next:
         if (req.body.cupId !== req.params.cup_id) throw new ForbiddenError("Forbidden Error");
         else if (isNaN(calendarId)) throw new BadRequestError("Bad Request Error");
 
-        await calendarController.deleteCalendar(req.body.userId, calendarId);
+        await calendarController.deleteCalendar(calendarId);
         res.status(StatusCode.NO_CONTENT).json({});
     } catch (_error) {
         next(_error);
