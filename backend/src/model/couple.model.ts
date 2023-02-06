@@ -4,6 +4,7 @@ import { File } from "formidable";
 import sequelize from ".";
 import { Album } from "./album.model";
 import { User } from "./user.model";
+import { Calendar } from "./calendar.model";
 
 // -------------------------------------------- Interface ------------------------------------------ //
 export interface ICouple {
@@ -51,6 +52,7 @@ export class Couple extends Model<ICouple, ICreate> {
 
     declare getUsers: HasManyGetAssociationsMixin<User>;
     declare getAlbums: HasManyGetAssociationsMixin<Album>;
+    declare getCalendars: HasManyGetAssociationsMixin<Calendar>;
 }
 
 Couple.init(

@@ -28,6 +28,16 @@ export interface IResponse {
     cupId: string;
     calendars: Calendar[];
 }
+
+export interface IRequestUpdate {
+    calendarId: number;
+    cupId: string;
+    title: string | undefined;
+    description: string | undefined;
+    fromDate: Date | undefined;
+    toDate: Date | undefined;
+    color: Date | undefined;
+}
 // ------------------------------------------ Interface End ---------------------------------------- //
 
 export class Calendar extends Model<ICalendar, ICreate> {
