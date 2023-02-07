@@ -7,7 +7,7 @@ import { User } from "../model/user.model";
 import { ILogin, ITokenResponse } from "../model/auth.model";
 
 import { checkPassword } from "../util/password";
-import { set, get, del } from "../util/redis";
+import { get, del } from "../util/redis";
 
 import UnauthorizedError from "../error/unauthorized";
 
@@ -53,13 +53,13 @@ const controller = {
 
                 return result;
             } else {
-                if (!refreshTokenWithRedis) throw new UnauthorizedError("Re Login");
+                if (!refreshTokenWithRedis) throw new UnauthorizedError("Wrong approach");
 
                 await del(userId);
-                throw new UnauthorizedError("Re Login");
+                throw new UnauthorizedError("Wrong approach");
             }
         } else {
-            throw new UnauthorizedError("Re Login");
+            throw new UnauthorizedError("Wrong approach");
         }
     },
     /**

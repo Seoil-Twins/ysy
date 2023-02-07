@@ -41,6 +41,14 @@ export const isDefaultFile = (fileName: string): boolean => {
 
 /**
  * N개의 이미지를 가져옵니다.
+ * ### Example
+ * ```typescript
+ * // nextPageToken이 없는 경우
+ * const firebaseResult: ListResult = await getFiles("path", 10);
+ *
+ * // nextPageToken이 있는 경우
+ * const firebaseResult: ListResult = await getFiles("path", 10, "nextPageToken");
+ * ```
  * @param folderName Folder 이름
  * @param count 가져올 이미지의 개수
  * @param nextPageToken 다음 페이지의 토큰
