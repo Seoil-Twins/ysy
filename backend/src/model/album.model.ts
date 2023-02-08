@@ -13,16 +13,16 @@ export interface IAlbum {
     createdTime: Date;
 }
 
+export interface ICreate {
+    cupId: string;
+    title: string;
+}
+
 export interface IRequestGet {
     albumId: number;
     cupId: string;
     count: number;
     nextPageToken: string | undefined;
-}
-
-export interface IRequestCreate {
-    cupId: string;
-    title: string;
 }
 
 export interface IRequestUpadteTitle {
@@ -47,11 +47,6 @@ export interface IResponse {
     createdTime: Date;
     items: string[];
     nextPageToken: string | undefined;
-}
-
-interface ICreate {
-    cupId: string;
-    title: string;
 }
 // ------------------------------------------ Interface End ---------------------------------------- //
 

@@ -6,7 +6,7 @@ import ForbiddenError from "../error/forbidden";
 import NotFoundError from "../error/notFound";
 
 import sequelize from "../model";
-import { Album, IRequestCreate, IRequestGet, IRequestUpadteThumbnail, IRequestUpadteTitle, IResponse } from "../model/album.model";
+import { Album, ICreate, IRequestGet, IRequestUpadteThumbnail, IRequestUpadteTitle, IResponse } from "../model/album.model";
 import { ErrorImage } from "../model/errorImage.model";
 
 import logger from "../logger/logger";
@@ -70,11 +70,8 @@ const controller = {
      *
      * @param data A {@link IRequestCreate}
      */
-    addAlbumFolder: async (data: IRequestCreate): Promise<void> => {
-        await Album.create({
-            cupId: data.cupId,
-            title: data.title
-        });
+    addAlbumFolder: async (data: ICreate): Promise<void> => {
+        await Album.create(data);
         logger.debug(`Create Data => ${JSON.stringify(data)}`);
     },
     /**
