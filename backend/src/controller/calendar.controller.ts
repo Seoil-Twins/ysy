@@ -1,10 +1,8 @@
 import dayjs from "dayjs";
 import { Op } from "sequelize";
 
-import ForbiddenError from "../error/forbidden";
 import NotFoundError from "../error/notFound";
 
-import sequelize from "../model";
 import { Couple } from "../model/couple.model";
 import { Calendar, ICreate, IUpdate, IResponse } from "../model/calendar.model";
 

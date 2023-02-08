@@ -5,6 +5,7 @@ import authRouter from "./auth";
 import coupleRouter from "./couple";
 import albumRouter from "./album";
 import calendarRouter from "./calendar";
+import inquireRouter from "./inquire";
 
 import authMiddleware from "../middlewares/auth.middleware";
 
@@ -15,5 +16,6 @@ router.use("/user", authMiddleware, userRouter);
 router.use("/couple", authMiddleware, coupleRouter);
 router.use("/album", authMiddleware, albumRouter);
 router.use("/calendar", authMiddleware, calendarRouter);
+router.use("/inquire", authMiddleware, inquireRouter);
 
 export default router;
