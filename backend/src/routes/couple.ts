@@ -88,11 +88,11 @@ router.patch("/:cup_id", async (req: Request, res: Response, next: NextFunction)
             const { value, error }: ValidationResult = validator(req.body, updateSchema);
 
             if (error) throw new BadRequestError("Bad Request Error");
-            else if (!req.body.file && !req.body.title && !req.body.cupDay) throw new BadRequestError("Bad Request Error");
             else if (req.body.cupId !== req.params.cup_id) throw new ForbiddenError("Not Same Couple Id");
 
             let file: any = undefined;
             if (Object.keys(files).length === 1) file = files.file;
+            if (!file && !req.body.title && !req.body.cupDay) throw new BadRequestError("Bad Request Error");
 
             await coupleController.updateCouple(req.body, file);
 

@@ -31,9 +31,9 @@ const controller = {
                 if (imageData instanceof Array<File>) {
                     for (let i = 0; i < imageData.length; i++) {
                         const image = imageData[i];
-                        const path = `/${inquireData.userId}/inquires/${inquire.inquireId}/${dayjs().valueOf()}.${image.originalFilename}`;
+                        const path = `${folderName}/${inquireData.userId}/inquires/${inquire.inquireId}/${dayjs().valueOf()}.${image.originalFilename}`;
 
-                        await uploadFile(path, folderName, image.filepath);
+                        await uploadFile(path, image.filepath);
                         firebaseUploads.push(path);
 
                         await InquireImage.create(
@@ -47,9 +47,9 @@ const controller = {
                         logger.debug(`Create Inquire Image => ${path}`);
                     }
                 } else if (imageData instanceof File) {
-                    const path = `/${inquireData.userId}/inquires/${inquire.inquireId}/${dayjs().valueOf()}.${imageData.originalFilename}`;
+                    const path = `${folderName}/${inquireData.userId}/inquires/${inquire.inquireId}/${dayjs().valueOf()}.${imageData.originalFilename}`;
 
-                    await uploadFile(path, folderName, imageData.filepath);
+                    await uploadFile(path, imageData.filepath);
                     firebaseUploads.push(path);
 
                     await InquireImage.create(
@@ -71,7 +71,7 @@ const controller = {
 
             if (firebaseUploads.length > 0) {
                 firebaseUploads.forEach(async (path: string) => {
-                    await deleteFile(path, folderName);
+                    await deleteFile(path);
                     logger.warn(`Firebase Delete => ${path}`);
                 });
             }

@@ -47,7 +47,7 @@ const controller = {
      * @returns A {@link ITokenResponse}
      */
     createCouple: async (data: IRequestCreate): Promise<ITokenResponse> => {
-        let fileName = null;
+        let path = null;
         let isUpload = false;
 
         const t = await sequelize.transaction();
@@ -71,9 +71,9 @@ const controller = {
             }
 
             if (data.thumbnail) {
-                fileName = `/${cupId}/thumbnail/${dayjs().valueOf()}.${data.thumbnail.originalFilename!}`;
+                path = `${folderName}/${cupId}/thumbnail/${dayjs().valueOf()}.${data.thumbnail.originalFilename!}`;
 
-                await uploadFile(fileName, folderName, data.thumbnail.filepath);
+                await uploadFile(path, data.thumbnail.filepath);
                 isUpload = true;
             }
 
@@ -82,7 +82,7 @@ const controller = {
                     cupId: cupId,
                     cupDay: data.cupDay,
                     title: data.title,
-                    thumbnail: fileName
+                    thumbnail: path
                 },
                 { transaction: t }
             );
@@ -126,8 +126,8 @@ const controller = {
 
             // Firebase에는 업로드 되었지만 DB 오류가 발생했다면 Firebase thumbnail 삭제
             if (data.thumbnail && isUpload) {
-                await deleteFile(fileName!, folderName);
-                logger.error(`After updating the firebase, a db error occurred and the firebase thumbnail is deleted => ${fileName}`);
+                await deleteFile(path!);
+                logger.error(`After updating the firebase, a db error occurred and the firebase thumbnail is deleted => ${path}`);
             }
 
             throw error;
@@ -140,7 +140,7 @@ const controller = {
      */
     updateCouple: async (data: IUpdate, thumbnail: File | undefined): Promise<void> => {
         let isUpload = false;
-        let fileName: string | null = null;
+        let path: string | null = null;
         const user = await User.findOne({
             attributes: ["cupId"],
             where: { userId: data.userId }
@@ -172,15 +172,15 @@ const controller = {
                 const isDefault = isDefaultFile(reqFileName);
 
                 if (isDefault) {
-                    fileName = null;
+                    path = null;
                 } else {
-                    fileName = `/${data.cupId}/thumbnail/${dayjs().valueOf()}.${reqFileName}`;
+                    path = `${folderName}/${data.cupId}/thumbnail/${dayjs().valueOf()}.${reqFileName}`;
 
-                    await uploadFile(fileName, folderName, thumbnail.filepath);
+                    await uploadFile(path, thumbnail.filepath);
                     isUpload = true;
                 }
 
-                data.thumbnail = fileName;
+                data.thumbnail = path;
             }
 
             await couple.update(data);
@@ -188,14 +188,14 @@ const controller = {
 
             // Upload, DB Update를 하고나서 기존 이미지 지우기
             if (prevThumbnail && data.thumbnail) {
-                await deleteFile(prevThumbnail, folderName);
+                await deleteFile(prevThumbnail);
                 logger.debug(`Deleted already thumbnail => ${prevThumbnail}`);
             }
         } catch (error) {
             // Firebase에는 업로드 되었지만 DB 오류가 발생했다면 Firebase Profile 삭제
             if (data.thumbnail && isUpload) {
-                await deleteFile(fileName!, folderName);
-                logger.error(`After updating the firebase, a db error occurred and the firebase thumbnail is deleted => ${fileName}`);
+                await deleteFile(path!);
+                logger.error(`After updating the firebase, a db error occurred and the firebase thumbnail is deleted => ${path}`);
             }
 
             throw error;

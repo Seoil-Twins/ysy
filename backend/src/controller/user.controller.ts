@@ -14,7 +14,7 @@ import ForbiddenError from "../error/forbidden";
 import UnauthorizedError from "../error/unauthorized";
 import ConflictError from "../error/conflict";
 
-const folderName = "profiles";
+const folderName = "users";
 
 const controller = {
     /**
@@ -107,7 +107,7 @@ const controller = {
      */
     updateUser: async (data: IUpdate, profile: File | undefined): Promise<void> => {
         let isUpload = false;
-        let fileName: string | null = "";
+        let path: string | null = "";
 
         const user: User | null = await User.findOne({
             where: {
@@ -130,15 +130,15 @@ const controller = {
                  * 사용자가 profile을 내리면 그걸로 넣고 요청
                  */
                 if (isDefault) {
-                    fileName = null;
+                    path = null;
                 } else {
-                    fileName = `${data.userId}.${dayjs().valueOf()}.${reqFileName}`;
+                    path = `${folderName}/${data.userId}/profile/${dayjs().valueOf()}.${reqFileName}`;
 
-                    await uploadFile(fileName, folderName, profile.filepath);
+                    await uploadFile(path, profile.filepath);
                     isUpload = true;
                 }
 
-                data.profile = fileName;
+                data.profile = path;
             }
 
             await user.update(data);
@@ -146,14 +146,14 @@ const controller = {
 
             // 이미 profile이 있다면 Firebase에서 삭제
             if (prevProfile && data.profile) {
-                await deleteFile(prevProfile, folderName);
+                await deleteFile(prevProfile);
                 logger.debug(`Deleted already profile => ${prevProfile}`);
             }
         } catch (error) {
             // Firebase에는 업로드 되었지만 DB 오류가 발생했다면 Firebase Profile 삭제
             if (data.profile && isUpload) {
-                await deleteFile(fileName!, folderName);
-                logger.error(`After updating the firebase, a db error occurred and the firebase profile is deleted => ${fileName}`);
+                await deleteFile(path!);
+                logger.error(`After updating the firebase, a db error occurred and the firebase profile is deleted => ${path}`);
             }
 
             throw error;
@@ -173,7 +173,7 @@ const controller = {
             deletedTime: new Date(dayjs().valueOf())
         });
 
-        if (user.profile) await deleteFile(user.profile, folderName);
+        if (user.profile) await deleteFile(user.profile);
         logger.debug(`Success Deleted userId => ${userId}`);
     }
 };

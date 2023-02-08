@@ -49,7 +49,7 @@ export const isDefaultFile = (fileName: string): boolean => {
  * // nextPageToken이 있는 경우
  * const firebaseResult: ListResult = await getFiles("path", 10, "nextPageToken");
  * ```
- * @param folderName Folder 이름
+ * @param path Folder 위치
  * @param count 가져올 이미지의 개수
  * @param nextPageToken 다음 페이지의 토큰
  * @returns 이미지의 리스트를 반환
@@ -79,11 +79,11 @@ export const getFiles = async (path: string, count: number, nextPageToken?: stri
 
 /**
  * 모든 이미지를 가져옵니다.
- * @param folderName Folder 이름
+ * @param path Folder 위치
  * @returns 이미지의 리스트를 반환
  */
-export const getAllFiles = async (path: string, folderName: string): Promise<ListResult> => {
-    const listRef = ref(storage, `${folderName}/${path}`);
+export const getAllFiles = async (path: string): Promise<ListResult> => {
+    const listRef = ref(storage, path);
     let result: ListResult = await listAll(listRef);
 
     return result;
@@ -91,12 +91,11 @@ export const getAllFiles = async (path: string, folderName: string): Promise<Lis
 
 /**
  * Firebase Storage를 통해 하나의 이미지를 업로드 합니다.
- * @param path 이미지 경로와 이름
- * @param folderName Firebase Storage 폴더 이름
+ * @param path 이미지 경로
  * @param filePath 이미지가 임시 저장된 경로
  */
-export const uploadFile = async (path: string, folderName: string, filePath: string): Promise<void> => {
-    const storageRef = ref(storage, `${folderName}/${path}`);
+export const uploadFile = async (path: string, filePath: string): Promise<void> => {
+    const storageRef = ref(storage, path);
 
     /**
      * Formidable PersistentFile Type은 File Type이 아니기 때문에
@@ -109,11 +108,11 @@ export const uploadFile = async (path: string, folderName: string, filePath: str
 
 /**
  * Firebase Storage를 통해 이미지를 삭제합니다.
- * @param path 이미지 경로와 이름
+ * @param path 이미지 경로
  * @param folderName Firebase Storage 폴더 이름
  */
-export const deleteFile = async (path: string, folderName: string): Promise<void> => {
-    const delRef = ref(storage, `${folderName}/${path}`);
+export const deleteFile = async (path: string): Promise<void> => {
+    const delRef = ref(storage, path);
     await deleteObject(delRef);
 };
 
@@ -122,8 +121,8 @@ export const deleteFile = async (path: string, folderName: string): Promise<void
  * @param path 폴더 경로
  * @param folderName 폴더 이름
  */
-export const deleteFolder = async (path: string, folderName: string): Promise<void> => {
-    const folderRef = ref(storage, `${folderName}/${path}`);
+export const deleteFolder = async (path: string): Promise<void> => {
+    const folderRef = ref(storage, path);
     const fileList = await listAll(folderRef);
     const promises = [];
 

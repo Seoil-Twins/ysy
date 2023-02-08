@@ -89,16 +89,16 @@ const controller = {
         if (files instanceof Array<File>) {
             for (let i = 0; i < files.length; i++) {
                 try {
-                    const fileName = `/${cupId}/${albumId}/${dayjs().valueOf()}.${files[i].originalFilename}`;
-                    await uploadFile(fileName, folderName, files[i].filepath);
+                    const path = `${folderName}/${cupId}/${albumId}/${dayjs().valueOf()}.${files[i].originalFilename}`;
+                    await uploadFile(path, files[i].filepath);
                 } catch (error) {
                     logger.error(`Add album error and ignore => ${JSON.stringify(error)}`);
                     continue;
                 }
             }
         } else if (files instanceof File) {
-            const fileName = `/${cupId}/${albumId}/${dayjs().valueOf()}.${files.originalFilename}`;
-            await uploadFile(fileName, folderName, files.filepath);
+            const path = `${folderName}//${cupId}/${albumId}/${dayjs().valueOf()}.${files.originalFilename}`;
+            await uploadFile(path, files.filepath);
         }
 
         logger.debug(`Success add albums => ${cupId}, ${albumId}, ${JSON.stringify(files)}`);
@@ -125,7 +125,7 @@ const controller = {
      */
     updateThumbnail: async (data: IRequestUpadteThumbnail): Promise<void> => {
         let isUpload = false;
-        const path = `/${data.cupId}/${data.albumId}/thumbnail/${dayjs().valueOf()}.${data.thumbnail.originalFilename}`;
+        const path = `${folderName}/${data.cupId}/${data.albumId}/thumbnail/${dayjs().valueOf()}.${data.thumbnail.originalFilename}`;
         const albumFolder = await Album.findByPk(data.albumId);
 
         if (!albumFolder) throw new NotFoundError("Not Found Error");
@@ -141,12 +141,12 @@ const controller = {
                 },
                 { transaction: t }
             );
-            await uploadFile(path, folderName, data.thumbnail.filepath);
+            await uploadFile(path, data.thumbnail.filepath);
             isUpload = true;
             logger.debug(`Update Data => ${JSON.stringify(data)}`);
 
             if (prevThumbnail) {
-                await deleteFile(prevThumbnail, folderName);
+                await deleteFile(prevThumbnail);
                 logger.debug(`Deleted already image => ${prevThumbnail}`);
             }
 
@@ -155,7 +155,7 @@ const controller = {
             t.rollback();
 
             if (isUpload) {
-                await deleteFile(path, folderName);
+                await deleteFile(path);
                 logger.error(`After updating the firebase, a db error occurred and the firebase image is deleted => ${path}`);
             }
         }
@@ -173,11 +173,11 @@ const controller = {
 
         await albumFolder.destroy();
 
-        if (albumFolder.thumbnail) await deleteFile(albumFolder.thumbnail, folderName);
+        if (albumFolder.thumbnail) await deleteFile(albumFolder.thumbnail);
 
-        const path = `/${cupId}/${albumId}`;
-        await deleteFolder(path, folderName);
-        const images = await getAllFiles(path, folderName);
+        const path = `${folderName}/${cupId}/${albumId}`;
+        await deleteFolder(path);
+        const images = await getAllFiles(path);
 
         // 지워지지 않은 이미지가 존재할 시
         if (images.items.length) {
