@@ -61,8 +61,8 @@ router.post("/", async (req: Request, res: Response, next: NextFunction) => {
             await inquireController.addInquire(inquireData, files.file);
 
             res.status(StatusCode.CREATED).json({});
-        } catch (_error) {
-            next(_error);
+        } catch (error) {
+            next(error);
         }
     });
 });

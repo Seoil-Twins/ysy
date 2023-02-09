@@ -28,8 +28,8 @@ router.get("/:cup_id", async (req: Request, res: Response, next: NextFunction) =
 
         logger.debug(`Response Data : ${JSON.stringify(results)}`);
         return res.status(StatusCode.OK).json(results);
-    } catch (_error) {
-        next(_error);
+    } catch (error) {
+        next(error);
     }
 });
 
@@ -53,34 +53,26 @@ router.get("/:cup_id/:album_id", async (req: Request, res: Response, next: NextF
 
         logger.debug(`Response Data : ${JSON.stringify(result)}`);
         return res.status(StatusCode.OK).json(result);
-    } catch (_error) {
-        next(_error);
+    } catch (error) {
+        next(error);
     }
 });
 
 router.post("/:cup_id", async (req: Request, res: Response, next: NextFunction) => {
     const form = formidable({ multiples: false });
 
-    form.parse(req, async (err, fields, files) => {
-        try {
-            if (err) throw new err();
+    try {
+        const { value, error }: ValidationResult = validator(req.body, titleSchema);
 
-            req.body = Object.assign({}, req.body, fields);
+        if (error) throw new BadRequestError("Bad Request Error");
+        else if (req.body.cupId !== req.params.cup_id) throw new ForbiddenError("Not Same Couple Id");
 
-            const { value, error }: ValidationResult = validator(req.body, titleSchema);
+        await albumController.addAlbumFolder(req.body);
 
-            if (error) throw new BadRequestError("Bad Request Error");
-            else if (req.body.cupId !== req.params.cup_id) throw new ForbiddenError("Not Same Couple Id");
-
-            if (Object.keys(files).length === 1) req.body.thumbnail = files.file;
-
-            await albumController.addAlbumFolder(req.body);
-
-            return res.status(StatusCode.CREATED).json({});
-        } catch (_error) {
-            next(_error);
-        }
-    });
+        return res.status(StatusCode.CREATED).json({});
+    } catch (error) {
+        next(error);
+    }
 });
 
 router.post("/:cup_id/:album_id", async (req: Request, res: Response, next: NextFunction) => {
@@ -100,8 +92,8 @@ router.post("/:cup_id/:album_id", async (req: Request, res: Response, next: Next
             await albumController.addAlbums(req.body.cupId, albumId, files.file);
 
             return res.status(StatusCode.CREATED).json({});
-        } catch (_error) {
-            next(_error);
+        } catch (error) {
+            next(error);
         }
     });
 });
@@ -119,8 +111,8 @@ router.patch("/:cup_id/:album_id/title", async (req: Request, res: Response, nex
         await albumController.updateTitle(req.body);
 
         return res.status(StatusCode.NO_CONTENT).json({});
-    } catch (_error) {
-        next(_error);
+    } catch (error) {
+        next(error);
     }
 });
 
@@ -142,8 +134,8 @@ router.patch("/:cup_id/:album_id/thumbnail", async (req: Request, res: Response,
             await albumController.updateThumbnail(req.body);
 
             return res.status(StatusCode.NO_CONTENT).json({});
-        } catch (_error) {
-            next(_error);
+        } catch (error) {
+            next(error);
         }
     });
 });
@@ -158,8 +150,8 @@ router.delete("/:cup_id/:album_id", async (req: Request, res: Response, next: Ne
         await albumController.deleteAlbum(req.body.cupId, albumId);
 
         return res.status(StatusCode.NO_CONTENT).json({});
-    } catch (_error) {
-        next(_error);
+    } catch (error) {
+        next(error);
     }
 });
 

@@ -61,8 +61,8 @@ router.post("/:cup_id", async (req: Request, res: Response, next: NextFunction) 
 
         await calendarController.addCalendar(value);
         res.status(StatusCode.CREATED).json({});
-    } catch (_error) {
-        next(_error);
+    } catch (error) {
+        next(error);
     }
 });
 
@@ -79,8 +79,8 @@ router.patch("/:cup_id/:calendar_id", async (req: Request, res: Response, next: 
 
         await calendarController.updateCalendar(calendarId, value);
         res.status(StatusCode.NO_CONTENT).json({});
-    } catch (_error) {
-        next(_error);
+    } catch (error) {
+        next(error);
     }
 });
 
@@ -93,8 +93,8 @@ router.delete("/:cup_id/:calendar_id", async (req: Request, res: Response, next:
 
         await calendarController.deleteCalendar(calendarId);
         res.status(StatusCode.NO_CONTENT).json({});
-    } catch (_error) {
-        next(_error);
+    } catch (error) {
+        next(error);
     }
 });
 

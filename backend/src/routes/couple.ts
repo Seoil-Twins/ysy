@@ -45,8 +45,8 @@ router.get("/:cup_id", async (req: Request, res: Response, next: NextFunction) =
 
         logger.debug(`Response Data : ${JSON.stringify(result)}`);
         return res.status(StatusCode.OK).json(result);
-    } catch (_error) {
-        next(_error);
+    } catch (error) {
+        next(error);
     }
 });
 
@@ -69,8 +69,8 @@ router.post("/", async (req: Request, res: Response, next: NextFunction) => {
 
             logger.debug(`Response Data : ${JSON.stringify(result)}`);
             return res.status(StatusCode.CREATED).json(result);
-        } catch (_error) {
-            next(_error);
+        } catch (error) {
+            next(error);
         }
     });
 });
@@ -88,7 +88,7 @@ router.patch("/:cup_id", async (req: Request, res: Response, next: NextFunction)
             const { value, error }: ValidationResult = validator(req.body, updateSchema);
 
             if (error) throw new BadRequestError("Bad Request Error");
-            else if (req.body.cupId !== req.params.cup_id) throw new ForbiddenError("Not Same Couple Id");
+            else if (req.body.cupId !== req.params.cup_id) throw new ForbiddenError("Not Matched Couple ID");
 
             let file: any = undefined;
             if (Object.keys(files).length === 1) file = files.file;
@@ -97,8 +97,8 @@ router.patch("/:cup_id", async (req: Request, res: Response, next: NextFunction)
             await coupleController.updateCouple(req.body, file);
 
             return res.status(StatusCode.NO_CONTENT).json({});
-        } catch (_error) {
-            next(_error);
+        } catch (error) {
+            next(error);
         }
     });
 });
@@ -117,8 +117,8 @@ router.delete("/:cup_id", async (req: Request, res: Response, next: NextFunction
 
         logger.debug(`Response Data : ${JSON.stringify(result)}`);
         return res.status(StatusCode.NO_CONTENT).json(result);
-    } catch (_error) {
-        next(_error);
+    } catch (error) {
+        next(error);
     }
 });
 
