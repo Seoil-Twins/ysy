@@ -1,19 +1,53 @@
-import { Op } from "sequelize";
+import dayjs from "dayjs";
+import { File } from "formidable";
 
 import NotFoundError from "../error/notFound";
 
 import sequelize from "../model";
 import { ICreate as ICreateInquire, Inquire } from "../model/inquire.model";
-import { IRequestCreate as IRequestCreateImage, InquireImage } from "../model/inquireImage.model";
+import { InquireImage } from "../model/inquireImage.model";
+import { Solution } from "../model/solution.model";
 
 import logger from "../logger/logger";
 import { deleteFile, uploadFile } from "../util/firebase";
-import dayjs from "dayjs";
-import { File } from "formidable";
+import { SolutionImage } from "../model/solutionImage.model";
 
 const folderName = "users";
 
 const controller = {
+    /**
+     * 문의사항들을 가져옵니다.
+     * @param userId User ID
+     * @returns A {@link Inquire} List
+     */
+    getInquires: async (userId: number): Promise<Inquire[]> => {
+        const inquires: Inquire[] = await Inquire.findAll({
+            where: { userId },
+            include: [
+                {
+                    model: InquireImage,
+                    as: "inquireImages",
+                    attributes: { exclude: ["inquireId"] }
+                },
+                {
+                    model: Solution,
+                    as: "solution",
+                    attributes: { exclude: ["inquireId"] },
+                    include: [
+                        {
+                            model: SolutionImage,
+                            as: "solutionImages",
+                            attributes: { exclude: ["solutionId"] }
+                        }
+                    ]
+                }
+            ]
+        });
+
+        if (inquires.length <= 0) throw new NotFoundError("Not Found Inquires");
+
+        return inquires;
+    },
     /**
      * 문의사항을 추가합니다.
      * @param inquireData {@link ICreateInquire}

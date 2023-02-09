@@ -1,7 +1,8 @@
 import { File } from "formidable";
-import { DataTypes, Model, literal } from "sequelize";
+import { DataTypes, Model, literal, Association, NonAttribute } from "sequelize";
 
 import sequelize from ".";
+import { InquireImage } from "./inquireImage.model";
 import { Solution } from "./solution.model";
 import { User } from "./user.model";
 
@@ -12,14 +13,6 @@ export interface IInquire {
     title: string;
     contents: string;
     createdTime: Date;
-}
-
-export interface IResponse {
-    inquireId: number;
-    title: string;
-    contents: string;
-    createdTime: Date;
-    solution: Solution | undefined;
 }
 
 export interface ICreate {
@@ -36,6 +29,9 @@ export interface IUpdate {
 // ------------------------------------------ Interface End ---------------------------------------- //
 
 export class Inquire extends Model<IInquire, ICreate> {
+    declare inquireImages?: NonAttribute<InquireImage>;
+    declare solution?: NonAttribute<Solution>;
+
     declare inquireId: number;
     declare userId: number;
     declare title: string;

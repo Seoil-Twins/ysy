@@ -11,6 +11,7 @@ import StatusCode from "../util/statusCode";
 import BadRequestError from "../error/badRequest";
 
 import { ICreate as ICreateInquire } from "../model/inquire.model";
+import ForbiddenError from "../error/forbidden";
 
 const router: Router = express.Router();
 
@@ -22,6 +23,19 @@ const postSchema: joi.Schema = joi.object({
 const updateSchema: joi.Schema = joi.object({
     title: joi.string(),
     contents: joi.string()
+});
+
+router.get("/:user_id", async (req: Request, res: Response, next: NextFunction) => {
+    const userId = Number(req.params.user_id);
+
+    try {
+        if (userId !== req.body.userId) throw new ForbiddenError("Not matches User Id");
+
+        const results = await inquireController.getInquires(userId);
+        return res.status(StatusCode.OK).json(results);
+    } catch (error) {
+        throw error;
+    }
 });
 
 router.post("/", async (req: Request, res: Response, next: NextFunction) => {
