@@ -29,7 +29,9 @@ export interface IUpdate {
 // ------------------------------------------ Interface End ---------------------------------------- //
 
 export class Inquire extends Model<IInquire, ICreate> {
+    /** If you use include inquireImage, You can use inquireImages field. */
     declare inquireImages?: NonAttribute<InquireImage>;
+    /** If you use include solution, You can use solution field. */
     declare solution?: NonAttribute<Solution>;
 
     declare inquireId: number;

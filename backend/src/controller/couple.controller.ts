@@ -28,7 +28,7 @@ const controller = {
      * @returns A {@link Couple}
      */
     getCouple: async (cupId: string): Promise<Couple> => {
-        const couple = await Couple.findOne({
+        const couple: Couple | null = await Couple.findOne({
             where: { cupId: cupId },
             include: {
                 model: User,
@@ -138,7 +138,7 @@ const controller = {
      * @param data A {@link IUpdate}
      * @param thumbnail 커플 대표사진
      */
-    updateCouple: async (data: IUpdate, thumbnail: File | undefined): Promise<void> => {
+    updateCouple: async (data: IUpdate, thumbnail?: File): Promise<void> => {
         let isUpload = false;
         let path: string | null = null;
         const user = await User.findOne({

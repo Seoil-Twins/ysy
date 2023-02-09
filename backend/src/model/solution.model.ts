@@ -1,4 +1,4 @@
-import { DataTypes, Model, literal } from "sequelize";
+import { DataTypes, Model, literal, NonAttribute } from "sequelize";
 
 import sequelize from ".";
 import { Inquire } from "./inquire.model";
@@ -27,6 +27,9 @@ export interface IUpdate {
 // ------------------------------------------ Interface End ---------------------------------------- //
 
 export class Solution extends Model<ISolution, ICreate> {
+    /** If you use include inquire, You can use inquire field. */
+    declare inquire?: NonAttribute<Inquire>;
+
     declare solutionId: number;
     declare inquireId: number;
     declare title: string;

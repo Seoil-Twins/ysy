@@ -105,7 +105,7 @@ const controller = {
      * @param data A {@link IUpdate}
      * @param profile User Profile
      */
-    updateUser: async (data: IUpdate, profile: File | undefined): Promise<void> => {
+    updateUser: async (data: IUpdate, profile?: File): Promise<void> => {
         let isUpload = false;
         let path: string | null = "";
 

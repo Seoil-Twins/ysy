@@ -27,7 +27,7 @@ export default {
         User.belongsTo(Couple, {
             foreignKey: "cupId",
             onDelete: "SET NULL",
-            as: "couples"
+            as: "couple"
         });
 
         // ------------------------------------------ Album to Couple ---------------------------------------- //
@@ -39,7 +39,7 @@ export default {
         Album.belongsTo(Couple, {
             foreignKey: "cupId",
             onDelete: "CASCADE",
-            as: "couples"
+            as: "couple"
         });
 
         // ------------------------------------------ Calendar to Couple ---------------------------------------- //
@@ -51,7 +51,7 @@ export default {
         Calendar.belongsTo(Couple, {
             foreignKey: "cupId",
             onDelete: "CASCADE",
-            as: "couples"
+            as: "couple"
         });
 
         // ------------------------------------------ Inquire to User ---------------------------------------- //
@@ -63,7 +63,7 @@ export default {
         Inquire.belongsTo(User, {
             foreignKey: "userId",
             onDelete: "CASCADE",
-            as: "users"
+            as: "user"
         });
 
         // ------------------------------------------ InquireImage to Inquire ---------------------------------------- //
@@ -75,7 +75,7 @@ export default {
         InquireImage.belongsTo(Inquire, {
             foreignKey: "inquireId",
             onDelete: "CASCADE",
-            as: "inquires"
+            as: "inquire"
         });
 
         // ------------------------------------------ Solution : Inquire ---------------------------------------- //
@@ -98,7 +98,7 @@ export default {
         SolutionImage.belongsTo(Solution, {
             foreignKey: "solutionId",
             onDelete: "CASCADE",
-            as: "solutions"
+            as: "solution"
         });
     }
 };
