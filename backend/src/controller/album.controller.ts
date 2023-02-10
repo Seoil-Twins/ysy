@@ -185,8 +185,7 @@ const controller = {
                 logger.warn(`Image not deleted : ${cupId} | ${albumId} => ${image.fullPath}`);
 
                 await ErrorImage.create({
-                    albumId: albumId,
-                    thumbnail: image.fullPath
+                    path: image.fullPath
                 });
             });
         }

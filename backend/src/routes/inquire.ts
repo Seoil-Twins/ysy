@@ -10,7 +10,7 @@ import StatusCode from "../util/statusCode";
 
 import BadRequestError from "../error/badRequest";
 
-import { ICreate as ICreateInquire } from "../model/inquire.model";
+import { ICreate, IUpdate } from "../model/inquire.model";
 import ForbiddenError from "../error/forbidden";
 
 const router: Router = express.Router();
@@ -45,7 +45,7 @@ router.post("/", async (req: Request, res: Response, next: NextFunction) => {
         if (err) throw new err();
 
         req.body = Object.assign({}, req.body, fields);
-        const inquireData: ICreateInquire = {
+        const inquireData: ICreate = {
             userId: req.body.userId,
             title: String(fields.title),
             contents: String(fields.contents)
@@ -65,6 +65,50 @@ router.post("/", async (req: Request, res: Response, next: NextFunction) => {
             next(error);
         }
     });
+});
+
+router.patch("/:inquire_id", async (req: Request, res: Response, next: NextFunction) => {
+    const form = formidable({ multiples: true });
+    const inquireId = Number(req.params.inquire_id);
+
+    form.parse(req, async (err, fields, files) => {
+        if (err) throw new err();
+        else if (isNaN(inquireId)) throw new BadRequestError("Invalid Inquire Id");
+
+        req.body = Object.assign({}, req.body, fields);
+        const inquireData: IUpdate = {
+            inquireId: inquireId,
+            title: fields.title ? String(fields.title) : undefined,
+            contents: fields.contents ? String(fields.contents) : undefined
+        };
+        const { value, error }: ValidationResult = validator(req.body, updateSchema);
+
+        try {
+            if (error) {
+                logger.debug(`Bad Request Error => ${JSON.stringify(error)}`);
+                throw new BadRequestError("Bad Request Error");
+            } else if (!inquireData.title && !inquireData.contents && !files.file) throw new BadRequestError("Bad Request");
+
+            await inquireController.updateInquire(inquireData, files.file);
+
+            res.status(StatusCode.NO_CONTENT).json({});
+        } catch (error) {
+            next(error);
+        }
+    });
+});
+
+router.delete("/:inquire_id", async (req: Request, res: Response, next: NextFunction) => {
+    const inquireId = Number(req.params.inquire_id);
+
+    try {
+        if (isNaN(inquireId)) throw new BadRequestError("Invalid Inquire Id");
+
+        await inquireController.deleteInquire(inquireId);
+        res.status(StatusCode.NO_CONTENT).json({});
+    } catch (error) {
+        next(error);
+    }
 });
 
 export default router;

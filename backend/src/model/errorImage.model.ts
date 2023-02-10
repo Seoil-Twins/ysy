@@ -5,20 +5,17 @@ import sequelize from ".";
 // -------------------------------------------- Interface ------------------------------------------ //
 export interface IErrorImage {
     errorId: number;
-    albumId: number;
-    thumbnail: string;
+    path: string;
     createdTime: Date;
 }
 
 interface ICreate {
-    albumId: number;
-    thumbnail: string;
+    path: string;
 }
 // ------------------------------------------ Interface End ---------------------------------------- //
 
 export class ErrorImage extends Model<IErrorImage, ICreate> {
-    declare albumId: number;
-    declare thumbnail: string;
+    declare path: string;
 }
 
 ErrorImage.init(
@@ -29,12 +26,7 @@ ErrorImage.init(
             autoIncrement: true,
             primaryKey: true
         },
-        albumId: {
-            field: "album_id",
-            type: DataTypes.INTEGER.UNSIGNED,
-            allowNull: false
-        },
-        thumbnail: {
+        path: {
             type: DataTypes.STRING(60)
         },
         createdTime: {

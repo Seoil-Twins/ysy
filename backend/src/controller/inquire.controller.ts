@@ -4,15 +4,74 @@ import { File } from "formidable";
 import NotFoundError from "../error/notFound";
 
 import sequelize from "../model";
-import { ICreate as ICreateInquire, Inquire } from "../model/inquire.model";
+import { ICreate, Inquire, IUpdate } from "../model/inquire.model";
 import { InquireImage } from "../model/inquireImage.model";
 import { Solution } from "../model/solution.model";
 
 import logger from "../logger/logger";
-import { deleteFile, uploadFile } from "../util/firebase";
+import { deleteFile, deleteFolder, getAllFiles, uploadFile } from "../util/firebase";
 import { SolutionImage } from "../model/solutionImage.model";
+import { Transaction } from "sequelize";
+import { ErrorImage } from "../model/errorImage.model";
 
 const folderName = "users";
+
+/**
+ * inquireImage 다중 Image 생성 및 변경을 해주는 함수
+ * @param inquireId Inquire Id
+ * @param userId User Id (이미지 path 생성할 때 사용)
+ * @param imageData Request로 받은 Image
+ * @param transaction transaction
+ */
+const uploads = async (inquireId: number, userId: number, imageData: File | File[], transaction: Transaction): Promise<void> => {
+    const firebaseUploads = [];
+
+    try {
+        if (imageData instanceof Array<File>) {
+            for (let i = 0; i < imageData.length; i++) {
+                const image = imageData[i];
+                const path = `${folderName}/${userId}/inquires/${inquireId}/${dayjs().valueOf()}.${image.originalFilename}`;
+
+                await uploadFile(path, image.filepath);
+                firebaseUploads.push(path);
+
+                await InquireImage.create(
+                    {
+                        inquireId: inquireId,
+                        image: path
+                    },
+                    { transaction }
+                );
+
+                logger.debug(`Create Inquire Image => ${path}`);
+            }
+        } else if (imageData instanceof File) {
+            const path = `${folderName}/${userId}/inquires/${inquireId}/${dayjs().valueOf()}.${imageData.originalFilename}`;
+
+            await uploadFile(path, imageData.filepath);
+            firebaseUploads.push(path);
+
+            await InquireImage.create(
+                {
+                    inquireId: inquireId,
+                    image: path
+                },
+                { transaction }
+            );
+
+            logger.debug(`Create Inquire Image => ${path}`);
+        }
+    } catch (error) {
+        logger.error(`DB Erorr => ${JSON.stringify(error)}`);
+
+        for (let i = 0; i < firebaseUploads.length; i++) {
+            await deleteFile(firebaseUploads[i]);
+            logger.warn(`Firebase Delete => ${firebaseUploads[i]}`);
+        }
+
+        throw error;
+    }
+};
 
 const controller = {
     /**
@@ -53,62 +112,83 @@ const controller = {
      * @param inquireData {@link ICreateInquire}
      * @param imageData {@link File} 또는 File[]
      */
-    addInquire: async (inquireData: ICreateInquire, imageData: File | File[]): Promise<void> => {
-        const t = await sequelize.transaction();
-        const firebaseUploads = [];
+    addInquire: async (inquireData: ICreate, imageData: File | File[]): Promise<void> => {
+        const transaction = await sequelize.transaction();
 
         try {
-            const inquire: Inquire = await Inquire.create(inquireData, { transaction: t });
+            const inquire: Inquire = await Inquire.create(inquireData, { transaction: transaction });
             logger.debug(`Create Inquire => ${JSON.stringify(inquire)}`);
 
+            if (imageData) await uploads(inquire.inquireId, inquire.userId, imageData, transaction);
+            transaction.commit();
+        } catch (error) {
+            transaction.rollback();
+
+            throw error;
+        }
+    },
+    updateInquire: async (inquireData: IUpdate, imageData: File | File[]): Promise<void> => {
+        const transaction = await sequelize.transaction();
+
+        try {
+            const inquire: Inquire | null = await Inquire.findByPk(inquireData.inquireId);
+            if (!inquire) throw new NotFoundError("Not Found inquire");
+
+            const images: InquireImage[] = await InquireImage.findAll({ where: { inquireId: inquire.inquireId } });
+
             if (imageData) {
-                if (imageData instanceof Array<File>) {
-                    for (let i = 0; i < imageData.length; i++) {
-                        const image = imageData[i];
-                        const path = `${folderName}/${inquireData.userId}/inquires/${inquire.inquireId}/${dayjs().valueOf()}.${image.originalFilename}`;
+                await inquire.update(inquireData, { transaction });
 
-                        await uploadFile(path, image.filepath);
-                        firebaseUploads.push(path);
+                for (let i = 0; i < images.length; i++) {
+                    logger.debug(`Destroy Data => ${images[i].image}`);
+                    await deleteFile(images[i].image);
+                    await images[i].destroy({ transaction });
+                }
 
-                        await InquireImage.create(
-                            {
-                                inquireId: inquire.inquireId,
-                                image: path
-                            },
-                            { transaction: t }
-                        );
+                await uploads(inquire.inquireId, inquire.userId, imageData, transaction);
+            }
 
-                        logger.debug(`Create Inquire Image => ${path}`);
-                    }
-                } else if (imageData instanceof File) {
-                    const path = `${folderName}/${inquireData.userId}/inquires/${inquire.inquireId}/${dayjs().valueOf()}.${imageData.originalFilename}`;
+            transaction.commit();
+        } catch (error) {
+            transaction.rollback();
 
-                    await uploadFile(path, imageData.filepath);
-                    firebaseUploads.push(path);
+            throw error;
+        }
+    },
+    deleteInquire: async (inquireId: number): Promise<void> => {
+        const transaction = await sequelize.transaction();
 
-                    await InquireImage.create(
-                        {
-                            inquireId: inquire.inquireId,
-                            image: path
-                        },
-                        { transaction: t }
-                    );
+        try {
+            const inquire: Inquire | null = await Inquire.findByPk(inquireId);
+            if (!inquire) throw new NotFoundError("Not Found Inquire");
 
-                    logger.debug(`Create Inquire Image => ${path}`);
+            const inquireImage: InquireImage[] = await InquireImage.findAll({ where: { inquireId } });
+
+            for (let i = 0; i < inquireImage.length; i++) {
+                const data = inquireImage[i];
+                await data.destroy({ transaction });
+            }
+
+            await inquire.destroy({ transaction });
+
+            if (inquireImage.length > 0) {
+                const path = `${folderName}/${inquire.userId}/inquires/${inquireId}`;
+                // await deleteFolder(path);
+                const images = await getAllFiles(path);
+
+                // 지워지지 않은 이미지가 존재할 시
+                if (images.items.length) {
+                    images.items.forEach(async (image) => {
+                        logger.warn(`Image not deleted, Inquire Id : ${inquire.inquireId} => ${image.fullPath}`);
+
+                        await ErrorImage.create({ path: image.fullPath });
+                    });
                 }
             }
 
-            t.commit();
+            transaction.commit();
         } catch (error) {
-            t.rollback();
-            logger.error(`DB Erorr => ${JSON.stringify(error)}`);
-
-            if (firebaseUploads.length > 0) {
-                firebaseUploads.forEach(async (path: string) => {
-                    await deleteFile(path);
-                    logger.warn(`Firebase Delete => ${path}`);
-                });
-            }
+            transaction.rollback();
 
             throw error;
         }

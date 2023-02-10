@@ -23,8 +23,8 @@ export interface ICreate {
 
 export interface IUpdate {
     inquireId: number;
-    title: string;
-    contents: string;
+    title?: string;
+    contents?: string;
 }
 // ------------------------------------------ Interface End ---------------------------------------- //
 
