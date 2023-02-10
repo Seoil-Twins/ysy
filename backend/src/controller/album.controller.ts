@@ -132,14 +132,14 @@ const controller = {
         else if (albumFolder.cupId !== data.cupId) throw new ForbiddenError("Forbidden Error");
 
         const prevThumbnail: string | null = albumFolder.thumbnail;
-        const t = await sequelize.transaction();
+        const transaction = await sequelize.transaction();
 
         try {
             await albumFolder.update(
                 {
                     thumbnail: path
                 },
-                { transaction: t }
+                { transaction }
             );
             await uploadFile(path, data.thumbnail.filepath);
             isUpload = true;
@@ -150,9 +150,9 @@ const controller = {
                 logger.debug(`Deleted already image => ${prevThumbnail}`);
             }
 
-            t.commit();
+            transaction.commit();
         } catch (error) {
-            t.rollback();
+            transaction.rollback();
 
             if (isUpload) {
                 await deleteFile(path);

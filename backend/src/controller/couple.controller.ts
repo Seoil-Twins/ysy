@@ -50,7 +50,7 @@ const controller = {
         let path = null;
         let isUpload = false;
 
-        const t = await sequelize.transaction();
+        const transaction = await sequelize.transaction();
 
         try {
             let isNot = true;
@@ -84,7 +84,7 @@ const controller = {
                     title: data.title,
                     thumbnail: path
                 },
-                { transaction: t }
+                { transaction }
             );
 
             const user1: User | null = await User.findOne({
@@ -102,7 +102,7 @@ const controller = {
                 { cupId: cupId },
                 {
                     where: { userId: data.userId },
-                    transaction: t
+                    transaction: transaction
                 }
             );
 
@@ -110,11 +110,11 @@ const controller = {
                 { cupId: cupId },
                 {
                     where: { userId: data.userId2 },
-                    transaction: t
+                    transaction: transaction
                 }
             );
 
-            await t.commit();
+            await transaction.commit();
             logger.debug(`Create Data => ${JSON.stringify(data)}`);
 
             // token 재발급
@@ -122,7 +122,7 @@ const controller = {
 
             return result;
         } catch (error) {
-            await t.rollback();
+            await transaction.rollback();
 
             // Firebase에는 업로드 되었지만 DB 오류가 발생했다면 Firebase thumbnail 삭제
             if (data.thumbnail && isUpload) {
@@ -228,29 +228,29 @@ const controller = {
 
         if (!user1 || !user2 || !couple) throw new NotFoundError("Not Found");
 
-        const t = await sequelize.transaction();
+        const transaction = await sequelize.transaction();
 
         try {
             const currentTime = new Date(dayjs().valueOf());
 
-            await user1.update({ cupId: null }, { transaction: t });
-            await user2.update({ cupId: null }, { transaction: t });
+            await user1.update({ cupId: null }, { transaction });
+            await user2.update({ cupId: null }, { transaction });
             await couple.update(
                 {
                     deleted: true,
                     deletedTime: currentTime
                 },
-                { transaction: t }
+                { transaction }
             );
 
             const result: ITokenResponse = await jwt.createToken(userId, null);
 
-            t.commit();
+            transaction.commit();
             logger.debug(`Success Update and Delete couple => ${user1.userId}, ${user2.userId}, ${cupId}`);
 
             return result;
         } catch (error) {
-            t.rollback();
+            transaction.rollback();
 
             throw error;
         }
