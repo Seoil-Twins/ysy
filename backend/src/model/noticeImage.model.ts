@@ -5,9 +5,9 @@ import sequelize from ".";
 import { Inquire } from "./inquire.model";
 
 // -------------------------------------------- Interface ------------------------------------------ //
-export interface IInquireImage {
+export interface INoticeImage {
     imageId: number;
-    inquireId: number;
+    noticeId: number;
     image: string;
     createdTime: Date;
 }
@@ -17,19 +17,19 @@ export interface IRequestCreate {
 }
 
 interface ICreate {
-    inquireId: number;
+    noticeId: number;
     image: string;
 }
 // ------------------------------------------ Interface End ---------------------------------------- //
 
-export class InquireImage extends Model<IInquireImage, ICreate> {
+export class NoticeImage extends Model<INoticeImage, ICreate> {
     declare imageId: number;
-    declare inquireId: number;
+    declare noticeId: number;
     declare image: string;
     declare createdTime: Date;
 }
 
-InquireImage.init(
+NoticeImage.init(
     {
         imageId: {
             field: "image_id",
@@ -37,13 +37,13 @@ InquireImage.init(
             autoIncrement: true,
             primaryKey: true
         },
-        inquireId: {
-            field: "inquire_id",
+        noticeId: {
+            field: "notice_id",
             type: DataTypes.INTEGER.UNSIGNED,
             allowNull: false,
             references: {
                 model: Inquire,
-                key: "inquire_id"
+                key: "notice_id"
             }
         },
         image: {
@@ -58,7 +58,7 @@ InquireImage.init(
     },
     {
         sequelize: sequelize,
-        tableName: "inquire_image",
+        tableName: "notice_image",
         timestamps: false
     }
 );

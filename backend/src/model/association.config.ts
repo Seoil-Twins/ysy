@@ -3,6 +3,8 @@ import { Calendar } from "./calendar.model";
 import { Couple } from "./couple.model";
 import { Inquire } from "./inquire.model";
 import { InquireImage } from "./inquireImage.model";
+import { Notice } from "./notice.model";
+import { NoticeImage } from "./noticeImage.model";
 import { Solution } from "./solution.model";
 import { SolutionImage } from "./solutionImage.model";
 import { User } from "./user.model";
@@ -99,6 +101,18 @@ export default {
             foreignKey: "solutionId",
             onDelete: "CASCADE",
             as: "solution"
+        });
+
+        // ------------------------------------------ SolutionImage to Solution ---------------------------------------- //
+        Notice.hasMany(NoticeImage, {
+            foreignKey: "noticeId",
+            as: "noticeImages"
+        });
+
+        NoticeImage.belongsTo(Notice, {
+            foreignKey: "noticeId",
+            onDelete: "CASCADE",
+            as: "notice"
         });
     }
 };

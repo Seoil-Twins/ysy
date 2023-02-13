@@ -2,6 +2,7 @@ import dayjs from "dayjs";
 import { File } from "formidable";
 
 import NotFoundError from "../error/notFound";
+import ConflictError from "../error/conflict";
 
 import sequelize from "../model";
 import { ICreate, Inquire, IUpdate } from "../model/inquire.model";
@@ -109,7 +110,7 @@ const controller = {
     },
     /**
      * 문의사항을 추가합니다.
-     * @param inquireData {@link ICreateInquire}
+     * @param inquireData {@link ICreate}
      * @param imageData {@link File} 또는 File[]
      */
     addInquire: async (inquireData: ICreate, imageData: File | File[]): Promise<void> => {
@@ -127,12 +128,18 @@ const controller = {
             throw error;
         }
     },
+    /**
+     * 문의사항을 수정합니다.
+     * @param inquireData {@link IUpdate}
+     * @param imageData {@link File} or {@link File} List
+     */
     updateInquire: async (inquireData: IUpdate, imageData: File | File[]): Promise<void> => {
         const transaction = await sequelize.transaction();
 
         try {
             const inquire: Inquire | null = await Inquire.findByPk(inquireData.inquireId);
             if (!inquire) throw new NotFoundError("Not Found inquire");
+            else if (inquire.solution) throw new ConflictError("This inquiry has already been answered");
 
             const images: InquireImage[] = await InquireImage.findAll({ where: { inquireId: inquire.inquireId } });
 
@@ -155,12 +162,17 @@ const controller = {
             throw error;
         }
     },
+    /**
+     * 문의사항을 삭제합니다.
+     * @param inquireId Inquire Id
+     */
     deleteInquire: async (inquireId: number): Promise<void> => {
         const transaction = await sequelize.transaction();
 
         try {
             const inquire: Inquire | null = await Inquire.findByPk(inquireId);
             if (!inquire) throw new NotFoundError("Not Found Inquire");
+            else if (inquire.solution) throw new ConflictError("This inquiry has already been answered");
 
             const inquireImage: InquireImage[] = await InquireImage.findAll({ where: { inquireId } });
 
@@ -173,7 +185,7 @@ const controller = {
 
             if (inquireImage.length > 0) {
                 const path = `${folderName}/${inquire.userId}/inquires/${inquireId}`;
-                // await deleteFolder(path);
+                await deleteFolder(path);
                 const images = await getAllFiles(path);
 
                 // 지워지지 않은 이미지가 존재할 시
