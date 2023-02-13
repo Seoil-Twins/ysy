@@ -5,10 +5,14 @@ import { NoticeImage } from "../model/noticeImage.model";
 import { Notice } from "../model/notice.model";
 
 const controller = {
+    /**
+     * 공지사항을 가져옵니다.
+     * @param count 보여질 개수
+     * @param page 페이지 수
+     * @returns A {@link Notice}[]
+     */
     getNotices: async (count: number, page: number): Promise<Notice[]> => {
-        console.log(count, page);
         const offset = (page - 1) * count;
-        logger.debug(`count : ${count}, page : ${page}, offset: ${offset}`);
 
         const notices: Notice[] = await Notice.findAll({
             include: [
