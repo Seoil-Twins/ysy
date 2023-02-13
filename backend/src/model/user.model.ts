@@ -1,8 +1,9 @@
 import { File } from "formidable";
-import { DataTypes, Model, literal } from "sequelize";
+import { DataTypes, Model, literal, NonAttribute } from "sequelize";
 
 import sequelize from ".";
 import { Couple } from "./couple.model";
+import { Inquire } from "./inquire.model";
 
 // -------------------------------------------- Interface ------------------------------------------ //
 export interface IUser {
@@ -35,13 +36,13 @@ export interface ICreate {
     eventNofi: boolean;
 }
 
-export interface IRequestUpdate {
+export interface IUpdate {
     userId: number;
-    name: string | undefined;
-    profile: File | undefined;
-    primaryNofi: boolean | undefined;
-    dateNofi: boolean | undefined;
-    eventNofi: boolean | undefined;
+    name?: string;
+    profile?: string | null;
+    primaryNofi?: boolean;
+    dateNofi?: boolean;
+    eventNofi?: boolean;
 }
 
 export interface IUserResponse {
@@ -65,6 +66,11 @@ export interface IUserResponse {
 // ------------------------------------------ Interface End ---------------------------------------- //
 
 export class User extends Model<IUser, ICreate> {
+    /** If you use include couple, You can use couple field. */
+    declare couple?: NonAttribute<Couple>;
+    /** If you use include inquire, You can use inquire field. */
+    declare inquires?: NonAttribute<Inquire>;
+
     declare userId: number;
     declare cupId: string | null;
     declare snsId: string;

@@ -1,6 +1,12 @@
 import { Album } from "./album.model";
 import { Calendar } from "./calendar.model";
 import { Couple } from "./couple.model";
+import { Inquire } from "./inquire.model";
+import { InquireImage } from "./inquireImage.model";
+import { Notice } from "./notice.model";
+import { NoticeImage } from "./noticeImage.model";
+import { Solution } from "./solution.model";
+import { SolutionImage } from "./solutionImage.model";
 import { User } from "./user.model";
 
 /**
@@ -23,7 +29,7 @@ export default {
         User.belongsTo(Couple, {
             foreignKey: "cupId",
             onDelete: "SET NULL",
-            as: "couples"
+            as: "couple"
         });
 
         // ------------------------------------------ Album to Couple ---------------------------------------- //
@@ -35,7 +41,7 @@ export default {
         Album.belongsTo(Couple, {
             foreignKey: "cupId",
             onDelete: "CASCADE",
-            as: "couples"
+            as: "couple"
         });
 
         // ------------------------------------------ Calendar to Couple ---------------------------------------- //
@@ -47,7 +53,66 @@ export default {
         Calendar.belongsTo(Couple, {
             foreignKey: "cupId",
             onDelete: "CASCADE",
-            as: "couples"
+            as: "couple"
+        });
+
+        // ------------------------------------------ Inquire to User ---------------------------------------- //
+        User.hasMany(Inquire, {
+            foreignKey: "userId",
+            as: "inquires"
+        });
+
+        Inquire.belongsTo(User, {
+            foreignKey: "userId",
+            onDelete: "CASCADE",
+            as: "user"
+        });
+
+        // ------------------------------------------ InquireImage to Inquire ---------------------------------------- //
+        Inquire.hasMany(InquireImage, {
+            foreignKey: "inquireId",
+            as: "inquireImages"
+        });
+
+        InquireImage.belongsTo(Inquire, {
+            foreignKey: "inquireId",
+            onDelete: "CASCADE",
+            as: "inquire"
+        });
+
+        // ------------------------------------------ Solution : Inquire ---------------------------------------- //
+        Inquire.hasOne(Solution, {
+            foreignKey: "inquireId",
+            as: "solution"
+        });
+
+        Solution.hasOne(Inquire, {
+            foreignKey: "inquireId",
+            as: "inquire"
+        });
+
+        // ------------------------------------------ SolutionImage to Solution ---------------------------------------- //
+        Solution.hasMany(SolutionImage, {
+            foreignKey: "solutionId",
+            as: "solutionImages"
+        });
+
+        SolutionImage.belongsTo(Solution, {
+            foreignKey: "solutionId",
+            onDelete: "CASCADE",
+            as: "solution"
+        });
+
+        // ------------------------------------------ SolutionImage to Solution ---------------------------------------- //
+        Notice.hasMany(NoticeImage, {
+            foreignKey: "noticeId",
+            as: "noticeImages"
+        });
+
+        NoticeImage.belongsTo(Notice, {
+            foreignKey: "noticeId",
+            onDelete: "CASCADE",
+            as: "notice"
         });
     }
 };

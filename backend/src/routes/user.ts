@@ -54,8 +54,8 @@ router.get("/me", async (req: Request, res: Response, next: NextFunction) => {
 
         logger.debug(`Response Data : ${JSON.stringify(result)}`);
         return res.status(StatusCode.OK).json(result);
-    } catch (_error) {
-        next(_error);
+    } catch (error) {
+        next(error);
     }
 });
 
@@ -69,8 +69,8 @@ router.get("/:user_id", async (req: Request, res: Response, next: NextFunction) 
 
         logger.debug(`Response Data : ${JSON.stringify(result)}`);
         return res.status(StatusCode.OK).json(result);
-    } catch (_error) {
-        next(_error);
+    } catch (error) {
+        next(error);
     }
 });
 
@@ -83,8 +83,8 @@ router.post("/", async (req: Request, res: Response, next: NextFunction) => {
         await userController.createUser(value);
 
         return res.status(StatusCode.CREATED).json({});
-    } catch (_error) {
-        next(_error);
+    } catch (error) {
+        next(error);
     }
 });
 
@@ -106,13 +106,15 @@ router.patch("/:user_id", async (req: Request, res: Response, next: NextFunction
                 throw new BadRequestError("Bad Request Error");
             else if (value.name && value.name.length <= 1) throw new BadRequestError("Bad Request Error");
 
-            if (Object.keys(files).length === 1) req.body.profile = files.file;
+            let file: any = undefined;
+            if (Object.keys(files).length === 1) file = files.file;
 
-            await userController.updateUser(req.body);
+            logger.debug(`${JSON.stringify(req.body)}`);
+            await userController.updateUser(req.body, file);
 
             return res.status(204).json({});
-        } catch (_error) {
-            next(_error);
+        } catch (error) {
+            next(error);
         }
     });
 });
@@ -130,8 +132,8 @@ router.delete("/:user_id", async (req: Request, res: Response, next: NextFunctio
         await userController.deleteUser(req.body.userId);
 
         return res.status(204).json({});
-    } catch (_error) {
-        next(_error);
+    } catch (error) {
+        next(error);
     }
 });
 

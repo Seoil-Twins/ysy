@@ -1,4 +1,4 @@
-import { DataTypes, Model, literal } from "sequelize";
+import { DataTypes, Model, literal, NonAttribute } from "sequelize";
 
 import sequelize from ".";
 import { Couple } from "./couple.model";
@@ -28,9 +28,21 @@ export interface IResponse {
     cupId: string;
     calendars: Calendar[];
 }
+
+export interface IUpdate {
+    cupId: string;
+    title?: string;
+    description?: string;
+    fromDate?: Date;
+    toDate?: Date;
+    color?: Date;
+}
 // ------------------------------------------ Interface End ---------------------------------------- //
 
 export class Calendar extends Model<ICalendar, ICreate> {
+    /** If you use include couple, You can use couple field. */
+    declare couple?: NonAttribute<Couple>;
+
     declare calendarId: number;
     declare cupId: string;
     declare title: string;

@@ -1,9 +1,10 @@
-import { DataTypes, Model, literal, HasManyGetAssociationsMixin } from "sequelize";
+import { DataTypes, Model, literal, HasManyGetAssociationsMixin, NonAttribute } from "sequelize";
 import { File } from "formidable";
 
 import sequelize from ".";
 import { Album } from "./album.model";
 import { User } from "./user.model";
+import { Calendar } from "./calendar.model";
 
 // -------------------------------------------- Interface ------------------------------------------ //
 export interface ICouple {
@@ -25,12 +26,12 @@ export interface IRequestCreate {
     thumbnail?: File;
 }
 
-export interface IRequestUpdate {
+export interface IUpdate {
     userId: number;
     cupId: string;
-    title: string | undefined;
-    thumbnail: File | undefined;
-    cupDay: Date | undefined;
+    title?: string;
+    thumbnail?: string | null;
+    cupDay?: Date;
 }
 
 interface ICreate {
@@ -42,6 +43,13 @@ interface ICreate {
 // ------------------------------------------ Interface End ---------------------------------------- //
 
 export class Couple extends Model<ICouple, ICreate> {
+    /** If you use include user, You can use users field. */
+    declare users?: NonAttribute<User>;
+    /** If you use include album, You can use albums field. */
+    declare albums?: NonAttribute<Album>;
+    /** If you use include calendar, You can use calendars field. */
+    declare calendars?: NonAttribute<Calendar>;
+
     declare cupId: string;
     declare cupDay: Date;
     declare title: string;
@@ -51,6 +59,7 @@ export class Couple extends Model<ICouple, ICreate> {
 
     declare getUsers: HasManyGetAssociationsMixin<User>;
     declare getAlbums: HasManyGetAssociationsMixin<Album>;
+    declare getCalendars: HasManyGetAssociationsMixin<Calendar>;
 }
 
 Couple.init(

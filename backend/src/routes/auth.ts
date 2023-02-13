@@ -29,8 +29,8 @@ router.post("/login", async (req: Request, res: Response, next: NextFunction) =>
 
         logger.debug(`Response Data : ${JSON.stringify(result)}`);
         return res.status(StatusCode.OK).json(result);
-    } catch (_error) {
-        next(_error);
+    } catch (error) {
+        next(error);
     }
 });
 
@@ -45,8 +45,8 @@ router.post("/refresh", async (req: Request, res: Response, next: NextFunction) 
 
         logger.debug(`Response Data : ${JSON.stringify(result)}`);
         return res.status(StatusCode.OK).json(result);
-    } catch (_error) {
-        next(_error);
+    } catch (error) {
+        next(error);
     }
 });
 

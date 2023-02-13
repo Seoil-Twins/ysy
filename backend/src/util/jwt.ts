@@ -41,6 +41,12 @@ const getExpired = (): number => {
 };
 
 export default {
+    /**
+     * 새로운 Access, Refresh Token을 생성 및 반환해줍니다.
+     * @param userId User Id
+     * @param cupId Couple Id
+     * @returns A {@link ITokenResponse}
+     */
     createToken: async (userId: number, cupId: string | null): Promise<ITokenResponse> => {
         const accessToken: string = createAccessToken(userId, cupId);
         const refreshToken: string = createRefreshToken();
@@ -56,6 +62,20 @@ export default {
 
         return result;
     },
+    /**
+     * Token을 검사해 나온 Payload를 반환합니다.
+     * ### Example
+     * ```typescript
+     * // JWT가 유효한지 검증 및 Payload를 반환합니다.
+     * const result: JwtPayload | string = jwt.verify(token);
+     *
+     * // JWT가 만료되었더라도 JWT Payload를 가져와 반환합니다.
+     * const result: JwtPayload | string = jwt.verify(token, true);
+     * ```
+     * @param token JWT
+     * @param ignoreExpiration 유효시간이 끝난 토큰의 정보
+     * @returns A {@link JwtPayload} or string
+     */
     verify: (token: string, ignoreExpiration: boolean = false): JwtPayload | string => {
         const [bearer, separatedToken] = token.split(" ");
         if (bearer !== "Bearer") throw new UnauthorizedError("Invalid Token");

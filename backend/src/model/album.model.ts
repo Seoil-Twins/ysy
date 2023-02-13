@@ -1,4 +1,4 @@
-import { DataTypes, Model, literal } from "sequelize";
+import { DataTypes, Model, literal, NonAttribute } from "sequelize";
 import { File } from "formidable";
 
 import sequelize from ".";
@@ -13,16 +13,16 @@ export interface IAlbum {
     createdTime: Date;
 }
 
+export interface ICreate {
+    cupId: string;
+    title: string;
+}
+
 export interface IRequestGet {
     albumId: number;
     cupId: string;
     count: number;
-    nextPageToken: string | undefined;
-}
-
-export interface IRequestCreate {
-    cupId: string;
-    title: string;
+    nextPageToken?: string;
 }
 
 export interface IRequestUpadteTitle {
@@ -46,16 +46,14 @@ export interface IResponse {
     thumbnail: string | null;
     createdTime: Date;
     items: string[];
-    nextPageToken: string | undefined;
-}
-
-interface ICreate {
-    cupId: string;
-    title: string;
+    nextPageToken?: string;
 }
 // ------------------------------------------ Interface End ---------------------------------------- //
 
 export class Album extends Model<IAlbum, ICreate> {
+    /** If you use include couple, You can use couple field. */
+    declare couple?: NonAttribute<Couple>;
+
     declare albumId: number;
     declare cupId: string;
     declare title: string;

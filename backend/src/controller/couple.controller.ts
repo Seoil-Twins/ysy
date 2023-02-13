@@ -1,11 +1,12 @@
 import randomString from "randomstring";
 import dayjs from "dayjs";
 import { Op } from "sequelize";
+import { File } from "formidable";
 
 import sequelize from "../model";
 import { User } from "../model/user.model";
 import { ITokenResponse } from "../model/auth.model";
-import { Couple, IRequestCreate, IRequestUpdate } from "../model/couple.model";
+import { Couple, IRequestCreate, IUpdate } from "../model/couple.model";
 
 import NotFoundError from "../error/notFound";
 import UnauthorizedError from "../error/unauthorized";
@@ -14,14 +15,20 @@ import InternalServerError from "../error/internalServer";
 import BadRequestError from "../error/badRequest";
 import ConflictError from "../error/conflict";
 
+import logger from "../logger/logger";
 import jwt from "../util/jwt";
 import { deleteFile, uploadFile, isDefaultFile } from "../util/firebase";
 
 const folderName = "couples";
 
 const controller = {
+    /**
+     * 커플 정보를 가져옵니다.
+     * @param cupId Couple Id
+     * @returns A {@link Couple}
+     */
     getCouple: async (cupId: string): Promise<Couple> => {
-        const couple = await Couple.findOne({
+        const couple: Couple | null = await Couple.findOne({
             where: { cupId: cupId },
             include: {
                 model: User,
@@ -34,11 +41,16 @@ const controller = {
 
         return couple;
     },
+    /**
+     * 커플를 생성하고 업데이트된 토큰 정보를 반환합니다.
+     * @param data A {@link IRequestCreate}
+     * @returns A {@link ITokenResponse}
+     */
     createCouple: async (data: IRequestCreate): Promise<ITokenResponse> => {
-        let fileName = null;
+        let path = null;
         let isUpload = false;
 
-        const t = await sequelize.transaction();
+        const transaction = await sequelize.transaction();
 
         try {
             let isNot = true;
@@ -59,9 +71,9 @@ const controller = {
             }
 
             if (data.thumbnail) {
-                fileName = `/${cupId}/thumbnail/${dayjs().valueOf()}.${data.thumbnail.originalFilename!}`;
+                path = `${folderName}/${cupId}/thumbnail/${dayjs().valueOf()}.${data.thumbnail.originalFilename!}`;
 
-                await uploadFile(fileName, folderName, data.thumbnail.filepath);
+                await uploadFile(path, data.thumbnail.filepath);
                 isUpload = true;
             }
 
@@ -70,9 +82,9 @@ const controller = {
                     cupId: cupId,
                     cupDay: data.cupDay,
                     title: data.title,
-                    thumbnail: fileName
+                    thumbnail: path
                 },
-                { transaction: t }
+                { transaction }
             );
 
             const user1: User | null = await User.findOne({
@@ -90,7 +102,7 @@ const controller = {
                 { cupId: cupId },
                 {
                     where: { userId: data.userId },
-                    transaction: t
+                    transaction: transaction
                 }
             );
 
@@ -98,28 +110,37 @@ const controller = {
                 { cupId: cupId },
                 {
                     where: { userId: data.userId2 },
-                    transaction: t
+                    transaction: transaction
                 }
             );
 
-            await t.commit();
+            await transaction.commit();
+            logger.debug(`Create Data => ${JSON.stringify(data)}`);
 
             // token 재발급
             const result: ITokenResponse = await jwt.createToken(data.userId, cupId);
 
             return result;
         } catch (error) {
-            await t.rollback();
+            await transaction.rollback();
 
-            // Firebase에는 업로드 되었지만 DB 오류가 발생했다면 Firebase Profile 삭제
-            if (data.thumbnail && isUpload) await deleteFile(fileName!, folderName);
+            // Firebase에는 업로드 되었지만 DB 오류가 발생했다면 Firebase thumbnail 삭제
+            if (data.thumbnail && isUpload) {
+                await deleteFile(path!);
+                logger.error(`After updating the firebase, a db error occurred and the firebase thumbnail is deleted => ${path}`);
+            }
 
             throw error;
         }
     },
-    updateCouple: async (data: IRequestUpdate): Promise<void> => {
+    /**
+     * 커플 정보를 수정합니다.
+     * @param data A {@link IUpdate}
+     * @param thumbnail 커플 대표사진
+     */
+    updateCouple: async (data: IUpdate, thumbnail?: File): Promise<void> => {
         let isUpload = false;
-        let fileName: string | null = null;
+        let path: string | null = null;
         const user = await User.findOne({
             attributes: ["cupId"],
             where: { userId: data.userId }
@@ -143,37 +164,39 @@ const controller = {
             throw new ForbiddenError("Forbidden Error");
         }
 
-        let updateData: any = { cupId: data.cupId };
-
-        if (data.title) updateData.title = data.title;
-        if (data.cupDay) updateData.cupDay = data.cupDay;
-
         const prevThumbnail: string | null = couple.thumbnail;
 
         try {
-            if (data.thumbnail) {
-                const reqFileName = data.thumbnail.originalFilename!;
+            if (thumbnail) {
+                const reqFileName = thumbnail.originalFilename!;
                 const isDefault = isDefaultFile(reqFileName);
 
                 if (isDefault) {
-                    fileName = null;
+                    path = null;
                 } else {
-                    fileName = `/${data.cupId}/thumbnail/${dayjs().valueOf()}.${reqFileName}`;
+                    path = `${folderName}/${data.cupId}/thumbnail/${dayjs().valueOf()}.${reqFileName}`;
 
-                    await uploadFile(fileName, folderName, data.thumbnail.filepath);
+                    await uploadFile(path, thumbnail.filepath);
                     isUpload = true;
                 }
 
-                updateData.thumbnail = fileName;
+                data.thumbnail = path;
             }
 
-            await couple.update(updateData);
+            await couple.update(data);
+            logger.debug(`Update Data => ${JSON.stringify(data)}`);
 
             // Upload, DB Update를 하고나서 기존 이미지 지우기
-            if (prevThumbnail && data.thumbnail) await deleteFile(prevThumbnail, folderName);
+            if (prevThumbnail && data.thumbnail) {
+                await deleteFile(prevThumbnail);
+                logger.debug(`Deleted already thumbnail => ${prevThumbnail}`);
+            }
         } catch (error) {
             // Firebase에는 업로드 되었지만 DB 오류가 발생했다면 Firebase Profile 삭제
-            if (data.thumbnail && isUpload) await deleteFile(fileName!, folderName);
+            if (data.thumbnail && isUpload) {
+                await deleteFile(path!);
+                logger.error(`After updating the firebase, a db error occurred and the firebase thumbnail is deleted => ${path}`);
+            }
 
             throw error;
         }
@@ -181,7 +204,6 @@ const controller = {
     /**
      * Couple 삭제 하는 메소드
      * Couple 삭제 시 thumbnail은 삭제하지 않으며, Admin API에서 Couple 삭제 시 처리
-     *
      * @param userId User Id
      * @param cupId Couple Id
      * @returns ITokenResponse: Access, Refresh Token
@@ -206,28 +228,29 @@ const controller = {
 
         if (!user1 || !user2 || !couple) throw new NotFoundError("Not Found");
 
-        const t = await sequelize.transaction();
+        const transaction = await sequelize.transaction();
 
         try {
             const currentTime = new Date(dayjs().valueOf());
 
-            await user1.update({ cupId: null }, { transaction: t });
-            await user2.update({ cupId: null }, { transaction: t });
+            await user1.update({ cupId: null }, { transaction });
+            await user2.update({ cupId: null }, { transaction });
             await couple.update(
                 {
                     deleted: true,
                     deletedTime: currentTime
                 },
-                { transaction: t }
+                { transaction }
             );
 
             const result: ITokenResponse = await jwt.createToken(userId, null);
 
-            t.commit();
+            transaction.commit();
+            logger.debug(`Success Update and Delete couple => ${user1.userId}, ${user2.userId}, ${cupId}`);
 
             return result;
         } catch (error) {
-            t.rollback();
+            transaction.rollback();
 
             throw error;
         }

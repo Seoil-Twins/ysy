@@ -10,10 +10,18 @@ const globalErrorHandler: ErrorRequestHandler = (e: any, req: Request, res: Resp
 
     if (e instanceof AbstractError) {
         const { message, statusCode } = e;
-        res.status(statusCode || StatusCode.INTERNAL_SERVER_ERROR).json({ message });
+        res.status(statusCode || StatusCode.INTERNAL_SERVER_ERROR).json({
+            type: e.name,
+            message: message,
+            statusCode: e.statusCode
+        });
     } else {
         logger.error(`Server Error : ${e}`);
-        res.status(StatusCode.INTERNAL_SERVER_ERROR).json({ message: "Internal server error" });
+        res.status(StatusCode.INTERNAL_SERVER_ERROR).json({
+            type: "Internal Server Error",
+            message: "Unknown Error",
+            statusCode: StatusCode.INTERNAL_SERVER_ERROR
+        });
     }
 };
 

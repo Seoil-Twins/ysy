@@ -1,21 +1,18 @@
 import dayjs from "dayjs";
 import { Op } from "sequelize";
 
-import ForbiddenError from "../error/forbidden";
 import NotFoundError from "../error/notFound";
 
-import sequelize from "../model";
 import { Couple } from "../model/couple.model";
-import { Calendar, ICreate, IResponse } from "../model/calendar.model";
+import { Calendar, ICreate, IUpdate, IResponse } from "../model/calendar.model";
 
 import logger from "../logger/logger";
-
 const controller = {
     /**
      * 해당년도에 커플 캘린더를 가져옵니다.
      * @param cupId Couple Id
      * @param year 검색할 년도 (1월부터 12월까지)
-     * @returns Calendar[]
+     * @returns Return {@link Calendar `Calendar[]`}
      */
     getCalendars: async (cupId: string, year: number): Promise<IResponse> => {
         const startDate = dayjs(`${year}-01-01`).format("YYYY-MM-DD HH:mm:ss");
@@ -45,10 +42,36 @@ const controller = {
     addCalendar: async (data: ICreate): Promise<void> => {
         const couple: Couple | null = await Couple.findByPk(data.cupId);
 
-        if (!couple) throw new NotFoundError(`Not Found Couple ${data.cupId}`);
+        if (!couple) throw new NotFoundError(`Not Found Couple to Couple Id ${data.cupId}`);
 
         await Calendar.create(data);
-        logger.debug(`Add Calendar ${JSON.stringify(data)}`);
+        logger.debug(`Add Calendar => ${JSON.stringify(data)}`);
+    },
+    /**
+     * 커플 캘린더 일정을 변경합니다.
+     * @param userId User Id
+     * @param calendarId Calendar ID
+     * @param data A {@link IRequestUpdate}
+     */
+    updateCalendar: async (calendarId: number, data: IUpdate): Promise<void> => {
+        const calendar: Calendar | null = await Calendar.findByPk(calendarId);
+
+        if (!calendar) throw new NotFoundError(`Not Found Calendar to Calendar Id ${calendarId}`);
+
+        await calendar.update(data);
+        logger.debug(`Update Data => ${JSON.stringify(data)}`);
+    },
+    /**
+     * 커플 캘린더 일정을 삭제합니다.
+     * @param calendarId Calendar Id
+     */
+    deleteCalendar: async (calendarId: number): Promise<void> => {
+        const calendar: Calendar | null = await Calendar.findByPk(calendarId);
+
+        if (!calendar) throw new NotFoundError(`Not Found Calendar to Calendar Id ${calendarId}`);
+
+        logger.debug(`Try Delete Data => ${JSON.stringify(calendar)}`);
+        await calendar.destroy();
     }
 };
 
