@@ -59,8 +59,6 @@ router.get("/:cup_id/:album_id", async (req: Request, res: Response, next: NextF
 });
 
 router.post("/:cup_id", async (req: Request, res: Response, next: NextFunction) => {
-    const form = formidable({ multiples: false });
-
     try {
         const { value, error }: ValidationResult = validator(req.body, titleSchema);
 
@@ -76,7 +74,7 @@ router.post("/:cup_id", async (req: Request, res: Response, next: NextFunction) 
 });
 
 router.post("/:cup_id/:album_id", async (req: Request, res: Response, next: NextFunction) => {
-    const form = formidable({ multiples: true });
+    const form = formidable({ multiples: true, maxFileSize: 5 * 1024 * 1024, maxFiles: 100 });
 
     form.parse(req, async (err, fields, files) => {
         try {
@@ -117,7 +115,7 @@ router.patch("/:cup_id/:album_id/title", async (req: Request, res: Response, nex
 });
 
 router.patch("/:cup_id/:album_id/thumbnail", async (req: Request, res: Response, next: NextFunction) => {
-    const form = formidable({ multiples: false });
+    const form = formidable({ multiples: false, maxFileSize: 5 * 1024 * 1024 });
 
     form.parse(req, async (err, fields, files) => {
         try {

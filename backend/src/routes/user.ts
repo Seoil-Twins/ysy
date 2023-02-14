@@ -90,7 +90,7 @@ router.post("/", async (req: Request, res: Response, next: NextFunction) => {
 
 // Update User Info
 router.patch("/:user_id", async (req: Request, res: Response, next: NextFunction) => {
-    const form = formidable({ multiples: false });
+    const form = formidable({ multiples: false, maxFileSize: 5 * 1024 * 1024 });
 
     form.parse(req, async (err, fields, files) => {
         try {
