@@ -6,10 +6,14 @@
  */
 
 import express, { Application, Request, Response, NextFunction } from "express";
+
 import routes from "./routes/index";
+
 import errorHandlerMiddleware from "./middlewares/errorHandler.middleware";
 import morganMiddleware from "./middlewares/morgan.middleware";
+
 import association from "./model/association.config";
+
 import logger from "./logger/logger";
 
 const app: Application = express();
@@ -27,6 +31,7 @@ app.all("*", (request: Request, _response: Response, next: NextFunction) => {
     next();
 });
 app.use("/", routes);
+
 app.use(errorHandlerMiddleware);
 
 app.listen(port, () => {
