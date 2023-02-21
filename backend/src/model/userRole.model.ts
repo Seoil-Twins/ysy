@@ -1,4 +1,4 @@
-import { DataTypes, Model } from "sequelize";
+import { DataTypes, Model, NonAttribute } from "sequelize";
 
 import sequelize from ".";
 import { Role } from "./role.model";
@@ -12,6 +12,8 @@ export interface IUserRole {
 // ------------------------------------------ Interface End ---------------------------------------- //
 
 export class UserRole extends Model<IUserRole> {
+    declare role: NonAttribute<Role>;
+
     declare userId: number;
     declare roleId: number;
 }

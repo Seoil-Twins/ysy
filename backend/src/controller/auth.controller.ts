@@ -10,6 +10,8 @@ import { checkPassword } from "../util/password";
 import { get, del } from "../util/redis";
 
 import UnauthorizedError from "../error/unauthorized";
+import { UserRole } from "../model/userRole.model";
+import { Role } from "../model/role.model";
 
 // dayjs에 isSameOrBefore 함수 추가
 dayjs.extend(isSameOrBefore);
@@ -79,7 +81,17 @@ const controller = {
         const isCheck: boolean = await checkPassword(data.password, user.password!);
         if (!isCheck) throw new UnauthorizedError("Invalid Password");
 
-        const result: ITokenResponse = await jwt.createToken(user.userId, user.cupId);
+        const role: UserRole | null = await UserRole.findOne({
+            where: { userId: user.userId },
+            include: {
+                model: Role,
+                as: "role"
+            }
+        });
+
+        if (!role) throw new UnauthorizedError("Invalid Role");
+
+        const result: ITokenResponse = await jwt.createToken(user.userId, user.cupId, role.role.name);
 
         return result;
     }
