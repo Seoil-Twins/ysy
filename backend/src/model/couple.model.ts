@@ -1,3 +1,4 @@
+import dayjs from "dayjs";
 import { DataTypes, Model, literal, HasManyGetAssociationsMixin, NonAttribute } from "sequelize";
 import { File } from "formidable";
 
@@ -84,7 +85,10 @@ Couple.init(
         createdTime: {
             field: "created_time",
             type: "TIMESTAMP",
-            defaultValue: literal("CURRENT_TIMESTAMP")
+            defaultValue: literal("CURRENT_TIMESTAMP"),
+            get(this: Couple): string {
+                return dayjs(this.getDataValue("createdTime")).format("YYYY-MM-DD HH:mm:ss");
+            }
         },
         deleted: {
             type: DataTypes.BOOLEAN,
@@ -93,7 +97,10 @@ Couple.init(
         },
         deletedTime: {
             field: "deleted_time",
-            type: "TIMESTAMP"
+            type: "TIMESTAMP",
+            get(this: Couple): string {
+                return dayjs(this.getDataValue("deletedTime")).format("YYYY-MM-DD HH:mm:ss");
+            }
         }
     },
     {

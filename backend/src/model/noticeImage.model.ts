@@ -1,4 +1,4 @@
-import { Files } from "formidable";
+import dayjs from "dayjs";
 import { DataTypes, Model, literal } from "sequelize";
 
 import sequelize from ".";
@@ -53,7 +53,10 @@ NoticeImage.init(
         createdTime: {
             field: "created_time",
             type: "TIMESTAMP",
-            defaultValue: literal("CURRENT_TIMESTAMP")
+            defaultValue: literal("CURRENT_TIMESTAMP"),
+            get(this: NoticeImage): string {
+                return dayjs(this.getDataValue("createdTime")).format("YYYY-MM-DD HH:mm:ss");
+            }
         }
     },
     {

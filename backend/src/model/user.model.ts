@@ -199,14 +199,14 @@ User.init(
         deleted: {
             type: DataTypes.BOOLEAN,
             allowNull: false,
-            defaultValue: false,
-            get(this: User): string {
-                return dayjs(this.getDataValue("deletedTime")).format("YYYY-MM-DD HH:mm:ss");
-            }
+            defaultValue: false
         },
         deletedTime: {
             field: "deleted_time",
-            type: "TIMESTAMP"
+            type: "TIMESTAMP",
+            get(this: User): string {
+                return dayjs(this.getDataValue("deletedTime")).format("YYYY-MM-DD HH:mm:ss");
+            }
         }
     },
     {

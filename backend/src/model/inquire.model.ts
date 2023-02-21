@@ -1,3 +1,4 @@
+import dayjs from "dayjs";
 import { DataTypes, Model, literal, NonAttribute } from "sequelize";
 
 import sequelize from ".";
@@ -68,7 +69,10 @@ Inquire.init(
         createdTime: {
             field: "created_time",
             type: "TIMESTAMP",
-            defaultValue: literal("CURRENT_TIMESTAMP")
+            defaultValue: literal("CURRENT_TIMESTAMP"),
+            get(this: Inquire): string {
+                return dayjs(this.getDataValue("createdTime")).format("YYYY-MM-DD HH:mm:ss");
+            }
         }
     },
     {
