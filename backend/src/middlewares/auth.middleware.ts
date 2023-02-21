@@ -21,6 +21,7 @@ const checkToken = (req: Request, res: Response, next: NextFunction) => {
 
         req.body.userId = user.userId;
         req.body.cupId = user.cupId;
+        req.body.role = user.role;
 
         logger.debug(`Authorization : ${JSON.stringify(user)}`);
 

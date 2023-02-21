@@ -1,3 +1,4 @@
+import dayjs from "dayjs";
 import { DataTypes, Model, literal, NonAttribute } from "sequelize";
 
 import sequelize from ".";
@@ -65,23 +66,9 @@ export interface IUserResponse {
     couple: User | null;
 }
 
-export interface IUserRoleResult {
-    userId: number;
-    cupId: string | null;
-    snsId: string;
-    code: string;
-    name: string;
-    email: string;
-    birthday: Date;
-    phone: string;
-    profile: string | null;
-    primaryNofi: boolean;
-    dateNofi: boolean;
-    eventNofi: boolean;
-    createdTime: Date;
-    deleted: boolean;
-    deletedTime: Date | null;
-    role: Role;
+export interface IUserResponseWithCount {
+    users: User[];
+    count: number;
 }
 // ------------------------------------------ Interface End ---------------------------------------- //
 
@@ -185,12 +172,18 @@ User.init(
         createdTime: {
             field: "created_time",
             type: "TIMESTAMP",
-            defaultValue: literal("CURRENT_TIMESTAMP")
+            defaultValue: literal("CURRENT_TIMESTAMP"),
+            get(this: User): string {
+                return dayjs(this.getDataValue("createdTime")).format("YYYY-MM-DD HH:mm:ss");
+            }
         },
         deleted: {
             type: DataTypes.BOOLEAN,
             allowNull: false,
-            defaultValue: false
+            defaultValue: false,
+            get(this: User): string {
+                return dayjs(this.getDataValue("deletedTime")).format("YYYY-MM-DD HH:mm:ss");
+            }
         },
         deletedTime: {
             field: "deleted_time",

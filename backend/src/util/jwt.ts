@@ -20,7 +20,7 @@ const refreshTokenexpiresIn: object = {
     expiresIn: process.env.DEVELOPMENT_JWT_REFRESHTOKEN_EXPIRES_IN
 };
 
-const createAccessToken = (userId: number, cupId: string | null, role?: string): string => {
+const createAccessToken = (userId: number, cupId: string | null, role?: number): string => {
     let payload = {
         userId,
         cupId,
@@ -48,7 +48,7 @@ export default {
      * @param cupId Couple Id
      * @returns A {@link ITokenResponse}
      */
-    createToken: async (userId: number, cupId: string | null, role?: string): Promise<ITokenResponse> => {
+    createToken: async (userId: number, cupId: string | null, role?: number): Promise<ITokenResponse> => {
         const accessToken: string = createAccessToken(userId, cupId, role);
         const refreshToken: string = createRefreshToken();
         const expiresIn = getExpired();

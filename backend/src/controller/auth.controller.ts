@@ -82,16 +82,12 @@ const controller = {
         if (!isCheck) throw new UnauthorizedError("Invalid Password");
 
         const role: UserRole | null = await UserRole.findOne({
-            where: { userId: user.userId },
-            include: {
-                model: Role,
-                as: "role"
-            }
+            where: { userId: user.userId }
         });
 
         if (!role) throw new UnauthorizedError("Invalid Role");
 
-        const result: ITokenResponse = await jwt.createToken(user.userId, user.cupId, role.role.name);
+        const result: ITokenResponse = await jwt.createToken(user.userId, user.cupId, role.roleId);
 
         return result;
     }
