@@ -54,8 +54,11 @@ NoticeImage.init(
             field: "created_time",
             type: "TIMESTAMP",
             defaultValue: literal("CURRENT_TIMESTAMP"),
-            get(this: NoticeImage): string {
-                return dayjs(this.getDataValue("createdTime")).format("YYYY-MM-DD HH:mm:ss");
+            get(this: NoticeImage): string | null {
+                const date = dayjs(this.getDataValue("createdTime"));
+                const formatDate = date.format("YYYY-MM-DD HH:mm:ss");
+
+                return date.isValid() ? formatDate : null;
             }
         }
     },

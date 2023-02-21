@@ -192,8 +192,11 @@ User.init(
             field: "created_time",
             type: "TIMESTAMP",
             defaultValue: literal("CURRENT_TIMESTAMP"),
-            get(this: User): string {
-                return dayjs(this.getDataValue("createdTime")).format("YYYY-MM-DD HH:mm:ss");
+            get(this: User): string | null {
+                const date = dayjs(this.getDataValue("createdTime"));
+                const formatDate = date.format("YYYY-MM-DD HH:mm:ss");
+
+                return date.isValid() ? formatDate : null;
             }
         },
         deleted: {
@@ -204,8 +207,11 @@ User.init(
         deletedTime: {
             field: "deleted_time",
             type: "TIMESTAMP",
-            get(this: User): string {
-                return dayjs(this.getDataValue("deletedTime")).format("YYYY-MM-DD HH:mm:ss");
+            get(this: User): string | null {
+                const date = dayjs(this.getDataValue("deletedTime"));
+                const formatDate = date.format("YYYY-MM-DD HH:mm:ss");
+
+                return date.isValid() ? formatDate : null;
             }
         }
     },
