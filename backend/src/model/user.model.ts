@@ -66,6 +66,25 @@ export interface IUserResponse {
     couple: User | null;
 }
 
+export interface IUserRoleResult {
+    userId: number;
+    cupId: string | null;
+    snsId: string;
+    code: string;
+    name: string;
+    email: string;
+    birthday: Date;
+    phone: string;
+    profile: string | null;
+    primaryNofi: boolean;
+    dateNofi: boolean;
+    eventNofi: boolean;
+    createdTime: Date;
+    deleted: boolean;
+    deletedTime: Date | null;
+    role: Role;
+}
+
 export interface IUserResponseWithCount {
     users: User[];
     count: number;
