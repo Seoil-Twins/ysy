@@ -47,11 +47,12 @@ const controller = {
         if (accessTokenIsBefore && !refreshTokenIsBefore) {
             const userId = String(accessTokenPayload.userId);
             const cupId = String(accessTokenPayload.cupId);
+            const role = Number(accessTokenPayload.role);
             const refreshTokenWithRedis: string | null = await get(userId);
             refreshToken = refreshToken.replace("Bearer ", "");
 
             if (refreshToken === refreshTokenWithRedis) {
-                const result: ITokenResponse = await jwt.createToken(Number(userId), cupId);
+                const result: ITokenResponse = await jwt.createToken(Number(userId), cupId, role);
 
                 return result;
             } else {
@@ -82,7 +83,11 @@ const controller = {
         if (!isCheck) throw new UnauthorizedError("Invalid Password");
 
         const role: UserRole | null = await UserRole.findOne({
-            where: { userId: user.userId }
+            where: { userId: user.userId },
+            include: {
+                model: Role,
+                as: "role"
+            }
         });
 
         if (!role) throw new UnauthorizedError("Invalid Role");

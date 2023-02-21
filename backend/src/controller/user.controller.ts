@@ -1,9 +1,9 @@
 import dayjs from "dayjs";
 import randomString from "randomstring";
-import { Op } from "sequelize";
+import { Op, OrderItem } from "sequelize";
 import { File } from "formidable";
 
-import { User, ICreate, IUpdate, IUserResponse } from "../model/user.model";
+import { User, ICreate, IUpdate, IUserResponse, IUserResponseWithCount } from "../model/user.model";
 
 import logger from "../logger/logger";
 import { deleteFile, isDefaultFile, uploadFile } from "../util/firebase";
@@ -50,6 +50,47 @@ const controller = {
         const result: IUserResponse = {
             ...user1.dataValues,
             couple: user2
+        };
+
+        return result;
+    },
+    getUsersWithSearch: async (reqCount: number, reqPage: number, reqSort: string, keyword?: string): Promise<IUserResponseWithCount> => {
+        const offset = (reqPage - 1) * reqCount;
+        let sort: OrderItem = ["name", "ASC"];
+
+        switch (reqSort) {
+            case "na":
+                sort = ["name", "ASC"];
+                break;
+            case "nd":
+                sort = ["name", "DESC"];
+                break;
+            case "r":
+                sort = ["createdTime", "DESC"];
+                break;
+            case "o":
+                sort = ["createdTime", "ASC"];
+                break;
+            case "dr":
+                sort = ["deletedTime", "DESC"];
+                break;
+            case "do":
+                sort = ["deletedTime", "ASC"];
+                break;
+            default:
+                sort = ["name", "ASC"];
+                break;
+        }
+
+        const { rows, count }: { rows: User[]; count: number } = await User.findAndCountAll({
+            offset: offset,
+            limit: reqCount,
+            order: [sort]
+        });
+
+        const result: IUserResponseWithCount = {
+            users: rows,
+            count: count
         };
 
         return result;

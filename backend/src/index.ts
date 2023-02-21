@@ -8,7 +8,6 @@
 import express, { Application, Request, Response, NextFunction } from "express";
 
 import routes from "./routes/index";
-import { admin, adminRouter } from "./routes/admin";
 
 import errorHandlerMiddleware from "./middlewares/errorHandler.middleware";
 import morganMiddleware from "./middlewares/morgan.middleware";
@@ -21,8 +20,6 @@ const app: Application = express();
 const port = 3000;
 
 association.config();
-
-app.use(admin.options.rootPath, adminRouter);
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
