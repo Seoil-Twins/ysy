@@ -5,9 +5,11 @@ import { Inquire } from "./inquire.model";
 import { InquireImage } from "./inquireImage.model";
 import { Notice } from "./notice.model";
 import { NoticeImage } from "./noticeImage.model";
+import { Role } from "./role.model";
 import { Solution } from "./solution.model";
 import { SolutionImage } from "./solutionImage.model";
 import { User } from "./user.model";
+import { UserRole } from "./userRole.model";
 
 /**
  *  hasMany => 1 : N
@@ -20,6 +22,30 @@ import { User } from "./user.model";
 
 export default {
     config: () => {
+        // ------------------------------------------ UserRole : User ---------------------------------------- //
+        User.hasOne(UserRole, {
+            foreignKey: "userId",
+            as: "userRole"
+        });
+
+        UserRole.hasOne(User, {
+            foreignKey: "userId",
+            onDelete: "CASCADE",
+            as: "users"
+        });
+
+        // ------------------------------------------ UserRole to Role ---------------------------------------- //
+        Role.hasMany(UserRole, {
+            foreignKey: "roleId",
+            as: "userRole"
+        });
+
+        UserRole.belongsTo(Role, {
+            foreignKey: "roleId",
+            onUpdate: "CASCADE",
+            as: "role"
+        });
+
         // ------------------------------------------ User to Couple ---------------------------------------- //
         Couple.hasMany(User, {
             foreignKey: "cupId",

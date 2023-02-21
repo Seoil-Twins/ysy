@@ -52,7 +52,7 @@ router.get("/:cup_id", async (req: Request, res: Response, next: NextFunction) =
 
 // Signup Couple
 router.post("/", async (req: Request, res: Response, next: NextFunction) => {
-    const form = formidable({ multiples: false });
+    const form = formidable({ multiples: false, maxFileSize: 5 * 1024 * 1024 });
 
     form.parse(req, async (err, fields, files) => {
         try {
@@ -77,7 +77,7 @@ router.post("/", async (req: Request, res: Response, next: NextFunction) => {
 
 // Update Couple Info
 router.patch("/:cup_id", async (req: Request, res: Response, next: NextFunction) => {
-    const form = formidable({ multiples: false });
+    const form = formidable({ multiples: false, maxFileSize: 5 * 1024 * 1024 });
 
     form.parse(req, async (err, fields, files) => {
         try {

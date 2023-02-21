@@ -12,7 +12,7 @@ const redisClient = redis.createClient({
     url: `redis://${username}:${password}@${host}:${port}`,
     legacyMode: true,
     socket: {
-        connectTimeout: 50000
+        connectTimeout: 70000
     }
 });
 

@@ -39,7 +39,7 @@ router.get("/:user_id", async (req: Request, res: Response, next: NextFunction) 
 });
 
 router.post("/", async (req: Request, res: Response, next: NextFunction) => {
-    const form = formidable({ multiples: true });
+    const form = formidable({ multiples: true, maxFileSize: 5 * 1024 * 1024, maxFiles: 5 });
 
     form.parse(req, async (err, fields, files) => {
         if (err) throw new err();
@@ -68,7 +68,7 @@ router.post("/", async (req: Request, res: Response, next: NextFunction) => {
 });
 
 router.patch("/:inquire_id", async (req: Request, res: Response, next: NextFunction) => {
-    const form = formidable({ multiples: true });
+    const form = formidable({ multiples: true, maxFileSize: 5 * 1024 * 1024, maxFiles: 5 });
     const inquireId = Number(req.params.inquire_id);
 
     form.parse(req, async (err, fields, files) => {

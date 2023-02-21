@@ -1,9 +1,10 @@
-import { File } from "formidable";
 import { DataTypes, Model, literal, NonAttribute } from "sequelize";
 
 import sequelize from ".";
 import { Couple } from "./couple.model";
 import { Inquire } from "./inquire.model";
+import { Role } from "./role.model";
+import { UserRole } from "./userRole.model";
 
 // -------------------------------------------- Interface ------------------------------------------ //
 export interface IUser {
@@ -12,7 +13,7 @@ export interface IUser {
     snsId: string;
     code: string;
     name: string;
-    password?: string;
+    password: string;
     email: string;
     birthday: Date;
     phone: string;
@@ -63,6 +64,25 @@ export interface IUserResponse {
     deletedTime: Date | null;
     couple: User | null;
 }
+
+export interface IUserRoleResult {
+    userId: number;
+    cupId: string | null;
+    snsId: string;
+    code: string;
+    name: string;
+    email: string;
+    birthday: Date;
+    phone: string;
+    profile: string | null;
+    primaryNofi: boolean;
+    dateNofi: boolean;
+    eventNofi: boolean;
+    createdTime: Date;
+    deleted: boolean;
+    deletedTime: Date | null;
+    role: Role;
+}
 // ------------------------------------------ Interface End ---------------------------------------- //
 
 export class User extends Model<IUser, ICreate> {
@@ -70,13 +90,15 @@ export class User extends Model<IUser, ICreate> {
     declare couple?: NonAttribute<Couple>;
     /** If you use include inquire, You can use inquire field. */
     declare inquires?: NonAttribute<Inquire>;
+    /** If you use include inquire, You can use inquire field. */
+    declare userRole?: NonAttribute<UserRole>;
 
     declare userId: number;
     declare cupId: string | null;
     declare snsId: string;
     declare code: string;
     declare name: string;
-    declare password?: string;
+    declare password: string;
     declare email: string;
     declare birthday: Date;
     declare phone: string;

@@ -13,6 +13,8 @@ import NotFoundError from "../error/notFound";
 import ForbiddenError from "../error/forbidden";
 import UnauthorizedError from "../error/unauthorized";
 import ConflictError from "../error/conflict";
+import { UserRole } from "../model/userRole.model";
+import sequelize from "../model";
 
 const folderName = "users";
 
@@ -83,20 +85,39 @@ const controller = {
             if (!user) isNot = false;
         }
 
+        const transaction = await sequelize.transaction();
         const hash: string = await createDigest(data.password);
         data.code = code;
         data.password = hash;
 
-        await User.create({
-            snsId: data.snsId,
-            code: code,
-            name: data.name,
-            email: data.email,
-            birthday: new Date(data.birthday),
-            password: hash,
-            phone: data.phone,
-            eventNofi: data.eventNofi
-        });
+        try {
+            const createdUser: User = await User.create(
+                {
+                    snsId: data.snsId,
+                    code: code,
+                    name: data.name,
+                    email: data.email,
+                    birthday: new Date(data.birthday),
+                    password: hash,
+                    phone: data.phone,
+                    eventNofi: data.eventNofi
+                },
+                { transaction }
+            );
+
+            await UserRole.create(
+                {
+                    userId: createdUser.userId,
+                    roleId: 4
+                },
+                { transaction }
+            );
+
+            transaction.commit();
+        } catch (error) {
+            transaction.rollback();
+            throw error;
+        }
 
         logger.debug(`Created User => ${data.email}`);
     },
