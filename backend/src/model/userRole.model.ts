@@ -6,12 +6,18 @@ import { User } from "./user.model";
 
 // -------------------------------------------- Interface ------------------------------------------ //
 export interface IUserRole {
+    userRoleId: number;
+    userId: number;
+    roleId: number;
+}
+
+interface ICreate {
     userId: number;
     roleId: number;
 }
 // ------------------------------------------ Interface End ---------------------------------------- //
 
-export class UserRole extends Model<IUserRole> {
+export class UserRole extends Model<IUserRole, ICreate> {
     declare role: NonAttribute<Role>;
 
     declare userId: number;
@@ -20,10 +26,16 @@ export class UserRole extends Model<IUserRole> {
 
 UserRole.init(
     {
+        userRoleId: {
+            field: "user_role_id",
+            type: DataTypes.INTEGER.UNSIGNED,
+            primaryKey: true
+        },
         userId: {
             field: "user_id",
             type: DataTypes.INTEGER.UNSIGNED,
-            primaryKey: true,
+            unique: true,
+            allowNull: false,
             references: {
                 model: User,
                 key: "userId"
@@ -32,7 +44,7 @@ UserRole.init(
         roleId: {
             field: "role_id",
             type: DataTypes.SMALLINT,
-            primaryKey: true,
+            allowNull: false,
             references: {
                 model: Role,
                 key: "roleId"

@@ -18,10 +18,12 @@ import logger from "./logger/logger";
 
 const app: Application = express();
 const port = 3000;
+const boolParser = require("express-query-boolean");
 
 association.config();
 
 app.use(express.json());
+app.use(boolParser());
 app.use(express.urlencoded({ extended: false }));
 app.use(morganMiddleware);
 app.all("*", (request: Request, _response: Response, next: NextFunction) => {

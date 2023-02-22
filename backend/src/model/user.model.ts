@@ -84,10 +84,43 @@ export interface IUserRoleResult {
     deletedTime: Date | null;
     role: Role;
 }
+// -------------------------------------------- Admin ------------------------------------------ //
 
 export interface IUserResponseWithCount {
     users: User[];
     count: number;
+}
+
+export interface PageOption {
+    count: number;
+    page: number;
+    sort: string | "na" | "nd" | "r" | "o" | "dr" | "do";
+}
+
+export interface SearchOption {
+    name?: string;
+    snsId?: string;
+}
+
+export interface FilterOption {
+    isCouple: boolean;
+    isDeleted: boolean;
+}
+
+export interface IUpdateAll {
+    code?: string;
+    name?: string;
+    email?: string;
+    password?: string;
+    birthday?: Date;
+    phone?: string;
+    profile?: string | null;
+    primaryNofi?: boolean;
+    dateNofi?: boolean;
+    eventNofi?: boolean;
+    deleted?: boolean;
+    deletedTime?: Date | null;
+    role?: number;
 }
 // ------------------------------------------ Interface End ---------------------------------------- //
 
