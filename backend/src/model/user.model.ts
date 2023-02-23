@@ -1,5 +1,5 @@
 import dayjs from "dayjs";
-import { DataTypes, Model, literal, NonAttribute } from "sequelize";
+import { DataTypes, Model, literal, NonAttribute, InferAttributes, InferCreationAttributes, CreationOptional } from "sequelize";
 
 import sequelize from ".";
 import { Couple } from "./couple.model";
@@ -8,25 +8,6 @@ import { Role } from "./role.model";
 import { UserRole } from "./userRole.model";
 
 // -------------------------------------------- Interface ------------------------------------------ //
-export interface IUser {
-    userId: number;
-    cupId: string | null;
-    snsId: string;
-    code: string;
-    name: string;
-    password: string;
-    email: string;
-    birthday: Date;
-    phone: string;
-    profile: string | null;
-    primaryNofi: boolean;
-    dateNofi: boolean;
-    eventNofi: boolean;
-    createdTime: Date;
-    deleted: boolean;
-    deletedTime: Date | null;
-}
-
 export interface ICreate {
     snsId: string;
     code: string;
@@ -65,25 +46,6 @@ export interface IUserResponse {
     deletedTime: Date | null;
     couple: User | null;
 }
-
-export interface IUserRoleResult {
-    userId: number;
-    cupId: string | null;
-    snsId: string;
-    code: string;
-    name: string;
-    email: string;
-    birthday: Date;
-    phone: string;
-    profile: string | null;
-    primaryNofi: boolean;
-    dateNofi: boolean;
-    eventNofi: boolean;
-    createdTime: Date;
-    deleted: boolean;
-    deletedTime: Date | null;
-    role: Role;
-}
 // -------------------------------------------- Admin ------------------------------------------ //
 
 export interface IUserResponseWithCount {
@@ -107,7 +69,22 @@ export interface FilterOption {
     isDeleted: boolean;
 }
 
-export interface IUpdateAll {
+export interface ICreateWithAdmin {
+    snsId: string;
+    code?: string;
+    name: string;
+    email: string;
+    password: string;
+    birthday: Date;
+    phone: string;
+    profile?: string | null;
+    primaryNofi: boolean;
+    dateNofi: boolean;
+    eventNofi: boolean;
+    role: number;
+}
+
+export interface IUpdateWithAdmin {
     code?: string;
     name?: string;
     email?: string;
@@ -124,7 +101,7 @@ export interface IUpdateAll {
 }
 // ------------------------------------------ Interface End ---------------------------------------- //
 
-export class User extends Model<IUser, ICreate> {
+export class User extends Model<InferAttributes<User>, InferCreationAttributes<User>> {
     /** If you use include couple, You can use couple field. */
     declare couple?: NonAttribute<Couple>;
     /** If you use include inquire, You can use inquire field. */
@@ -132,8 +109,8 @@ export class User extends Model<IUser, ICreate> {
     /** If you use include inquire, You can use inquire field. */
     declare userRole?: NonAttribute<UserRole>;
 
-    declare userId: number;
-    declare cupId: string | null;
+    declare userId: CreationOptional<number>;
+    declare cupId: CreationOptional<string | null>;
     declare snsId: string;
     declare code: string;
     declare name: string;
@@ -141,13 +118,13 @@ export class User extends Model<IUser, ICreate> {
     declare email: string;
     declare birthday: Date;
     declare phone: string;
-    declare profile: string | null;
-    declare primaryNofi: boolean;
-    declare dateNofi: boolean;
-    declare eventNofi: boolean;
-    declare createdTime: Date;
-    declare deleted: boolean;
-    declare deletedTime: Date | null;
+    declare profile: CreationOptional<string | null>;
+    declare primaryNofi: CreationOptional<boolean>;
+    declare dateNofi: CreationOptional<boolean>;
+    declare eventNofi: CreationOptional<boolean>;
+    declare createdTime: CreationOptional<Date>;
+    declare deleted: CreationOptional<boolean>;
+    declare deletedTime: CreationOptional<Date | null>;
 }
 
 User.init(

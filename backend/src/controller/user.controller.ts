@@ -3,7 +3,18 @@ import randomString from "randomstring";
 import { Op, OrderItem, WhereOptions } from "sequelize";
 import { File } from "formidable";
 
-import { User, ICreate, IUpdate, IUserResponse, IUserResponseWithCount, PageOption, SearchOption, FilterOption, IUpdateAll } from "../model/user.model";
+import {
+    User,
+    ICreate,
+    IUpdate,
+    IUserResponse,
+    IUserResponseWithCount,
+    PageOption,
+    SearchOption,
+    FilterOption,
+    IUpdateWithAdmin,
+    ICreateWithAdmin
+} from "../model/user.model";
 
 import logger from "../logger/logger";
 import { deleteFile, isDefaultFile, uploadFile } from "../util/firebase";
@@ -58,6 +69,45 @@ const createWhere = (searchOptions: SearchOption, filterOption: FilterOption): W
     if (filterOption.isDeleted) result["deleted"] = true;
 
     return result;
+};
+
+const createCode = async (): Promise<string> => {
+    let isNot = true;
+    let code = "";
+
+    while (isNot) {
+        code = randomString.generate({
+            length: 6,
+            charset: "alphanumeric"
+        });
+
+        const user: User | null = await User.findOne({
+            where: { code }
+        });
+
+        if (!user) isNot = false;
+    }
+
+    return code;
+};
+
+const uploadProfile = async (userId: number, file: File) => {
+    let path: string | null = "";
+    const reqFileName = file.originalFilename!;
+    const isDefault = isDefaultFile(reqFileName);
+
+    /**
+     * Frontend에선 static으로 default.jpg,png,svg 셋 중 하나 갖고있다가
+     * 사용자가 profile을 내리면 그걸로 넣고 요청
+     */
+    if (isDefault) {
+        path = null;
+    } else {
+        path = `${folderName}/${userId}/profile/${dayjs().valueOf()}.${reqFileName}`;
+        await uploadFile(path, file.filepath);
+    }
+
+    return path;
 };
 
 const controller = {
@@ -145,8 +195,6 @@ const controller = {
      * @param data A {@link ICreate}
      */
     createUser: async (data: ICreate): Promise<void> => {
-        let isNot = true;
-        let code = "";
         const user: User | null = await User.findOne({
             where: {
                 [Op.or]: [{ email: data.email }, { phone: data.phone }]
@@ -155,32 +203,16 @@ const controller = {
 
         if (user) throw new ConflictError("Duplicated User");
 
-        // 중복된 code가 있는지 검사
-        while (isNot) {
-            code = randomString.generate({
-                length: 6,
-                charset: "alphanumeric"
-            });
-
-            const user: User | null = await User.findOne({
-                where: {
-                    code: code
-                }
-            });
-
-            if (!user) isNot = false;
-        }
-
         const transaction = await sequelize.transaction();
         const hash: string = await createDigest(data.password);
-        data.code = code;
         data.password = hash;
+        data.code = await createCode();
 
         try {
             const createdUser: User = await User.create(
                 {
                     snsId: data.snsId,
-                    code: code,
+                    code: data.code,
                     name: data.name,
                     email: data.email,
                     birthday: new Date(data.birthday),
@@ -208,18 +240,108 @@ const controller = {
         logger.debug(`Created User => ${data.email}`);
     },
     /**
+     * Admin API 전용이며, 기존 Create보다 더 많은 정보를 생성할 수 있습니다.
+     * ```typescript
+     * const data: ICreateWithAdmin = {
+     *      snsId: "1001",
+     *      name: "이름",
+            email: "email@email.com",
+            code: "AAAAAA",                             // 영어 대소문자 및 숫자로 이루어진 6글자
+            password: "password123!",                   // 8~15글자 및 특수문자를 포함해야 함
+            phone: "01085297193",
+            birthday: 2000-11-26,                       // 1980-01-01 ~ 2023-12-31
+            primaryNofi: true,      
+            eventNofi: true,
+            dateNofi: false,
+            role: 1
+     * };
+     * await updateUserWithAdmin(data);
+     * await updateUserWithAdmin(data, file);   // create profile
+     * ```
+     * @param data A {@link ICreateWithAdmin}
+     * @param file A {@link File} | undefined
+     */
+    createUserWithAdmin: async (data: ICreateWithAdmin, file?: File): Promise<void> => {
+        let isUpload = false;
+        let path: string | null = "";
+        const user: User | null = await User.findOne({
+            where: {
+                [Op.or]: [{ email: data.email }, { phone: data.phone }]
+            }
+        });
+
+        if (user) throw new ConflictError("Duplicated User");
+        if (data.code) {
+            const user: User | null = await User.findOne({
+                where: { code: data.code }
+            });
+
+            if (user) data.code = await createCode();
+        } else {
+            data.code = await createCode();
+        }
+
+        const transaction = await sequelize.transaction();
+        const hash: string = await createDigest(data.password);
+        data.password = hash;
+
+        try {
+            const createdUser: User = await User.create(
+                {
+                    snsId: data.snsId,
+                    name: data.name,
+                    email: data.email,
+                    code: data.code,
+                    password: hash,
+                    phone: data.phone,
+                    birthday: data.birthday,
+                    primaryNofi: boolean(data.primaryNofi),
+                    eventNofi: boolean(data.eventNofi),
+                    dateNofi: boolean(data.dateNofi)
+                },
+                { transaction }
+            );
+
+            await UserRole.create(
+                {
+                    userId: createdUser.userId,
+                    roleId: data.role
+                },
+                { transaction }
+            );
+
+            if (file) {
+                data.profile = await uploadProfile(createdUser.userId, file);
+                if (data.profile) isUpload = true;
+            }
+
+            await createdUser.update({ profile: data.profile }, { transaction });
+            transaction.commit();
+        } catch (error) {
+            transaction.rollback();
+
+            // Firebase에는 업로드 되었지만 DB 오류가 발생했다면 Firebase Profile 삭제
+            if (file && isUpload) {
+                await deleteFile(path!);
+                logger.error(`After updating the firebase, a db error occurred and the firebase profile is deleted => ${path}`);
+            }
+
+            throw error;
+        }
+
+        logger.debug(`Created User => ${data.email}`);
+    },
+    /**
      * 유저의 정보를 수정합니다.
      * @param data A {@link IUpdate}
      * @param profile User Profile
      */
-    updateUser: async (data: IUpdate, profile?: File): Promise<void> => {
+    updateUser: async (data: IUpdate, file?: File): Promise<void> => {
         let isUpload = false;
         let path: string | null = "";
 
         const user: User | null = await User.findOne({
-            where: {
-                userId: data.userId
-            }
+            where: { userId: data.userId }
         });
 
         if (!user) throw new NotFoundError("Not Found User");
@@ -228,24 +350,10 @@ const controller = {
         let prevProfile: string | null = user.profile;
 
         try {
-            if (profile) {
-                const reqFileName = profile.originalFilename!;
-                const isDefault = isDefaultFile(reqFileName);
-
-                /**
-                 * Frontend에선 static으로 default.jpg,png,svg 셋 중 하나 갖고있다가
-                 * 사용자가 profile을 내리면 그걸로 넣고 요청
-                 */
-                if (isDefault) {
-                    path = null;
-                } else {
-                    path = `${folderName}/${data.userId}/profile/${dayjs().valueOf()}.${reqFileName}`;
-
-                    await uploadFile(path, profile.filepath);
-                    isUpload = true;
-                }
-
-                data.profile = path;
+            if (file) {
+                data.profile = await uploadProfile(data.userId, file);
+                if (data.profile) isUpload = true;
+                else if (prevProfile && !data.profile) await deleteFile(prevProfile);
             }
 
             await user.update(data);
@@ -293,7 +401,7 @@ const controller = {
      * @param data A {@link IUpdateAll}
      * @param file A {@link File}
      */
-    updateUserWithAdmin: async (userId: number, data: IUpdateAll, file?: File): Promise<void> => {
+    updateUserWithAdmin: async (userId: number, data: IUpdateWithAdmin, file?: File): Promise<void> => {
         let isUpload = false;
         let path: string | null = "";
 
@@ -313,23 +421,9 @@ const controller = {
                 await userRole.update({ roleId: data.role }, { transaction });
             }
             if (file) {
-                const reqFileName = file.originalFilename!;
-                const isDefault = isDefaultFile(reqFileName);
-
-                /**
-                 * Frontend에선 static으로 default.jpg,png,svg 셋 중 하나 갖고있다가
-                 * 사용자가 profile을 내리면 그걸로 넣고 요청
-                 */
-                if (isDefault) {
-                    path = null;
-                } else {
-                    path = `${folderName}/${userId}/profile/${dayjs().valueOf()}.${reqFileName}`;
-
-                    await uploadFile(path, file.filepath);
-                    isUpload = true;
-                }
-
-                data.profile = path;
+                data.profile = await uploadProfile(userId, file);
+                if (data.profile) isUpload = true;
+                else if (prevProfile && !data.profile) await deleteFile(prevProfile);
             }
             if (data.password) data.password = await createDigest(data.password);
             if (boolean(data.deleted)) data.deletedTime = new Date(dayjs().valueOf());

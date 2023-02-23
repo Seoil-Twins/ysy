@@ -2,7 +2,7 @@ import joi, { ValidationResult } from "joi";
 import express, { Router, Request, Response, NextFunction } from "express";
 import formidable from "formidable";
 
-import { FilterOption, IUpdateAll, IUserResponseWithCount, PageOption, SearchOption } from "../model/user.model";
+import { FilterOption, ICreateWithAdmin, IUpdateWithAdmin, IUserResponseWithCount, PageOption, SearchOption } from "../model/user.model";
 
 import userController from "../controller/user.controller";
 
@@ -40,6 +40,23 @@ const canView = (req: Request, _res: Response, next: NextFunction) => {
 //------------------------------------------------------------------ User ------------------------------------------------------------------//
 const pwPattern = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[$@$!%*#?&])[A-Za-z\d$@$!%*#?&]{8,15}$/;
 const phonePattern = /^[0-9]+$/;
+const userCreateSchema: joi.Schema = joi.object({
+    snsId: joi.string().length(4).required(),
+    name: joi.string().max(8).trim().required(),
+    code: joi.string().trim(),
+    password: joi.string().trim().min(8).max(15).regex(RegExp(pwPattern)).required(),
+    email: joi.string().trim().email().required(),
+    phone: joi.string().trim().length(11).regex(RegExp(phonePattern)).required(),
+    birthday: joi
+        .date()
+        .greater(new Date("1980-01-01")) // 1980-01-01보다 더 큰 날짜여야 함.
+        .less(new Date("2023-12-31"))
+        .required(), // 2023-12-31보다 낮은 날짜여야 함.
+    eventNofi: joi.bool().default(false).required(),
+    primaryNofi: joi.bool().default(false).required(),
+    dateNofi: joi.bool().default(false).required(),
+    role: joi.number().min(1).max(1).required()
+});
 const userUpdateSchema: joi.Schema = joi.object({
     name: joi.string().max(8).trim(),
     code: joi.string().trim(),
@@ -53,7 +70,8 @@ const userUpdateSchema: joi.Schema = joi.object({
     eventNofi: joi.bool().default(false),
     primaryNofi: joi.bool().default(false),
     dateNofi: joi.bool().default(false),
-    delete: joi.bool().default(false)
+    delete: joi.bool().default(false),
+    role: joi.number().min(1).max(1)
 });
 
 router.get("/user", canView, async (req: Request, res: Response, next: NextFunction) => {
@@ -81,6 +99,41 @@ router.get("/user", canView, async (req: Request, res: Response, next: NextFunct
     }
 });
 
+router.post("/user", canModifyWithEditor, async (req: Request, res: Response, next: NextFunction) => {
+    const form = formidable({ multiples: false, maxFileSize: 5 * 1024 * 1024 });
+
+    form.parse(req, async (err, fields, files) => {
+        try {
+            req.body = Object.assign({}, req.body, fields);
+            const { value, error }: ValidationResult = validator(req.body, userCreateSchema);
+
+            if (err) throw new err();
+            else if (error) throw new BadRequestError(error.message);
+            else if (files.file instanceof Array<File>) throw new BadRequestError("You must have only one profile");
+
+            const data: ICreateWithAdmin = {
+                snsId: req.body.snsId,
+                name: req.body.name,
+                email: req.body.email,
+                code: req.body.code,
+                password: req.body.password,
+                phone: req.body.phone,
+                birthday: req.body.birthday,
+                primaryNofi: req.body.primaryNofi,
+                eventNofi: req.body.eventNofi,
+                dateNofi: req.body.dateNofi,
+                role: req.body.role
+            };
+
+            await userController.createUserWithAdmin(data, files.file);
+
+            return res.status(StatusCode.CREATED).json({});
+        } catch (error) {
+            next(error);
+        }
+    });
+});
+
 router.patch("/user/:user_id", canModifyWithEditor, async (req: Request, res: Response, next: NextFunction) => {
     const form = formidable({ multiples: false, maxFileSize: 5 * 1024 * 1024 });
 
@@ -95,7 +148,7 @@ router.patch("/user/:user_id", canModifyWithEditor, async (req: Request, res: Re
             else if (error) throw new BadRequestError(error.message);
             else if (files.file instanceof Array<File>) throw new BadRequestError("You must have only one profile");
 
-            const data: IUpdateAll = {
+            const data: IUpdateWithAdmin = {
                 name: req.body.name,
                 email: req.body.email,
                 code: req.body.code,
@@ -108,6 +161,7 @@ router.patch("/user/:user_id", canModifyWithEditor, async (req: Request, res: Re
                 deleted: req.body.deleted,
                 role: req.body.role
             };
+
             await userController.updateUserWithAdmin(userId, data, files.file);
 
             return res.status(StatusCode.NO_CONTENT).json({});
