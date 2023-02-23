@@ -1,18 +1,11 @@
 import dayjs from "dayjs";
-import { DataTypes, Model, literal, NonAttribute } from "sequelize";
 import { File } from "formidable";
+import { DataTypes, Model, literal, NonAttribute } from "sequelize";
+import { CreationOptional, InferAttributes, InferCreationAttributes } from "sequelize/types/model";
 
 import sequelize from ".";
 import { Couple } from "./couple.model";
 // -------------------------------------------- Interface ------------------------------------------ //
-export interface IAlbum {
-    albumId: number;
-    cupId: string;
-    title: string;
-    thumbnail: string | null;
-    createdTime: Date;
-}
-
 export interface ICreate {
     cupId: string;
     title: string;
@@ -50,14 +43,15 @@ export interface IResponse {
 }
 // ------------------------------------------ Interface End ---------------------------------------- //
 
-export class Album extends Model<IAlbum, ICreate> {
+export class Album extends Model<InferAttributes<Album>, InferCreationAttributes<Album>> {
     /** If you use include couple, You can use couple field. */
     declare couple?: NonAttribute<Couple>;
 
-    declare albumId: number;
+    declare albumId: CreationOptional<number>;
     declare cupId: string;
     declare title: string;
-    declare thumbnail: string | null;
+    declare thumbnail: CreationOptional<string | null>;
+    declare createdTime: CreationOptional<Date>;
 }
 
 Album.init(

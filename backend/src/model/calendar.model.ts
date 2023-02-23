@@ -1,28 +1,18 @@
 import dayjs from "dayjs";
 import { DataTypes, Model, literal, NonAttribute } from "sequelize";
+import { CreationOptional, InferAttributes, InferCreationAttributes } from "sequelize/types/model";
 
 import sequelize from ".";
 import { Couple } from "./couple.model";
 
 // -------------------------------------------- Interface ------------------------------------------ //
-export interface ICalendar {
-    calendarId: number;
-    cupId: string;
-    title: string;
-    description: string;
-    fromDate: Date;
-    toDate: Date;
-    color: Date;
-    createdTime: Date;
-}
-
 export interface ICreate {
     cupId: string;
     title: string;
     description: string;
     fromDate: Date;
     toDate: Date;
-    color: Date;
+    color: string;
 }
 
 export interface IResponse {
@@ -36,21 +26,22 @@ export interface IUpdate {
     description?: string;
     fromDate?: Date;
     toDate?: Date;
-    color?: Date;
+    color?: string;
 }
 // ------------------------------------------ Interface End ---------------------------------------- //
 
-export class Calendar extends Model<ICalendar, ICreate> {
+export class Calendar extends Model<InferAttributes<Calendar>, InferCreationAttributes<Calendar>> {
     /** If you use include couple, You can use couple field. */
     declare couple?: NonAttribute<Couple>;
 
-    declare calendarId: number;
+    declare calendarId: CreationOptional<number>;
     declare cupId: string;
     declare title: string;
     declare description: string;
     declare fromDate: Date;
     declare toDate: Date;
     declare color: string;
+    declare createdTime: CreationOptional<Date>;
 }
 
 Calendar.init(

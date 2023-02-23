@@ -1,25 +1,14 @@
 import { DataTypes, Model, NonAttribute } from "sequelize";
+import { CreationOptional, InferAttributes, InferCreationAttributes } from "sequelize/types/model";
 
 import sequelize from ".";
 import { Role } from "./role.model";
 import { User } from "./user.model";
 
-// -------------------------------------------- Interface ------------------------------------------ //
-export interface IUserRole {
-    userRoleId: number;
-    userId: number;
-    roleId: number;
-}
-
-interface ICreate {
-    userId: number;
-    roleId: number;
-}
-// ------------------------------------------ Interface End ---------------------------------------- //
-
-export class UserRole extends Model<IUserRole, ICreate> {
+export class UserRole extends Model<InferAttributes<UserRole>, InferCreationAttributes<UserRole>> {
     declare role: NonAttribute<Role>;
 
+    declare userRoleId: CreationOptional<number>;
     declare userId: number;
     declare roleId: number;
 }

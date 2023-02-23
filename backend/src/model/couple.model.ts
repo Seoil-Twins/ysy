@@ -1,6 +1,7 @@
 import dayjs from "dayjs";
-import { DataTypes, Model, literal, HasManyGetAssociationsMixin, NonAttribute } from "sequelize";
 import { File } from "formidable";
+import { DataTypes, Model, literal, HasManyGetAssociationsMixin, NonAttribute } from "sequelize";
+import { CreationOptional, InferAttributes, InferCreationAttributes } from "sequelize/types/model";
 
 import sequelize from ".";
 import { Album } from "./album.model";
@@ -8,16 +9,6 @@ import { User } from "./user.model";
 import { Calendar } from "./calendar.model";
 
 // -------------------------------------------- Interface ------------------------------------------ //
-export interface ICouple {
-    cupId: string;
-    cupDay: Date;
-    title: string;
-    thumbnail: string | null;
-    createdTime: Date;
-    deleted: boolean;
-    deletedTime: Date | null;
-}
-
 export interface IRequestCreate {
     // Auth Middleware User Id
     userId: number;
@@ -34,16 +25,9 @@ export interface IUpdate {
     thumbnail?: string | null;
     cupDay?: Date;
 }
-
-interface ICreate {
-    cupId: string;
-    cupDay: Date;
-    title: string;
-    thumbnail: string | null;
-}
 // ------------------------------------------ Interface End ---------------------------------------- //
 
-export class Couple extends Model<ICouple, ICreate> {
+export class Couple extends Model<InferAttributes<Couple>, InferCreationAttributes<Couple>> {
     /** If you use include user, You can use users field. */
     declare users?: NonAttribute<User>;
     /** If you use include album, You can use albums field. */
@@ -51,12 +35,13 @@ export class Couple extends Model<ICouple, ICreate> {
     /** If you use include calendar, You can use calendars field. */
     declare calendars?: NonAttribute<Calendar>;
 
-    declare cupId: string;
+    declare cupId: CreationOptional<string>;
     declare cupDay: Date;
     declare title: string;
-    declare thumbnail: string | null;
-    declare deleted: boolean;
-    declare deletedTime: Date | null;
+    declare thumbnail: CreationOptional<string | null>;
+    declare createdTime: CreationOptional<Date>;
+    declare deleted: CreationOptional<boolean>;
+    declare deletedTime: CreationOptional<Date | null>;
 
     declare getUsers: HasManyGetAssociationsMixin<User>;
     declare getAlbums: HasManyGetAssociationsMixin<Album>;

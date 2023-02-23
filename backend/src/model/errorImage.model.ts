@@ -1,22 +1,13 @@
 import dayjs from "dayjs";
 import { DataTypes, Model, literal } from "sequelize";
+import { CreationOptional, InferAttributes, InferCreationAttributes } from "sequelize/types/model";
 
 import sequelize from ".";
 
-// -------------------------------------------- Interface ------------------------------------------ //
-export interface IErrorImage {
-    errorId: number;
-    path: string;
-    createdTime: Date;
-}
-
-interface ICreate {
-    path: string;
-}
-// ------------------------------------------ Interface End ---------------------------------------- //
-
-export class ErrorImage extends Model<IErrorImage, ICreate> {
+export class ErrorImage extends Model<InferAttributes<ErrorImage>, InferCreationAttributes<ErrorImage>> {
+    declare errorId: CreationOptional<number>;
     declare path: string;
+    declare createdTime: CreationOptional<Date>;
 }
 
 ErrorImage.init(

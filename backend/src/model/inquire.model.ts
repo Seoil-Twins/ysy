@@ -1,5 +1,6 @@
 import dayjs from "dayjs";
 import { DataTypes, Model, literal, NonAttribute } from "sequelize";
+import { CreationOptional, InferAttributes, InferCreationAttributes } from "sequelize/types/model";
 
 import sequelize from ".";
 import { InquireImage } from "./inquireImage.model";
@@ -7,14 +8,6 @@ import { Solution } from "./solution.model";
 import { User } from "./user.model";
 
 // -------------------------------------------- Interface ------------------------------------------ //
-export interface IInquire {
-    inquireId: number;
-    userId: number;
-    title: string;
-    contents: string;
-    createdTime: Date;
-}
-
 export interface ICreate {
     userId: number;
     title: string;
@@ -28,17 +21,17 @@ export interface IUpdate {
 }
 // ------------------------------------------ Interface End ---------------------------------------- //
 
-export class Inquire extends Model<IInquire, ICreate> {
+export class Inquire extends Model<InferAttributes<Inquire>, InferCreationAttributes<Inquire>> {
     /** If you use include inquireImage, You can use inquireImages field. */
     declare inquireImages?: NonAttribute<InquireImage>;
     /** If you use include solution, You can use solution field. */
     declare solution?: NonAttribute<Solution>;
 
-    declare inquireId: number;
+    declare inquireId: CreationOptional<number>;
     declare userId: number;
     declare title: string;
     declare contents: string;
-    declare createdTime: Date;
+    declare createdTime: CreationOptional<Date>;
 }
 
 Inquire.init(

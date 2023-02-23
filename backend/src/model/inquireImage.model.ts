@@ -1,32 +1,21 @@
 import dayjs from "dayjs";
 import { DataTypes, Model, literal } from "sequelize";
+import { CreationOptional, InferAttributes, InferCreationAttributes } from "sequelize/types/model";
 
 import sequelize from ".";
 import { Inquire } from "./inquire.model";
 
 // -------------------------------------------- Interface ------------------------------------------ //
-export interface IInquireImage {
-    imageId: number;
-    inquireId: number;
-    image: string;
-    createdTime: Date;
-}
-
 export interface IRequestCreate {
     image: File | File[];
 }
-
-interface ICreate {
-    inquireId: number;
-    image: string;
-}
 // ------------------------------------------ Interface End ---------------------------------------- //
 
-export class InquireImage extends Model<IInquireImage, ICreate> {
-    declare imageId: number;
+export class InquireImage extends Model<InferAttributes<InquireImage>, InferCreationAttributes<InquireImage>> {
+    declare imageId: CreationOptional<number>;
     declare inquireId: number;
     declare image: string;
-    declare createdTime: Date;
+    declare createdTime: CreationOptional<Date>;
 }
 
 InquireImage.init(
