@@ -6,7 +6,7 @@ import { File } from "formidable";
 import sequelize from "../model";
 import { User } from "../model/user.model";
 import { ITokenResponse } from "../model/auth.model";
-import { Couple, IRequestCreate, IUpdate } from "../model/couple.model";
+import { Couple, FilterOptions, ICoupleResponseWithCount, IRequestCreate, IUpdate, PageOptions, SearchOptions } from "../model/couple.model";
 
 import NotFoundError from "../error/notFound";
 import UnauthorizedError from "../error/unauthorized";
@@ -20,8 +20,45 @@ import jwt from "../util/jwt";
 import { deleteFile, uploadFile, isDefaultFile } from "../util/firebase";
 import { UserRole } from "../model/userRole.model";
 import { Role } from "../model/role.model";
+import { OrderItem, WhereOptions } from "sequelize/types/model";
+import { boolean } from "boolean";
 
 const folderName = "couples";
+
+const createSort = (sort: string): OrderItem => {
+    let result: OrderItem = ["createdTime", "DESC"];
+
+    switch (sort) {
+        case "r":
+            result = ["createdTime", "DESC"];
+            break;
+        case "o":
+            result = ["createdTime", "ASC"];
+            break;
+        case "dr":
+            result = ["deletedTime", "DESC"];
+            break;
+        case "do":
+            result = ["deletedTime", "ASC"];
+            break;
+        default:
+            result = ["createdTime", "DESC"];
+            break;
+    }
+
+    return result;
+};
+
+const createWhere = (filterOptions: FilterOptions, cupId?: string): WhereOptions => {
+    let result: WhereOptions = {};
+
+    if (cupId) result["cupId"] = cupId;
+    if (boolean(filterOptions.isDeleted)) result["deleted"] = true;
+    if (filterOptions.fromDate && filterOptions.toDate) result["createdTime"] = { [Op.between]: [filterOptions.fromDate, filterOptions.toDate] };
+
+    console.log(result);
+    return result;
+};
 
 const controller = {
     /**
@@ -42,6 +79,65 @@ const controller = {
         if (!couple) throw new NotFoundError("Not Found Couple");
 
         return couple;
+    },
+    getCouplesWithAdmin: async (pageOptions: PageOptions, searchOptions: SearchOptions, filterOptions: FilterOptions): Promise<ICoupleResponseWithCount> => {
+        const offset = (pageOptions.page - 1) * pageOptions.count;
+        const sort: OrderItem = createSort(pageOptions.sort);
+        const where: WhereOptions = createWhere(filterOptions);
+        const reuslt: ICoupleResponseWithCount = {
+            couples: [],
+            count: 0
+        };
+
+        if (searchOptions.name && searchOptions.name !== "undefined") {
+            let { rows, count }: { rows: User[]; count: number } = await User.findAndCountAll({
+                offset,
+                limit: pageOptions.count,
+                order: [sort],
+                where: {
+                    name: { [Op.like]: `%${searchOptions.name}%` },
+                    cupId: { [Op.not]: null }
+                }
+            });
+
+            if (rows.length > 0) {
+                rows = rows.filter((user: User, idx: number, self: User[]) => idx === self.findIndex((t) => t.cupId === user.cupId));
+
+                for (let i = 0; i < rows.length; i++) {
+                    const where = createWhere(filterOptions, rows[i].cupId!);
+                    const couple: Couple | null = await Couple.findOne({
+                        where,
+                        include: {
+                            model: User,
+                            as: "users"
+                        }
+                    });
+
+                    reuslt.couples.push(couple!);
+                }
+
+                reuslt.count = count - (count - rows.length);
+            }
+        } else {
+            const where = createWhere(filterOptions);
+
+            let { rows, count }: { rows: Couple[]; count: number } = await Couple.findAndCountAll({
+                offset,
+                limit: pageOptions.count,
+                order: [sort],
+                where,
+                include: {
+                    model: User,
+                    as: "users"
+                }
+            });
+
+            // include user를 count 함.
+            reuslt.count = count / 2;
+            reuslt.couples = rows;
+        }
+
+        return reuslt;
     },
     /**
      * 커플를 생성하고 업데이트된 토큰 정보를 반환합니다.

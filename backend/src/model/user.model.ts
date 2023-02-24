@@ -53,18 +53,18 @@ export interface IUserResponseWithCount {
     count: number;
 }
 
-export interface PageOption {
+export interface PageOptions {
     count: number;
     page: number;
     sort: string | "na" | "nd" | "r" | "o" | "dr" | "do";
 }
 
-export interface SearchOption {
+export interface SearchOptions {
     name?: string;
     snsId?: string;
 }
 
-export interface FilterOption {
+export interface FilterOptions {
     isCouple: boolean;
     isDeleted: boolean;
 }

@@ -50,7 +50,7 @@ router.get("/:cup_id", async (req: Request, res: Response, next: NextFunction) =
     }
 });
 
-// Signup Couple
+// Create Couple
 router.post("/", async (req: Request, res: Response, next: NextFunction) => {
     const form = formidable({ multiples: false, maxFileSize: 5 * 1024 * 1024 });
 

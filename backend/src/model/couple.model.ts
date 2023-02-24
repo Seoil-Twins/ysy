@@ -25,6 +25,28 @@ export interface IUpdate {
     thumbnail?: string | null;
     cupDay?: Date;
 }
+
+// -------------------------------------------- Admin ------------------------------------------ //
+export interface ICoupleResponseWithCount {
+    couples: Couple[];
+    count: number;
+}
+
+export interface PageOptions {
+    count: number;
+    page: number;
+    sort: string | "r" | "o" | "dr" | "do";
+}
+
+export interface SearchOptions {
+    name?: string;
+}
+
+export interface FilterOptions {
+    fromDate?: Date;
+    toDate?: Date;
+    isDeleted: boolean;
+}
 // ------------------------------------------ Interface End ---------------------------------------- //
 
 export class Couple extends Model<InferAttributes<Couple>, InferCreationAttributes<Couple>> {

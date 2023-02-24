@@ -1,10 +1,25 @@
 import joi, { ValidationResult } from "joi";
 import express, { Router, Request, Response, NextFunction } from "express";
 import formidable from "formidable";
+import { boolean } from "boolean";
 
-import { FilterOption, ICreateWithAdmin, IUpdateWithAdmin, IUserResponseWithCount, PageOption, SearchOption } from "../model/user.model";
+import {
+    ICreateWithAdmin,
+    IUpdateWithAdmin,
+    IUserResponseWithCount,
+    PageOptions as UserPageOptions,
+    SearchOptions as UserSearchOptions,
+    FilterOptions as UserFilterOptions
+} from "../model/user.model";
+import {
+    ICoupleResponseWithCount,
+    PageOptions as CouplePageOptions,
+    SearchOptions as CoupleSearchOptions,
+    FilterOptions as CoupleFilterOptions
+} from "../model/couple.model";
 
 import userController from "../controller/user.controller";
+import coupleController from "../controller/couple.controller";
 
 import logger from "../logger/logger";
 import validator from "../util/validator";
@@ -12,6 +27,9 @@ import StatusCode from "../util/statusCode";
 
 import BadRequestError from "../error/badRequest";
 import ForbiddenError from "../error/forbidden";
+import dayjs from "dayjs";
+
+dayjs.locale("ko");
 
 const router: Router = express.Router();
 
@@ -75,22 +93,22 @@ const userUpdateSchema: joi.Schema = joi.object({
 });
 
 router.get("/user", canView, async (req: Request, res: Response, next: NextFunction) => {
-    const pageOption: PageOption = {
+    const pageOptions: UserPageOptions = {
         count: Number(req.query.count) || 10,
         page: Number(req.query.page) || 1,
         sort: String(req.query.sort) || "na"
     };
-    const searchOption: SearchOption = {
+    const searchOptions: UserSearchOptions = {
         name: String(req.query.name) || undefined,
         snsId: String(req.query.sns_id) || undefined
     };
-    const filterOption: FilterOption = {
-        isCouple: Boolean(req.query.couple) || false,
-        isDeleted: Boolean(req.query.deleted) || false
+    const filterOptions: UserFilterOptions = {
+        isCouple: boolean(req.query.couple) || false,
+        isDeleted: boolean(req.query.deleted) || false
     };
 
     try {
-        const result: IUserResponseWithCount = await userController.getUsersWithSearch(pageOption, searchOption, filterOption);
+        const result: IUserResponseWithCount = await userController.getUsersWithSearch(pageOptions, searchOptions, filterOptions);
 
         logger.debug(`Response Data => ${JSON.stringify(result)}`);
         return res.status(StatusCode.OK).json(result);
@@ -186,5 +204,29 @@ router.delete("/user/:user_ids", canView, async (req: Request, res: Response, ne
     }
 });
 //--------------------------------------------------------------- User End ------------------------------------------------------------------//
+//----------------------------------------------------------------- Couple ------------------------------------------------------------------//
+router.get("/couple", canView, async (req: Request, res: Response, next: NextFunction) => {
+    const pageOptions: CouplePageOptions = {
+        count: Number(req.query.count) || 10,
+        page: Number(req.query.page) || 1,
+        sort: String(req.query.sort) || "r"
+    };
+    const searchOptions: CoupleSearchOptions = { name: String(req.query.name) || undefined };
+    const filterOptions: CoupleFilterOptions = {
+        fromDate: req.query.from_date ? new Date(dayjs(String(req.query.from_date)).valueOf()) : undefined,
+        toDate: req.query.to_date ? new Date(dayjs(String(req.query.to_date)).add(1, "day").valueOf()) : undefined,
+        isDeleted: boolean(req.query.deleted) || false
+    };
+
+    try {
+        const result: ICoupleResponseWithCount = await coupleController.getCouplesWithAdmin(pageOptions, searchOptions, filterOptions);
+
+        logger.debug(`Response Data => ${JSON.stringify(result)}`);
+        return res.status(StatusCode.OK).json(result);
+    } catch (error) {
+        next(error);
+    }
+});
+//-------------------------------------------------------------- Couple End -----------------------------------------------------------------//
 
 export default router;

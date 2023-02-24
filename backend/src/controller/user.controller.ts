@@ -9,9 +9,9 @@ import {
     IUpdate,
     IUserResponse,
     IUserResponseWithCount,
-    PageOption,
-    SearchOption,
-    FilterOption,
+    PageOptions,
+    SearchOptions,
+    FilterOptions,
     IUpdateWithAdmin,
     ICreateWithAdmin
 } from "../model/user.model";
@@ -68,13 +68,13 @@ const createSort = (sort: string): OrderItem => {
     return result;
 };
 
-const createWhere = (searchOptions: SearchOption, filterOption: FilterOption): WhereOptions => {
+const createWhere = (searchOptions: SearchOptions, filterOptions: FilterOptions): WhereOptions => {
     let result: WhereOptions = {};
 
     if (searchOptions.name && searchOptions.name !== "undefined") result["name"] = { [Op.like]: `%${searchOptions.name}%` };
     if (searchOptions.snsId && searchOptions.snsId !== "undefined") result["snsId"] = searchOptions.snsId;
-    if (filterOption.isCouple) result["cupId"] = { [Op.not]: null };
-    if (filterOption.isDeleted) result["deleted"] = true;
+    if (filterOptions.isCouple) result["cupId"] = { [Op.not]: null };
+    if (filterOptions.isDeleted) result["deleted"] = true;
 
     return result;
 };
@@ -157,36 +157,36 @@ const controller = {
     /**
      * Admin API 전용이며 Pagination, Sort, Search 등을 사용하여 검색할 수 있습니다.
      * ```typescript
-     * const pageOption: PageOption = {
+     * const pageOptions: PageOptions = {
      *      page: 1,
      *      count 5,
      *      sort: "r"
      * };
      * // This object value not required.
-     * const searchOption: SearchOption = {
+     * const searchOptions: SearchOptions = {
      *      name: "용",     // This using mysql "Like" method.
      *      snsId: 1001
      * };
-     * const filterOption: FilterOption = {
+     * const filterOptions: FilterOptions = {
      *      isCouple: true,     // Get only users with couple.
      *      isDeleted: true     // Get only deleted users.
      * };
      *
-     * const result = await getUsersWithSearch(pageOption, searchOption, filterOption);
+     * const result = await getUsersWithSearch(pageOptions, SearchOptions, FilterOptions);
      * ```
-     * @param pageOption A {@link PageOption}
-     * @param searchOption A {@link SearchOption}
-     * @param filterOption A {@link FilterOption}
+     * @param pageOptions A {@link PageOptions}
+     * @param searchOptions A {@link SearchOptions}
+     * @param filterOptions A {@link FilterOptions}
      * @returns A {@link IUserResponseWithCount}
      */
-    getUsersWithSearch: async (pageOption: PageOption, searchOption: SearchOption, filterOption: FilterOption): Promise<IUserResponseWithCount> => {
-        const offset = (pageOption.page - 1) * pageOption.count;
-        const sort: OrderItem = createSort(pageOption.sort);
-        const where: WhereOptions = createWhere(searchOption, filterOption);
+    getUsersWithSearch: async (pageOptions: PageOptions, searchOptions: SearchOptions, filterOptions: FilterOptions): Promise<IUserResponseWithCount> => {
+        const offset = (pageOptions.page - 1) * pageOptions.count;
+        const sort: OrderItem = createSort(pageOptions.sort);
+        const where: WhereOptions = createWhere(searchOptions, filterOptions);
 
         const { rows, count }: { rows: User[]; count: number } = await User.findAndCountAll({
             offset: offset,
-            limit: pageOption.count,
+            limit: pageOptions.count,
             order: [sort],
             where
         });
