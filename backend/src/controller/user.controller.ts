@@ -533,6 +533,8 @@ const controller = {
             }
 
             await otherUser[0].update({ cupId: null });
+
+            if (user.couple!.thumbnail) await deleteFile(user.couple!.thumbnail);
             await user.couple!.destroy();
         });
 
