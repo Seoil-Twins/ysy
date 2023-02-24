@@ -105,7 +105,7 @@ export class User extends Model<InferAttributes<User>, InferCreationAttributes<U
     /** If you use include couple, You can use couple field. */
     declare couple?: NonAttribute<Couple>;
     /** If you use include inquire, You can use inquire field. */
-    declare inquires?: NonAttribute<Inquire>;
+    declare inquires?: NonAttribute<Inquire[]>;
     /** If you use include inquire, You can use inquire field. */
     declare userRole?: NonAttribute<UserRole>;
 

@@ -182,7 +182,7 @@ const controller = {
         // 지워지지 않은 이미지가 존재할 시
         if (images.items.length) {
             images.items.forEach(async (image) => {
-                logger.warn(`Image not deleted : ${cupId} | ${albumId} => ${image.fullPath}`);
+                logger.warn(`Album Image not deleted : ${cupId} | ${albumId} => ${image.fullPath}`);
 
                 await ErrorImage.create({
                     path: image.fullPath

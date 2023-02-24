@@ -20,7 +20,7 @@ export interface IUpdate {
 
 export class Notice extends Model<InferAttributes<Notice>, InferCreationAttributes<Notice>> {
     /** If you use include inquireImage, You can use inquireImages field. */
-    declare noticeImages?: NonAttribute<InquireImage>;
+    declare noticeImages?: NonAttribute<InquireImage[]>;
 
     declare noticeId: CreationOptional<number>;
     declare title: string;

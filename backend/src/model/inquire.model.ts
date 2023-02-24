@@ -1,5 +1,6 @@
 import dayjs from "dayjs";
 import { DataTypes, Model, literal, NonAttribute } from "sequelize";
+import { HasManyGetAssociationsMixin } from "sequelize/types/associations";
 import { CreationOptional, InferAttributes, InferCreationAttributes } from "sequelize/types/model";
 
 import sequelize from ".";
@@ -23,7 +24,7 @@ export interface IUpdate {
 
 export class Inquire extends Model<InferAttributes<Inquire>, InferCreationAttributes<Inquire>> {
     /** If you use include inquireImage, You can use inquireImages field. */
-    declare inquireImages?: NonAttribute<InquireImage>;
+    declare inquireImages?: NonAttribute<InquireImage[]>;
     /** If you use include solution, You can use solution field. */
     declare solution?: NonAttribute<Solution>;
 
@@ -32,6 +33,8 @@ export class Inquire extends Model<InferAttributes<Inquire>, InferCreationAttrib
     declare title: string;
     declare contents: string;
     declare createdTime: CreationOptional<Date>;
+
+    declare getInquireImages: HasManyGetAssociationsMixin<InquireImage>;
 }
 
 Inquire.init(

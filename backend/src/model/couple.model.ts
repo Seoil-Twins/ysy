@@ -29,11 +29,11 @@ export interface IUpdate {
 
 export class Couple extends Model<InferAttributes<Couple>, InferCreationAttributes<Couple>> {
     /** If you use include user, You can use users field. */
-    declare users?: NonAttribute<User>;
+    declare users?: NonAttribute<User[]>;
     /** If you use include album, You can use albums field. */
-    declare albums?: NonAttribute<Album>;
+    declare albums?: NonAttribute<Album[]>;
     /** If you use include calendar, You can use calendars field. */
-    declare calendars?: NonAttribute<Calendar>;
+    declare calendars?: NonAttribute<Calendar[]>;
 
     declare cupId: CreationOptional<string>;
     declare cupDay: Date;

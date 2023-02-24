@@ -27,6 +27,14 @@ import ConflictError from "../error/conflict";
 import { UserRole } from "../model/userRole.model";
 import sequelize from "../model";
 import { boolean } from "boolean";
+import { ErrorImage } from "../model/errorImage.model";
+import { Couple } from "../model/couple.model";
+import { Album } from "../model/album.model";
+import { Inquire } from "../model/inquire.model";
+
+import albumController from "./album.controller";
+import inquireController from "./inquire.controller";
+import { Solution } from "../model/solution.model";
 
 const folderName = "users";
 
@@ -473,7 +481,75 @@ const controller = {
      * @param userIds User Id List
      */
     deleteUserWithAdmin: async (userIds: number[]): Promise<void> => {
-        await User.destroy({ where: { userId: userIds } });
+        const users: User[] = await User.findAll({
+            where: { userId: userIds },
+            include: [
+                {
+                    model: Couple,
+                    as: "couple"
+                },
+                {
+                    model: Inquire,
+                    as: "inquires",
+                    include: [
+                        {
+                            model: Solution,
+                            as: "solution"
+                        }
+                    ]
+                }
+            ]
+        });
+
+        if (users.length <= 0) throw new NotFoundError("Not found users.");
+
+        const userHasInquiry = users.filter((user: User) => {
+            if (user.inquires) return user;
+        });
+        const userHasCouple = users.filter((user: User) => {
+            if (user.cupId) return user;
+        });
+
+        // Inquire 삭제
+        userHasInquiry.forEach(async (user: User) => {
+            user.inquires!.forEach(async (inquire: Inquire) => {
+                await inquireController.deleteInquire(inquire.inquireId);
+                // soluton 삭제
+                // if (inquire.solution) await solutionController.deleteSolution(inquire.solution.solutionId);
+            });
+        });
+
+        // Album 삭제 및 Couple 삭제
+        userHasCouple.forEach(async (user: User) => {
+            const otherUser: User[] = (await user.couple!.getUsers()).filter((coupleUser: User) => {
+                if (coupleUser.userId != user.userId) return user;
+            });
+            const albums: Album[] = await user.couple!.getAlbums();
+
+            if (albums) {
+                albums.forEach(async (album: Album) => {
+                    await albumController.deleteAlbum(user.cupId!, album.albumId);
+                });
+            }
+
+            await otherUser[0].update({ cupId: null });
+            await user.couple!.destroy();
+        });
+
+        users.forEach(async (user: User) => {
+            const profile: string | null = user.profile;
+
+            if (profile) {
+                try {
+                    await deleteFile(profile);
+                } catch (_error) {
+                    logger.warn(`User Image not deleted : ${user.userId} => ${profile}`);
+                    await ErrorImage.create({ path: profile });
+                }
+            }
+
+            await user.destroy();
+        });
     }
 };
 
