@@ -11,54 +11,24 @@ import {
     SearchOptions as UserSearchOptions,
     FilterOptions as UserFilterOptions
 } from "../model/user.model";
-import {
-    ICoupleResponseWithCount,
-    PageOptions as CouplePageOptions,
-    SearchOptions as CoupleSearchOptions,
-    FilterOptions as CoupleFilterOptions
-} from "../model/couple.model";
 
-import userController from "../controller/user.controller";
-import coupleController from "../controller/couple.controller";
+import userAdminController from "../controller/user.admin.controller";
 
 import logger from "../logger/logger";
 import validator from "../util/validator";
 import StatusCode from "../util/statusCode";
 
 import BadRequestError from "../error/badRequest";
-import ForbiddenError from "../error/forbidden";
 import dayjs from "dayjs";
+import { canModifyWithEditor, canView } from "../util/checkRole";
 
 dayjs.locale("ko");
 
 const router: Router = express.Router();
 
-const canModifyWithAdmin = (req: Request, _res: Response, next: NextFunction) => {
-    const role: number = Number(req.body.role);
-
-    if (role !== 1) throw new ForbiddenError("Unauthorized Access");
-    else next();
-};
-
-const canModifyWithEditor = (req: Request, _res: Response, next: NextFunction) => {
-    const role: number = Number(req.body.role);
-    console.log(role);
-
-    if (role !== 1 && role !== 2) throw new ForbiddenError("Unauthorized Access");
-    else next();
-};
-
-const canView = (req: Request, _res: Response, next: NextFunction) => {
-    const role: number = Number(req.body.role);
-
-    if (role !== 1 && role !== 2 && role !== 3) throw new ForbiddenError("Unauthorized Access");
-    else next();
-};
-
-//------------------------------------------------------------------ User ------------------------------------------------------------------//
 const pwPattern = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[$@$!%*#?&])[A-Za-z\d$@$!%*#?&]{8,15}$/;
 const phonePattern = /^[0-9]+$/;
-const userCreateSchema: joi.Schema = joi.object({
+const createSchema: joi.Schema = joi.object({
     snsId: joi.string().length(4).required(),
     name: joi.string().max(8).trim().required(),
     code: joi.string().trim(),
@@ -73,9 +43,9 @@ const userCreateSchema: joi.Schema = joi.object({
     eventNofi: joi.bool().default(false).required(),
     primaryNofi: joi.bool().default(false).required(),
     dateNofi: joi.bool().default(false).required(),
-    role: joi.number().min(1).max(1).required()
+    role: joi.number().min(1).max(4).required()
 });
-const userUpdateSchema: joi.Schema = joi.object({
+const updateSchema: joi.Schema = joi.object({
     name: joi.string().max(8).trim(),
     code: joi.string().trim(),
     password: joi.string().trim().min(8).max(15).regex(RegExp(pwPattern)),
@@ -89,10 +59,10 @@ const userUpdateSchema: joi.Schema = joi.object({
     primaryNofi: joi.bool().default(false),
     dateNofi: joi.bool().default(false),
     delete: joi.bool().default(false),
-    role: joi.number().min(1).max(1)
+    role: joi.number().min(1).max(4)
 });
 
-router.get("/user", canView, async (req: Request, res: Response, next: NextFunction) => {
+router.get("/", canView, async (req: Request, res: Response, next: NextFunction) => {
     const pageOptions: UserPageOptions = {
         count: Number(req.query.count) || 10,
         page: Number(req.query.page) || 1,
@@ -108,7 +78,7 @@ router.get("/user", canView, async (req: Request, res: Response, next: NextFunct
     };
 
     try {
-        const result: IUserResponseWithCount = await userController.getUsersWithSearch(pageOptions, searchOptions, filterOptions);
+        const result: IUserResponseWithCount = await userAdminController.getUsersWithSearch(pageOptions, searchOptions, filterOptions);
 
         logger.debug(`Response Data => ${JSON.stringify(result)}`);
         return res.status(StatusCode.OK).json(result);
@@ -117,17 +87,17 @@ router.get("/user", canView, async (req: Request, res: Response, next: NextFunct
     }
 });
 
-router.post("/user", canModifyWithEditor, async (req: Request, res: Response, next: NextFunction) => {
+router.post("/", canModifyWithEditor, async (req: Request, res: Response, next: NextFunction) => {
     const form = formidable({ multiples: false, maxFileSize: 5 * 1024 * 1024 });
 
     form.parse(req, async (err, fields, files) => {
         try {
             req.body = Object.assign({}, req.body, fields);
-            const { value, error }: ValidationResult = validator(req.body, userCreateSchema);
+            const { value, error }: ValidationResult = validator(req.body, createSchema);
 
             if (err) throw new err();
             else if (error) throw new BadRequestError(error.message);
-            else if (files.file instanceof Array<File>) throw new BadRequestError("You must have only one profile");
+            else if (files.file instanceof Array<formidable.File>) throw new BadRequestError("You must have only one profile");
 
             const data: ICreateWithAdmin = {
                 snsId: req.body.snsId,
@@ -143,7 +113,7 @@ router.post("/user", canModifyWithEditor, async (req: Request, res: Response, ne
                 role: req.body.role
             };
 
-            await userController.createUserWithAdmin(data, files.file);
+            await userAdminController.createUser(data, files.file);
 
             return res.status(StatusCode.CREATED).json({});
         } catch (error) {
@@ -152,19 +122,19 @@ router.post("/user", canModifyWithEditor, async (req: Request, res: Response, ne
     });
 });
 
-router.patch("/user/:user_id", canModifyWithEditor, async (req: Request, res: Response, next: NextFunction) => {
+router.patch("/:user_id", canModifyWithEditor, async (req: Request, res: Response, next: NextFunction) => {
     const form = formidable({ multiples: false, maxFileSize: 5 * 1024 * 1024 });
 
     form.parse(req, async (err, fields, files) => {
         try {
             const userId = Number(req.params.user_id);
             req.body = Object.assign({}, req.body, fields);
-            const { value, error }: ValidationResult = validator(req.body, userUpdateSchema);
+            const { value, error }: ValidationResult = validator(req.body, updateSchema);
 
             if (err) throw new err();
             else if (isNaN(userId)) throw new BadRequestError("Invalid User ID");
             else if (error) throw new BadRequestError(error.message);
-            else if (files.file instanceof Array<File>) throw new BadRequestError("You must have only one profile");
+            else if (files.file instanceof Array<formidable.File>) throw new BadRequestError("You must have only one profile");
 
             const data: IUpdateWithAdmin = {
                 name: req.body.name,
@@ -180,7 +150,7 @@ router.patch("/user/:user_id", canModifyWithEditor, async (req: Request, res: Re
                 role: req.body.role
             };
 
-            await userController.updateUserWithAdmin(userId, data, files.file);
+            await userAdminController.updateUser(userId, data, files.file);
 
             return res.status(StatusCode.NO_CONTENT).json({});
         } catch (error) {
@@ -189,44 +159,19 @@ router.patch("/user/:user_id", canModifyWithEditor, async (req: Request, res: Re
     });
 });
 
-router.delete("/user/:user_ids", canView, async (req: Request, res: Response, next: NextFunction) => {
+router.delete("/:user_ids", canView, async (req: Request, res: Response, next: NextFunction) => {
     const userIds: number[] = req.params.user_ids.split(",").map(Number);
     const numberUserIds: number[] = userIds.filter((val) => {
         return !isNaN(val);
     });
 
     try {
-        await userController.deleteUserWithAdmin(numberUserIds);
+        await userAdminController.deleteUser(numberUserIds);
 
         return res.status(StatusCode.OK).json({});
     } catch (error) {
         next(error);
     }
 });
-//--------------------------------------------------------------- User End ------------------------------------------------------------------//
-//----------------------------------------------------------------- Couple ------------------------------------------------------------------//
-router.get("/couple", canView, async (req: Request, res: Response, next: NextFunction) => {
-    const pageOptions: CouplePageOptions = {
-        count: Number(req.query.count) || 10,
-        page: Number(req.query.page) || 1,
-        sort: String(req.query.sort) || "r"
-    };
-    const searchOptions: CoupleSearchOptions = { name: String(req.query.name) || undefined };
-    const filterOptions: CoupleFilterOptions = {
-        fromDate: req.query.from_date ? new Date(dayjs(String(req.query.from_date)).valueOf()) : undefined,
-        toDate: req.query.to_date ? new Date(dayjs(String(req.query.to_date)).add(1, "day").valueOf()) : undefined,
-        isDeleted: boolean(req.query.deleted) || false
-    };
-
-    try {
-        const result: ICoupleResponseWithCount = await coupleController.getCouplesWithAdmin(pageOptions, searchOptions, filterOptions);
-
-        logger.debug(`Response Data => ${JSON.stringify(result)}`);
-        return res.status(StatusCode.OK).json(result);
-    } catch (error) {
-        next(error);
-    }
-});
-//-------------------------------------------------------------- Couple End -----------------------------------------------------------------//
 
 export default router;

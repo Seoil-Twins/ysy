@@ -15,7 +15,7 @@ export interface IRequestCreate {
     userId2: number;
     cupDay: Date;
     title: string;
-    thumbnail?: File;
+    thumbnail?: string | null;
 }
 
 export interface IUpdate {
