@@ -1,4 +1,5 @@
-import { DataTypes, Model, literal, NonAttribute } from "sequelize";
+import dayjs from "dayjs";
+import { DataTypes, Model, literal, NonAttribute, InferAttributes, InferCreationAttributes, CreationOptional } from "sequelize";
 
 import sequelize from ".";
 import { Couple } from "./couple.model";
@@ -7,25 +8,6 @@ import { Role } from "./role.model";
 import { UserRole } from "./userRole.model";
 
 // -------------------------------------------- Interface ------------------------------------------ //
-export interface IUser {
-    userId: number;
-    cupId: string | null;
-    snsId: string;
-    code: string;
-    name: string;
-    password: string;
-    email: string;
-    birthday: Date;
-    phone: string;
-    profile: string | null;
-    primaryNofi: boolean;
-    dateNofi: boolean;
-    eventNofi: boolean;
-    createdTime: Date;
-    deleted: boolean;
-    deletedTime: Date | null;
-}
-
 export interface ICreate {
     snsId: string;
     code: string;
@@ -64,37 +46,71 @@ export interface IUserResponse {
     deletedTime: Date | null;
     couple: User | null;
 }
+// -------------------------------------------- Admin ------------------------------------------ //
 
-export interface IUserRoleResult {
-    userId: number;
-    cupId: string | null;
+export interface IUserResponseWithCount {
+    users: User[];
+    count: number;
+}
+
+export interface PageOptions {
+    count: number;
+    page: number;
+    sort: string | "na" | "nd" | "r" | "o" | "dr" | "do";
+}
+
+export interface SearchOptions {
+    name?: string;
+    snsId?: string;
+}
+
+export interface FilterOptions {
+    isCouple: boolean;
+    isDeleted: boolean;
+}
+
+export interface ICreateWithAdmin {
     snsId: string;
-    code: string;
+    code?: string;
     name: string;
     email: string;
+    password: string;
     birthday: Date;
     phone: string;
-    profile: string | null;
+    profile?: string | null;
     primaryNofi: boolean;
     dateNofi: boolean;
     eventNofi: boolean;
-    createdTime: Date;
-    deleted: boolean;
-    deletedTime: Date | null;
-    role: Role;
+    role: number;
+}
+
+export interface IUpdateWithAdmin {
+    code?: string;
+    name?: string;
+    email?: string;
+    password?: string;
+    birthday?: Date;
+    phone?: string;
+    profile?: string | null;
+    primaryNofi?: boolean;
+    dateNofi?: boolean;
+    eventNofi?: boolean;
+    deleted?: boolean;
+    deletedTime?: Date | null;
+    role?: number;
 }
 // ------------------------------------------ Interface End ---------------------------------------- //
 
-export class User extends Model<IUser, ICreate> {
+export class User extends Model<InferAttributes<User>, InferCreationAttributes<User>> {
     /** If you use include couple, You can use couple field. */
     declare couple?: NonAttribute<Couple>;
     /** If you use include inquire, You can use inquire field. */
-    declare inquires?: NonAttribute<Inquire>;
+    declare inquires?: NonAttribute<Inquire[]>;
     /** If you use include inquire, You can use inquire field. */
     declare userRole?: NonAttribute<UserRole>;
 
-    declare userId: number;
-    declare cupId: string | null;
+    declare userId: CreationOptional<number>;
+    declare cupId: CreationOptional<string | null>;
     declare snsId: string;
     declare code: string;
     declare name: string;
@@ -102,13 +118,13 @@ export class User extends Model<IUser, ICreate> {
     declare email: string;
     declare birthday: Date;
     declare phone: string;
-    declare profile: string | null;
-    declare primaryNofi: boolean;
-    declare dateNofi: boolean;
-    declare eventNofi: boolean;
-    declare createdTime: Date;
-    declare deleted: boolean;
-    declare deletedTime: Date | null;
+    declare profile: CreationOptional<string | null>;
+    declare primaryNofi: CreationOptional<boolean>;
+    declare dateNofi: CreationOptional<boolean>;
+    declare eventNofi: CreationOptional<boolean>;
+    declare createdTime: CreationOptional<Date>;
+    declare deleted: CreationOptional<boolean>;
+    declare deletedTime: CreationOptional<Date | null>;
 }
 
 User.init(
@@ -185,7 +201,13 @@ User.init(
         createdTime: {
             field: "created_time",
             type: "TIMESTAMP",
-            defaultValue: literal("CURRENT_TIMESTAMP")
+            defaultValue: literal("CURRENT_TIMESTAMP"),
+            get(this: User): string | null {
+                const date = dayjs(this.getDataValue("createdTime"));
+                const formatDate = date.format("YYYY-MM-DD HH:mm:ss");
+
+                return date.isValid() ? formatDate : null;
+            }
         },
         deleted: {
             type: DataTypes.BOOLEAN,
@@ -194,7 +216,13 @@ User.init(
         },
         deletedTime: {
             field: "deleted_time",
-            type: "TIMESTAMP"
+            type: "TIMESTAMP",
+            get(this: User): string | null {
+                const date = dayjs(this.getDataValue("deletedTime"));
+                const formatDate = date.format("YYYY-MM-DD HH:mm:ss");
+
+                return date.isValid() ? formatDate : null;
+            }
         }
     },
     {

@@ -1,27 +1,30 @@
-import { DataTypes, Model } from "sequelize";
+import { DataTypes, Model, NonAttribute } from "sequelize";
+import { CreationOptional, InferAttributes, InferCreationAttributes } from "sequelize/types/model";
 
 import sequelize from ".";
 import { Role } from "./role.model";
 import { User } from "./user.model";
 
-// -------------------------------------------- Interface ------------------------------------------ //
-export interface IUserRole {
-    userId: number;
-    roleId: number;
-}
-// ------------------------------------------ Interface End ---------------------------------------- //
+export class UserRole extends Model<InferAttributes<UserRole>, InferCreationAttributes<UserRole>> {
+    declare role: NonAttribute<Role>;
 
-export class UserRole extends Model<IUserRole> {
+    declare userRoleId: CreationOptional<number>;
     declare userId: number;
     declare roleId: number;
 }
 
 UserRole.init(
     {
+        userRoleId: {
+            field: "user_role_id",
+            type: DataTypes.INTEGER.UNSIGNED,
+            primaryKey: true
+        },
         userId: {
             field: "user_id",
             type: DataTypes.INTEGER.UNSIGNED,
-            primaryKey: true,
+            unique: true,
+            allowNull: false,
             references: {
                 model: User,
                 key: "userId"
@@ -30,7 +33,7 @@ UserRole.init(
         roleId: {
             field: "role_id",
             type: DataTypes.SMALLINT,
-            primaryKey: true,
+            allowNull: false,
             references: {
                 model: Role,
                 key: "roleId"

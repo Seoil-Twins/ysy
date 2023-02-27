@@ -3,20 +3,59 @@ import randomString from "randomstring";
 import { Op } from "sequelize";
 import { File } from "formidable";
 
-import { User, ICreate, IUpdate, IUserResponse } from "../model/user.model";
-
 import logger from "../logger/logger";
 import { deleteFile, isDefaultFile, uploadFile } from "../util/firebase";
 import { createDigest } from "../util/password";
+
+import sequelize from "../model";
+import { User, ICreate, IUpdate, IUserResponse } from "../model/user.model";
+import { UserRole } from "../model/userRole.model";
 
 import NotFoundError from "../error/notFound";
 import ForbiddenError from "../error/forbidden";
 import UnauthorizedError from "../error/unauthorized";
 import ConflictError from "../error/conflict";
-import { UserRole } from "../model/userRole.model";
-import sequelize from "../model";
 
-const folderName = "users";
+const FOLDER_NAME = "users";
+
+const createCode = async (): Promise<string> => {
+    let isNot = true;
+    let code = "";
+
+    while (isNot) {
+        code = randomString.generate({
+            length: 6,
+            charset: "alphanumeric"
+        });
+
+        const user: User | null = await User.findOne({
+            where: { code }
+        });
+
+        if (!user) isNot = false;
+    }
+
+    return code;
+};
+
+const uploadProfile = async (userId: number, file: File) => {
+    let path: string | null = "";
+    const reqFileName = file.originalFilename!;
+    const isDefault = isDefaultFile(reqFileName);
+
+    /**
+     * Frontend에선 static으로 default.jpg,png,svg 셋 중 하나 갖고있다가
+     * 사용자가 profile을 내리면 그걸로 넣고 요청
+     */
+    if (isDefault) {
+        path = null;
+    } else {
+        path = `${FOLDER_NAME}/${userId}/profile/${dayjs().valueOf()}.${reqFileName}`;
+        await uploadFile(path, file.filepath);
+    }
+
+    return path;
+};
 
 const controller = {
     /**
@@ -59,8 +98,6 @@ const controller = {
      * @param data A {@link ICreate}
      */
     createUser: async (data: ICreate): Promise<void> => {
-        let isNot = true;
-        let code = "";
         const user: User | null = await User.findOne({
             where: {
                 [Op.or]: [{ email: data.email }, { phone: data.phone }]
@@ -69,32 +106,16 @@ const controller = {
 
         if (user) throw new ConflictError("Duplicated User");
 
-        // 중복된 code가 있는지 검사
-        while (isNot) {
-            code = randomString.generate({
-                length: 6,
-                charset: "alphanumeric"
-            });
-
-            const user: User | null = await User.findOne({
-                where: {
-                    code: code
-                }
-            });
-
-            if (!user) isNot = false;
-        }
-
         const transaction = await sequelize.transaction();
         const hash: string = await createDigest(data.password);
-        data.code = code;
         data.password = hash;
+        data.code = await createCode();
 
         try {
             const createdUser: User = await User.create(
                 {
                     snsId: data.snsId,
-                    code: code,
+                    code: data.code,
                     name: data.name,
                     email: data.email,
                     birthday: new Date(data.birthday),
@@ -126,14 +147,12 @@ const controller = {
      * @param data A {@link IUpdate}
      * @param profile User Profile
      */
-    updateUser: async (data: IUpdate, profile?: File): Promise<void> => {
+    updateUser: async (data: IUpdate, file?: File): Promise<void> => {
         let isUpload = false;
         let path: string | null = "";
 
         const user: User | null = await User.findOne({
-            where: {
-                userId: data.userId
-            }
+            where: { userId: data.userId }
         });
 
         if (!user) throw new NotFoundError("Not Found User");
@@ -142,24 +161,10 @@ const controller = {
         let prevProfile: string | null = user.profile;
 
         try {
-            if (profile) {
-                const reqFileName = profile.originalFilename!;
-                const isDefault = isDefaultFile(reqFileName);
-
-                /**
-                 * Frontend에선 static으로 default.jpg,png,svg 셋 중 하나 갖고있다가
-                 * 사용자가 profile을 내리면 그걸로 넣고 요청
-                 */
-                if (isDefault) {
-                    path = null;
-                } else {
-                    path = `${folderName}/${data.userId}/profile/${dayjs().valueOf()}.${reqFileName}`;
-
-                    await uploadFile(path, profile.filepath);
-                    isUpload = true;
-                }
-
-                data.profile = path;
+            if (file) {
+                data.profile = await uploadProfile(data.userId, file);
+                if (data.profile) isUpload = true;
+                else if (prevProfile && !data.profile) await deleteFile(prevProfile);
             }
 
             await user.update(data);

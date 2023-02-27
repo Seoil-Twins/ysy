@@ -1,17 +1,11 @@
+import dayjs from "dayjs";
 import { DataTypes, Model, literal, NonAttribute } from "sequelize";
+import { CreationOptional, InferAttributes, InferCreationAttributes } from "sequelize/types/model";
 
 import sequelize from ".";
 import { Inquire } from "./inquire.model";
 
 // -------------------------------------------- Interface ------------------------------------------ //
-export interface ISolution {
-    solutionId: number;
-    inquireId: number;
-    title: string;
-    contents: string;
-    createdTime: Date;
-}
-
 export interface ICreate {
     inquireId: number;
     title: string;
@@ -26,15 +20,15 @@ export interface IUpdate {
 }
 // ------------------------------------------ Interface End ---------------------------------------- //
 
-export class Solution extends Model<ISolution, ICreate> {
+export class Solution extends Model<InferAttributes<Solution>, InferCreationAttributes<Solution>> {
     /** If you use include inquire, You can use inquire field. */
     declare inquire?: NonAttribute<Inquire>;
 
-    declare solutionId: number;
+    declare solutionId: CreationOptional<number>;
     declare inquireId: number;
     declare title: string;
     declare contents: string;
-    declare createdTime: Date;
+    declare createdTime: CreationOptional<Date>;
 }
 
 Solution.init(
@@ -65,7 +59,13 @@ Solution.init(
         createdTime: {
             field: "created_time",
             type: "TIMESTAMP",
-            defaultValue: literal("CURRENT_TIMESTAMP")
+            defaultValue: literal("CURRENT_TIMESTAMP"),
+            get(this: Solution): string | null {
+                const date = dayjs(this.getDataValue("createdTime"));
+                const formatDate = date.format("YYYY-MM-DD HH:mm:ss");
+
+                return date.isValid() ? formatDate : null;
+            }
         }
     },
     {

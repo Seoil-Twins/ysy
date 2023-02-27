@@ -1,32 +1,21 @@
-import { Files } from "formidable";
+import dayjs from "dayjs";
 import { DataTypes, Model, literal } from "sequelize";
+import { CreationOptional, InferAttributes, InferCreationAttributes } from "sequelize/types/model";
 
 import sequelize from ".";
 import { Inquire } from "./inquire.model";
 
 // -------------------------------------------- Interface ------------------------------------------ //
-export interface INoticeImage {
-    imageId: number;
-    noticeId: number;
-    image: string;
-    createdTime: Date;
-}
-
 export interface IRequestCreate {
     image: File | File[];
 }
-
-interface ICreate {
-    noticeId: number;
-    image: string;
-}
 // ------------------------------------------ Interface End ---------------------------------------- //
 
-export class NoticeImage extends Model<INoticeImage, ICreate> {
-    declare imageId: number;
+export class NoticeImage extends Model<InferAttributes<NoticeImage>, InferCreationAttributes<NoticeImage>> {
+    declare imageId: CreationOptional<number>;
     declare noticeId: number;
     declare image: string;
-    declare createdTime: Date;
+    declare createdTime: CreationOptional<Date>;
 }
 
 NoticeImage.init(
@@ -53,7 +42,13 @@ NoticeImage.init(
         createdTime: {
             field: "created_time",
             type: "TIMESTAMP",
-            defaultValue: literal("CURRENT_TIMESTAMP")
+            defaultValue: literal("CURRENT_TIMESTAMP"),
+            get(this: NoticeImage): string | null {
+                const date = dayjs(this.getDataValue("createdTime"));
+                const formatDate = date.format("YYYY-MM-DD HH:mm:ss");
+
+                return date.isValid() ? formatDate : null;
+            }
         }
     },
     {

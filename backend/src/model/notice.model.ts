@@ -1,16 +1,11 @@
+import dayjs from "dayjs";
 import { DataTypes, Model, literal, NonAttribute } from "sequelize";
+import { CreationOptional, InferAttributes, InferCreationAttributes } from "sequelize/types/model";
 
 import sequelize from ".";
 import { InquireImage } from "./inquireImage.model";
 
 // -------------------------------------------- Interface ------------------------------------------ //
-export interface INotice {
-    noticeId: number;
-    title: string;
-    contents: string;
-    createdTime: Date;
-}
-
 export interface ICreate {
     title: string;
     contents: string;
@@ -23,14 +18,14 @@ export interface IUpdate {
 }
 // ------------------------------------------ Interface End ---------------------------------------- //
 
-export class Notice extends Model<INotice, ICreate> {
+export class Notice extends Model<InferAttributes<Notice>, InferCreationAttributes<Notice>> {
     /** If you use include inquireImage, You can use inquireImages field. */
-    declare noticeImages?: NonAttribute<InquireImage>;
+    declare noticeImages?: NonAttribute<InquireImage[]>;
 
-    declare noticeId: number;
+    declare noticeId: CreationOptional<number>;
     declare title: string;
     declare contents: string;
-    declare createdTime: Date;
+    declare createdTime: CreationOptional<Date>;
 }
 
 Notice.init(
@@ -52,7 +47,13 @@ Notice.init(
         createdTime: {
             field: "created_time",
             type: "TIMESTAMP",
-            defaultValue: literal("CURRENT_TIMESTAMP")
+            defaultValue: literal("CURRENT_TIMESTAMP"),
+            get(this: Notice): string | null {
+                const date = dayjs(this.getDataValue("createdTime"));
+                const formatDate = date.format("YYYY-MM-DD HH:mm:ss");
+
+                return date.isValid() ? formatDate : null;
+            }
         }
     },
     {

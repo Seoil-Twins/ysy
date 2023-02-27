@@ -10,6 +10,8 @@ import { checkPassword } from "../util/password";
 import { get, del } from "../util/redis";
 
 import UnauthorizedError from "../error/unauthorized";
+import { UserRole } from "../model/userRole.model";
+import { Role } from "../model/role.model";
 
 // dayjs에 isSameOrBefore 함수 추가
 dayjs.extend(isSameOrBefore);
@@ -45,11 +47,12 @@ const controller = {
         if (accessTokenIsBefore && !refreshTokenIsBefore) {
             const userId = String(accessTokenPayload.userId);
             const cupId = String(accessTokenPayload.cupId);
+            const role = Number(accessTokenPayload.role);
             const refreshTokenWithRedis: string | null = await get(userId);
             refreshToken = refreshToken.replace("Bearer ", "");
 
             if (refreshToken === refreshTokenWithRedis) {
-                const result: ITokenResponse = await jwt.createToken(Number(userId), cupId);
+                const result: ITokenResponse = await jwt.createToken(Number(userId), cupId, role);
 
                 return result;
             } else {
@@ -79,7 +82,17 @@ const controller = {
         const isCheck: boolean = await checkPassword(data.password, user.password!);
         if (!isCheck) throw new UnauthorizedError("Invalid Password");
 
-        const result: ITokenResponse = await jwt.createToken(user.userId, user.cupId);
+        const role: UserRole | null = await UserRole.findOne({
+            where: { userId: user.userId },
+            include: {
+                model: Role,
+                as: "role"
+            }
+        });
+
+        if (!role) throw new UnauthorizedError("Invalid Role");
+
+        const result: ITokenResponse = await jwt.createToken(user.userId, user.cupId, role.roleId);
 
         return result;
     }

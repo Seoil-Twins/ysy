@@ -1,21 +1,13 @@
+import dayjs from "dayjs";
 import { DataTypes, Model, literal } from "sequelize";
+import { CreationOptional, InferAttributes, InferCreationAttributes } from "sequelize/types/model";
 
 import sequelize from ".";
 
-// -------------------------------------------- Interface ------------------------------------------ //
-export interface IErrorImage {
-    errorId: number;
-    path: string;
-    createdTime: Date;
-}
-
-interface ICreate {
-    path: string;
-}
-// ------------------------------------------ Interface End ---------------------------------------- //
-
-export class ErrorImage extends Model<IErrorImage, ICreate> {
+export class ErrorImage extends Model<InferAttributes<ErrorImage>, InferCreationAttributes<ErrorImage>> {
+    declare errorId: CreationOptional<number>;
     declare path: string;
+    declare createdTime: CreationOptional<Date>;
 }
 
 ErrorImage.init(
@@ -32,7 +24,13 @@ ErrorImage.init(
         createdTime: {
             field: "created_time",
             type: "TIMESTAMP",
-            defaultValue: literal("CURRENT_TIMESTAMP")
+            defaultValue: literal("CURRENT_TIMESTAMP"),
+            get(this: ErrorImage): string | null {
+                const date = dayjs(this.getDataValue("createdTime"));
+                const formatDate = date.format("YYYY-MM-DD HH:mm:ss");
+
+                return date.isValid() ? formatDate : null;
+            }
         }
     },
     {

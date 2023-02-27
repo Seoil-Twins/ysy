@@ -1,19 +1,32 @@
-import express, { Router, Request, Response, NextFunction } from "express";
+import dayjs from "dayjs";
 import joi, { ValidationResult } from "joi";
+import express, { Router, Request, Response, NextFunction } from "express";
 import formidable, { File } from "formidable";
+import { boolean } from "boolean";
+
+import {
+    ICoupleResponseWithCount,
+    PageOptions as CouplePageOptions,
+    SearchOptions as CoupleSearchOptions,
+    FilterOptions as CoupleFilterOptions,
+    IRequestCreate,
+    IUpdate
+} from "../model/couple.model";
+import { ITokenResponse } from "../model/auth.model";
 
 import coupleController from "../controller/couple.controller";
+import coupleAdminController from "../controller/couple.admin.controller";
 
 import logger from "../logger/logger";
 import validator from "../util/validator";
 import StatusCode from "../util/statusCode";
+import { canModifyWithEditor, canView } from "../util/checkRole";
 
-import InternalServerError from "../error/internalServer";
-import ForbiddenError from "../error/forbidden";
 import BadRequestError from "../error/badRequest";
+import ForbiddenError from "../error/forbidden";
+import InternalServerError from "../error/internalServer";
 
-import { ITokenResponse } from "../model/auth.model";
-import { Couple, IRequestCreate, IUpdate } from "../model/couple.model";
+dayjs.locale("ko");
 
 const router: Router = express.Router();
 
@@ -28,19 +41,23 @@ const updateSchema: joi.Schema = joi.object({
     cupDay: joi.date()
 });
 
-// Get Couple Info
-router.get("/:cup_id", async (req: Request, res: Response, next: NextFunction) => {
+router.get("/", canView, async (req: Request, res: Response, next: NextFunction) => {
+    const pageOptions: CouplePageOptions = {
+        count: Number(req.query.count) || 10,
+        page: Number(req.query.page) || 1,
+        sort: String(req.query.sort) || "r"
+    };
+    const searchOptions: CoupleSearchOptions = { name: String(req.query.name) || undefined };
+    const filterOptions: CoupleFilterOptions = {
+        fromDate: req.query.from_date ? new Date(dayjs(String(req.query.from_date)).valueOf()) : undefined,
+        toDate: req.query.to_date ? new Date(dayjs(String(req.query.to_date)).add(1, "day").valueOf()) : undefined,
+        isDeleted: boolean(req.query.deleted) || false
+    };
+
     try {
-        const userId = Number(req.body.userId);
-        const cupId = req.body.cupId;
+        const result: ICoupleResponseWithCount = await coupleAdminController.getCouple(pageOptions, searchOptions, filterOptions);
 
-        if (isNaN(userId)) throw new BadRequestError("Invalid User Id");
-        else if (!cupId) throw new ForbiddenError("Invalid Couple Id");
-        else if (cupId !== req.params.cup_id) throw new ForbiddenError("Not Same Couple Id");
-
-        const result: Couple = await coupleController.getCouple(cupId);
-
-        logger.debug(`Response Data : ${JSON.stringify(result)}`);
+        logger.debug(`Response Data => ${JSON.stringify(result)}`);
         return res.status(StatusCode.OK).json(result);
     } catch (error) {
         next(error);
@@ -48,7 +65,7 @@ router.get("/:cup_id", async (req: Request, res: Response, next: NextFunction) =
 });
 
 // Create Couple
-router.post("/", async (req: Request, res: Response, next: NextFunction) => {
+router.post("/", canModifyWithEditor, async (req: Request, res: Response, next: NextFunction) => {
     const form = formidable({ multiples: false, maxFileSize: 5 * 1024 * 1024 });
 
     form.parse(req, async (err, fields, files) => {
@@ -63,7 +80,7 @@ router.post("/", async (req: Request, res: Response, next: NextFunction) => {
             if (error) throw new BadRequestError("Bad Request Error");
 
             const data: IRequestCreate = {
-                userId: req.body.userId,
+                userId: req.body.userId1,
                 userId2: req.body.userId2,
                 cupDay: req.body.cupDay,
                 title: req.body.title
@@ -80,7 +97,7 @@ router.post("/", async (req: Request, res: Response, next: NextFunction) => {
 });
 
 // Update Couple Info
-router.patch("/:cup_id", async (req: Request, res: Response, next: NextFunction) => {
+router.patch("/:cup_id", canModifyWithEditor, async (req: Request, res: Response, next: NextFunction) => {
     const form = formidable({ multiples: false, maxFileSize: 5 * 1024 * 1024 });
 
     form.parse(req, async (err, fields, files) => {
@@ -94,10 +111,9 @@ router.patch("/:cup_id", async (req: Request, res: Response, next: NextFunction)
 
             if (error) throw new BadRequestError(error.message);
             else if (!file && !req.body.title && !req.body.cupDay) throw new BadRequestError("Update values is not changed");
-            else if (req.body.cupId !== req.params.cup_id) throw new ForbiddenError("Not matched couple id");
 
             const data: IUpdate = {
-                userId: req.body.userId,
+                userId: req.body.target,
                 cupId: req.body.cupId,
                 cupDay: req.body.cupDay,
                 title: req.body.title
@@ -112,23 +128,6 @@ router.patch("/:cup_id", async (req: Request, res: Response, next: NextFunction)
     });
 });
 
-// Delete Couple
-router.delete("/:cup_id", async (req: Request, res: Response, next: NextFunction) => {
-    try {
-        const userId = Number(req.body.userId);
-        const cupId = req.body.cupId;
-
-        if (isNaN(userId)) throw new BadRequestError("Invalid User Id");
-        else if (!cupId) throw new ForbiddenError("Invalid Couple Id");
-        else if (req.body.cupId !== req.params.cup_id) throw new ForbiddenError("Not Same Couple Id");
-
-        const result: ITokenResponse = await coupleController.deleteCouple(userId, cupId);
-
-        logger.debug(`Response Data : ${JSON.stringify(result)}`);
-        return res.status(StatusCode.NO_CONTENT).json(result);
-    } catch (error) {
-        next(error);
-    }
-});
+router.delete("/:couple_ids", canModifyWithEditor, async (req: Request, res: Response, next: NextFunction) => {});
 
 export default router;

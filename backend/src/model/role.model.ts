@@ -1,15 +1,9 @@
 import { DataTypes, Model } from "sequelize";
+import { InferAttributes, InferCreationAttributes } from "sequelize/types/model";
 
 import sequelize from ".";
 
-// -------------------------------------------- Interface ------------------------------------------ //
-export interface IRole {
-    roleId: number;
-    name: string;
-}
-// ------------------------------------------ Interface End ---------------------------------------- //
-
-export class Role extends Model<IRole> {
+export class Role extends Model<InferAttributes<Role>, InferCreationAttributes<Role>> {
     declare roleId: number;
     declare name: string;
 }

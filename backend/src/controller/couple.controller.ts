@@ -18,8 +18,10 @@ import ConflictError from "../error/conflict";
 import logger from "../logger/logger";
 import jwt from "../util/jwt";
 import { deleteFile, uploadFile, isDefaultFile } from "../util/firebase";
+import { UserRole } from "../model/userRole.model";
+import { Role } from "../model/role.model";
 
-const folderName = "couples";
+const FOLDER_NAME = "couples";
 
 const controller = {
     /**
@@ -46,7 +48,7 @@ const controller = {
      * @param data A {@link IRequestCreate}
      * @returns A {@link ITokenResponse}
      */
-    createCouple: async (data: IRequestCreate): Promise<ITokenResponse> => {
+    createCouple: async (data: IRequestCreate, file?: File): Promise<ITokenResponse> => {
         let path = null;
         let isUpload = false;
 
@@ -70,10 +72,10 @@ const controller = {
                 if (!user) isNot = false;
             }
 
-            if (data.thumbnail) {
-                path = `${folderName}/${cupId}/thumbnail/${dayjs().valueOf()}.${data.thumbnail.originalFilename!}`;
+            if (file) {
+                path = `${FOLDER_NAME}/${cupId}/thumbnail/${dayjs().valueOf()}.${file.originalFilename!}`;
 
-                await uploadFile(path, data.thumbnail.filepath);
+                await uploadFile(path, file.filepath);
                 isUpload = true;
             }
 
@@ -114,11 +116,21 @@ const controller = {
                 }
             );
 
+            const role: UserRole | null = await UserRole.findOne({
+                where: { userId: user1.userId },
+                include: {
+                    model: Role,
+                    as: "role"
+                }
+            });
+
+            if (!role) throw new UnauthorizedError("Invalid Role");
+
             await transaction.commit();
             logger.debug(`Create Data => ${JSON.stringify(data)}`);
 
             // token 재발급
-            const result: ITokenResponse = await jwt.createToken(data.userId, cupId);
+            const result: ITokenResponse = await jwt.createToken(data.userId, cupId, role.roleId);
 
             return result;
         } catch (error) {
@@ -174,7 +186,7 @@ const controller = {
                 if (isDefault) {
                     path = null;
                 } else {
-                    path = `${folderName}/${data.cupId}/thumbnail/${dayjs().valueOf()}.${reqFileName}`;
+                    path = `${FOLDER_NAME}/${data.cupId}/thumbnail/${dayjs().valueOf()}.${reqFileName}`;
 
                     await uploadFile(path, thumbnail.filepath);
                     isUpload = true;
@@ -243,7 +255,17 @@ const controller = {
                 { transaction }
             );
 
-            const result: ITokenResponse = await jwt.createToken(userId, null);
+            const role: UserRole | null = await UserRole.findOne({
+                where: { userId: user1.userId },
+                include: {
+                    model: Role,
+                    as: "role"
+                }
+            });
+
+            if (!role) throw new UnauthorizedError("Invalid Role");
+
+            const result: ITokenResponse = await jwt.createToken(userId, null, role.roleId);
 
             transaction.commit();
             logger.debug(`Success Update and Delete couple => ${user1.userId}, ${user2.userId}, ${cupId}`);

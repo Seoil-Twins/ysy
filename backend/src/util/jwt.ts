@@ -20,10 +20,11 @@ const refreshTokenexpiresIn: object = {
     expiresIn: process.env.DEVELOPMENT_JWT_REFRESHTOKEN_EXPIRES_IN
 };
 
-const createAccessToken = (userId: number, cupId: string | null): string => {
+const createAccessToken = (userId: number, cupId: string | null, role: number): string => {
     let payload = {
-        userId: userId,
-        cupId: cupId
+        userId,
+        cupId,
+        role
     };
 
     return jwt.sign(payload, SECRET_KEY, accessTokenOptions);
@@ -47,8 +48,8 @@ export default {
      * @param cupId Couple Id
      * @returns A {@link ITokenResponse}
      */
-    createToken: async (userId: number, cupId: string | null): Promise<ITokenResponse> => {
-        const accessToken: string = createAccessToken(userId, cupId);
+    createToken: async (userId: number, cupId: string | null, role: number): Promise<ITokenResponse> => {
+        const accessToken: string = createAccessToken(userId, cupId, role);
         const refreshToken: string = createRefreshToken();
         const expiresIn = getExpired();
         // redis database에 refreshToken 저장

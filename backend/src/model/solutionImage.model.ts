@@ -1,28 +1,21 @@
+import dayjs from "dayjs";
 import { DataTypes, Model, literal } from "sequelize";
+import { CreationOptional, InferAttributes, InferCreationAttributes } from "sequelize/types/model";
 
 import sequelize from ".";
 import { Solution } from "./solution.model";
 
 // -------------------------------------------- Interface ------------------------------------------ //
-export interface ISolutionImage {
-    imageId: number;
-    solutionId: number;
-    image: string;
-    createdTime: Date;
-}
-
-export interface ICreate {
-    solutionId: number;
-    image: string;
-    createdTime: Date;
+export interface IRequestCreate {
+    image: File | File[];
 }
 // ------------------------------------------ Interface End ---------------------------------------- //
 
-export class SolutionImage extends Model<ISolutionImage, ICreate> {
-    declare imageId: number;
+export class SolutionImage extends Model<InferAttributes<SolutionImage>, InferCreationAttributes<SolutionImage>> {
+    declare imageId: CreationOptional<number>;
     declare solutionId: number;
     declare image: string;
-    declare createdTime: Date;
+    declare createdTime: CreationOptional<Date>;
 }
 
 SolutionImage.init(
@@ -49,7 +42,13 @@ SolutionImage.init(
         createdTime: {
             field: "created_time",
             type: "TIMESTAMP",
-            defaultValue: literal("CURRENT_TIMESTAMP")
+            defaultValue: literal("CURRENT_TIMESTAMP"),
+            get(this: SolutionImage): string | null {
+                const date = dayjs(this.getDataValue("createdTime"));
+                const formatDate = date.format("YYYY-MM-DD HH:mm:ss");
+
+                return date.isValid() ? formatDate : null;
+            }
         }
     },
     {
