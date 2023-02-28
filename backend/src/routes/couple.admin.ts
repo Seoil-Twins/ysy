@@ -55,7 +55,7 @@ router.get("/", canView, async (req: Request, res: Response, next: NextFunction)
     };
 
     try {
-        const result: ICoupleResponseWithCount = await coupleAdminController.getCouple(pageOptions, searchOptions, filterOptions);
+        const result: ICoupleResponseWithCount = await coupleAdminController.getCouples(pageOptions, searchOptions, filterOptions);
 
         logger.debug(`Response Data => ${JSON.stringify(result)}`);
         return res.status(StatusCode.OK).json(result);
@@ -128,6 +128,16 @@ router.patch("/:cup_id", canModifyWithEditor, async (req: Request, res: Response
     });
 });
 
-router.delete("/:couple_ids", canModifyWithEditor, async (req: Request, res: Response, next: NextFunction) => {});
+router.delete("/:couple_ids", canModifyWithEditor, async (req: Request, res: Response, next: NextFunction) => {
+    const coupleIds: string[] = req.params.couple_ids.split(",");
+
+    try {
+        await coupleAdminController.deleteCouples(coupleIds);
+
+        res.status(StatusCode.NO_CONTENT).json({});
+    } catch (error) {
+        next(error);
+    }
+});
 
 export default router;

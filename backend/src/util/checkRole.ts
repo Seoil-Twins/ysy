@@ -10,7 +10,6 @@ export const canModifyWithAdmin = (req: Request, _res: Response, next: NextFunct
 
 export const canModifyWithEditor = (req: Request, _res: Response, next: NextFunction) => {
     const role: number = Number(req.body.role);
-    console.log(role);
 
     if (role !== 1 && role !== 2) throw new ForbiddenError("Unauthorized Access");
     else next();

@@ -1,10 +1,18 @@
 import { Op } from "sequelize";
+import { boolean } from "boolean";
+
+import logger from "../logger/logger";
+import { deleteFile } from "../util/firebase";
+
+import albumController from "./album.controller";
 
 import sequelize from "../model";
 import { User } from "../model/user.model";
 import { Couple, FilterOptions, ICoupleResponseWithCount, PageOptions, SearchOptions } from "../model/couple.model";
 import { OrderItem, WhereOptions } from "sequelize/types/model";
-import { boolean } from "boolean";
+import { Album } from "../model/album.model";
+import { ErrorImage } from "../model/errorImage.model";
+import NotFoundError from "../error/notFound";
 
 const FOLDER_NAME = "couples";
 
@@ -66,7 +74,7 @@ const controller = {
      * @param filterOptions {@link FilterOptions}
      * @returns A {@link ICoupleResponseWithCount}
      */
-    getCouple: async (pageOptions: PageOptions, searchOptions: SearchOptions, filterOptions: FilterOptions): Promise<ICoupleResponseWithCount> => {
+    getCouples: async (pageOptions: PageOptions, searchOptions: SearchOptions, filterOptions: FilterOptions): Promise<ICoupleResponseWithCount> => {
         const offset = (pageOptions.page - 1) * pageOptions.count;
         const sort: OrderItem = createSort(pageOptions.sort);
         const reuslt: ICoupleResponseWithCount = {
@@ -123,6 +131,58 @@ const controller = {
         }
 
         return reuslt;
+    },
+    deleteCouples: async (coupleIds: string[]): Promise<void> => {
+        const couples = await Couple.findAll({
+            where: { cupId: coupleIds },
+            include: [
+                {
+                    model: Album,
+                    as: "albums"
+                },
+                {
+                    model: User,
+                    as: "users"
+                }
+            ]
+        });
+
+        couples.forEach(async (couple: Couple) => {
+            const transaction = await sequelize.transaction();
+
+            try {
+                if (couple.thumbnail) {
+                    try {
+                        await deleteFile(couple.thumbnail!);
+                    } catch (error) {
+                        logger.warn(`User Image not deleted : ${couple.cupId} => ${couple.thumbnail}`);
+                        await ErrorImage.create({ path: couple.thumbnail! });
+                    }
+                }
+
+                if (couple.albums) {
+                    const albums: Album[] = await couple.albums!;
+
+                    albums.forEach(async (album: Album) => {
+                        try {
+                            await albumController.deleteAlbum(couple.cupId, album.albumId);
+                        } catch (error) {
+                            if (error instanceof NotFoundError) return;
+                        }
+                    });
+                }
+
+                couple.users!.forEach(async (user: User) => {
+                    await user.update({ cupId: null }, { transaction });
+                });
+
+                await couple.destroy({ transaction });
+
+                transaction.commit();
+            } catch (error) {
+                transaction.rollback();
+            }
+        });
     }
 };
 

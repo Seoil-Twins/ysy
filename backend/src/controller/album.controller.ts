@@ -171,8 +171,6 @@ const controller = {
         if (!albumFolder) throw new NotFoundError("Not Found Error");
         else if (albumFolder.cupId !== cupId) throw new ForbiddenError("Forbidden Error");
 
-        await albumFolder.destroy();
-
         if (albumFolder.thumbnail) await deleteFile(albumFolder.thumbnail);
 
         const path = `${folderName}/${cupId}/${albumId}`;
@@ -190,6 +188,7 @@ const controller = {
             });
         }
 
+        await albumFolder.destroy();
         logger.debug(`Success Deleted albums => ${cupId}, ${albumId}`);
     }
 };
