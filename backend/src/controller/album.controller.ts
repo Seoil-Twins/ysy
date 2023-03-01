@@ -11,7 +11,7 @@ import { Album, ICreate, IRequestGet, IRequestUpadteThumbnail, IRequestUpadteTit
 import logger from "../logger/logger";
 import { deleteFile, deleteFolder, getFiles, uploadFile } from "../util/firebase";
 
-const folderName = "couples";
+const FOLDER_NAME = "couples";
 
 const controller = {
     /**
@@ -43,7 +43,7 @@ const controller = {
 
         if (!album) throw new NotFoundError("Not Found Albums");
 
-        const refName = `${folderName}/${data.cupId}/${data.albumId}`;
+        const refName = `${FOLDER_NAME}/${data.cupId}/${data.albumId}`;
         const firebaseResult: ListResult = await getFiles(refName, data.count, data.nextPageToken);
         const files: StorageReference[] = firebaseResult.items;
         const nextPageToken: string | undefined = firebaseResult.nextPageToken;
@@ -88,7 +88,7 @@ const controller = {
         if (files instanceof Array<File>) {
             for (let i = 0; i < files.length; i++) {
                 try {
-                    const path = `${folderName}/${cupId}/${albumId}/${dayjs().valueOf()}.${files[i].originalFilename}`;
+                    const path = `${FOLDER_NAME}/${cupId}/${albumId}/${dayjs().valueOf()}.${files[i].originalFilename}`;
                     await uploadFile(path, files[i].filepath);
                 } catch (error) {
                     logger.error(`Add album error and ignore => ${JSON.stringify(error)}`);
@@ -96,7 +96,7 @@ const controller = {
                 }
             }
         } else if (files instanceof File) {
-            const path = `${folderName}//${cupId}/${albumId}/${dayjs().valueOf()}.${files.originalFilename}`;
+            const path = `${FOLDER_NAME}//${cupId}/${albumId}/${dayjs().valueOf()}.${files.originalFilename}`;
             await uploadFile(path, files.filepath);
         }
 
@@ -124,7 +124,7 @@ const controller = {
      */
     updateThumbnail: async (data: IRequestUpadteThumbnail): Promise<void> => {
         let isUpload = false;
-        const path = `${folderName}/${data.cupId}/${data.albumId}/thumbnail/${dayjs().valueOf()}.${data.thumbnail.originalFilename}`;
+        const path = `${FOLDER_NAME}/${data.cupId}/${data.albumId}/thumbnail/${dayjs().valueOf()}.${data.thumbnail.originalFilename}`;
         const albumFolder = await Album.findByPk(data.albumId);
 
         if (!albumFolder) throw new NotFoundError("Not Found Error");
@@ -172,7 +172,7 @@ const controller = {
 
         if (albumFolder.thumbnail) await deleteFile(albumFolder.thumbnail);
 
-        const path = `${folderName}/${cupId}/${albumId}`;
+        const path = `${FOLDER_NAME}/${cupId}/${albumId}`;
         await deleteFolder(path);
         await albumFolder.destroy();
         logger.debug(`Success Deleted albums => ${cupId}, ${albumId}`);

@@ -112,6 +112,8 @@ export const uploadFile = async (path: string, filePath: string): Promise<void> 
 
 /**
  * Firebase Storage를 통해 이미지를 삭제합니다.
+ * 만약 Firebase 문제가 아닌 모종의 이유로 삭제가 되지 않았다면 ErrorImage Table에 추가됩니다.
+ * 대신, Firebase 자체에 문제가 생겼다면 Error를 반환합니다.
  * @param path 이미지 경로
  * @param folderName Firebase Storage 폴더 이름
  */
@@ -131,6 +133,8 @@ export const deleteFile = async (path: string): Promise<void> => {
 
 /**
  * Firebase Storage 폴더를 삭제합니다.
+ * 만약 Firebase 문제가 아닌 모종의 이유로 삭제가 되지 않았다면 ErrorImage Table에 추가됩니다.
+ * 대신, Firebase 자체에 문제가 생겼다면 Error를 반환합니다.
  * @param path 폴더 경로
  * @param folderName 폴더 이름
  */
@@ -147,7 +151,7 @@ export const deleteFolder = async (path: string): Promise<void> => {
      * Promise.all => N개의 Promise를 수행 중 하나라도 거부(reject) 당하면 바로 에러를 반환
      * Promise.allSettled => 이행/거부 여부와 관계없이 주어진 Promise가 모두 완료될 때 까지 기달림
      */
-    // await Promise.allSettled(promises);
+    await Promise.allSettled(promises);
 
     const images = await getAllFiles(path);
 

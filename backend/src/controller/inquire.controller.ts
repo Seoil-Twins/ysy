@@ -14,7 +14,7 @@ import { deleteFile, deleteFolder, uploadFile } from "../util/firebase";
 import { SolutionImage } from "../model/solutionImage.model";
 import { Transaction } from "sequelize";
 
-const folderName = "users";
+const FOLDER_NAME = "users";
 
 /**
  * inquireImage 다중 Image 생성 및 변경을 해주는 함수
@@ -30,7 +30,7 @@ const uploads = async (inquireId: number, userId: number, imageData: File | File
         if (imageData instanceof Array<File>) {
             for (let i = 0; i < imageData.length; i++) {
                 const image = imageData[i];
-                const path = `${folderName}/${userId}/inquires/${inquireId}/${dayjs().valueOf()}.${image.originalFilename}`;
+                const path = `${FOLDER_NAME}/${userId}/inquires/${inquireId}/${dayjs().valueOf()}.${image.originalFilename}`;
 
                 await uploadFile(path, image.filepath);
                 firebaseUploads.push(path);
@@ -46,7 +46,7 @@ const uploads = async (inquireId: number, userId: number, imageData: File | File
                 logger.debug(`Create Inquire Image => ${path}`);
             }
         } else if (imageData instanceof File) {
-            const path = `${folderName}/${userId}/inquires/${inquireId}/${dayjs().valueOf()}.${imageData.originalFilename}`;
+            const path = `${FOLDER_NAME}/${userId}/inquires/${inquireId}/${dayjs().valueOf()}.${imageData.originalFilename}`;
 
             await uploadFile(path, imageData.filepath);
             firebaseUploads.push(path);
@@ -183,7 +183,7 @@ const controller = {
             await inquire.destroy({ transaction });
 
             if (inquireImage.length > 0) {
-                const path = `${folderName}/${inquire.userId}/inquires/${inquireId}`;
+                const path = `${FOLDER_NAME}/${inquire.userId}/inquires/${inquireId}`;
                 await deleteFolder(path);
             }
 
