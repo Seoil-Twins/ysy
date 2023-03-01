@@ -10,10 +10,9 @@ import { InquireImage } from "../model/inquireImage.model";
 import { Solution } from "../model/solution.model";
 
 import logger from "../logger/logger";
-import { deleteFile, deleteFolder, getAllFiles, uploadFile } from "../util/firebase";
+import { deleteFile, deleteFolder, uploadFile } from "../util/firebase";
 import { SolutionImage } from "../model/solutionImage.model";
 import { Transaction } from "sequelize";
-import { ErrorImage } from "../model/errorImage.model";
 
 const folderName = "users";
 
@@ -186,16 +185,6 @@ const controller = {
             if (inquireImage.length > 0) {
                 const path = `${folderName}/${inquire.userId}/inquires/${inquireId}`;
                 await deleteFolder(path);
-                const images = await getAllFiles(path);
-
-                // 지워지지 않은 이미지가 존재할 시
-                if (images.items.length) {
-                    images.items.forEach(async (image) => {
-                        logger.warn(`Image not deleted, Inquire Id : ${inquire.inquireId} => ${image.fullPath}`);
-
-                        await ErrorImage.create({ path: image.fullPath });
-                    });
-                }
             }
 
             transaction.commit();

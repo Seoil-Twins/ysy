@@ -7,10 +7,9 @@ import NotFoundError from "../error/notFound";
 
 import sequelize from "../model";
 import { Album, ICreate, IRequestGet, IRequestUpadteThumbnail, IRequestUpadteTitle, IResponse } from "../model/album.model";
-import { ErrorImage } from "../model/errorImage.model";
 
 import logger from "../logger/logger";
-import { deleteFile, deleteFolder, getAllFiles, getFiles, uploadFile } from "../util/firebase";
+import { deleteFile, deleteFolder, getFiles, uploadFile } from "../util/firebase";
 
 const folderName = "couples";
 
@@ -175,19 +174,6 @@ const controller = {
 
         const path = `${folderName}/${cupId}/${albumId}`;
         await deleteFolder(path);
-        const images = await getAllFiles(path);
-
-        // 지워지지 않은 이미지가 존재할 시
-        if (images.items.length) {
-            images.items.forEach(async (image) => {
-                logger.warn(`Album Image not deleted : ${cupId} | ${albumId} => ${image.fullPath}`);
-
-                await ErrorImage.create({
-                    path: image.fullPath
-                });
-            });
-        }
-
         await albumFolder.destroy();
         logger.debug(`Success Deleted albums => ${cupId}, ${albumId}`);
     }

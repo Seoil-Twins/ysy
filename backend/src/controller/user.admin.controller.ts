@@ -358,7 +358,7 @@ const controller = {
         userHasInquiry.forEach(async (user: User) => {
             user.inquires!.forEach(async (inquire: Inquire) => {
                 await inquireController.deleteInquire(inquire.inquireId);
-                // soluton 삭제
+                // soluton image 삭제
                 // if (inquire.solution) await solutionController.deleteSolution(inquire.solution.solutionId);
             });
         });

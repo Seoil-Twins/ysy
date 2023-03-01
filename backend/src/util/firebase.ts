@@ -3,6 +3,10 @@ import * as fs from "fs";
 import { initializeApp, FirebaseError } from "firebase/app";
 import { getStorage, ref, uploadBytes, deleteObject, ListResult, list, listAll } from "firebase/storage";
 
+import logger from "../logger/logger";
+
+import { ErrorImage } from "../model/errorImage.model";
+
 dotenv.config();
 
 // TODO: Add SDKs for Firebase products that you want to use
@@ -82,7 +86,7 @@ export const getFiles = async (path: string, count: number, nextPageToken?: stri
  * @param path Folder 위치
  * @returns 이미지의 리스트를 반환
  */
-export const getAllFiles = async (path: string): Promise<ListResult> => {
+const getAllFiles = async (path: string): Promise<ListResult> => {
     const listRef = ref(storage, path);
     let result: ListResult = await listAll(listRef);
 
@@ -114,6 +118,15 @@ export const uploadFile = async (path: string, filePath: string): Promise<void> 
 export const deleteFile = async (path: string): Promise<void> => {
     const delRef = ref(storage, path);
     await deleteObject(delRef);
+
+    const images: ListResult = await getAllFiles(path);
+
+    if (images.items.length && images.items.length > 0) {
+        try {
+            logger.warn(`Image not deleted : ${path} => ${new Error().stack}`);
+        } catch (_error) {}
+        await ErrorImage.create({ path: path });
+    }
 };
 
 /**
@@ -134,7 +147,24 @@ export const deleteFolder = async (path: string): Promise<void> => {
      * Promise.all => N개의 Promise를 수행 중 하나라도 거부(reject) 당하면 바로 에러를 반환
      * Promise.allSettled => 이행/거부 여부와 관계없이 주어진 Promise가 모두 완료될 때 까지 기달림
      */
-    await Promise.allSettled(promises);
+    // await Promise.allSettled(promises);
+
+    const images = await getAllFiles(path);
+
+    // 지워지지 않은 이미지가 존재할 시
+    if (images.items.length && images.items.length > 0) {
+        try {
+            logger.warn(`Image Folder not deleted : ${path} => ${new Error().stack}`);
+        } catch (_error) {}
+
+        images.items.forEach(async (image) => {
+            logger.warn(`Image not deleted : ${image.fullPath}`);
+
+            await ErrorImage.create({ path: image.fullPath });
+        });
+
+        logger.warn(`------------------------------------------------------------------------------------------`);
+    }
 };
 
 export default firebaseApp;
