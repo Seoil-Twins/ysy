@@ -41,6 +41,31 @@ export interface IResponse {
     items: string[];
     nextPageToken?: string;
 }
+// -------------------------------------------- Admin ------------------------------------------ //
+export interface IAlbumResponseWithCount {
+    albums: Album[];
+    count: number;
+}
+
+export interface PageOptions {
+    count: number;
+    page: number;
+    sort: string | "r" | "o" | "cd" | "ca";
+}
+
+export interface SearchOptions {
+    cupId?: string;
+}
+
+export interface FilterOptions {
+    fromDate?: Date;
+    toDate?: Date;
+}
+
+export interface IUpdate {
+    title?: string;
+    thumbnail: string;
+}
 // ------------------------------------------ Interface End ---------------------------------------- //
 
 export class Album extends Model<InferAttributes<Album>, InferCreationAttributes<Album>> {

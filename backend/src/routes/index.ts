@@ -10,6 +10,7 @@ import noticeRouter from "./notice";
 
 import userAdminRouter from "./user.admin";
 import coupleAdminRouter from "./couple.admin";
+import albumAdminRouter from "./album.admin";
 
 import authMiddleware from "../middlewares/auth.middleware";
 
@@ -26,5 +27,6 @@ router.use("/inquire", authMiddleware, inquireRouter);
 
 router.use("/admin/user", authMiddleware, userAdminRouter);
 router.use("/admin/couple", authMiddleware, coupleAdminRouter);
+router.use("/admin/album", authMiddleware, albumAdminRouter);
 
 export default router;
