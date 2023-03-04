@@ -20,7 +20,7 @@ import {
 } from "../model/album.model";
 
 import logger from "../logger/logger";
-import { deleteFile, deleteFolder, getFiles, uploadFile } from "../util/firebase";
+import { deleteFile, deleteFolder, uploadFile } from "../util/firebase";
 import { Op, OrderItem, WhereOptions } from "sequelize";
 
 const FOLDER_NAME = "couples";
@@ -101,7 +101,6 @@ const controller = {
 
         return result;
     },
-    getAlbums: async (data: IRequestGet): Promise<void> => {},
     addAlbumFolder: async (data: ICreate): Promise<void> => {},
     addAlbums: async (cupId: string, albumId: number, files: File | File[]): Promise<void> => {},
     updateTitle: async (data: IRequestUpadteTitle): Promise<void> => {},

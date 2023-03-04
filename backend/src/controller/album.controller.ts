@@ -1,5 +1,4 @@
 import dayjs from "dayjs";
-import { ListResult, StorageReference } from "firebase/storage";
 import { File } from "formidable";
 
 import ForbiddenError from "../error/forbidden";
@@ -9,7 +8,8 @@ import sequelize from "../model";
 import { Album, ICreate, IRequestGet, IRequestUpadteThumbnail, IRequestUpadteTitle, IResponse } from "../model/album.model";
 
 import logger from "../logger/logger";
-import { deleteFile, deleteFolder, getFiles, uploadFile } from "../util/firebase";
+import { deleteFile, deleteFolder, uploadFile } from "../util/firebase";
+import { AlbumImage } from "../model/albnmImage.model";
 
 const FOLDER_NAME = "couples";
 
@@ -21,7 +21,14 @@ const controller = {
      */
     getAlbumsFolder: async (cupId: string): Promise<Album[]> => {
         const albums: Album[] = await Album.findAll({
-            where: { cupId: cupId }
+            where: { cupId: cupId },
+            attributes: { include: [[sequelize.fn("COUNT", sequelize.col("albumImages.album_id")), "count"]] },
+            include: {
+                model: AlbumImage,
+                as: "albumImages",
+                attributes: []
+            },
+            group: "Album.album_id"
         });
 
         if (albums.length <= 0) throw new NotFoundError("Not Found Albums");
@@ -35,31 +42,20 @@ const controller = {
      */
     getAlbums: async (data: IRequestGet): Promise<IResponse> => {
         const album: Album | null = await Album.findOne({
-            where: {
-                cupId: data.cupId,
-                albumId: data.albumId
-            }
+            where: { cupId: data.cupId }
         });
 
         if (!album) throw new NotFoundError("Not Found Albums");
 
-        const refName = `${FOLDER_NAME}/${data.cupId}/${data.albumId}`;
-        const firebaseResult: ListResult = await getFiles(refName, data.count, data.nextPageToken);
-        const files: StorageReference[] = firebaseResult.items;
-        const nextPageToken: string | undefined = firebaseResult.nextPageToken;
-
-        if (files.length <= 0) throw new NotFoundError("Not Found Error");
-
-        const items: string[] = [];
-
-        files.forEach((file) => {
-            items.push(file.fullPath);
+        const { rows, count }: { rows: AlbumImage[]; count: number } = await AlbumImage.findAndCountAll({
+            where: { albumId: data.albumId },
+            attributes: { exclude: ["albumId"] }
         });
 
         const result: IResponse = {
             ...album.dataValues,
-            items: items,
-            nextPageToken: nextPageToken
+            images: rows,
+            total: count
         };
 
         return result;
@@ -86,21 +82,38 @@ const controller = {
         else if (albumFolder.cupId !== cupId) throw new ForbiddenError("Forbidden Error");
 
         if (files instanceof Array<File>) {
+            const transaction = await sequelize.transaction();
+
             for (let i = 0; i < files.length; i++) {
                 try {
                     const path = `${FOLDER_NAME}/${cupId}/${albumId}/${dayjs().valueOf()}.${files[i].originalFilename}`;
                     await uploadFile(path, files[i].filepath);
+
+                    await AlbumImage.create(
+                        {
+                            albumId: albumId,
+                            image: path
+                        },
+                        { transaction }
+                    );
                 } catch (error) {
                     logger.error(`Add album error and ignore => ${JSON.stringify(error)}`);
                     continue;
                 }
             }
+
+            transaction.commit();
         } else if (files instanceof File) {
             const path = `${FOLDER_NAME}//${cupId}/${albumId}/${dayjs().valueOf()}.${files.originalFilename}`;
             await uploadFile(path, files.filepath);
+
+            await AlbumImage.create({
+                albumId: albumId,
+                image: path
+            });
         }
 
-        logger.debug(`Success add albums => ${cupId}, ${albumId}, ${JSON.stringify(files)}`);
+        logger.debug(`Success add albums => ${cupId} | ${albumId} | ${JSON.stringify(files)}`);
     },
     /**
      * 앨범 폴더명을 수정합니다.

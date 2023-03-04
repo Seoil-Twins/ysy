@@ -1,3 +1,4 @@
+import { AlbumImage } from "./albnmImage.model";
 import { Album } from "./album.model";
 import { Calendar } from "./calendar.model";
 import { Couple } from "./couple.model";
@@ -68,6 +69,18 @@ export default {
             foreignKey: "cupId",
             onDelete: "CASCADE",
             as: "couple"
+        });
+
+        // ------------------------------------------ Album to AlbumImage --------------------------------------- //
+        Album.hasMany(AlbumImage, {
+            foreignKey: "albumId",
+            as: "albumImages"
+        });
+
+        AlbumImage.belongsTo(Album, {
+            foreignKey: "albumId",
+            onDelete: "CASCADE",
+            as: "album"
         });
 
         // ------------------------------------------ Calendar to Couple ---------------------------------------- //

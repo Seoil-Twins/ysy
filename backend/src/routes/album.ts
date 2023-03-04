@@ -36,18 +36,17 @@ router.get("/:cup_id", async (req: Request, res: Response, next: NextFunction) =
 router.get("/:cup_id/:album_id", async (req: Request, res: Response, next: NextFunction) => {
     try {
         const albumId = Number(req.params.album_id);
-        let count = Number(req.query.count);
-        const nextPageToken = req.query.nextPageToken ? String(req.query.nextPageToken) : undefined;
+        const page = !isNaN(Number(req.query.page)) ? Number(req.query.page) : 1;
+        const count = !isNaN(Number(req.query.count)) ? Number(req.query.count) : 50;
 
         if (req.body.cupId !== req.params.cup_id) throw new ForbiddenError("Not Same Couple Id");
         else if (isNaN(albumId)) throw new BadRequestError("Bad Request Error");
-        else if (isNaN(count)) count = 50;
 
         const data: IRequestGet = {
             albumId: albumId,
             cupId: req.body.cupId,
-            count: count,
-            nextPageToken: nextPageToken
+            page: page,
+            count: count
         };
         const result: IResponse = await albumController.getAlbums(data);
 

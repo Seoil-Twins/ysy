@@ -44,45 +44,8 @@ export const isDefaultFile = (fileName: string): boolean => {
 };
 
 /**
- * N개의 이미지를 가져옵니다.
- * ### Example
- * ```typescript
- * // nextPageToken이 없는 경우
- * const firebaseResult: ListResult = await getFiles("path", 10);
- *
- * // nextPageToken이 있는 경우
- * const firebaseResult: ListResult = await getFiles("path", 10, "nextPageToken");
- * ```
- * @param path Folder 위치
- * @param count 가져올 이미지의 개수
- * @param nextPageToken 다음 페이지의 토큰
- * @returns 이미지의 리스트를 반환
- */
-export const getFiles = async (path: string, count: number, nextPageToken?: string): Promise<ListResult> => {
-    const listRef = ref(storage, `${path}`);
-    let result: ListResult | undefined = undefined;
-
-    try {
-        result = await list(listRef, {
-            maxResults: count,
-            pageToken: nextPageToken
-        });
-    } catch (error) {
-        // nextPageToken이 유효하지 않은 경우
-        if (error instanceof FirebaseError && error.code === "storage/unknown") {
-            result = await list(listRef, {
-                maxResults: count
-            });
-        } else {
-            throw error;
-        }
-    }
-
-    return result;
-};
-
-/**
  * 모든 이미지를 가져옵니다.
+ * 모든 이미지를 가져오기 때문에 많은 이미지를 저장하고 있는 곳에서 사용하는 건 추천하지 않습니다.
  * @param path Folder 위치
  * @returns 이미지의 리스트를 반환
  */
@@ -113,28 +76,32 @@ export const uploadFile = async (path: string, filePath: string): Promise<void> 
 /**
  * Firebase Storage를 통해 이미지를 삭제합니다.
  * 만약 Firebase 문제가 아닌 모종의 이유로 삭제가 되지 않았다면 ErrorImage Table에 추가됩니다.
- * 대신, Firebase 자체에 문제가 생겼다면 Error를 반환합니다.
  * @param path 이미지 경로
  * @param folderName Firebase Storage 폴더 이름
  */
 export const deleteFile = async (path: string): Promise<void> => {
     const delRef = ref(storage, path);
-    await deleteObject(delRef);
 
-    const images: ListResult = await getAllFiles(path);
+    try {
+        await deleteObject(delRef);
+    } catch (error) {
+        const images: ListResult = await getAllFiles(path);
 
-    if (images.items.length && images.items.length > 0) {
-        try {
-            logger.warn(`Image not deleted : ${path} => ${new Error().stack}`);
-        } catch (_error) {}
-        await ErrorImage.create({ path: path });
+        if (images.items.length && images.items.length > 0) {
+            try {
+                if (error instanceof Error) logger.warn(`Image not deleted : ${path} => ${error.stack}`);
+                else logger.warn(`Image not deleted : ${path} => ${new Error().stack}`);
+            } catch (_error) {}
+            await ErrorImage.create({ path: path });
+        }
+
+        throw error;
     }
 };
 
 /**
  * Firebase Storage 폴더를 삭제합니다.
  * 만약 Firebase 문제가 아닌 모종의 이유로 삭제가 되지 않았다면 ErrorImage Table에 추가됩니다.
- * 대신, Firebase 자체에 문제가 생겼다면 Error를 반환합니다.
  * @param path 폴더 경로
  * @param folderName 폴더 이름
  */
@@ -153,9 +120,9 @@ export const deleteFolder = async (path: string): Promise<void> => {
      */
     await Promise.allSettled(promises);
 
+    // allsettled는 무조건 resolve 상태가 아니므로 확인하는 절차
     const images = await getAllFiles(path);
 
-    // 지워지지 않은 이미지가 존재할 시
     if (images.items.length && images.items.length > 0) {
         try {
             logger.warn(`Image Folder not deleted : ${path} => ${new Error().stack}`);

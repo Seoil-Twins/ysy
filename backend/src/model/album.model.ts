@@ -1,9 +1,10 @@
 import dayjs from "dayjs";
 import { File } from "formidable";
-import { DataTypes, Model, literal, NonAttribute } from "sequelize";
+import { DataTypes, Model, literal, NonAttribute, HasManyGetAssociationsMixin } from "sequelize";
 import { CreationOptional, InferAttributes, InferCreationAttributes } from "sequelize/types/model";
 
 import sequelize from ".";
+import { AlbumImage } from "./albnmImage.model";
 import { Couple } from "./couple.model";
 // -------------------------------------------- Interface ------------------------------------------ //
 export interface ICreate {
@@ -14,8 +15,8 @@ export interface ICreate {
 export interface IRequestGet {
     albumId: number;
     cupId: string;
+    page: number;
     count: number;
-    nextPageToken?: string;
 }
 
 export interface IRequestUpadteTitle {
@@ -38,8 +39,8 @@ export interface IResponse {
     title: string;
     thumbnail: string | null;
     createdTime: Date;
-    items: string[];
-    nextPageToken?: string;
+    images: AlbumImage[];
+    total: number;
 }
 // -------------------------------------------- Admin ------------------------------------------ //
 export interface IAlbumResponseWithCount {
@@ -69,6 +70,8 @@ export interface IUpdate {
 // ------------------------------------------ Interface End ---------------------------------------- //
 
 export class Album extends Model<InferAttributes<Album>, InferCreationAttributes<Album>> {
+    /** If you use include inquireImage, You can use inquireImages field. */
+    declare albumImages?: NonAttribute<AlbumImage[]>;
     /** If you use include couple, You can use couple field. */
     declare couple?: NonAttribute<Couple>;
 
@@ -77,6 +80,8 @@ export class Album extends Model<InferAttributes<Album>, InferCreationAttributes
     declare title: string;
     declare thumbnail: CreationOptional<string | null>;
     declare createdTime: CreationOptional<Date>;
+
+    declare getAlbumImages: HasManyGetAssociationsMixin<AlbumImage>;
 }
 
 Album.init(
