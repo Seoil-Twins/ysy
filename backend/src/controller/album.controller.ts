@@ -22,7 +22,7 @@ const controller = {
     getAlbumsFolder: async (cupId: string): Promise<Album[]> => {
         const albums: Album[] = await Album.findAll({
             where: { cupId: cupId },
-            attributes: { include: [[sequelize.fn("COUNT", sequelize.col("albumImages.album_id")), "count"]] },
+            attributes: { include: [[sequelize.fn("COUNT", sequelize.col("albumImages.album_id")), "total"]] },
             include: {
                 model: AlbumImage,
                 as: "albumImages",

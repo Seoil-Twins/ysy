@@ -45,7 +45,7 @@ export interface IResponse {
 // -------------------------------------------- Admin ------------------------------------------ //
 export interface IAlbumResponseWithCount {
     albums: Album[];
-    count: number;
+    total: number;
 }
 
 export interface PageOptions {
@@ -63,9 +63,8 @@ export interface FilterOptions {
     toDate?: Date;
 }
 
-export interface IUpdate {
+export interface IAdminUpdate {
     title?: string;
-    thumbnail: string;
 }
 // ------------------------------------------ Interface End ---------------------------------------- //
 

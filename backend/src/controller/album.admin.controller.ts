@@ -21,7 +21,8 @@ import {
 
 import logger from "../logger/logger";
 import { deleteFile, deleteFolder, uploadFile } from "../util/firebase";
-import { Op, OrderItem, WhereOptions } from "sequelize";
+import { GroupedCountResultItem, Op, OrderItem, WhereOptions } from "sequelize";
+import { AlbumImage } from "../model/albnmImage.model";
 
 const FOLDER_NAME = "couples";
 
@@ -87,22 +88,103 @@ const controller = {
         const sort: OrderItem = createSort(pageOptions.sort);
         const where: WhereOptions = createWhere(searchOptions, filterOptions);
 
-        const { rows, count }: { rows: Album[]; count: number } = await Album.findAndCountAll({
+        const { rows }: { rows: Album[] } = await Album.findAndCountAll({
             where,
             offset,
             limit: pageOptions.count,
-            order: [sort]
+            order: [sort],
+            attributes: { include: [[sequelize.fn("COUNT", sequelize.col("albumImages.album_id")), "total"]] },
+            include: {
+                model: AlbumImage,
+                as: "albumImages",
+                attributes: [],
+                duplicating: false
+            },
+            group: "Album.album_id"
         });
+
+        const count: number = await Album.count();
 
         const result: IAlbumResponseWithCount = {
             albums: rows,
-            count: count
+            total: count
         };
 
         return result;
     },
-    addAlbumFolder: async (data: ICreate): Promise<void> => {},
-    addAlbums: async (cupId: string, albumId: number, files: File | File[]): Promise<void> => {},
+    addAlbum: async (data: ICreate, thumbnail?: File, images?: File | File[]): Promise<void> => {
+        let isThumbnailUpload = false;
+        let isImagesUpload = false;
+        let thumbnailPath = "";
+        let albumId: number = 0;
+        const transaction = await sequelize.transaction();
+
+        try {
+            const album = await Album.create(data, { transaction });
+            albumId = album.albumId;
+
+            if (thumbnail) {
+                thumbnailPath = `${FOLDER_NAME}/${data.cupId}/${album.albumId}/thumbnail/${dayjs().valueOf()}.${thumbnail.originalFilename}`;
+                await uploadFile(thumbnailPath, thumbnail.filepath);
+                isThumbnailUpload = true;
+
+                await album.update(
+                    {
+                        thumbnail: thumbnailPath
+                    },
+                    { transaction }
+                );
+                logger.debug(`Upload Firebase Album Thumbnail => ${JSON.stringify(thumbnail)}`);
+            }
+
+            if (images && images instanceof Array<File>) {
+                for (let i = 0; i < images.length; i++) {
+                    try {
+                        const path = `${FOLDER_NAME}/${album.cupId}/${album.albumId}/${dayjs().valueOf()}.${images[i].originalFilename}`;
+                        await uploadFile(path, images[i].filepath);
+                        isImagesUpload = true;
+
+                        await AlbumImage.create(
+                            {
+                                albumId: album.albumId,
+                                image: path
+                            },
+                            { transaction }
+                        );
+                    } catch (error) {
+                        logger.error(`Add album error and ignore => ${JSON.stringify(error)}`);
+                        logger.error(`Ignore File Info => ${JSON.stringify(images[i])}`);
+                        continue;
+                    }
+                }
+            } else if (images && images instanceof File) {
+                const path = `${FOLDER_NAME}//${album.cupId}/${album.albumId}/${dayjs().valueOf()}.${images.originalFilename}`;
+                await uploadFile(path, images.filepath);
+                isImagesUpload = true;
+
+                await AlbumImage.create(
+                    {
+                        albumId: album.albumId,
+                        image: path
+                    },
+                    { transaction }
+                );
+            }
+
+            transaction.commit();
+        } catch (error) {
+            logger.error(`Album Create Error ${JSON.stringify(error)}`);
+
+            if (isThumbnailUpload) await deleteFile(thumbnailPath);
+            if (isImagesUpload) {
+                const path = `${FOLDER_NAME}/${data.cupId}/${albumId}`;
+                await deleteFolder(path);
+            }
+
+            transaction.rollback();
+            throw error;
+        }
+    },
     updateTitle: async (data: IRequestUpadteTitle): Promise<void> => {},
     updateThumbnail: async (data: IRequestUpadteThumbnail): Promise<void> => {},
     deleteAlbum: async (cupId: string, albumId: number): Promise<void> => {}

@@ -103,7 +103,6 @@ export const deleteFile = async (path: string): Promise<void> => {
  * Firebase Storage 폴더를 삭제합니다.
  * 만약 Firebase 문제가 아닌 모종의 이유로 삭제가 되지 않았다면 ErrorImage Table에 추가됩니다.
  * @param path 폴더 경로
- * @param folderName 폴더 이름
  */
 export const deleteFolder = async (path: string): Promise<void> => {
     const folderRef = ref(storage, path);
