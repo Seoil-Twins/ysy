@@ -19,7 +19,7 @@ ErrorImage.init(
             primaryKey: true
         },
         path: {
-            type: DataTypes.STRING(60)
+            type: DataTypes.STRING(200)
         },
         createdTime: {
             field: "created_time",

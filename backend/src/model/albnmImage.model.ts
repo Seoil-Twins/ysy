@@ -33,7 +33,7 @@ AlbumImage.init(
             }
         },
         image: {
-            type: DataTypes.STRING(60),
+            type: DataTypes.STRING(200),
             allowNull: false
         },
         createdTime: {

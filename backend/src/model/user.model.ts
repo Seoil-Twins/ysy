@@ -178,7 +178,7 @@ User.init(
             allowNull: false
         },
         profile: {
-            type: DataTypes.STRING(60)
+            type: DataTypes.STRING(200)
         },
         primaryNofi: {
             field: "primary_nofi",
