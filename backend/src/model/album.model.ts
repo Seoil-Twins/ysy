@@ -64,6 +64,8 @@ export interface FilterOptions {
 }
 
 export interface IAdminUpdate {
+    cupId: string;
+    albumId: number;
     title?: string;
 }
 // ------------------------------------------ Interface End ---------------------------------------- //
