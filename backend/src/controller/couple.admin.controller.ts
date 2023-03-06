@@ -151,14 +151,7 @@ const controller = {
             const transaction = await sequelize.transaction();
 
             try {
-                if (couple.thumbnail) {
-                    try {
-                        await deleteFile(couple.thumbnail!);
-                    } catch (error) {
-                        logger.warn(`User Image not deleted : ${couple.cupId} => ${couple.thumbnail}`);
-                        await ErrorImage.create({ path: couple.thumbnail! });
-                    }
-                }
+                if (couple.thumbnail) await deleteFile(couple.thumbnail!);
 
                 if (couple.albums) {
                     const albums: Album[] = await couple.albums!;

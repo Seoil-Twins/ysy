@@ -303,7 +303,7 @@ const controller = {
             // 이미 profile이 있다면 Firebase에서 삭제
             if (prevProfile && data.profile) {
                 await deleteFile(prevProfile);
-                logger.debug(`Deleted already profile => ${prevProfile}`);
+                logger.debug(`Deleted Previous Profile => ${prevProfile}`);
             }
 
             transaction.commit();
@@ -385,15 +385,7 @@ const controller = {
         users.forEach(async (user: User) => {
             const profile: string | null = user.profile;
 
-            if (profile) {
-                try {
-                    await deleteFile(profile);
-                } catch (_error) {
-                    logger.warn(`User Image not deleted : ${user.userId} => ${profile}`);
-                    await ErrorImage.create({ path: profile });
-                }
-            }
-
+            if (profile) await deleteFile(profile);
             await user.destroy();
         });
     }

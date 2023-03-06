@@ -201,7 +201,7 @@ const controller = {
             // Upload, DB Update를 하고나서 기존 이미지 지우기
             if (prevThumbnail && data.thumbnail) {
                 await deleteFile(prevThumbnail);
-                logger.debug(`Deleted already thumbnail => ${prevThumbnail}`);
+                logger.debug(`Deleted Previous thumbnail => ${prevThumbnail}`);
             }
         } catch (error) {
             // Firebase에는 업로드 되었지만 DB 오류가 발생했다면 Firebase Profile 삭제

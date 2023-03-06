@@ -159,7 +159,7 @@ const controller = {
 
             if (prevThumbnail) {
                 await deleteFile(prevThumbnail);
-                logger.debug(`Deleted already image => ${prevThumbnail}`);
+                logger.debug(`Deleted Previous thumbnail => ${prevThumbnail}`);
             }
 
             transaction.commit();
