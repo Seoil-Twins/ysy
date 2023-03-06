@@ -3,22 +3,19 @@ import { DataTypes, Model, literal } from "sequelize";
 import { CreationOptional, InferAttributes, InferCreationAttributes } from "sequelize/types/model";
 
 import sequelize from ".";
-import { Inquire } from "./inquire.model";
+import { Album } from "./album.model";
 
 // -------------------------------------------- Interface ------------------------------------------ //
-export interface IRequestCreate {
-    image: File | File[];
-}
 // ------------------------------------------ Interface End ---------------------------------------- //
 
-export class InquireImage extends Model<InferAttributes<InquireImage>, InferCreationAttributes<InquireImage>> {
+export class AlbumImage extends Model<InferAttributes<AlbumImage>, InferCreationAttributes<AlbumImage>> {
     declare imageId: CreationOptional<number>;
-    declare inquireId: number;
+    declare albumId: number;
     declare image: string;
     declare createdTime: CreationOptional<Date>;
 }
 
-InquireImage.init(
+AlbumImage.init(
     {
         imageId: {
             field: "image_id",
@@ -26,13 +23,13 @@ InquireImage.init(
             autoIncrement: true,
             primaryKey: true
         },
-        inquireId: {
-            field: "inquire_id",
+        albumId: {
+            field: "album_id",
             type: DataTypes.INTEGER.UNSIGNED,
             allowNull: false,
             references: {
-                model: Inquire,
-                key: "inquire_id"
+                model: Album,
+                key: "album_id"
             }
         },
         image: {
@@ -43,7 +40,7 @@ InquireImage.init(
             field: "created_time",
             type: "TIMESTAMP",
             defaultValue: literal("CURRENT_TIMESTAMP"),
-            get(this: InquireImage): string | null {
+            get(this: AlbumImage): string | null {
                 const date = dayjs(this.getDataValue("createdTime"));
                 const formatDate = date.format("YYYY-MM-DD HH:mm:ss");
 
@@ -53,7 +50,7 @@ InquireImage.init(
     },
     {
         sequelize: sequelize,
-        tableName: "inquire_image",
+        tableName: "album_image",
         timestamps: false
     }
 );

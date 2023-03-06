@@ -173,7 +173,7 @@ const controller = {
             // 이미 profile이 있다면 Firebase에서 삭제
             if (prevProfile && data.profile) {
                 await deleteFile(prevProfile);
-                logger.debug(`Deleted already profile => ${prevProfile}`);
+                logger.debug(`Deleted Previous Profile => ${prevProfile}`);
             }
         } catch (error) {
             // Firebase에는 업로드 되었지만 DB 오류가 발생했다면 Firebase Profile 삭제

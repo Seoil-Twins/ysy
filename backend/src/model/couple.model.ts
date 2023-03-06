@@ -87,7 +87,7 @@ Couple.init(
             allowNull: false
         },
         thumbnail: {
-            type: DataTypes.STRING(60)
+            type: DataTypes.STRING(200)
         },
         createdTime: {
             field: "created_time",

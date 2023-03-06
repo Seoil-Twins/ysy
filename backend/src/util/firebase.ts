@@ -3,6 +3,10 @@ import * as fs from "fs";
 import { initializeApp, FirebaseError } from "firebase/app";
 import { getStorage, ref, uploadBytes, deleteObject, ListResult, list, listAll } from "firebase/storage";
 
+import logger from "../logger/logger";
+
+import { ErrorImage } from "../model/errorImage.model";
+
 dotenv.config();
 
 // TODO: Add SDKs for Firebase products that you want to use
@@ -40,49 +44,12 @@ export const isDefaultFile = (fileName: string): boolean => {
 };
 
 /**
- * N개의 이미지를 가져옵니다.
- * ### Example
- * ```typescript
- * // nextPageToken이 없는 경우
- * const firebaseResult: ListResult = await getFiles("path", 10);
- *
- * // nextPageToken이 있는 경우
- * const firebaseResult: ListResult = await getFiles("path", 10, "nextPageToken");
- * ```
- * @param path Folder 위치
- * @param count 가져올 이미지의 개수
- * @param nextPageToken 다음 페이지의 토큰
- * @returns 이미지의 리스트를 반환
- */
-export const getFiles = async (path: string, count: number, nextPageToken?: string): Promise<ListResult> => {
-    const listRef = ref(storage, `${path}`);
-    let result: ListResult | undefined = undefined;
-
-    try {
-        result = await list(listRef, {
-            maxResults: count,
-            pageToken: nextPageToken
-        });
-    } catch (error) {
-        // nextPageToken이 유효하지 않은 경우
-        if (error instanceof FirebaseError && error.code === "storage/unknown") {
-            result = await list(listRef, {
-                maxResults: count
-            });
-        } else {
-            throw error;
-        }
-    }
-
-    return result;
-};
-
-/**
  * 모든 이미지를 가져옵니다.
+ * 모든 이미지를 가져오기 때문에 많은 이미지를 저장하고 있는 곳에서 사용하는 건 추천하지 않습니다.
  * @param path Folder 위치
  * @returns 이미지의 리스트를 반환
  */
-export const getAllFiles = async (path: string): Promise<ListResult> => {
+const getAllFiles = async (path: string): Promise<ListResult> => {
     const listRef = ref(storage, path);
     let result: ListResult = await listAll(listRef);
 
@@ -108,18 +75,36 @@ export const uploadFile = async (path: string, filePath: string): Promise<void> 
 
 /**
  * Firebase Storage를 통해 이미지를 삭제합니다.
+ * 만약 Firebase 문제가 아닌 모종의 이유로 삭제가 되지 않았다면 ErrorImage Table에 추가됩니다.
  * @param path 이미지 경로
  * @param folderName Firebase Storage 폴더 이름
  */
 export const deleteFile = async (path: string): Promise<void> => {
     const delRef = ref(storage, path);
-    await deleteObject(delRef);
+
+    try {
+        await deleteObject(delRef);
+    } catch (error) {
+        const images: ListResult = await getAllFiles(path);
+
+        if ((error instanceof FirebaseError && error.code === "storage/object-not-found") || (images.items.length && images.items.length > 0)) {
+            try {
+                if (error instanceof Error) logger.warn(`Image not deleted : ${path} => ${error.stack}`);
+                else logger.warn(`Image not deleted : ${path} => ${new Error().stack}`);
+            } catch (_error) {}
+
+            await ErrorImage.create({ path: path });
+            return;
+        } else {
+            throw error;
+        }
+    }
 };
 
 /**
  * Firebase Storage 폴더를 삭제합니다.
+ * 만약 Firebase 문제가 아닌 모종의 이유로 삭제가 되지 않았다면 ErrorImage Table에 추가됩니다.
  * @param path 폴더 경로
- * @param folderName 폴더 이름
  */
 export const deleteFolder = async (path: string): Promise<void> => {
     const folderRef = ref(storage, path);
@@ -135,6 +120,23 @@ export const deleteFolder = async (path: string): Promise<void> => {
      * Promise.allSettled => 이행/거부 여부와 관계없이 주어진 Promise가 모두 완료될 때 까지 기달림
      */
     await Promise.allSettled(promises);
+
+    // allsettled는 무조건 resolve 상태가 아니므로 확인하는 절차
+    const images = await getAllFiles(path);
+
+    if (images.items.length && images.items.length > 0) {
+        try {
+            logger.warn(`Image Folder not deleted : ${path} => ${new Error().stack}`);
+        } catch (_error) {}
+
+        images.items.forEach(async (image) => {
+            logger.warn(`Image not deleted : ${image.fullPath}`);
+
+            await ErrorImage.create({ path: image.fullPath });
+        });
+
+        logger.warn(`------------------------------------------------------------------------------------------`);
+    }
 };
 
 export default firebaseApp;
