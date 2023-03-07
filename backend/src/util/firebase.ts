@@ -101,6 +101,42 @@ export const deleteFile = async (path: string): Promise<void> => {
     }
 };
 
+export const deleteFiles = async (paths: string[]): Promise<void> => {
+    if (!deleteFiles.length || deleteFiles.length <= 0) return;
+
+    const promises: any[] = [];
+
+    paths.forEach((path: string) => {
+        const delRef = ref(storage, path);
+        promises.push(deleteObject(delRef));
+    });
+
+    /**
+     * Promise.all => N개의 Promise를 수행 중 하나라도 거부(reject) 당하면 바로 에러를 반환
+     * Promise.allSettled => 이행/거부 여부와 관계없이 주어진 Promise가 모두 완료될 때 까지 기달림
+     */
+    await Promise.allSettled(promises);
+
+    // allsettled는 무조건 resolve 상태가 아니므로 확인하는 절차
+    paths.forEach(async (path: string) => {
+        const images = await getAllFiles(path);
+
+        if (images.items.length && images.items.length > 0) {
+            try {
+                logger.warn(`Image Folder not deleted : ${path} => ${new Error().stack}`);
+            } catch (_error) {}
+
+            images.items.forEach(async (image) => {
+                logger.warn(`Image not deleted : ${image.fullPath}`);
+
+                await ErrorImage.create({ path: image.fullPath });
+            });
+
+            logger.warn(`------------------------------------------------------------------------------------------`);
+        }
+    });
+};
+
 /**
  * Firebase Storage 폴더를 삭제합니다.
  * 만약 Firebase 문제가 아닌 모종의 이유로 삭제가 되지 않았다면 ErrorImage Table에 추가됩니다.

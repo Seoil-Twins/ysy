@@ -34,7 +34,7 @@ router.get("/:user_id", async (req: Request, res: Response, next: NextFunction) 
         const results = await inquireController.getInquires(userId);
         return res.status(StatusCode.OK).json(results);
     } catch (error) {
-        throw error;
+        next(error);
     }
 });
 

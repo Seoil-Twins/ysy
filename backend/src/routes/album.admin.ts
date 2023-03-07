@@ -135,6 +135,36 @@ router.patch("/:cup_id/:album_id", canModifyWithEditor, async (req: Request, res
     });
 });
 
-router.delete("/:couple_ids", canModifyWithEditor, async (req: Request, res: Response, next: NextFunction) => {});
+router.delete("/:album_ids", canModifyWithEditor, async (req: Request, res: Response, next: NextFunction) => {
+    const albumIds: number[] = req.params.album_ids.split(",").map(Number);
+    const numAlbumIds: number[] = albumIds.filter((albumId: number) => {
+        if (!isNaN(albumId)) return albumId;
+    });
+
+    try {
+        if (!numAlbumIds || numAlbumIds.length <= 0) throw new BadRequestError("No album ids");
+
+        await albumAdminController.deleteAlbum(numAlbumIds);
+        res.status(StatusCode.NO_CONTENT).json({});
+    } catch (error) {
+        next(error);
+    }
+});
+
+router.delete("/image/:image_ids", canModifyWithEditor, async (req: Request, res: Response, next: NextFunction) => {
+    const imageIds: number[] = req.params.image_ids.split(",").map(Number);
+    const numImageIds: number[] = imageIds.filter((imageId: number) => {
+        if (!isNaN(imageId)) return imageId;
+    });
+
+    try {
+        if (!numImageIds || numImageIds.length <= 0) throw new BadRequestError("No album ids");
+
+        await albumAdminController.deleteAlbumImages(numImageIds);
+        res.status(StatusCode.NO_CONTENT).json({});
+    } catch (error) {
+        next(error);
+    }
+});
 
 export default router;
