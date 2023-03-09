@@ -1,7 +1,7 @@
 import dotenv from "dotenv";
 import * as fs from "fs";
 import { initializeApp, FirebaseError } from "firebase/app";
-import { getStorage, ref, uploadBytes, deleteObject, ListResult, list, listAll } from "firebase/storage";
+import { getStorage, ref, uploadBytes, deleteObject, ListResult, listAll } from "firebase/storage";
 
 import logger from "../logger/logger";
 
@@ -74,6 +74,31 @@ export const uploadFile = async (path: string, filePath: string): Promise<void> 
 };
 
 /**
+ * 여러 개의 이미지를 Firebase Storage에 업로드 합니다.
+ * @param filePaths 컴퓨터에 임시 저장되어 있는 파일 주소
+ * @param imagePaths Firebase Storage에 저장할 주소
+ * @returns [성공한 배열, 실패한 배열]
+ */
+export const uploadFiles = async (filePaths: string[], imagePaths: string[]): Promise<PromiseSettledResult<any>[][]> => {
+    const promises: any[] = [];
+
+    for (let i = 0; i < filePaths.length; i++) {
+        const filePath = filePaths[i];
+        const imagePath = imagePaths[i];
+        const storageRef = ref(storage, imagePath);
+        const buffer = await fs.readFileSync(filePath);
+
+        promises.push(uploadBytes(storageRef, buffer));
+    }
+
+    const results: PromiseSettledResult<any>[] = await Promise.allSettled(promises);
+    const successResults = results.filter((result) => result.status === "fulfilled" && result.value);
+    const failedResults = results.filter((result) => result.status === "rejected");
+
+    return [successResults, failedResults];
+};
+
+/**
  * Firebase Storage를 통해 이미지를 삭제합니다.
  * 만약 Firebase 문제가 아닌 모종의 이유로 삭제가 되지 않았다면 ErrorImage Table에 추가됩니다.
  * @param path 이미지 경로
@@ -102,7 +127,7 @@ export const deleteFile = async (path: string): Promise<void> => {
 };
 
 export const deleteFiles = async (paths: string[]): Promise<void> => {
-    if (!deleteFiles.length || deleteFiles.length <= 0) return;
+    if (!paths.length || paths.length <= 0) return;
 
     const promises: any[] = [];
 
