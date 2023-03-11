@@ -159,7 +159,7 @@ const controller = {
         });
 
         if (!user) throw new UnauthorizedError("Invalid Token (User not found using token)");
-        else if (user.cupId !== data.cupId) throw new ForbiddenError("Forbidden Error");
+        else if (user.cupId !== data.cupId) throw new ForbiddenError("You don't same user couple ID and path parameter couple ID");
 
         const couple = await Couple.findOne({
             where: { cupId: data.cupId }
@@ -173,7 +173,7 @@ const controller = {
 
             throw new InternalServerError("DB Error");
         } else if (couple.deleted) {
-            throw new ForbiddenError("Forbidden Error");
+            throw new ForbiddenError("Couple is deleted");
         }
 
         const prevThumbnail: string | null = couple.thumbnail;

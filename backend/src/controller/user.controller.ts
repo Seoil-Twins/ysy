@@ -156,7 +156,7 @@ const controller = {
         });
 
         if (!user) throw new NotFoundError("Not Found User");
-        else if (user.deleted) throw new ForbiddenError("Forbidden Error");
+        else if (user.deleted) throw new ForbiddenError("User is deleted");
 
         let prevProfile: string | null = user.profile;
 

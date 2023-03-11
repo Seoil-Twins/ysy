@@ -49,7 +49,7 @@ router.get("/me", async (req: Request, res: Response, next: NextFunction) => {
     const userId: number = Number(req.body.userId);
 
     try {
-        if (isNaN(userId)) throw new BadRequestError("Invalid User Id");
+        if (isNaN(userId)) throw new BadRequestError("User ID must be a number type");
         const result: IUserResponse = await userController.getUsers(userId);
 
         logger.debug(`Response Data : ${JSON.stringify(result)}`);
@@ -64,7 +64,7 @@ router.get("/:user_id", async (req: Request, res: Response, next: NextFunction) 
     const userId: number = Number(req.params.user_id);
 
     try {
-        if (isNaN(userId)) throw new BadRequestError("Invalid User Id");
+        if (isNaN(userId)) throw new BadRequestError("User ID must be a number type");
         const result: IUserResponse = await userController.getUsers(userId);
 
         logger.debug(`Response Data : ${JSON.stringify(result)}`);
@@ -79,7 +79,7 @@ router.post("/", async (req: Request, res: Response, next: NextFunction) => {
     const { value, error }: ValidationResult = validator(req.body, signupSchema);
 
     try {
-        if (error) throw new BadRequestError("Bad Request Error");
+        if (error) throw new BadRequestError(error.message);
         await userController.createUser(value);
 
         return res.status(StatusCode.CREATED).json({});
@@ -94,14 +94,14 @@ router.patch("/:user_id", async (req: Request, res: Response, next: NextFunction
 
     form.parse(req, async (err, fields, files) => {
         try {
-            if (err) throw new InternalServerError("Image Server Error");
+            if (err) throw new InternalServerError(`Image Server Error : ${JSON.stringify(err)}`);
 
             req.body = Object.assign({}, req.body, fields);
 
             const { value, error }: ValidationResult = validator(req.body, updateSchema);
 
-            if (req.params.user_id != req.body.userId) throw new ForbiddenError("Forbidden Error");
-            else if (error) throw new BadRequestError("Bad Request Error");
+            if (req.params.user_id != req.body.userId) throw new ForbiddenError("You don't same token user ID and path parameter user ID");
+            else if (error) throw new BadRequestError(error.message);
             else if (!value.name && value.dateNofi === undefined && !value.primaryNofi === undefined && !value.file)
                 throw new BadRequestError("Bad Request Error");
             else if (value.name && value.name.length <= 1) throw new BadRequestError("Bad Request Error");
@@ -126,8 +126,8 @@ router.delete("/:user_id", async (req: Request, res: Response, next: NextFunctio
     try {
         // Couple 정보를 삭제 후 요청
         if (req.body.cupId) throw new BadRequestError("Bad Request Error");
-        else if (req.params.user_id != req.body.userId) throw new ForbiddenError("Forbidden Error");
-        else if (error) throw new BadRequestError("Bad Request Error");
+        else if (req.params.user_id != req.body.userId) throw new ForbiddenError("You don't same token user ID and path parameter user ID");
+        else if (error) throw new BadRequestError(error.message);
 
         await userController.deleteUser(req.body.userId);
 

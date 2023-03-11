@@ -23,7 +23,7 @@ router.post("/login", async (req: Request, res: Response, next: NextFunction) =>
     const { value, error }: ValidationResult = validator(req.body, loginSchema);
 
     try {
-        if (error) throw new BadRequestError("Bad Request Error");
+        if (error) throw new BadRequestError(error.message);
 
         const result = await authController.login(value);
 

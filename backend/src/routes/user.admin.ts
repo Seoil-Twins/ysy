@@ -1,3 +1,4 @@
+import dayjs from "dayjs";
 import joi, { ValidationResult } from "joi";
 import express, { Router, Request, Response, NextFunction } from "express";
 import formidable from "formidable";
@@ -17,10 +18,10 @@ import userAdminController from "../controller/user.admin.controller";
 import logger from "../logger/logger";
 import validator from "../util/validator";
 import StatusCode from "../util/statusCode";
+import { canModifyWithEditor, canView } from "../util/checkRole";
 
 import BadRequestError from "../error/badRequest";
-import dayjs from "dayjs";
-import { canModifyWithEditor, canView } from "../util/checkRole";
+import InternalServerError from "../error/internalServer";
 
 dayjs.locale("ko");
 
@@ -95,9 +96,9 @@ router.post("/", canModifyWithEditor, async (req: Request, res: Response, next: 
             req.body = Object.assign({}, req.body, fields);
             const { value, error }: ValidationResult = validator(req.body, createSchema);
 
-            if (err) throw new err();
+            if (err) throw new InternalServerError(`Image Server Error : ${JSON.stringify(err)}`);
             else if (error) throw new BadRequestError(error.message);
-            else if (files.file instanceof Array<formidable.File>) throw new BadRequestError("You must have only one profile");
+            else if (files.file instanceof Array<formidable.File>) throw new BadRequestError("You must request only one profile");
 
             const data: ICreateWithAdmin = {
                 snsId: req.body.snsId,
@@ -131,10 +132,10 @@ router.patch("/:user_id", canModifyWithEditor, async (req: Request, res: Respons
             req.body = Object.assign({}, req.body, fields);
             const { value, error }: ValidationResult = validator(req.body, updateSchema);
 
-            if (err) throw new err();
-            else if (isNaN(userId)) throw new BadRequestError("Invalid User ID");
+            if (err) throw new InternalServerError(`Image Server Error : ${JSON.stringify(err)}`);
+            else if (isNaN(userId)) throw new BadRequestError("User ID must be a number type");
             else if (error) throw new BadRequestError(error.message);
-            else if (files.file instanceof Array<formidable.File>) throw new BadRequestError("You must have only one profile");
+            else if (files.file instanceof Array<formidable.File>) throw new BadRequestError("You must request only one profile");
 
             const data: IUpdateWithAdmin = {
                 name: req.body.name,
@@ -166,6 +167,8 @@ router.delete("/:user_ids", canView, async (req: Request, res: Response, next: N
     });
 
     try {
+        if (!numberUserIds || numberUserIds.length <= 0) throw new BadRequestError("user ID must be a number type");
+
         await userAdminController.deleteUser(numberUserIds);
 
         return res.status(StatusCode.OK).json({});

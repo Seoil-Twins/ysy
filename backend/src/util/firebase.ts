@@ -68,9 +68,9 @@ export const uploadFile = async (path: string, filePath: string): Promise<void> 
      * Formidable PersistentFile Type은 File Type이 아니기 때문에
      * fs를 통해 해당 file path를 가져와 Buffer로 변경
      */
-    const srcToFile = await fs.readFileSync(filePath);
+    const buffer = await fs.readFileSync(filePath);
 
-    await uploadBytes(storageRef, srcToFile);
+    await uploadBytes(storageRef, buffer);
 };
 
 /**
@@ -126,6 +126,10 @@ export const deleteFile = async (path: string): Promise<void> => {
     }
 };
 
+/**
+ * 여러 개의 파일을 Firebase storage에서 삭제합니다.
+ * @param paths 파일 경로 리스트
+ */
 export const deleteFiles = async (paths: string[]): Promise<void> => {
     if (!paths.length || paths.length <= 0) return;
 
@@ -136,30 +140,32 @@ export const deleteFiles = async (paths: string[]): Promise<void> => {
         promises.push(deleteObject(delRef));
     });
 
-    /**
-     * Promise.all => N개의 Promise를 수행 중 하나라도 거부(reject) 당하면 바로 에러를 반환
-     * Promise.allSettled => 이행/거부 여부와 관계없이 주어진 Promise가 모두 완료될 때 까지 기달림
-     */
-    await Promise.allSettled(promises);
+    const results: PromiseSettledResult<any>[] = await Promise.allSettled(promises);
+    const failedResults = results.filter((result) => result.status === "rejected");
 
-    // allsettled는 무조건 resolve 상태가 아니므로 확인하는 절차
-    paths.forEach(async (path: string) => {
-        const images = await getAllFiles(path);
+    if (failedResults.length > 0) {
+        failedResults.forEach((failed) => {
+            if (failed.status === "rejected") logger.warn(`Delete image file error => ${JSON.stringify(failed.reason)}`);
+        });
 
-        if (images.items.length && images.items.length > 0) {
-            try {
-                logger.warn(`Image Folder not deleted : ${path} => ${new Error().stack}`);
-            } catch (_error) {}
+        // firebase storage error는 무조건 요청한 path의 값을 주지 않기 때문에 모두 확인
+        paths.forEach(async (path: string) => {
+            const images = await getAllFiles(path);
 
-            images.items.forEach(async (image) => {
-                logger.warn(`Image not deleted : ${image.fullPath}`);
+            if (images.items.length && images.items.length > 0) {
+                try {
+                    logger.warn(`Image Folder not deleted : ${path} => ${new Error().stack}`);
+                } catch (_error) {}
 
-                await ErrorImage.create({ path: image.fullPath });
-            });
+                for (const image of images.items) {
+                    logger.warn(`Image not deleted : ${image.fullPath}`);
+                    await ErrorImage.create({ path: image.fullPath });
+                }
 
-            logger.warn(`------------------------------------------------------------------------------------------`);
-        }
-    });
+                logger.warn(`------------------------------------------------------------------------------------------`);
+            }
+        });
+    }
 };
 
 /**
@@ -176,27 +182,29 @@ export const deleteFolder = async (path: string): Promise<void> => {
         promises.push(deleteObject(item));
     }
 
-    /**
-     * Promise.all => N개의 Promise를 수행 중 하나라도 거부(reject) 당하면 바로 에러를 반환
-     * Promise.allSettled => 이행/거부 여부와 관계없이 주어진 Promise가 모두 완료될 때 까지 기달림
-     */
-    await Promise.allSettled(promises);
+    const results: PromiseSettledResult<any>[] = await Promise.allSettled(promises);
+    const failedResults = results.filter((result) => result.status === "rejected");
 
-    // allsettled는 무조건 resolve 상태가 아니므로 확인하는 절차
-    const images = await getAllFiles(path);
-
-    if (images.items.length && images.items.length > 0) {
-        try {
-            logger.warn(`Image Folder not deleted : ${path} => ${new Error().stack}`);
-        } catch (_error) {}
-
-        images.items.forEach(async (image) => {
-            logger.warn(`Image not deleted : ${image.fullPath}`);
-
-            await ErrorImage.create({ path: image.fullPath });
+    if (failedResults.length > 0) {
+        failedResults.forEach((failed) => {
+            if (failed.status === "rejected") logger.warn(`Delete image file error => ${JSON.stringify(failed.reason)}`);
         });
 
-        logger.warn(`------------------------------------------------------------------------------------------`);
+        // firebase storage error는 무조건 요청한 path의 값을 주지 않기 때문에 모두 확인
+        const images = await getAllFiles(path);
+
+        if (images.items.length && images.items.length > 0) {
+            try {
+                logger.warn(`Image Folder not deleted : ${path} => ${new Error().stack}`);
+            } catch (_error) {}
+
+            for (const image of images.items) {
+                logger.warn(`Image not deleted : ${image.fullPath}`);
+                await ErrorImage.create({ path: image.fullPath });
+            }
+
+            logger.warn(`------------------------------------------------------------------------------------------`);
+        }
     }
 };
 
