@@ -1,5 +1,6 @@
 import dayjs from "dayjs";
 import { File } from "formidable";
+import { Op, OrderItem, Transaction, WhereOptions } from "sequelize";
 
 import NotFoundError from "../error/notFound";
 
@@ -8,7 +9,6 @@ import { Album, ICreate, IAlbumResponseWithCount, SearchOptions, PageOptions, Fi
 
 import logger from "../logger/logger";
 import { deleteFile, deleteFiles, deleteFolder, isDefaultFile, uploadFile, uploadFiles } from "../util/firebase";
-import { Op, OrderItem, Transaction, WhereOptions } from "sequelize";
 import { AlbumImage } from "../model/albnmImage.model";
 
 const FOLDER_NAME = "couples";
@@ -221,11 +221,7 @@ const controller = {
                 const isDefault = isDefaultFile(thumbnail.originalFilename!);
 
                 if (isDefault) thumbnailPath = null;
-                else {
-                    thumbnailPath = `${FOLDER_NAME}/${data.cupId}/${album.albumId}/thumbnail/${dayjs().valueOf()}.${thumbnail.originalFilename}`;
-                    await uploadFile(thumbnailPath, thumbnail.filepath);
-                    isThumbnailUpload = true;
-                }
+                else thumbnailPath = `${FOLDER_NAME}/${data.cupId}/${album.albumId}/thumbnail/${dayjs().valueOf()}.${thumbnail.originalFilename}`;
 
                 updateData.thumbnail = thumbnailPath;
 
@@ -236,10 +232,14 @@ const controller = {
             await album.update(updateData, { transaction });
 
             if (prevThumbnail) await deleteFile(prevThumbnail);
+            if (thumbnailPath) {
+                await uploadFile(thumbnailPath, thumbnail!.filepath);
+                isThumbnailUpload = true;
+            }
 
             transaction.commit();
         } catch (error) {
-            logger.error(`Album Create Error ${JSON.stringify(error)}`);
+            logger.error(`Album Update Error ${JSON.stringify(error)}`);
 
             if (isThumbnailUpload) await thumbnailError(thumbnailPath!);
 
@@ -247,28 +247,55 @@ const controller = {
             throw error;
         }
     },
-    deleteAlbum: async (albumIds: number[]): Promise<void> => {
-        const albums: Album[] = await Album.findAll({ where: { albumId: albumIds } });
-        if (!albums.length || albums.length <= 0) throw new NotFoundError("Not found albums");
+    deleteAlbums: async (albumIds: number[]): Promise<void> => {
+        const transaction: Transaction = await sequelize.transaction();
 
-        albums.forEach(async (album: Album) => {
-            if (album.thumbnail) await deleteFile(album.thumbnail);
+        try {
+            const thumbnailPaths: string[] = [];
+            const albumPaths: string[] = [];
+            const albums: Album[] = await Album.findAll({ where: { albumId: albumIds } });
+            if (!albums.length || albums.length <= 0) throw new NotFoundError("Not found albums");
 
-            const imagesPath = `${FOLDER_NAME}/${album.cupId}/${album.albumId}`;
-            await deleteFolder(imagesPath);
-            await album.destroy();
-        });
+            for (const album of albums) {
+                await album.destroy({ transaction });
+
+                if (album.thumbnail) thumbnailPaths.push(album.thumbnail);
+
+                const albumPath = `${FOLDER_NAME}/${album.cupId}/${album.albumId}`;
+                albumPaths.push(albumPath);
+            }
+
+            await deleteFiles(thumbnailPaths);
+
+            const promises = [];
+            for (const albumPath of albumPaths) promises.push(deleteFolder(albumPath));
+            await Promise.allSettled(promises);
+
+            transaction.commit();
+        } catch (error) {
+            logger.error(`Delete album error => ${JSON.stringify(error)}`);
+            transaction.rollback();
+        }
     },
     deleteAlbumImages: async (imageIds: number[]): Promise<void> => {
-        const images: AlbumImage[] = await AlbumImage.findAll({ where: { imageId: imageIds } });
-        if (!images.length || images.length <= 0) throw new NotFoundError("Not found images");
+        const transaction: Transaction = await sequelize.transaction();
 
-        const paths = images.map((image: AlbumImage) => {
-            return image.image;
-        });
+        try {
+            const images: AlbumImage[] = await AlbumImage.findAll({ where: { imageId: imageIds } });
+            if (!images.length || images.length <= 0) throw new NotFoundError("Not found images");
 
-        await deleteFiles(paths);
-        await AlbumImage.destroy({ where: { imageId: imageIds } });
+            const paths = images.map((image: AlbumImage) => {
+                return image.image;
+            });
+
+            await AlbumImage.destroy({ where: { imageId: imageIds }, transaction });
+            await deleteFiles(paths);
+
+            transaction.commit();
+        } catch (error) {
+            logger.error(`Delete album error => ${JSON.stringify(error)}`);
+            transaction.rollback();
+        }
     }
 };
 
