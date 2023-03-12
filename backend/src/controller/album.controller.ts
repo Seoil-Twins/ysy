@@ -77,13 +77,15 @@ const controller = {
      * @param files 앨범 이미지 파일
      */
     addAlbums: async (cupId: string, albumId: number, files: File | File[]): Promise<void> => {
-        const transaction = await sequelize.transaction();
+        let transaction: Transaction | undefined = undefined;
         const albumFolder = await Album.findByPk(albumId);
 
         if (!albumFolder) throw new NotFoundError("Not Found Error");
         else if (albumFolder.cupId !== cupId) throw new ForbiddenError("The ID of the album folder and the body ID don't match.");
 
         try {
+            transaction = await sequelize.transaction();
+
             if (files instanceof Array<File>) {
                 const filePaths: string[] = [];
                 const imagePaths: string[] = [];
@@ -110,8 +112,6 @@ const controller = {
                         );
                     }
                 }
-
-                transaction.commit();
             } else if (files instanceof File) {
                 const path = `${FOLDER_NAME}//${cupId}/${albumId}/${dayjs().valueOf()}.${files.originalFilename}`;
 
@@ -129,7 +129,7 @@ const controller = {
             await transaction.commit();
             logger.debug(`Success add albums => ${cupId} | ${albumId} | ${JSON.stringify(files)}`);
         } catch (error) {
-            await transaction.rollback();
+            if (transaction) await transaction.rollback();
             logger.error(`Album Create Error ${JSON.stringify(error)}`);
             throw error;
         }
@@ -163,9 +163,10 @@ const controller = {
         else if (albumFolder.cupId !== data.cupId) throw new ForbiddenError("The ID of the album folder and the body ID don't match.");
 
         const prevThumbnail: string | null = albumFolder.thumbnail;
-        const transaction = await sequelize.transaction();
+        let transaction: Transaction | undefined = undefined;
 
         try {
+            transaction = await sequelize.transaction();
             await albumFolder.update(
                 {
                     thumbnail: path
@@ -189,7 +190,7 @@ const controller = {
                 logger.error(`After updating the firebase, a db error occurred and the firebase image is deleted => ${path}`);
             }
 
-            await transaction.rollback();
+            if (transaction) await transaction.rollback();
             throw error;
         }
     },
@@ -204,19 +205,21 @@ const controller = {
         if (!albumFolder) throw new NotFoundError("Not Found Error");
         else if (albumFolder.cupId !== cupId) throw new ForbiddenError("The ID of the album folder and the body ID don't match.");
 
-        if (albumFolder.thumbnail) await deleteFile(albumFolder.thumbnail);
-
         const path = `${FOLDER_NAME}/${cupId}/${albumId}`;
-        const transaction: Transaction = await sequelize.transaction();
+        let transaction: Transaction | undefined = undefined;
 
         try {
-            await albumFolder.destroy();
+            transaction = await sequelize.transaction();
+
+            await albumFolder.destroy({ transaction });
+
+            if (albumFolder.thumbnail) await deleteFile(albumFolder.thumbnail);
             await deleteFolder(path);
 
             await transaction.commit();
             logger.debug(`Success Deleted albums => ${cupId}, ${albumId}`);
         } catch (error) {
-            await transaction.rollback();
+            if (transaction) await transaction.rollback();
 
             logger.error(`Delete album error => ${JSON.stringify(error)}`);
             throw error;
@@ -233,16 +236,17 @@ const controller = {
             return image.image;
         });
 
-        const transaction: Transaction = await sequelize.transaction();
+        let transaction: Transaction | undefined = undefined;
 
         try {
+            transaction = await sequelize.transaction();
             await AlbumImage.destroy({ where: { imageId: imageIds }, transaction });
             await deleteFiles(paths);
 
-            transaction.commit();
+            await transaction.commit();
         } catch (error) {
             logger.error(`Delete album error => ${JSON.stringify(error)}`);
-            transaction.rollback();
+            if (transaction) await transaction.rollback();
 
             throw error;
         }

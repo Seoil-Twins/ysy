@@ -157,9 +157,10 @@ const controller = {
         let isThumbnailUpload = false;
         let thumbnailPath = "";
         let albumId = 0;
-        const transaction = await sequelize.transaction();
+        let transaction: Transaction | undefined = undefined;
 
         try {
+            transaction = await sequelize.transaction();
             const album = await Album.create(data, { transaction });
             albumId = album.albumId;
 
@@ -181,25 +182,25 @@ const controller = {
 
             if (images) isImagesUpload = await addImages(data.cupId, album.albumId, images, transaction);
 
-            transaction.commit();
+            await transaction.commit();
         } catch (error) {
             logger.error(`Album Create Error ${JSON.stringify(error)}`);
 
             if (isThumbnailUpload) await thumbnailError(thumbnailPath);
             if (isImagesUpload) await deleteFolder(`${FOLDER_NAME}/${data.cupId}/${albumId}`);
-
-            transaction.rollback();
+            if (transaction) await transaction.rollback();
             throw error;
         }
     },
     addAlbumImages: async (cupId: string, albumId: number, images: File | File[]): Promise<void> => {
-        const transaction = await sequelize.transaction();
+        let transaction: Transaction | undefined = undefined;
 
         try {
+            transaction = await sequelize.transaction();
             await addImages(cupId, albumId, images, transaction);
-            transaction.commit();
+            await transaction.commit();
         } catch (error) {
-            transaction.rollback();
+            if (transaction) await transaction.rollback();
             throw error;
         }
     },
@@ -210,11 +211,13 @@ const controller = {
             title: undefined,
             thumbnail: undefined
         };
-        const transaction = await sequelize.transaction();
+        let transaction: Transaction | undefined = undefined;
         const album: Album | null = await Album.findByPk(data.albumId);
 
         try {
             if (!album) throw new NotFoundError("Not Found Album");
+
+            transaction = await sequelize.transaction();
 
             if (data.title) updateData.title = data.title;
             if (thumbnail) {
@@ -237,24 +240,26 @@ const controller = {
                 isThumbnailUpload = true;
             }
 
-            transaction.commit();
+            await transaction.commit();
         } catch (error) {
             logger.error(`Album Update Error ${JSON.stringify(error)}`);
 
             if (isThumbnailUpload) await thumbnailError(thumbnailPath!);
 
-            transaction.rollback();
+            if (transaction) await transaction.rollback();
             throw error;
         }
     },
     deleteAlbums: async (albumIds: number[]): Promise<void> => {
-        const transaction: Transaction = await sequelize.transaction();
+        let transaction: Transaction | undefined = undefined;
 
         try {
             const thumbnailPaths: string[] = [];
             const albumPaths: string[] = [];
             const albums: Album[] = await Album.findAll({ where: { albumId: albumIds } });
             if (!albums.length || albums.length <= 0) throw new NotFoundError("Not found albums");
+
+            transaction = await sequelize.transaction();
 
             for (const album of albums) {
                 await album.destroy({ transaction });
@@ -271,18 +276,20 @@ const controller = {
             for (const albumPath of albumPaths) promises.push(deleteFolder(albumPath));
             await Promise.allSettled(promises);
 
-            transaction.commit();
+            await transaction.commit();
         } catch (error) {
             logger.error(`Delete album error => ${JSON.stringify(error)}`);
-            transaction.rollback();
+            if (transaction) await transaction.rollback();
         }
     },
     deleteAlbumImages: async (imageIds: number[]): Promise<void> => {
-        const transaction: Transaction = await sequelize.transaction();
+        let transaction: Transaction | undefined = undefined;
 
         try {
             const images: AlbumImage[] = await AlbumImage.findAll({ where: { imageId: imageIds } });
             if (!images.length || images.length <= 0) throw new NotFoundError("Not found images");
+
+            transaction = await sequelize.transaction();
 
             const paths = images.map((image: AlbumImage) => {
                 return image.image;
@@ -291,10 +298,10 @@ const controller = {
             await AlbumImage.destroy({ where: { imageId: imageIds }, transaction });
             await deleteFiles(paths);
 
-            transaction.commit();
+            await transaction.commit();
         } catch (error) {
             logger.error(`Delete album error => ${JSON.stringify(error)}`);
-            transaction.rollback();
+            if (transaction) await transaction.rollback();
         }
     }
 };

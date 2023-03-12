@@ -10,7 +10,7 @@ import { InquireImage } from "../model/inquireImage.model";
 import { Solution } from "../model/solution.model";
 
 import logger from "../logger/logger";
-import { deleteFile, deleteFolder, uploadFile } from "../util/firebase";
+import { deleteFile, deleteFiles, deleteFolder, uploadFile, uploadFiles } from "../util/firebase";
 import { SolutionImage } from "../model/solutionImage.model";
 import { Transaction } from "sequelize";
 
@@ -20,36 +20,42 @@ const FOLDER_NAME = "users";
  * inquireImage 다중 Image 생성 및 변경을 해주는 함수
  * @param inquireId Inquire Id
  * @param userId User Id (이미지 path 생성할 때 사용)
- * @param imageData Request로 받은 Image
+ * @param images Request로 받은 Image
  * @param transaction transaction
  */
-const uploads = async (inquireId: number, userId: number, imageData: File | File[], transaction: Transaction): Promise<void> => {
-    const firebaseUploads = [];
-
+const uploads = async (inquireId: number, userId: number, images: File | File[], transaction: Transaction): Promise<void> => {
     try {
-        if (imageData instanceof Array<File>) {
-            for (let i = 0; i < imageData.length; i++) {
-                const image = imageData[i];
-                const path = `${FOLDER_NAME}/${userId}/inquires/${inquireId}/${dayjs().valueOf()}.${image.originalFilename}`;
+        if (images instanceof Array<File>) {
+            const filePaths: string[] = [];
+            const imagePaths: string[] = [];
 
-                await uploadFile(path, image.filepath);
-                firebaseUploads.push(path);
+            images.forEach((image: File) => {
+                filePaths.push(image.filepath);
+                imagePaths.push(`${FOLDER_NAME}/${userId}/inquires/${inquireId}/${dayjs().valueOf()}.${image.originalFilename}`);
+            });
 
-                await InquireImage.create(
-                    {
-                        inquireId: inquireId,
-                        image: path
-                    },
-                    { transaction }
-                );
+            const [successResults, failedResults]: PromiseSettledResult<any>[][] = await uploadFiles(filePaths, imagePaths);
 
-                logger.debug(`Create Inquire Image => ${path}`);
+            failedResults.forEach((failed) => {
+                logger.error(`Add inquire image error and ignore => ${JSON.stringify(failed)}`);
+            });
+
+            for (const result of successResults) {
+                if (result.status === "fulfilled") {
+                    const path = result.value.metadata.fullPath;
+                    logger.debug(`Create Inquire Image => ${path}`);
+
+                    await InquireImage.create(
+                        {
+                            inquireId: inquireId,
+                            image: path
+                        },
+                        { transaction }
+                    );
+                }
             }
-        } else if (imageData instanceof File) {
-            const path = `${FOLDER_NAME}/${userId}/inquires/${inquireId}/${dayjs().valueOf()}.${imageData.originalFilename}`;
-
-            await uploadFile(path, imageData.filepath);
-            firebaseUploads.push(path);
+        } else if (images instanceof File) {
+            const path = `${FOLDER_NAME}/${userId}/inquires/${inquireId}/${dayjs().valueOf()}.${images.originalFilename}`;
 
             await InquireImage.create(
                 {
@@ -59,16 +65,12 @@ const uploads = async (inquireId: number, userId: number, imageData: File | File
                 { transaction }
             );
 
-            logger.debug(`Create Inquire Image => ${path}`);
+            await uploadFile(path, images.filepath);
+
+            logger.debug(`Create inquire image => ${path}`);
         }
     } catch (error) {
-        logger.error(`DB Erorr => ${JSON.stringify(error)}`);
-
-        for (let i = 0; i < firebaseUploads.length; i++) {
-            await deleteFile(firebaseUploads[i]);
-            logger.warn(`Firebase Delete => ${firebaseUploads[i]}`);
-        }
-
+        logger.error(`Inquire image create error ${JSON.stringify(error)}`);
         throw error;
     }
 };
@@ -113,16 +115,18 @@ const controller = {
      * @param imageData {@link File} 또는 File[]
      */
     addInquire: async (inquireData: ICreate, imageData: File | File[]): Promise<void> => {
-        const transaction = await sequelize.transaction();
+        let transaction: Transaction | undefined = undefined;
 
         try {
-            const inquire: Inquire = await Inquire.create(inquireData, { transaction: transaction });
+            transaction = await sequelize.transaction();
+
+            const inquire: Inquire = await Inquire.create(inquireData, { transaction });
             logger.debug(`Create Inquire => ${JSON.stringify(inquire)}`);
 
             if (imageData) await uploads(inquire.inquireId, inquire.userId, imageData, transaction);
-            transaction.commit();
+            await transaction.commit();
         } catch (error) {
-            transaction.rollback();
+            if (transaction) await transaction.rollback();
 
             throw error;
         }
@@ -133,7 +137,7 @@ const controller = {
      * @param imageData {@link File} or {@link File} List
      */
     updateInquire: async (inquireData: IUpdate, imageData: File | File[]): Promise<void> => {
-        const transaction = await sequelize.transaction();
+        let transaction: Transaction | undefined = undefined;
 
         try {
             const inquire: Inquire | null = await Inquire.findByPk(inquireData.inquireId);
@@ -142,21 +146,28 @@ const controller = {
 
             const images: InquireImage[] = await InquireImage.findAll({ where: { inquireId: inquire.inquireId } });
 
+            transaction = await sequelize.transaction();
+
             if (imageData) {
+                const imagePaths: string[] = [];
+                const imageIds: number[] = [];
+
+                images.forEach((image: InquireImage) => {
+                    imagePaths.push(image.image);
+                    imageIds.push(image.imageId);
+                });
+
+                await InquireImage.destroy({ where: { imageId: imageIds }, transaction });
                 await inquire.update(inquireData, { transaction });
 
-                for (let i = 0; i < images.length; i++) {
-                    logger.debug(`Destroy Data => ${images[i].image}`);
-                    await deleteFile(images[i].image);
-                    await images[i].destroy({ transaction });
-                }
-
+                await deleteFiles(imagePaths);
                 await uploads(inquire.inquireId, inquire.userId, imageData, transaction);
             }
 
-            transaction.commit();
+            await transaction.commit();
         } catch (error) {
-            transaction.rollback();
+            if (transaction) await transaction.rollback();
+            logger.error(`Inquire update error | ${inquireData.inquireId} => ${JSON.stringify(error)}`);
 
             throw error;
         }
@@ -166,20 +177,22 @@ const controller = {
      * @param inquireId Inquire Id
      */
     deleteInquire: async (inquireId: number): Promise<void> => {
-        const transaction = await sequelize.transaction();
+        let transaction: Transaction | undefined = undefined;
 
         try {
             const inquire: Inquire | null = await Inquire.findByPk(inquireId);
             if (!inquire) throw new NotFoundError("Not Found Inquire");
             else if (inquire.solution) throw new ConflictError("This inquiry has already been answered");
 
+            transaction = await sequelize.transaction();
             const inquireImage: InquireImage[] = await InquireImage.findAll({ where: { inquireId } });
+            const imageIds: number[] = [];
 
-            for (let i = 0; i < inquireImage.length; i++) {
-                const data = inquireImage[i];
-                await data.destroy({ transaction });
-            }
+            inquireImage.forEach((image: InquireImage) => {
+                imageIds.push(image.imageId);
+            });
 
+            await InquireImage.destroy({ where: { imageId: imageIds }, transaction });
             await inquire.destroy({ transaction });
 
             if (inquireImage.length > 0) {
@@ -187,9 +200,9 @@ const controller = {
                 await deleteFolder(path);
             }
 
-            transaction.commit();
+            await transaction.commit();
         } catch (error) {
-            transaction.rollback();
+            if (transaction) await transaction.rollback();
 
             throw error;
         }

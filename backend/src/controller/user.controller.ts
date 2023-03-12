@@ -1,6 +1,6 @@
 import dayjs from "dayjs";
 import randomString from "randomstring";
-import { Op } from "sequelize";
+import { Op, Transaction } from "sequelize";
 import { File } from "formidable";
 
 import logger from "../logger/logger";
@@ -38,7 +38,7 @@ const createCode = async (): Promise<string> => {
     return code;
 };
 
-const uploadProfile = async (userId: number, file: File) => {
+const createProfilePath = (userId: number, file: File): string | null => {
     let path: string | null = "";
     const reqFileName = file.originalFilename!;
     const isDefault = isDefaultFile(reqFileName);
@@ -47,12 +47,8 @@ const uploadProfile = async (userId: number, file: File) => {
      * Frontend에선 static으로 default.jpg,png,svg 셋 중 하나 갖고있다가
      * 사용자가 profile을 내리면 그걸로 넣고 요청
      */
-    if (isDefault) {
-        path = null;
-    } else {
-        path = `${FOLDER_NAME}/${userId}/profile/${dayjs().valueOf()}.${reqFileName}`;
-        await uploadFile(path, file.filepath);
-    }
+    if (isDefault) path = null;
+    else path = `${FOLDER_NAME}/${userId}/profile/${dayjs().valueOf()}.${reqFileName}`;
 
     return path;
 };
@@ -159,22 +155,30 @@ const controller = {
         else if (user.deleted) throw new ForbiddenError("User is deleted");
 
         let prevProfile: string | null = user.profile;
+        let transaction: Transaction | undefined = undefined;
 
         try {
+            transaction = await sequelize.transaction();
+
             if (file) {
-                data.profile = await uploadProfile(data.userId, file);
-                if (data.profile) isUpload = true;
-                else if (prevProfile && !data.profile) await deleteFile(prevProfile);
+                data.profile = createProfilePath(data.userId, file);
+
+                // profile 있으면 업로드
+                if (data.profile) {
+                    await uploadFile(data.profile, file.filepath);
+                    isUpload = true;
+
+                    if (prevProfile) await deleteFile(prevProfile); // 전에 있던 profile 삭제
+                } else if (prevProfile && !data.profile) {
+                    // default 이미지로 변경시
+                    await deleteFile(prevProfile);
+                }
             }
 
             await user.update(data);
             logger.debug(`Update Data => ${JSON.stringify(data)}`);
 
-            // 이미 profile이 있다면 Firebase에서 삭제
-            if (prevProfile && data.profile) {
-                await deleteFile(prevProfile);
-                logger.debug(`Deleted Previous Profile => ${prevProfile}`);
-            }
+            await transaction.commit();
         } catch (error) {
             // Firebase에는 업로드 되었지만 DB 오류가 발생했다면 Firebase Profile 삭제
             if (data.profile && isUpload) {
@@ -182,6 +186,7 @@ const controller = {
                 logger.error(`After updating the firebase, a db error occurred and the firebase profile is deleted => ${path}`);
             }
 
+            if (transaction) await transaction.rollback();
             throw error;
         }
     },

@@ -1,6 +1,6 @@
 import randomString from "randomstring";
 import dayjs from "dayjs";
-import { Op } from "sequelize";
+import { Op, Transaction } from "sequelize";
 import { File } from "formidable";
 
 import sequelize from "../model";
@@ -52,9 +52,10 @@ const controller = {
         let path = null;
         let isUpload = false;
 
-        const transaction = await sequelize.transaction();
+        let transaction: Transaction | undefined = undefined;
 
         try {
+            transaction = await sequelize.transaction();
             let isNot = true;
             let cupId = "";
 
@@ -104,7 +105,7 @@ const controller = {
                 { cupId: cupId },
                 {
                     where: { userId: data.userId },
-                    transaction: transaction
+                    transaction
                 }
             );
 
@@ -112,7 +113,7 @@ const controller = {
                 { cupId: cupId },
                 {
                     where: { userId: data.userId2 },
-                    transaction: transaction
+                    transaction
                 }
             );
 
@@ -126,15 +127,15 @@ const controller = {
 
             if (!role) throw new UnauthorizedError("Invalid Role");
 
-            await transaction.commit();
-            logger.debug(`Create Data => ${JSON.stringify(data)}`);
-
             // token 재발급
             const result: ITokenResponse = await jwt.createToken(data.userId, cupId, role.roleId);
 
+            await transaction.commit();
+            logger.debug(`Create Data => ${JSON.stringify(data)}`);
+
             return result;
         } catch (error) {
-            await transaction.rollback();
+            if (transaction) await transaction.rollback();
 
             // Firebase에는 업로드 되었지만 DB 오류가 발생했다면 Firebase thumbnail 삭제
             if (data.thumbnail && isUpload) {
@@ -177,8 +178,11 @@ const controller = {
         }
 
         const prevThumbnail: string | null = couple.thumbnail;
+        let transaction: Transaction | undefined = undefined;
 
         try {
+            transaction = await sequelize.transaction();
+
             if (thumbnail) {
                 const reqFileName = thumbnail.originalFilename!;
                 const isDefault = isDefaultFile(reqFileName);
@@ -195,7 +199,7 @@ const controller = {
                 data.thumbnail = path;
             }
 
-            await couple.update(data);
+            await couple.update(data, { transaction });
             logger.debug(`Update Data => ${JSON.stringify(data)}`);
 
             // Upload, DB Update를 하고나서 기존 이미지 지우기
@@ -203,12 +207,17 @@ const controller = {
                 await deleteFile(prevThumbnail);
                 logger.debug(`Deleted Previous thumbnail => ${prevThumbnail}`);
             }
+
+            await transaction.commit();
         } catch (error) {
             // Firebase에는 업로드 되었지만 DB 오류가 발생했다면 Firebase Profile 삭제
             if (data.thumbnail && isUpload) {
                 await deleteFile(path!);
                 logger.error(`After updating the firebase, a db error occurred and the firebase thumbnail is deleted => ${path}`);
             }
+
+            if (transaction) await transaction.rollback();
+            logger.error(`User update error => ${JSON.stringify(error)}`);
 
             throw error;
         }
@@ -240,9 +249,10 @@ const controller = {
 
         if (!user1 || !user2 || !couple) throw new NotFoundError("Not Found");
 
-        const transaction = await sequelize.transaction();
+        let transaction: Transaction | undefined = undefined;
 
         try {
+            transaction = await sequelize.transaction();
             const currentTime = new Date(dayjs().valueOf());
 
             await user1.update({ cupId: null }, { transaction });
@@ -267,12 +277,13 @@ const controller = {
 
             const result: ITokenResponse = await jwt.createToken(userId, null, role.roleId);
 
-            transaction.commit();
+            await transaction.commit();
             logger.debug(`Success Update and Delete couple => ${user1.userId}, ${user2.userId}, ${cupId}`);
 
             return result;
         } catch (error) {
-            transaction.rollback();
+            if (transaction) await transaction.rollback();
+            logger.error(`Couple (${cupId}) delete error => ${JSON.stringify(error)}`);
 
             throw error;
         }
