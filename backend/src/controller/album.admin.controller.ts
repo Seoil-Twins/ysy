@@ -1,28 +1,14 @@
 import dayjs from "dayjs";
-import { ListResult, StorageReference } from "firebase/storage";
 import { File } from "formidable";
+import { Op, OrderItem, Transaction, WhereOptions } from "sequelize";
 
-import ForbiddenError from "../error/forbidden";
 import NotFoundError from "../error/notFound";
 
 import sequelize from "../model";
-import {
-    Album,
-    ICreate,
-    IRequestGet,
-    IRequestUpadteThumbnail,
-    IRequestUpadteTitle,
-    IResponse,
-    IAlbumResponseWithCount,
-    SearchOptions,
-    PageOptions,
-    FilterOptions,
-    IAdminUpdate
-} from "../model/album.model";
+import { Album, ICreate, IAlbumResponseWithCount, SearchOptions, PageOptions, FilterOptions, IAdminUpdate } from "../model/album.model";
 
 import logger from "../logger/logger";
-import { deleteFile, deleteFolder, uploadFile } from "../util/firebase";
-import { GroupedCountResultItem, Op, OrderItem, Transaction, WhereOptions } from "sequelize";
+import { deleteFile, deleteFiles, deleteFolder, isDefaultFile, uploadFile, uploadFiles } from "../util/firebase";
 import { AlbumImage } from "../model/albnmImage.model";
 
 const FOLDER_NAME = "couples";
@@ -64,38 +50,36 @@ const thumbnailError = async (path: string) => {
     await deleteFile(path);
 };
 
-const imagesError = async (path: string) => {
-    await deleteFolder(path);
-};
-
 const addImages = async (cupId: string, albumId: number, images: File | File[], transaction: Transaction) => {
-    let isImagesUpload = false;
-
     try {
         if (images && images instanceof Array<File>) {
-            for (let i = 0; i < images.length; i++) {
-                try {
-                    const path = `${FOLDER_NAME}/${cupId}/${albumId}/${dayjs().valueOf()}.${images[i].originalFilename}`;
-                    await uploadFile(path, images[i].filepath);
-                    isImagesUpload = true;
+            const filePaths: string[] = [];
+            const imagePaths: string[] = [];
 
+            images.forEach((image: File) => {
+                filePaths.push(image.filepath);
+                imagePaths.push(`${FOLDER_NAME}/${cupId}/${albumId}/${dayjs().valueOf()}.${image.originalFilename}`);
+            });
+
+            const [successResults, failedResults]: PromiseSettledResult<any>[][] = await uploadFiles(filePaths, imagePaths);
+
+            failedResults.forEach((failed) => {
+                logger.error(`Add album error and ignore => ${JSON.stringify(failed)}`);
+            });
+
+            for (const result of successResults) {
+                if (result.status === "fulfilled") {
                     await AlbumImage.create(
                         {
                             albumId: albumId,
-                            image: path
+                            image: result.value.metadata.fullPath
                         },
                         { transaction }
                     );
-                } catch (error) {
-                    logger.error(`Add album error and ignore => ${JSON.stringify(error)}`);
-                    logger.error(`Ignore File Info => ${JSON.stringify(images[i])}`);
-                    continue;
                 }
             }
         } else if (images && images instanceof File) {
             const path = `${FOLDER_NAME}/${cupId}/${albumId}/${dayjs().valueOf()}.${images.originalFilename}`;
-            await uploadFile(path, images.filepath);
-            isImagesUpload = true;
 
             await AlbumImage.create(
                 {
@@ -104,15 +88,13 @@ const addImages = async (cupId: string, albumId: number, images: File | File[], 
                 },
                 { transaction }
             );
+
+            await uploadFile(path, images.filepath);
         }
 
         return true;
     } catch (error) {
         logger.error(`Album Create Error ${JSON.stringify(error)}`);
-
-        const path = `${FOLDER_NAME}/${cupId}/${albumId}`;
-        if (isImagesUpload) await imagesError(path);
-
         throw error;
     }
 };
@@ -171,20 +153,19 @@ const controller = {
         return result;
     },
     createAlbum: async (data: ICreate, thumbnail?: File, images?: File | File[]): Promise<void> => {
-        let isThumbnailUpload = false;
         let isImagesUpload = false;
+        let isThumbnailUpload = false;
         let thumbnailPath = "";
-        let albumId: number = 0;
-        const transaction = await sequelize.transaction();
+        let albumId = 0;
+        let transaction: Transaction | undefined = undefined;
 
         try {
+            transaction = await sequelize.transaction();
             const album = await Album.create(data, { transaction });
             albumId = album.albumId;
 
             if (thumbnail) {
                 thumbnailPath = `${FOLDER_NAME}/${data.cupId}/${album.albumId}/thumbnail/${dayjs().valueOf()}.${thumbnail.originalFilename}`;
-                await uploadFile(thumbnailPath, thumbnail.filepath);
-                isThumbnailUpload = true;
 
                 await album.update(
                     {
@@ -192,53 +173,59 @@ const controller = {
                     },
                     { transaction }
                 );
+
+                await uploadFile(thumbnailPath, thumbnail.filepath);
+                isThumbnailUpload = true;
+
                 logger.debug(`Upload Firebase Album Thumbnail => ${JSON.stringify(thumbnail)}`);
             }
 
             if (images) isImagesUpload = await addImages(data.cupId, album.albumId, images, transaction);
 
-            transaction.commit();
+            await transaction.commit();
         } catch (error) {
             logger.error(`Album Create Error ${JSON.stringify(error)}`);
 
-            const imagesPath = `${FOLDER_NAME}/${data.cupId}/${albumId}`;
-
             if (isThumbnailUpload) await thumbnailError(thumbnailPath);
-            if (isImagesUpload) await imagesError(imagesPath);
-
-            transaction.rollback();
+            if (isImagesUpload) await deleteFolder(`${FOLDER_NAME}/${data.cupId}/${albumId}`);
+            if (transaction) await transaction.rollback();
             throw error;
         }
     },
     addAlbumImages: async (cupId: string, albumId: number, images: File | File[]): Promise<void> => {
-        const transaction = await sequelize.transaction();
+        let transaction: Transaction | undefined = undefined;
 
         try {
+            transaction = await sequelize.transaction();
             await addImages(cupId, albumId, images, transaction);
-            transaction.commit();
+            await transaction.commit();
         } catch (error) {
-            transaction.rollback();
+            if (transaction) await transaction.rollback();
             throw error;
         }
     },
     updateAlbum: async (data: IAdminUpdate, thumbnail?: File): Promise<void> => {
         let isThumbnailUpload = false;
-        let thumbnailPath = "";
+        let thumbnailPath: string | null = null;
         const updateData: any = {
             title: undefined,
             thumbnail: undefined
         };
-        const transaction = await sequelize.transaction();
+        let transaction: Transaction | undefined = undefined;
         const album: Album | null = await Album.findByPk(data.albumId);
 
         try {
             if (!album) throw new NotFoundError("Not Found Album");
 
+            transaction = await sequelize.transaction();
+
             if (data.title) updateData.title = data.title;
             if (thumbnail) {
-                thumbnailPath = `${FOLDER_NAME}/${data.cupId}/${album.albumId}/thumbnail/${dayjs().valueOf()}.${thumbnail.originalFilename}`;
-                await uploadFile(thumbnailPath, thumbnail.filepath);
-                isThumbnailUpload = true;
+                const isDefault = isDefaultFile(thumbnail.originalFilename!);
+
+                if (isDefault) thumbnailPath = null;
+                else thumbnailPath = `${FOLDER_NAME}/${data.cupId}/${album.albumId}/thumbnail/${dayjs().valueOf()}.${thumbnail.originalFilename}`;
+
                 updateData.thumbnail = thumbnailPath;
 
                 logger.debug(`Upload Firebase Album Thumbnail => ${JSON.stringify(thumbnail)}`);
@@ -248,15 +235,73 @@ const controller = {
             await album.update(updateData, { transaction });
 
             if (prevThumbnail) await deleteFile(prevThumbnail);
+            if (thumbnailPath) {
+                await uploadFile(thumbnailPath, thumbnail!.filepath);
+                isThumbnailUpload = true;
+            }
 
-            transaction.commit();
+            await transaction.commit();
         } catch (error) {
-            logger.error(`Album Create Error ${JSON.stringify(error)}`);
+            logger.error(`Album Update Error ${JSON.stringify(error)}`);
 
-            if (isThumbnailUpload) await thumbnailError(thumbnailPath);
+            if (isThumbnailUpload) await thumbnailError(thumbnailPath!);
 
-            transaction.rollback();
+            if (transaction) await transaction.rollback();
             throw error;
+        }
+    },
+    deleteAlbums: async (albumIds: number[]): Promise<void> => {
+        let transaction: Transaction | undefined = undefined;
+
+        try {
+            const thumbnailPaths: string[] = [];
+            const albumPaths: string[] = [];
+            const albums: Album[] = await Album.findAll({ where: { albumId: albumIds } });
+            if (!albums.length || albums.length <= 0) throw new NotFoundError("Not found albums");
+
+            transaction = await sequelize.transaction();
+
+            for (const album of albums) {
+                await album.destroy({ transaction });
+
+                if (album.thumbnail) thumbnailPaths.push(album.thumbnail);
+
+                const albumPath = `${FOLDER_NAME}/${album.cupId}/${album.albumId}`;
+                albumPaths.push(albumPath);
+            }
+
+            await deleteFiles(thumbnailPaths);
+
+            const promises = [];
+            for (const albumPath of albumPaths) promises.push(deleteFolder(albumPath));
+            await Promise.allSettled(promises);
+
+            await transaction.commit();
+        } catch (error) {
+            logger.error(`Delete album error => ${JSON.stringify(error)}`);
+            if (transaction) await transaction.rollback();
+        }
+    },
+    deleteAlbumImages: async (imageIds: number[]): Promise<void> => {
+        let transaction: Transaction | undefined = undefined;
+
+        try {
+            const images: AlbumImage[] = await AlbumImage.findAll({ where: { imageId: imageIds } });
+            if (!images.length || images.length <= 0) throw new NotFoundError("Not found images");
+
+            transaction = await sequelize.transaction();
+
+            const paths = images.map((image: AlbumImage) => {
+                return image.image;
+            });
+
+            await AlbumImage.destroy({ where: { imageId: imageIds }, transaction });
+            await deleteFiles(paths);
+
+            await transaction.commit();
+        } catch (error) {
+            logger.error(`Delete album error => ${JSON.stringify(error)}`);
+            if (transaction) await transaction.rollback();
         }
     }
 };

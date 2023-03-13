@@ -34,9 +34,9 @@ router.get("/:cup_id", async (req: Request, res: Response, next: NextFunction) =
         const userId = Number(req.body.userId);
         const cupId = req.body.cupId;
 
-        if (isNaN(userId)) throw new BadRequestError("Invalid User Id");
-        else if (!cupId) throw new ForbiddenError("Invalid Couple Id");
-        else if (cupId !== req.params.cup_id) throw new ForbiddenError("Not Same Couple Id");
+        if (isNaN(userId)) throw new BadRequestError("User ID must be a number type");
+        else if (!cupId) throw new ForbiddenError("You must request couple ID");
+        else if (cupId !== req.params.cup_id) throw new ForbiddenError("You don't same token couple ID and path parameter couple ID");
 
         const result: Couple = await coupleController.getCouple(cupId);
 
@@ -53,14 +53,14 @@ router.post("/", async (req: Request, res: Response, next: NextFunction) => {
 
     form.parse(req, async (err, fields, files) => {
         try {
-            if (err) throw new err();
+            if (err) throw new InternalServerError(`Image Server Error : ${JSON.stringify(err)}`);
 
             req.body = Object.assign({}, req.body, fields);
 
             const { value, error }: ValidationResult = validator(req.body, signupSchema);
             const file: File | undefined = !(files.file instanceof Array<formidable.File>) ? files.file : undefined;
 
-            if (error) throw new BadRequestError("Bad Request Error");
+            if (error) throw new BadRequestError(error.message);
 
             const data: IRequestCreate = {
                 userId: req.body.userId,
@@ -85,7 +85,7 @@ router.patch("/:cup_id", async (req: Request, res: Response, next: NextFunction)
 
     form.parse(req, async (err, fields, files) => {
         try {
-            if (err) throw new InternalServerError("Image Server Error");
+            if (err) throw new InternalServerError(`Image Server Error : ${JSON.stringify(err)}`);
 
             req.body = Object.assign({}, req.body, fields);
 
@@ -93,8 +93,8 @@ router.patch("/:cup_id", async (req: Request, res: Response, next: NextFunction)
             const file: File | undefined = !(files.file instanceof Array<formidable.File>) ? files.file : undefined;
 
             if (error) throw new BadRequestError(error.message);
-            else if (!file && !req.body.title && !req.body.cupDay) throw new BadRequestError("Update values is not changed");
-            else if (req.body.cupId !== req.params.cup_id) throw new ForbiddenError("Not matched couple id");
+            else if (!file && !req.body.title && !req.body.cupDay) throw new BadRequestError("Request values is empty");
+            else if (req.body.cupId !== req.params.cup_id) throw new ForbiddenError("You don't same token couple ID and path parameter couple ID");
 
             const data: IUpdate = {
                 userId: req.body.userId,
@@ -118,9 +118,9 @@ router.delete("/:cup_id", async (req: Request, res: Response, next: NextFunction
         const userId = Number(req.body.userId);
         const cupId = req.body.cupId;
 
-        if (isNaN(userId)) throw new BadRequestError("Invalid User Id");
-        else if (!cupId) throw new ForbiddenError("Invalid Couple Id");
-        else if (req.body.cupId !== req.params.cup_id) throw new ForbiddenError("Not Same Couple Id");
+        if (isNaN(userId)) throw new BadRequestError("User ID must be a number type");
+        else if (!cupId) throw new ForbiddenError("You must request couple ID");
+        else if (req.body.cupId !== req.params.cup_id) throw new ForbiddenError("You don't same token couple ID and path parameter couple ID");
 
         const result: ITokenResponse = await coupleController.deleteCouple(userId, cupId);
 

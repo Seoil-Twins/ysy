@@ -23,7 +23,6 @@ import StatusCode from "../util/statusCode";
 import { canModifyWithEditor, canView } from "../util/checkRole";
 
 import BadRequestError from "../error/badRequest";
-import ForbiddenError from "../error/forbidden";
 import InternalServerError from "../error/internalServer";
 
 dayjs.locale("ko");
@@ -70,14 +69,14 @@ router.post("/", canModifyWithEditor, async (req: Request, res: Response, next: 
 
     form.parse(req, async (err, fields, files) => {
         try {
-            if (err) throw new err();
+            if (err) throw new InternalServerError(`Image Server Error : ${JSON.stringify(err)}`);
 
             req.body = Object.assign({}, req.body, fields);
 
             const { value, error }: ValidationResult = validator(req.body, signupSchema);
             const file: File | undefined = !(files.file instanceof Array<formidable.File>) ? files.file : undefined;
 
-            if (error) throw new BadRequestError("Bad Request Error");
+            if (error) throw new BadRequestError(error.message);
 
             const data: IRequestCreate = {
                 userId: req.body.userId1,
@@ -102,7 +101,7 @@ router.patch("/:cup_id", canModifyWithEditor, async (req: Request, res: Response
 
     form.parse(req, async (err, fields, files) => {
         try {
-            if (err) throw new InternalServerError("Image Server Error");
+            if (err) throw new InternalServerError(`Image Server Error : ${JSON.stringify(err)}`);
 
             req.body = Object.assign({}, req.body, fields);
 
@@ -110,7 +109,7 @@ router.patch("/:cup_id", canModifyWithEditor, async (req: Request, res: Response
             const file: File | undefined = !(files.file instanceof Array<formidable.File>) ? files.file : undefined;
 
             if (error) throw new BadRequestError(error.message);
-            else if (!file && !req.body.title && !req.body.cupDay) throw new BadRequestError("Update values is not changed");
+            else if (!file && !req.body.title && !req.body.cupDay) throw new BadRequestError("Request values is empty");
 
             const data: IUpdate = {
                 userId: req.body.target,
