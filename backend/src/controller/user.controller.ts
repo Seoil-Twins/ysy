@@ -15,6 +15,7 @@ import NotFoundError from "../error/notFound";
 import ForbiddenError from "../error/forbidden";
 import UnauthorizedError from "../error/unauthorized";
 import ConflictError from "../error/conflict";
+import UserService from "../service/user.service";
 
 const FOLDER_NAME = "users";
 
@@ -53,39 +54,29 @@ const createProfilePath = (userId: number, file: File): string | null => {
     return path;
 };
 
-const controller = {
+class UserController {
+    private userService: UserService;
+
+    constructor(userService: UserService) {
+        this.userService = userService;
+    }
+
+    getUser = async (userId: number): Promise<IUserResponse> => {
+        const result: IUserResponse = await this.userService.getUser(userId);
+
+        return result;
+    };
+}
+
+export const controller = {
     /**
      * 유저와 커플의 정보를 가져옵니다.
      * @param userId User Id
      * @returns A {@link IUserResponse}
      */
     getUsers: async (userId: number): Promise<IUserResponse> => {
-        const user1: User | null = await User.findOne({
-            attributes: { exclude: ["password"] },
-            where: {
-                userId: userId
-            }
-        });
-        let user2: User | null = null;
-
-        if (!user1) throw new UnauthorizedError("Invalid Token (User not found using token)");
-
-        if (user1.cupId !== null) {
-            user2 = await User.findOne({
-                attributes: { exclude: ["password"] },
-                where: {
-                    cupId: user1.cupId,
-                    [Op.not]: {
-                        userId: user1.userId
-                    }
-                }
-            });
-        }
-
-        const result: IUserResponse = {
-            ...user1.dataValues,
-            couple: user2
-        };
+        const userService = new UserService();
+        const result: IUserResponse = await userService.getUser(userId);
 
         return result;
     },
@@ -209,4 +200,4 @@ const controller = {
     }
 };
 
-export default controller;
+export const controller2 = UserController;

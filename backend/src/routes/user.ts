@@ -4,7 +4,7 @@ import formidable from "formidable";
 
 import { IUserResponse } from "../model/user.model";
 
-import userController from "../controller/user.controller";
+import { controller as userController, controller2 as UserController } from "../controller/user.controller";
 
 import logger from "../logger/logger";
 import validator from "../util/validator";
@@ -13,8 +13,11 @@ import StatusCode from "../util/statusCode";
 import BadRequestError from "../error/badRequest";
 import ForbiddenError from "../error/forbidden";
 import InternalServerError from "../error/internalServer";
+import UserService from "../service/user.service";
 
 const router: Router = express.Router();
+const userService = new UserService();
+const userController2 = new UserController(userService);
 
 const pwPattern = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[$@$!%*#?&])[A-Za-z\d$@$!%*#?&]{8,15}$/;
 const phonePattern = /^[0-9]+$/;
@@ -50,7 +53,7 @@ router.get("/me", async (req: Request, res: Response, next: NextFunction) => {
 
     try {
         if (isNaN(userId)) throw new BadRequestError("User ID must be a number type");
-        const result: IUserResponse = await userController.getUsers(userId);
+        const result: IUserResponse = await userController2.getUser(userId);
 
         logger.debug(`Response Data : ${JSON.stringify(result)}`);
         return res.status(StatusCode.OK).json(result);
