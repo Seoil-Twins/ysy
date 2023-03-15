@@ -7,16 +7,19 @@ import sequelize from "../model";
 import { User, ICreate, IUpdate, IUserResponse } from "../model/user.model";
 
 import UserService from "../service/user.service";
+import UserRoleService from "../service/userRole.service";
 
 class UserController {
     private userService: UserService;
+    private userRoleService: UserRoleService;
 
-    constructor(userService: UserService) {
+    constructor(userService: UserService, userRoleService: UserRoleService) {
         this.userService = userService;
+        this.userRoleService = userRoleService;
     }
 
     getUser = async (userId: number): Promise<IUserResponse> => {
-        const result: IUserResponse = await this.userService.getUser(userId);
+        const result: IUserResponse = await this.userService.getUserAdditionalInfo(userId);
 
         return result;
     };
@@ -25,7 +28,8 @@ class UserController {
         const transaction: Transaction = await sequelize.transaction();
 
         try {
-            await this.userService.createUser(transaction, data);
+            const user: User = await this.userService.createUser(transaction, data);
+            await this.userRoleService.updateUserRole(transaction, user.userId);
             await transaction.commit();
         } catch (error) {
             await transaction.rollback();

@@ -5,12 +5,22 @@ import logger from "../logger/logger";
 import validator from "../util/validator";
 import StatusCode from "../util/statusCode";
 
-import authController from "../controller/auth.controller";
+import AuthController from "../controller/auth.controller";
 
 import BadRequestError from "../error/badRequest";
 import UnauthorizedError from "../error/unauthorized";
 
+import AuthService from "../service/auth.service";
+import UserService from "../service/user.service";
+import UserRoleService from "../service/userRole.service";
+
+import { ILogin, ITokenResponse } from "../model/auth.model";
+
 const router: Router = express.Router();
+const authService = new AuthService();
+const userService = new UserService();
+const userRoleService = new UserRoleService();
+const authController = new AuthController(authService, userService, userRoleService);
 
 const pwPattern = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[$@$!%*#?&])[A-Za-z\d$@$!%*#?&]{8,15}$/;
 
@@ -20,12 +30,17 @@ const loginSchema: joi.Schema = joi.object({
 });
 
 router.post("/login", async (req: Request, res: Response, next: NextFunction) => {
-    const { value, error }: ValidationResult = validator(req.body, loginSchema);
+    const { error }: ValidationResult = validator(req.body, loginSchema);
 
     try {
         if (error) throw new BadRequestError(error.message);
 
-        const result = await authController.login(value);
+        const data: ILogin = {
+            email: req.body.email,
+            password: req.body.password
+        };
+
+        const result: ITokenResponse = await authController.login(data);
 
         logger.debug(`Response Data : ${JSON.stringify(result)}`);
         return res.status(StatusCode.OK).json(result);

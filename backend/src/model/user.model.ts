@@ -9,7 +9,6 @@ import { UserRole } from "./userRole.model";
 // -------------------------------------------- Interface ------------------------------------------ //
 export interface ICreate {
     snsId: string;
-    code: string;
     name: string;
     password: string;
     email: string;

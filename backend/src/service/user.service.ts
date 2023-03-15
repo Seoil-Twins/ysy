@@ -53,7 +53,43 @@ class UserService {
         return path;
     };
 
-    getUser = async (userId: number): Promise<IUserResponse> => {
+    private getUserWithUserId = async (userId: number): Promise<User | null> => {
+        const user: User | null = await User.findOne({
+            where: { userId }
+        });
+
+        return user;
+    };
+
+    private getUserWithEmailOrPhone = async (email: string, phone: string): Promise<User | null> => {
+        const user: User | null = await User.findOne({
+            where: {
+                [Op.or]: [{ email: email }, { phone: phone }]
+            }
+        });
+
+        return user;
+    };
+
+    /**
+     * email로 User의 정보를 가져옵니다.
+     * @param email User Email
+     * @returns A {@link User} | null
+     */
+    getUserWithEmail = async (email: string): Promise<User | null> => {
+        const user: User | null = await User.findOne({
+            where: { email }
+        });
+
+        return user;
+    };
+
+    /**
+     * 유저와 커플의 정보를 가져옵니다.
+     * @param userId User Id
+     * @returns A {@link IUserResponse}
+     */
+    getUserAdditionalInfo = async (userId: number): Promise<IUserResponse> => {
         const user1: User | null = await User.findOne({
             attributes: { exclude: ["password"] },
             where: { userId }
@@ -87,23 +123,17 @@ class UserService {
      * 유저 정보를 생성합니다.
      * @param data A {@link User}
      */
-    createUser = async (transaction: Transaction, data: ICreate): Promise<void> => {
-        const user: User | null = await User.findOne({
-            where: {
-                [Op.or]: [{ email: data.email }, { phone: data.phone }]
-            }
-        });
-
+    createUser = async (transaction: Transaction, data: ICreate): Promise<User> => {
+        const user: User | null = await this.getUserWithEmailOrPhone(data.email, data.phone);
         if (user) throw new ConflictError("Duplicated User");
 
         const hash: string = await createDigest(data.password);
-        data.password = hash;
-        data.code = await this.createCode();
+        const code = await this.createCode();
 
         const createdUser: User = await User.create(
             {
                 snsId: data.snsId,
-                code: data.code,
+                code: code,
                 name: data.name,
                 email: data.email,
                 birthday: new Date(data.birthday),
@@ -114,22 +144,19 @@ class UserService {
             { transaction }
         );
 
-        await UserRole.create(
-            {
-                userId: createdUser.userId,
-                roleId: 4
-            },
-            { transaction }
-        );
+        return createdUser;
     };
 
+    /**
+     * 유저의 정보를 수정합니다.
+     * @param data A {@link IUpdate}
+     * @param profile User Profile
+     */
     updateUser = async (transaction: Transaction, data: IUpdate, file?: File): Promise<User> => {
         let isUpload = false;
         let path: string | null = "";
 
-        const user: User | null = await User.findOne({
-            where: { userId: data.userId }
-        });
+        const user: User | null = await this.getUserWithUserId(data.userId);
 
         if (!user) throw new NotFoundError("Not Found User");
         else if (user.deleted) throw new ForbiddenError("User is deleted");
@@ -152,7 +179,7 @@ class UserService {
                 }
             }
 
-            await user.update(data);
+            await user.update(data, { transaction });
 
             return user;
         } catch (error) {
@@ -171,7 +198,7 @@ class UserService {
      * @param userId User Id
      */
     deleteUser = async (transaction: Transaction, userId: number): Promise<void> => {
-        const user: User | null = await User.findOne({ where: { userId: userId } });
+        const user: User | null = await this.getUserWithUserId(userId);
 
         if (!user) throw new NotFoundError("Not Found User");
 
