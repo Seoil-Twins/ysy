@@ -4,7 +4,6 @@ import { DataTypes, Model, literal, NonAttribute, InferAttributes, InferCreation
 import sequelize from ".";
 import { Couple } from "./couple.model";
 import { Inquire } from "./inquire.model";
-import { Role } from "./role.model";
 import { UserRole } from "./userRole.model";
 
 // -------------------------------------------- Interface ------------------------------------------ //
@@ -44,7 +43,7 @@ export interface IUserResponse {
     createdTime: Date;
     deleted: boolean;
     deletedTime: Date | null;
-    couple: User | null;
+    couple: User | undefined;
 }
 // -------------------------------------------- Admin ------------------------------------------ //
 

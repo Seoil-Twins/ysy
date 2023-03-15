@@ -4,7 +4,7 @@ import formidable from "formidable";
 
 import { IUserResponse } from "../model/user.model";
 
-import { controller as userController, controller2 as UserController } from "../controller/user.controller";
+import UserController from "../controller/user.controller";
 
 import logger from "../logger/logger";
 import validator from "../util/validator";
@@ -17,7 +17,7 @@ import UserService from "../service/user.service";
 
 const router: Router = express.Router();
 const userService = new UserService();
-const userController2 = new UserController(userService);
+const userController = new UserController(userService);
 
 const pwPattern = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[$@$!%*#?&])[A-Za-z\d$@$!%*#?&]{8,15}$/;
 const phonePattern = /^[0-9]+$/;
@@ -53,7 +53,7 @@ router.get("/me", async (req: Request, res: Response, next: NextFunction) => {
 
     try {
         if (isNaN(userId)) throw new BadRequestError("User ID must be a number type");
-        const result: IUserResponse = await userController2.getUser(userId);
+        const result: IUserResponse = await userController.getUser(userId);
 
         logger.debug(`Response Data : ${JSON.stringify(result)}`);
         return res.status(StatusCode.OK).json(result);
@@ -68,7 +68,7 @@ router.get("/:user_id", async (req: Request, res: Response, next: NextFunction) 
 
     try {
         if (isNaN(userId)) throw new BadRequestError("User ID must be a number type");
-        const result: IUserResponse = await userController.getUsers(userId);
+        const result: IUserResponse = await userController.getUser(userId);
 
         logger.debug(`Response Data : ${JSON.stringify(result)}`);
         return res.status(StatusCode.OK).json(result);
