@@ -19,7 +19,7 @@ class UserController {
     }
 
     getUser = async (userId: number): Promise<IUserResponse> => {
-        const result: IUserResponse = await this.userService.getUserAdditionalInfo(userId);
+        const result: IUserResponse = await this.userService.select(userId);
 
         return result;
     };
@@ -28,8 +28,8 @@ class UserController {
         const transaction: Transaction = await sequelize.transaction();
 
         try {
-            const user: User = await this.userService.createUser(transaction, data);
-            await this.userRoleService.updateUserRole(transaction, user.userId);
+            const user: User = await this.userService.create(transaction, data);
+            await this.userRoleService.create(transaction, user.userId);
             await transaction.commit();
         } catch (error) {
             await transaction.rollback();
@@ -43,7 +43,7 @@ class UserController {
         const transaction = await sequelize.transaction();
 
         try {
-            const updateUser: User = await this.userService.updateUser(transaction, data, file);
+            const updateUser: User = await this.userService.update(transaction, data, file);
             await transaction.commit();
 
             return updateUser;
@@ -59,7 +59,7 @@ class UserController {
         const transaction = await sequelize.transaction();
 
         try {
-            await this.userService.deleteUser(transaction, userId);
+            await this.userService.delete(transaction, userId);
             await transaction.commit();
         } catch (error) {
             await transaction.rollback();

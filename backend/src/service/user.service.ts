@@ -3,8 +3,9 @@ import { File } from "formidable";
 import randomString from "randomstring";
 import { Op, Transaction } from "sequelize";
 
+import { Service } from "./service";
+
 import logger from "../logger/logger";
-import { UserRole } from "../model/userRole.model";
 import { User, IUserResponse, ICreate, IUpdate } from "../model/user.model";
 
 import UnauthorizedError from "../error/unauthorized";
@@ -15,7 +16,7 @@ import { createDigest } from "../util/password";
 import NotFoundError from "../error/notFound";
 import ForbiddenError from "../error/forbidden";
 
-class UserService {
+class UserService extends Service {
     private FOLDER_NAME = "users";
 
     private createCode = async (): Promise<string> => {
@@ -85,11 +86,11 @@ class UserService {
     };
 
     /**
-     * 유저와 커플의 정보를 가져옵니다.
+     * 유저와 이어진 커플의 정보를 가져옵니다.
      * @param userId User Id
      * @returns A {@link IUserResponse}
      */
-    getUserAdditionalInfo = async (userId: number): Promise<IUserResponse> => {
+    select = async (userId: number): Promise<IUserResponse> => {
         const user1: User | null = await User.findOne({
             attributes: { exclude: ["password"] },
             where: { userId }
@@ -123,7 +124,7 @@ class UserService {
      * 유저 정보를 생성합니다.
      * @param data A {@link User}
      */
-    createUser = async (transaction: Transaction, data: ICreate): Promise<User> => {
+    create = async (transaction: Transaction, data: ICreate): Promise<User> => {
         const user: User | null = await this.getUserWithEmailOrPhone(data.email, data.phone);
         if (user) throw new ConflictError("Duplicated User");
 
@@ -152,7 +153,7 @@ class UserService {
      * @param data A {@link IUpdate}
      * @param profile User Profile
      */
-    updateUser = async (transaction: Transaction, data: IUpdate, file?: File): Promise<User> => {
+    update = async (transaction: Transaction, data: IUpdate, file?: File): Promise<User> => {
         let isUpload = false;
         let path: string | null = "";
 
@@ -197,7 +198,7 @@ class UserService {
      * 사용자 정보 삭제이며, Couple이 있는 경우 Frontend에서 연인 끊기 후 삭제를 요청.
      * @param userId User Id
      */
-    deleteUser = async (transaction: Transaction, userId: number): Promise<void> => {
+    delete = async (transaction: Transaction, userId: number): Promise<void> => {
         const user: User | null = await this.getUserWithUserId(userId);
 
         if (!user) throw new NotFoundError("Not Found User");

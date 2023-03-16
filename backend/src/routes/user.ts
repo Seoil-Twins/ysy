@@ -19,8 +19,8 @@ import { boolean } from "boolean";
 
 const router: Router = express.Router();
 const userService = new UserService();
-const userRoleSer = new UserRoleService();
-const userController = new UserController(userService, userRoleSer);
+const userRoleService = new UserRoleService();
+const userController = new UserController(userService, userRoleService);
 
 const pwPattern = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[$@$!%*#?&])[A-Za-z\d$@$!%*#?&]{8,15}$/;
 const phonePattern = /^[0-9]+$/;

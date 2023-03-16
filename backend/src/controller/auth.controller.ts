@@ -36,7 +36,7 @@ class AuthController {
         const user: User | null = await this.userService.getUserWithEmail(data.email);
         if (!user) throw new UnauthorizedError("Invalid Email");
 
-        const role: UserRole | null = await this.userRoleService.getUserRole(user.userId);
+        const role: UserRole | null = await this.userRoleService.select(user.userId);
         if (!role) throw new UnauthorizedError("Invalid Role");
 
         const result: ITokenResponse = await this.authService.login(user, role, data.password);

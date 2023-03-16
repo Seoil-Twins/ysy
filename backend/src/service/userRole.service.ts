@@ -1,9 +1,12 @@
 import { Transaction } from "sequelize";
+
+import { Service } from "./service";
+
 import { Role } from "../model/role.model";
 import { UserRole } from "../model/userRole.model";
 
-class UserRoleService {
-    getUserRole = async (userId: number): Promise<UserRole | null> => {
+class UserRoleService extends Service {
+    select = async (userId: number): Promise<UserRole | null> => {
         const role: UserRole | null = await UserRole.findOne({
             where: { userId: userId },
             include: {
@@ -17,7 +20,7 @@ class UserRoleService {
         return role;
     };
 
-    updateUserRole = async (transaction: Transaction, userId: number): Promise<void> => {
+    create = async (transaction: Transaction, userId: number): Promise<any> => {
         await UserRole.create(
             {
                 userId: userId,
@@ -26,6 +29,14 @@ class UserRoleService {
             { transaction }
         );
     };
+
+    update = async (transaction: Transaction, ...args: any[]): Promise<void> => {
+        throw new Error("Method not implemented.");
+    };
+
+    delete(transaction: Transaction, ...args: any[]): Promise<any> {
+        throw new Error("Method not implemented.");
+    }
 }
 
 export default UserRoleService;
