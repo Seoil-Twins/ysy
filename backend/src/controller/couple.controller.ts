@@ -1,12 +1,11 @@
 import randomString from "randomstring";
-import dayjs from "dayjs";
-import { Op, Transaction } from "sequelize";
+import { Transaction } from "sequelize";
 import { File } from "formidable";
 
 import sequelize from "../model";
 import { User } from "../model/user.model";
 import { ITokenResponse } from "../model/auth.model";
-import { Couple, IRequestCreate, IUpdate } from "../model/couple.model";
+import { Couple, IRequestCreate, IUpdateWithController, IUpdateWithService } from "../model/couple.model";
 
 import NotFoundError from "../error/notFound";
 import UnauthorizedError from "../error/unauthorized";
@@ -17,117 +16,66 @@ import ConflictError from "../error/conflict";
 
 import logger from "../logger/logger";
 import jwt from "../util/jwt";
-import { deleteFile, uploadFile, isDefaultFile } from "../util/firebase";
 import { UserRole } from "../model/userRole.model";
-import { Role } from "../model/role.model";
 
-const FOLDER_NAME = "couples";
+import UserService from "../service/user.service";
+import UserRoleService from "../service/userRole.service";
+import CoupleService from "../service/couple.service";
 
-const controller = {
-    /**
-     * 커플 정보를 가져옵니다.
-     * @param cupId Couple Id
-     * @returns A {@link Couple}
-     */
-    getCouple: async (cupId: string): Promise<Couple> => {
-        const couple: Couple | null = await Couple.findOne({
-            where: { cupId: cupId },
-            include: {
-                model: User,
-                as: "users",
-                attributes: { exclude: ["password"] }
-            }
-        });
+class CoupleController {
+    private coupleSerivce: CoupleService;
+    private userService: UserService;
+    private userRoleService: UserRoleService;
 
+    constructor(coupleSerivce: CoupleService, userService: UserService, userRoleService: UserRoleService) {
+        this.coupleSerivce = coupleSerivce;
+        this.userService = userService;
+        this.userRoleService = userRoleService;
+    }
+
+    async getCouple(cupId: string): Promise<Couple> {
+        const couple: Couple | null = await this.coupleSerivce.select(cupId, ["password"]);
         if (!couple) throw new NotFoundError("Not Found Couple");
 
         return couple;
-    },
-    /**
-     * 커플를 생성하고 업데이트된 토큰 정보를 반환합니다.
-     * @param data A {@link IRequestCreate}
-     * @returns A {@link ITokenResponse}
-     */
-    createCouple: async (data: IRequestCreate, file?: File): Promise<ITokenResponse> => {
-        let path = null;
-        let isUpload = false;
+    }
 
+    async createCouple(data: IRequestCreate, file?: File): Promise<ITokenResponse> {
+        let isNot = true;
+        let cupId = "";
         let transaction: Transaction | undefined = undefined;
 
         try {
             transaction = await sequelize.transaction();
-            let isNot = true;
-            let cupId = "";
 
-            // 중복된 Id인지 검사
             while (isNot) {
                 cupId = randomString.generate({
                     length: 8,
                     charset: "alphanumeric"
                 });
 
-                const user: User | null = await User.findOne({
-                    where: { cupId: cupId }
-                });
-
+                const user: User | null = await this.userService.select({ cupId });
                 if (!user) isNot = false;
             }
 
-            if (file) {
-                path = `${FOLDER_NAME}/${cupId}/thumbnail/${dayjs().valueOf()}.${file.originalFilename!}`;
-
-                await uploadFile(path, file.filepath);
-                isUpload = true;
-            }
-
-            await Couple.create(
-                {
-                    cupId: cupId,
-                    cupDay: data.cupDay,
-                    title: data.title,
-                    thumbnail: path
-                },
-                { transaction }
-            );
-
-            const user1: User | null = await User.findOne({
-                where: { userId: data.userId }
-            });
-
-            const user2: User | null = await User.findOne({
-                where: { userId: data.userId2 }
-            });
+            const createdCouple = await this.coupleSerivce.create(transaction, cupId, data, file);
+            const user1: User | null = await this.userService.select({ userId: data.userId });
+            const user2: User | null = await this.userService.select({ userId: data.userId2 });
 
             if (!user1 || !user2) throw new BadRequestError("Bad Request");
             else if (user1.cupId || user2.cupId) throw new ConflictError("Duplicated Cup Id");
 
-            await user1.update(
-                { cupId: cupId },
-                {
-                    where: { userId: data.userId },
-                    transaction
-                }
-            );
-
-            await user2.update(
-                { cupId: cupId },
-                {
-                    where: { userId: data.userId2 },
-                    transaction
-                }
-            );
-
-            const role: UserRole | null = await UserRole.findOne({
-                where: { userId: user1.userId },
-                include: {
-                    model: Role,
-                    as: "role"
-                }
+            await this.userService.update(transaction, user1, {
+                cupId: createdCouple.cupId
             });
 
+            await this.userService.update(transaction, user2, {
+                cupId: createdCouple.cupId
+            });
+
+            const role: UserRole | null = await this.userRoleService.select(user1.userId);
             if (!role) throw new UnauthorizedError("Invalid Role");
 
-            // token 재발급
             const result: ITokenResponse = await jwt.createToken(data.userId, cupId, role.roleId);
 
             await transaction.commit();
@@ -136,143 +84,69 @@ const controller = {
             return result;
         } catch (error) {
             if (transaction) await transaction.rollback();
-
-            // Firebase에는 업로드 되었지만 DB 오류가 발생했다면 Firebase thumbnail 삭제
-            if (data.thumbnail && isUpload) {
-                await deleteFile(path!);
-                logger.error(`After updating the firebase, a db error occurred and the firebase thumbnail is deleted => ${path}`);
-            }
+            logger.error(`Couple create Error => ${JSON.stringify(error)}`);
 
             throw error;
         }
-    },
-    /**
-     * 커플 정보를 수정합니다.
-     * @param data A {@link IUpdate}
-     * @param thumbnail 커플 대표사진
-     */
-    updateCouple: async (data: IUpdate, thumbnail?: File): Promise<void> => {
-        let isUpload = false;
-        let path: string | null = null;
-        const user = await User.findOne({
-            attributes: ["cupId"],
-            where: { userId: data.userId }
-        });
+    }
+
+    async updateCouple(data: IUpdateWithController, thumbnail?: File): Promise<Couple> {
+        let transaction: Transaction | undefined = undefined;
+        const user: User | null = await this.userService.select({ userId: data.userId });
 
         if (!user) throw new UnauthorizedError("Invalid Token (User not found using token)");
         else if (user.cupId !== data.cupId) throw new ForbiddenError("You don't same user couple ID and path parameter couple ID");
 
-        const couple = await Couple.findOne({
-            where: { cupId: data.cupId }
-        });
-
-        // User Table에는 있지만 Couple Table에 없다면
-        if (!couple) {
-            await user.update({
-                cupId: null
-            });
-
-            throw new InternalServerError("DB Error");
-        } else if (couple.deleted) {
-            throw new ForbiddenError("Couple is deleted");
-        }
-
-        const prevThumbnail: string | null = couple.thumbnail;
-        let transaction: Transaction | undefined = undefined;
-
         try {
             transaction = await sequelize.transaction();
 
-            if (thumbnail) {
-                const reqFileName = thumbnail.originalFilename!;
-                const isDefault = isDefaultFile(reqFileName);
+            const couple: Couple | null = await this.coupleSerivce.select(data.cupId);
 
-                if (isDefault) {
-                    path = null;
-                } else {
-                    path = `${FOLDER_NAME}/${data.cupId}/thumbnail/${dayjs().valueOf()}.${reqFileName}`;
+            if (!couple) {
+                await this.userService.update(transaction, user, {
+                    cupId: null
+                });
 
-                    await uploadFile(path, thumbnail.filepath);
-                    isUpload = true;
-                }
-
-                data.thumbnail = path;
+                throw new InternalServerError("DB Error");
+            } else if (couple.deleted) {
+                throw new ForbiddenError("Couple is deleted");
             }
 
-            await couple.update(data, { transaction });
-            logger.debug(`Update Data => ${JSON.stringify(data)}`);
-
-            // Upload, DB Update를 하고나서 기존 이미지 지우기
-            if (prevThumbnail && data.thumbnail) {
-                await deleteFile(prevThumbnail);
-                logger.debug(`Deleted Previous thumbnail => ${prevThumbnail}`);
-            }
+            const updateData: IUpdateWithService = {
+                title: data.title,
+                cupDay: data.cupDay,
+                thumbnail: data.thumbnail
+            };
+            const updatedCouple: Couple = await this.coupleSerivce.update(transaction, couple, updateData, thumbnail);
 
             await transaction.commit();
+            return updatedCouple;
         } catch (error) {
-            // Firebase에는 업로드 되었지만 DB 오류가 발생했다면 Firebase Profile 삭제
-            if (data.thumbnail && isUpload) {
-                await deleteFile(path!);
-                logger.error(`After updating the firebase, a db error occurred and the firebase thumbnail is deleted => ${path}`);
-            }
-
             if (transaction) await transaction.rollback();
             logger.error(`User update error => ${JSON.stringify(error)}`);
 
             throw error;
         }
-    },
-    /**
-     * Couple 삭제 하는 메소드
-     * Couple 삭제 시 thumbnail은 삭제하지 않으며, Admin API에서 Couple 삭제 시 처리
-     * @param userId User Id
-     * @param cupId Couple Id
-     * @returns ITokenResponse: Access, Refresh Token
-     */
-    deleteCouple: async (userId: number, cupId: string): Promise<ITokenResponse> => {
-        const couple = await Couple.findOne({
-            where: { cupId: cupId }
-        });
+    }
 
-        const user1 = await User.findOne({
-            where: { userId: userId }
-        });
+    async deleteCouple(userId: number, cupId: string): Promise<ITokenResponse> {
+        const couple: Couple | null = await this.coupleSerivce.select(cupId);
+        if (!couple) throw new NotFoundError("Not found couple using token couple ID");
+        else if (!couple.users) throw new NotFoundError("Not found user or another user using token couple ID");
 
-        const user2 = await User.findOne({
-            where: {
-                cupId: cupId,
-                [Op.not]: {
-                    userId: user1!.userId
-                }
-            }
-        });
-
-        if (!user1 || !user2 || !couple) throw new NotFoundError("Not Found");
+        const user1: User = couple.users[0].userId === userId ? couple.users[0] : couple.users[1];
+        const user2: User = couple.users[0].userId !== userId ? couple.users[0] : couple.users[1];
 
         let transaction: Transaction | undefined = undefined;
 
         try {
             transaction = await sequelize.transaction();
-            const currentTime = new Date(dayjs().valueOf());
 
-            await user1.update({ cupId: null }, { transaction });
-            await user2.update({ cupId: null }, { transaction });
-            await couple.update(
-                {
-                    deleted: true,
-                    deletedTime: currentTime
-                },
-                { transaction }
-            );
+            await this.userService.update(transaction, user1, { cupId: null });
+            await this.userService.update(transaction, user2, { cupId: null });
+            await this.coupleSerivce.delete(transaction, couple);
 
-            const role: UserRole | null = await UserRole.findOne({
-                where: { userId: user1.userId },
-                include: {
-                    model: Role,
-                    as: "role"
-                }
-            });
-
+            const role: UserRole | null = await this.userRoleService.select(userId);
             if (!role) throw new UnauthorizedError("Invalid Role");
 
             const result: ITokenResponse = await jwt.createToken(userId, null, role.roleId);
@@ -288,6 +162,6 @@ const controller = {
             throw error;
         }
     }
-};
+}
 
-export default controller;
+export default CoupleController;

@@ -7,9 +7,9 @@ import UnauthorizedError from "../error/unauthorized";
 import { ILogin, ITokenResponse } from "../model/auth.model";
 
 import jwt from "../util/jwt";
-
 import { del, get } from "../util/redis";
 import { checkPassword } from "../util/password";
+
 import { UserRole } from "../model/userRole.model";
 import { User } from "../model/user.model";
 
@@ -22,7 +22,7 @@ class AuthService {
      * @param refreshToken JWT Refresh Token
      * @returns A {@link ITokenResponse}
      */
-    updateToken = async (accessToken: string, refreshToken: string): Promise<ITokenResponse> => {
+    async updateToken(accessToken: string, refreshToken: string): Promise<ITokenResponse> {
         /**
          * RTR : Refresh Token Rotation
          * Refresh Token이 Access Token을 발급했다면 Refresh Token도 재발행 (1회용)
@@ -63,20 +63,20 @@ class AuthService {
         } else {
             throw new UnauthorizedError("Wrong approach");
         }
-    };
+    }
 
     /**
      * 사용자 로그인을 합니다.
      * @param data A {@link ILogin}
      * @returns A {@link ITokenResponse}
      */
-    login = async (user: User, role: UserRole, password: string): Promise<ITokenResponse> => {
+    async login(user: User, role: UserRole, password: string): Promise<ITokenResponse> {
         const isCheck: boolean = await checkPassword(password, user.password!);
         if (!isCheck) throw new UnauthorizedError("Invalid Password");
 
         const result: ITokenResponse = await jwt.createToken(user.userId, user.cupId, role.roleId);
         return result;
-    };
+    }
 }
 
 export default AuthService;

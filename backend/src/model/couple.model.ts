@@ -18,13 +18,15 @@ export interface IRequestCreate {
     thumbnail?: string | null;
 }
 
-export interface IUpdate {
+export interface IUpdateWithController {
     userId: number;
     cupId: string;
     title?: string;
     thumbnail?: string | null;
     cupDay?: Date;
 }
+
+export type IUpdateWithService = Omit<IUpdateWithController, "userId" | "cupId">;
 
 // -------------------------------------------- Admin ------------------------------------------ //
 export interface ICoupleResponseWithCount {

@@ -4,10 +4,12 @@ import { File } from "formidable";
 import logger from "../logger/logger";
 
 import sequelize from "../model";
-import { User, ICreate, IUpdate, IUserResponse } from "../model/user.model";
+import { User, ICreate, IUpdateWithController, IUserResponse, IUpdateWithService } from "../model/user.model";
 
 import UserService from "../service/user.service";
 import UserRoleService from "../service/userRole.service";
+
+import NotFoundError from "../error/notFound";
 
 class UserController {
     private userService: UserService;
@@ -18,13 +20,13 @@ class UserController {
         this.userRoleService = userRoleService;
     }
 
-    getUser = async (userId: number): Promise<IUserResponse> => {
-        const result: IUserResponse = await this.userService.select(userId);
+    async getUser(userId: number): Promise<IUserResponse> {
+        const result: IUserResponse = await this.userService.selectForResponse(userId);
 
         return result;
-    };
+    }
 
-    createUser = async (data: ICreate): Promise<void> => {
+    async createUser(data: ICreate): Promise<void> {
         const transaction: Transaction = await sequelize.transaction();
 
         try {
@@ -37,13 +39,24 @@ class UserController {
 
             throw error;
         }
-    };
+    }
 
-    updateUser = async (data: IUpdate, file?: File): Promise<User> => {
+    async updateUser(data: IUpdateWithController, file?: File): Promise<User> {
         const transaction = await sequelize.transaction();
 
         try {
-            const updateUser: User = await this.userService.update(transaction, data, file);
+            const user: User | null = await this.userService.select({ userId: data.userId });
+            if (!user) throw new NotFoundError("Not found user using token user ID");
+
+            const updateData: IUpdateWithService = {
+                cupId: data.cupId,
+                name: data.name,
+                profile: data.profile,
+                primaryNofi: data.primaryNofi,
+                dateNofi: data.dateNofi,
+                eventNofi: data.eventNofi
+            };
+            const updateUser: User = await this.userService.update(transaction, user, updateData, file);
             await transaction.commit();
 
             return updateUser;
@@ -53,13 +66,16 @@ class UserController {
 
             throw error;
         }
-    };
+    }
 
-    deleteUser = async (userId: number): Promise<void> => {
+    async deleteUser(userId: number): Promise<void> {
+        const user: User | null = await this.userService.select({ userId });
+        if (!user) throw new NotFoundError("Not found user using user ID");
+
         const transaction = await sequelize.transaction();
 
         try {
-            await this.userService.delete(transaction, userId);
+            await this.userService.delete(transaction, user);
             await transaction.commit();
         } catch (error) {
             await transaction.rollback();
@@ -67,7 +83,7 @@ class UserController {
 
             throw error;
         }
-    };
+    }
 }
 
 export default UserController;

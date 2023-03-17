@@ -2,7 +2,7 @@ import express, { Router, Request, Response, NextFunction } from "express";
 import joi, { ValidationResult } from "joi";
 import formidable, { File } from "formidable";
 
-import coupleController from "../controller/couple.controller";
+import CoupleController from "../controller/couple.controller";
 
 import logger from "../logger/logger";
 import validator from "../util/validator";
@@ -13,9 +13,16 @@ import ForbiddenError from "../error/forbidden";
 import BadRequestError from "../error/badRequest";
 
 import { ITokenResponse } from "../model/auth.model";
-import { Couple, IRequestCreate, IUpdate } from "../model/couple.model";
+import { Couple, IRequestCreate, IUpdateWithController } from "../model/couple.model";
+import CoupleService from "../service/couple.service";
+import UserService from "../service/user.service";
+import UserRoleService from "../service/userRole.service";
 
 const router: Router = express.Router();
+const coupleSerivce = new CoupleService();
+const userService = new UserService();
+const userRoleService = new UserRoleService();
+const coupleController = new CoupleController(coupleSerivce, userService, userRoleService);
 
 const signupSchema: joi.Schema = joi.object({
     userId2: joi.number().required(),
@@ -63,10 +70,10 @@ router.post("/", async (req: Request, res: Response, next: NextFunction) => {
             if (error) throw new BadRequestError(error.message);
 
             const data: IRequestCreate = {
-                userId: req.body.userId,
-                userId2: req.body.userId2,
-                cupDay: req.body.cupDay,
-                title: req.body.title
+                userId: value.userId,
+                userId2: value.userId2,
+                cupDay: value.cupDay,
+                title: value.title
             };
 
             const result: ITokenResponse = await coupleController.createCouple(data, file);
@@ -96,11 +103,11 @@ router.patch("/:cup_id", async (req: Request, res: Response, next: NextFunction)
             else if (!file && !req.body.title && !req.body.cupDay) throw new BadRequestError("Request values is empty");
             else if (req.body.cupId !== req.params.cup_id) throw new ForbiddenError("You don't same token couple ID and path parameter couple ID");
 
-            const data: IUpdate = {
-                userId: req.body.userId,
-                cupId: req.body.cupId,
-                cupDay: req.body.cupDay,
-                title: req.body.title
+            const data: IUpdateWithController = {
+                userId: value.userId,
+                cupId: value.cupId,
+                cupDay: value.cupDay,
+                title: value.title
             };
 
             await coupleController.updateCouple(data, file);

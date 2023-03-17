@@ -6,7 +6,7 @@ import { Role } from "../model/role.model";
 import { UserRole } from "../model/userRole.model";
 
 class UserRoleService extends Service {
-    select = async (userId: number): Promise<UserRole | null> => {
+    async select(userId: number): Promise<UserRole | null> {
         const role: UserRole | null = await UserRole.findOne({
             where: { userId: userId },
             include: {
@@ -18,9 +18,9 @@ class UserRoleService extends Service {
         });
 
         return role;
-    };
+    }
 
-    create = async (transaction: Transaction, userId: number): Promise<any> => {
+    async create(transaction: Transaction, userId: number): Promise<any> {
         await UserRole.create(
             {
                 userId: userId,
@@ -28,13 +28,13 @@ class UserRoleService extends Service {
             },
             { transaction }
         );
-    };
+    }
 
-    update = async (transaction: Transaction, ...args: any[]): Promise<void> => {
+    async update(transaction: Transaction, ...args: any[]): Promise<void> {
         throw new Error("Method not implemented.");
-    };
+    }
 
-    delete(transaction: Transaction, ...args: any[]): Promise<any> {
+    async delete(transaction: Transaction, ...args: any[]): Promise<any> {
         throw new Error("Method not implemented.");
     }
 }

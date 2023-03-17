@@ -1,25 +1,26 @@
 import dayjs from "dayjs";
 import { File } from "formidable";
 import randomString from "randomstring";
-import { Op, Transaction } from "sequelize";
+import { Op, Transaction, WhereOptions } from "sequelize";
 
 import { Service } from "./service";
 
 import logger from "../logger/logger";
-import { User, IUserResponse, ICreate, IUpdate } from "../model/user.model";
+import { User, IUserResponse, ICreate, IUpdateWithService } from "../model/user.model";
 
 import UnauthorizedError from "../error/unauthorized";
 import ConflictError from "../error/conflict";
 
 import { deleteFile, isDefaultFile, uploadFile } from "../util/firebase";
 import { createDigest } from "../util/password";
+
 import NotFoundError from "../error/notFound";
 import ForbiddenError from "../error/forbidden";
 
 class UserService extends Service {
     private FOLDER_NAME = "users";
 
-    private createCode = async (): Promise<string> => {
+    private async createCode(): Promise<string> {
         let isNot = true;
         let code = "";
 
@@ -37,9 +38,9 @@ class UserService extends Service {
         }
 
         return code;
-    };
+    }
 
-    private createProfilePath = (userId: number, file: File): string | null => {
+    private createProfilePath(userId: number, file: File): string | null {
         let path: string | null = "";
         const reqFileName = file.originalFilename!;
         const isDefault = isDefaultFile(reqFileName);
@@ -52,45 +53,14 @@ class UserService extends Service {
         else path = `${this.FOLDER_NAME}/${userId}/profile/${dayjs().valueOf()}.${reqFileName}`;
 
         return path;
-    };
+    }
 
-    private getUserWithUserId = async (userId: number): Promise<User | null> => {
-        const user: User | null = await User.findOne({
-            where: { userId }
-        });
-
+    async select(where: WhereOptions<User>): Promise<User | null> {
+        const user: User | null = await User.findOne({ where });
         return user;
-    };
+    }
 
-    private getUserWithEmailOrPhone = async (email: string, phone: string): Promise<User | null> => {
-        const user: User | null = await User.findOne({
-            where: {
-                [Op.or]: [{ email: email }, { phone: phone }]
-            }
-        });
-
-        return user;
-    };
-
-    /**
-     * email로 User의 정보를 가져옵니다.
-     * @param email User Email
-     * @returns A {@link User} | null
-     */
-    getUserWithEmail = async (email: string): Promise<User | null> => {
-        const user: User | null = await User.findOne({
-            where: { email }
-        });
-
-        return user;
-    };
-
-    /**
-     * 유저와 이어진 커플의 정보를 가져옵니다.
-     * @param userId User Id
-     * @returns A {@link IUserResponse}
-     */
-    select = async (userId: number): Promise<IUserResponse> => {
+    async selectForResponse(userId: number): Promise<IUserResponse> {
         const user1: User | null = await User.findOne({
             attributes: { exclude: ["password"] },
             where: { userId }
@@ -118,14 +88,10 @@ class UserService extends Service {
         };
 
         return result;
-    };
+    }
 
-    /**
-     * 유저 정보를 생성합니다.
-     * @param data A {@link User}
-     */
-    create = async (transaction: Transaction, data: ICreate): Promise<User> => {
-        const user: User | null = await this.getUserWithEmailOrPhone(data.email, data.phone);
+    async create(transaction: Transaction, data: ICreate): Promise<User> {
+        const user: User | null = await this.select({ email: data.email, phone: data.phone });
         if (user) throw new ConflictError("Duplicated User");
 
         const hash: string = await createDigest(data.password);
@@ -146,27 +112,18 @@ class UserService extends Service {
         );
 
         return createdUser;
-    };
+    }
 
-    /**
-     * 유저의 정보를 수정합니다.
-     * @param data A {@link IUpdate}
-     * @param profile User Profile
-     */
-    update = async (transaction: Transaction, data: IUpdate, file?: File): Promise<User> => {
+    async update(transaction: Transaction, user: User, data: IUpdateWithService, file?: File): Promise<User> {
+        if (user.deleted) throw new ForbiddenError("User is deleted");
+
         let isUpload = false;
         let path: string | null = "";
-
-        const user: User | null = await this.getUserWithUserId(data.userId);
-
-        if (!user) throw new NotFoundError("Not Found User");
-        else if (user.deleted) throw new ForbiddenError("User is deleted");
-
         let prevProfile: string | null = user.profile;
 
         try {
             if (file) {
-                data.profile = this.createProfilePath(data.userId, file);
+                data.profile = this.createProfilePath(user.userId, file);
 
                 // profile 있으면 업로드
                 if (data.profile) {
@@ -192,15 +149,9 @@ class UserService extends Service {
 
             throw error;
         }
-    };
+    }
 
-    /**
-     * 사용자 정보 삭제이며, Couple이 있는 경우 Frontend에서 연인 끊기 후 삭제를 요청.
-     * @param userId User Id
-     */
-    delete = async (transaction: Transaction, userId: number): Promise<void> => {
-        const user: User | null = await this.getUserWithUserId(userId);
-
+    async delete(transaction: Transaction, user: User): Promise<void> {
         if (!user) throw new NotFoundError("Not Found User");
 
         await user.update(
@@ -211,8 +162,8 @@ class UserService extends Service {
             { transaction }
         );
 
-        logger.debug(`Success Deleted userId => ${userId}`);
-    };
+        logger.debug(`Success Deleted userId => ${user.userId}`);
+    }
 }
 
 export default UserService;

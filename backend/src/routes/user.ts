@@ -2,7 +2,7 @@ import express, { Router, Request, Response, NextFunction } from "express";
 import joi, { ValidationResult } from "joi";
 import formidable, { File } from "formidable";
 
-import { ICreate, IUpdate, IUserResponse } from "../model/user.model";
+import { ICreate, IUpdateWithController, IUserResponse } from "../model/user.model";
 
 import UserController from "../controller/user.controller";
 
@@ -120,7 +120,7 @@ router.patch("/:user_id", async (req: Request, res: Response, next: NextFunction
             else if (value.name && value.name.length <= 1) throw new BadRequestError("Bad Request Error");
             else if (files.file instanceof Array<formidable.File>) throw new BadRequestError("You must request only one profile");
 
-            const data: IUpdate = {
+            const data: IUpdateWithController = {
                 userId: value.userId,
                 name: value.password,
                 profile: undefined,

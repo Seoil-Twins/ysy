@@ -17,14 +17,17 @@ export interface ICreate {
     eventNofi: boolean;
 }
 
-export interface IUpdate {
+export interface IUpdateWithController {
     userId: number;
+    cupId?: string | null;
     name?: string;
     profile?: string | null;
     primaryNofi?: boolean;
     dateNofi?: boolean;
     eventNofi?: boolean;
 }
+
+export type IUpdateWithService = Omit<IUpdateWithController, "userId">;
 
 export interface IUserResponse {
     userId: number;
