@@ -1,7 +1,7 @@
 import dayjs from "dayjs";
 import { DataTypes, Model, literal, NonAttribute, InferAttributes, InferCreationAttributes, CreationOptional } from "sequelize";
 
-import sequelize from ".";
+import sequelize, { applyDateHook } from ".";
 import { Couple } from "./couple.model";
 import { Inquire } from "./inquire.model";
 import { UserRole } from "./userRole.model";
@@ -202,13 +202,7 @@ User.init(
         createdTime: {
             field: "created_time",
             type: "TIMESTAMP",
-            defaultValue: literal("CURRENT_TIMESTAMP"),
-            get(this: User): string | null {
-                const date = dayjs(this.getDataValue("createdTime"));
-                const formatDate = date.format("YYYY-MM-DD HH:mm:ss");
-
-                return date.isValid() ? formatDate : null;
-            }
+            defaultValue: literal("CURRENT_TIMESTAMP")
         },
         deleted: {
             type: DataTypes.BOOLEAN,
@@ -217,13 +211,7 @@ User.init(
         },
         deletedTime: {
             field: "deleted_time",
-            type: "TIMESTAMP",
-            get(this: User): string | null {
-                const date = dayjs(this.getDataValue("deletedTime"));
-                const formatDate = date.format("YYYY-MM-DD HH:mm:ss");
-
-                return date.isValid() ? formatDate : null;
-            }
+            type: "TIMESTAMP"
         }
     },
     {
@@ -232,3 +220,5 @@ User.init(
         tableName: "user"
     }
 );
+
+applyDateHook(User);

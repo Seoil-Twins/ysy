@@ -3,7 +3,7 @@ import { File } from "formidable";
 import { DataTypes, Model, literal, HasManyGetAssociationsMixin, NonAttribute } from "sequelize";
 import { CreationOptional, InferAttributes, InferCreationAttributes } from "sequelize/types/model";
 
-import sequelize from ".";
+import sequelize, { applyDateHook } from ".";
 import { Album } from "./album.model";
 import { User } from "./user.model";
 import { Calendar } from "./calendar.model";
@@ -94,13 +94,7 @@ Couple.init(
         createdTime: {
             field: "created_time",
             type: "TIMESTAMP",
-            defaultValue: literal("CURRENT_TIMESTAMP"),
-            get(this: Couple): string | null {
-                const date = dayjs(this.getDataValue("createdTime"));
-                const formatDate = date.format("YYYY-MM-DD HH:mm:ss");
-
-                return date.isValid() ? formatDate : null;
-            }
+            defaultValue: literal("CURRENT_TIMESTAMP")
         },
         deleted: {
             type: DataTypes.BOOLEAN,
@@ -109,13 +103,7 @@ Couple.init(
         },
         deletedTime: {
             field: "deleted_time",
-            type: "TIMESTAMP",
-            get(this: Couple): string | null {
-                const date = dayjs(this.getDataValue("deletedTime"));
-                const formatDate = date.format("YYYY-MM-DD HH:mm:ss");
-
-                return date.isValid() ? formatDate : null;
-            }
+            type: "TIMESTAMP"
         }
     },
     {
@@ -124,3 +112,5 @@ Couple.init(
         timestamps: false
     }
 );
+
+applyDateHook(Couple);

@@ -84,13 +84,13 @@ router.post("/", async (req: Request, res: Response, next: NextFunction) => {
         if (error) throw new BadRequestError(error.message);
 
         const data: ICreate = {
-            snsId: req.body.snsId,
-            name: req.body.name,
-            email: req.body.email,
-            birthday: new Date(req.body.birthday),
-            password: req.body.password,
-            phone: req.body.phone,
-            eventNofi: boolean(req.body.eventNofi)
+            snsId: value.snsId,
+            name: value.name,
+            email: value.email,
+            birthday: new Date(value.birthday),
+            password: value.password,
+            phone: value.phone,
+            eventNofi: boolean(value.eventNofi)
         };
 
         await userController.createUser(data);

@@ -2,7 +2,7 @@ import dayjs from "dayjs";
 import { DataTypes, Model, literal, NonAttribute } from "sequelize";
 import { CreationOptional, InferAttributes, InferCreationAttributes } from "sequelize/types/model";
 
-import sequelize from ".";
+import sequelize, { applyDateHook } from ".";
 import { InquireImage } from "./inquireImage.model";
 
 // -------------------------------------------- Interface ------------------------------------------ //
@@ -47,13 +47,7 @@ Notice.init(
         createdTime: {
             field: "created_time",
             type: "TIMESTAMP",
-            defaultValue: literal("CURRENT_TIMESTAMP"),
-            get(this: Notice): string | null {
-                const date = dayjs(this.getDataValue("createdTime"));
-                const formatDate = date.format("YYYY-MM-DD HH:mm:ss");
-
-                return date.isValid() ? formatDate : null;
-            }
+            defaultValue: literal("CURRENT_TIMESTAMP")
         }
     },
     {
@@ -62,3 +56,5 @@ Notice.init(
         timestamps: false
     }
 );
+
+applyDateHook(Notice);

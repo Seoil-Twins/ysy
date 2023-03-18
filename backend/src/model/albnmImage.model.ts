@@ -2,7 +2,7 @@ import dayjs from "dayjs";
 import { DataTypes, Model, literal } from "sequelize";
 import { CreationOptional, InferAttributes, InferCreationAttributes } from "sequelize/types/model";
 
-import sequelize from ".";
+import sequelize, { applyDateHook } from ".";
 import { Album } from "./album.model";
 
 // -------------------------------------------- Interface ------------------------------------------ //
@@ -39,13 +39,7 @@ AlbumImage.init(
         createdTime: {
             field: "created_time",
             type: "TIMESTAMP",
-            defaultValue: literal("CURRENT_TIMESTAMP"),
-            get(this: AlbumImage): string | null {
-                const date = dayjs(this.getDataValue("createdTime"));
-                const formatDate = date.format("YYYY-MM-DD HH:mm:ss");
-
-                return date.isValid() ? formatDate : null;
-            }
+            defaultValue: literal("CURRENT_TIMESTAMP")
         }
     },
     {
@@ -54,3 +48,5 @@ AlbumImage.init(
         timestamps: false
     }
 );
+
+applyDateHook(AlbumImage);
