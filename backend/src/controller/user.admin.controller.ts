@@ -382,7 +382,7 @@ const controller = {
 
                 if (albums) {
                     for (const album of albums) {
-                        await albumController.deleteAlbum(user.cupId!, album.albumId);
+                        // await albumController.deleteAlbum(user.cupId!, album.albumId);
                     }
                 }
 

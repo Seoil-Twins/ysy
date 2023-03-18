@@ -1,5 +1,4 @@
 import dayjs from "dayjs";
-import { File } from "formidable";
 import { DataTypes, Model, literal, NonAttribute, HasManyGetAssociationsMixin } from "sequelize";
 import { CreationOptional, InferAttributes, InferCreationAttributes } from "sequelize/types/model";
 
@@ -14,23 +13,19 @@ export interface ICreate {
 
 export interface IRequestGet {
     albumId: number;
-    cupId: string;
     page: number;
     count: number;
 }
 
 export interface IRequestUpadteTitle {
-    userId: number;
     cupId: string;
     albumId: number;
     title: string;
 }
 
 export interface IRequestUpadteThumbnail {
-    userId: number;
     cupId: string;
     albumId: number;
-    thumbnail: File;
 }
 
 export interface IResponse {
