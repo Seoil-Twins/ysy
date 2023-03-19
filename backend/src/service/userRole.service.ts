@@ -20,7 +20,7 @@ class UserRoleService extends Service {
         return role;
     }
 
-    async create(transaction: Transaction, userId: number): Promise<void> {
+    async create(transaction: Transaction | null = null, userId: number): Promise<void> {
         await UserRole.create(
             {
                 userId: userId,

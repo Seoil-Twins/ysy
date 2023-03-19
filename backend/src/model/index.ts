@@ -29,8 +29,7 @@ const formatDate = (results: any[]) => {
             if (value instanceof Date) {
                 const date = dayjs(value);
                 const formatDate = date.format("YYYY-MM-DD HH:mm:ss");
-
-                result[key] = date.isValid() ? formatDate : null;
+                result.dataValues[key] = date.isValid() ? formatDate : null;
             }
         }
     });

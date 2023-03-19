@@ -28,7 +28,7 @@ class AlbumImageService implements Service {
         return { rows, count };
     }
 
-    async create(transaction: Transaction, cupId: string, albumId: number, image: File): Promise<AlbumImage> {
+    async create(transaction: Transaction | null = null, cupId: string, albumId: number, image: File): Promise<AlbumImage> {
         const path = `${this.FOLDER_NAME}//${cupId}/${albumId}/${dayjs().valueOf()}.${image.originalFilename}`;
 
         const createdImage: AlbumImage = await AlbumImage.create(
@@ -44,7 +44,7 @@ class AlbumImageService implements Service {
         return createdImage;
     }
 
-    async createMutiple(transaction: Transaction, cupId: string, albumId: number, images: File[]): Promise<AlbumImage[]> {
+    async createMutiple(transaction: Transaction | null = null, cupId: string, albumId: number, images: File[]): Promise<AlbumImage[]> {
         const filePaths: string[] = [];
         const imagePaths: string[] = [];
         const createdImages: AlbumImage[] = [];
@@ -77,11 +77,11 @@ class AlbumImageService implements Service {
         return createdImages;
     }
 
-    update(transaction: Transaction, ...args: any[]): Promise<any> {
+    update(_transaction: Transaction | null = null): Promise<any> {
         throw new Error("Method not implemented.");
     }
 
-    async delete(transaction: Transaction, imageIds: number[], paths: string[]): Promise<any> {
+    async delete(transaction: Transaction | null = null, imageIds: number[], paths: string[]): Promise<any> {
         await AlbumImage.destroy({ where: { imageId: imageIds }, transaction });
         await deleteFiles(paths);
     }

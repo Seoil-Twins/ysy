@@ -1,7 +1,7 @@
 import express, { Router, Request, Response, NextFunction } from "express";
 import joi, { ValidationResult } from "joi";
 
-import calendarController from "../controller/calendar.controller";
+import CalendarController from "../controller/calendar.controller";
 
 import logger from "../logger/logger";
 import validator from "../util/validator";
@@ -10,9 +10,15 @@ import StatusCode from "../util/statusCode";
 import BadRequestError from "../error/badRequest";
 import ForbiddenError from "../error/forbidden";
 
-import { IResponse } from "../model/calendar.model";
+import { Calendar, IResponse } from "../model/calendar.model";
+
+import CalendarService from "../service/Calendar.service";
+import CoupleService from "../service/couple.service";
 
 const router: Router = express.Router();
+const calendarService: CalendarService = new CalendarService();
+const coupleService: CoupleService = new CoupleService();
+const calendarController: CalendarController = new CalendarController(calendarService, coupleService);
 
 const postSchema: joi.Schema = joi.object({
     title: joi.string().required(),
@@ -57,8 +63,9 @@ router.post("/:cup_id", async (req: Request, res: Response, next: NextFunction) 
         if (error) throw new BadRequestError(error.message);
         else if (req.body.cupId !== req.params.cup_id) throw new ForbiddenError("You don't same token couple ID and path parameter couple ID");
 
-        await calendarController.addCalendar(value);
-        res.status(StatusCode.CREATED).json({});
+        const url: string = await calendarController.addCalendar(value);
+        console.log(url);
+        res.header({ Location: url }).status(StatusCode.CREATED).json({});
     } catch (error) {
         next(error);
     }
@@ -73,8 +80,8 @@ router.patch("/:cup_id/:calendar_id", async (req: Request, res: Response, next: 
         else if (req.body.cupId !== req.params.cup_id) throw new ForbiddenError("You don't same token couple ID and path parameter couple ID");
         else if (isNaN(calendarId)) throw new BadRequestError("Calendar ID must be a number type");
 
-        await calendarController.updateCalendar(calendarId, value);
-        res.status(StatusCode.NO_CONTENT).json({});
+        const updatedCalendar: Calendar = await calendarController.updateCalendar(calendarId, value);
+        res.status(StatusCode.OK).json(updatedCalendar);
     } catch (error) {
         next(error);
     }

@@ -90,7 +90,7 @@ class UserService extends Service {
         return result;
     }
 
-    async create(transaction: Transaction, data: ICreate): Promise<User> {
+    async create(transaction: Transaction | null = null, data: ICreate): Promise<User> {
         const user: User | null = await this.select({ email: data.email, phone: data.phone });
         if (user) throw new ConflictError("Duplicated User");
 
@@ -114,7 +114,7 @@ class UserService extends Service {
         return createdUser;
     }
 
-    async update(transaction: Transaction, user: User, data: IUpdateWithService, file?: File): Promise<User> {
+    async update(transaction: Transaction | null = null, user: User, data: IUpdateWithService, file?: File): Promise<User> {
         if (user.deleted) throw new ForbiddenError("User is deleted");
 
         let isUpload = false;
@@ -151,7 +151,7 @@ class UserService extends Service {
         }
     }
 
-    async delete(transaction: Transaction, user: User): Promise<void> {
+    async delete(transaction: Transaction | null = null, user: User): Promise<void> {
         if (!user) throw new NotFoundError("Not Found User");
 
         await user.update(

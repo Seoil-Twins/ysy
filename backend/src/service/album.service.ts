@@ -59,16 +59,16 @@ class AlbumService implements Service {
         return album;
     }
 
-    update(_transaction: Transaction): Promise<any> {
+    update(_transaction: Transaction | null = null): Promise<any> {
         throw new Error("Method not implemented.");
     }
 
-    async updateTitle(transaction: Transaction, album: Album, title: string): Promise<Album> {
+    async updateTitle(transaction: Transaction | null = null, album: Album, title: string): Promise<Album> {
         const updatedAlbum = await album.update({ title }, { transaction });
         return updatedAlbum;
     }
 
-    async updateThumbnail(transaction: Transaction, album: Album, thumbnail: File): Promise<Album> {
+    async updateThumbnail(transaction: Transaction | null = null, album: Album, thumbnail: File): Promise<Album> {
         let isUpload = false;
         const path = `${this.FOLDER_NAME}/${album.cupId}/${album.albumId}/thumbnail/${dayjs().valueOf()}.${thumbnail.originalFilename}`;
         const prevThumbnail: string | null = album.thumbnail;
@@ -100,7 +100,7 @@ class AlbumService implements Service {
         }
     }
 
-    async delete(transaction: Transaction, album: Album): Promise<void> {
+    async delete(transaction: Transaction | null = null, album: Album): Promise<void> {
         const path = `${this.FOLDER_NAME}/${album.cupId}/${album.albumId}`;
 
         await album.destroy({ transaction });

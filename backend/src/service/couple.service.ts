@@ -26,7 +26,12 @@ class CoupleService extends Service {
         return couple;
     }
 
-    async create(transaction: Transaction, cupId: string, data: IRequestCreate, file?: File): Promise<Couple> {
+    async selectByPk(cupId: string): Promise<Couple | null> {
+        const couple: Couple | null = await Couple.findByPk(cupId);
+        return couple;
+    }
+
+    async create(transaction: Transaction | null = null, cupId: string, data: IRequestCreate, file?: File): Promise<Couple> {
         let path = null;
         let isUpload = false;
 
@@ -60,7 +65,7 @@ class CoupleService extends Service {
         }
     }
 
-    async update(transaction: Transaction, couple: Couple, data: IUpdateWithService, thumbnail?: File): Promise<Couple> {
+    async update(transaction: Transaction | null = null, couple: Couple, data: IUpdateWithService, thumbnail?: File): Promise<Couple> {
         let isUpload = false;
         const prevThumbnail: string | null = couple.thumbnail;
 
@@ -100,7 +105,7 @@ class CoupleService extends Service {
         }
     }
 
-    async delete(transaction: Transaction, couple: Couple): Promise<void> {
+    async delete(transaction: Transaction | null = null, couple: Couple): Promise<void> {
         const currentTime = new Date(dayjs().valueOf());
 
         await couple.update(

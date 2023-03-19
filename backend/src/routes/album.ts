@@ -120,7 +120,7 @@ router.patch("/:cup_id/:album_id/title", async (req: Request, res: Response, nex
 
         const album: Album = await albumController.updateTitle(data);
 
-        return res.status(StatusCode.NO_CONTENT).json(album);
+        return res.status(StatusCode.OK).json(album);
     } catch (error) {
         next(error);
     }
@@ -146,7 +146,7 @@ router.patch("/:cup_id/:album_id/thumbnail", async (req: Request, res: Response,
             const thumbnail: File = files.thumbnail;
             const album: Album = await albumController.updateThumbnail(data, thumbnail);
 
-            return res.status(StatusCode.NO_CONTENT).json(album);
+            return res.status(StatusCode.OK).json(album);
         } catch (error) {
             next(error);
         }
