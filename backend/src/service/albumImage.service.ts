@@ -8,8 +8,12 @@ import { deleteFiles, uploadFile, uploadFiles } from "../util/firebase";
 
 import { Service } from "./service";
 
-class AlbumImageService implements Service {
+class AlbumImageService extends Service {
     private FOLDER_NAME = "couples";
+
+    getURL(...args: any[]): string {
+        throw new Error("Method not implemented.");
+    }
 
     async select(imageIds: number[]): Promise<AlbumImage[]> {
         const images: AlbumImage[] = await AlbumImage.findAll({ where: { imageId: imageIds } });

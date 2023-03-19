@@ -64,7 +64,6 @@ router.post("/:cup_id", async (req: Request, res: Response, next: NextFunction) 
         else if (req.body.cupId !== req.params.cup_id) throw new ForbiddenError("You don't same token couple ID and path parameter couple ID");
 
         const url: string = await calendarController.addCalendar(value);
-        console.log(url);
         res.header({ Location: url }).status(StatusCode.CREATED).json({});
     } catch (error) {
         next(error);

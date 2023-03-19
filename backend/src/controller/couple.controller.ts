@@ -40,7 +40,7 @@ class CoupleController {
         return couple;
     }
 
-    async createCouple(data: IRequestCreate, file?: File): Promise<ITokenResponse> {
+    async createCouple(data: IRequestCreate, file?: File): Promise<[ITokenResponse, string]> {
         let isNot = true;
         let cupId = "";
         let transaction: Transaction | undefined = undefined;
@@ -81,7 +81,9 @@ class CoupleController {
             await transaction.commit();
             logger.debug(`Create Data => ${JSON.stringify(data)}`);
 
-            return result;
+            const url: string = this.coupleSerivce.getURL(cupId);
+
+            return [result, url];
         } catch (error) {
             if (transaction) await transaction.rollback();
             logger.error(`Couple create Error => ${JSON.stringify(error)}`);

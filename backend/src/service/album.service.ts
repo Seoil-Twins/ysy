@@ -1,6 +1,9 @@
 import dayjs from "dayjs";
 import { File } from "formidable";
 import { FindOptions, InferAttributes, Transaction } from "sequelize";
+
+import { API_ROOT } from "..";
+
 import logger from "../logger/logger";
 
 import sequelize from "../model";
@@ -22,7 +25,7 @@ type SelectOptions =
       >
     | undefined;
 
-class AlbumService implements Service {
+class AlbumService extends Service {
     private FOLDER_NAME = "couples";
 
     private getAlbumWithTotal(): SelectOptions {
@@ -37,6 +40,18 @@ class AlbumService implements Service {
         };
 
         return data;
+    }
+
+    getURL(): string {
+        throw new Error("Method not implemented.");
+    }
+
+    getFolderUrl(cupId: string): string {
+        return `${API_ROOT}/album/${cupId}`;
+    }
+
+    getAlbumUrl(cupId: string, albumId: number): string {
+        return `${API_ROOT}/album/${cupId}/${albumId}`;
     }
 
     async select(albumId: number): Promise<Album | null> {

@@ -93,9 +93,9 @@ router.post("/", async (req: Request, res: Response, next: NextFunction) => {
             eventNofi: boolean(value.eventNofi)
         };
 
-        await userController.createUser(data);
+        const url: string = await userController.createUser(data);
 
-        return res.status(StatusCode.CREATED).json({});
+        return res.header({ Location: url }).status(StatusCode.CREATED).json({});
     } catch (error) {
         next(error);
     }

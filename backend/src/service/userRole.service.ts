@@ -6,6 +6,10 @@ import { Role } from "../model/role.model";
 import { UserRole } from "../model/userRole.model";
 
 class UserRoleService extends Service {
+    getURL(...args: any[]): string {
+        throw new Error("Method not implemented.");
+    }
+
     async select(userId: number): Promise<UserRole | null> {
         const role: UserRole | null = await UserRole.findOne({
             where: { userId: userId },

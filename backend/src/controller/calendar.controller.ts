@@ -43,7 +43,7 @@ class CalendarController {
         await this.calendarService.create(null, data);
         logger.debug(`Add Calendar => ${JSON.stringify(data)}`);
 
-        const url: string = `http://localhost:3000/calendar/${data.cupId}/${data.fromDate.getFullYear()}`;
+        const url: string = this.calendarService.getURL(data.cupId, data.fromDate.getFullYear());
         return url;
     }
 

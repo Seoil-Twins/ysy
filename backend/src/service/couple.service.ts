@@ -2,6 +2,8 @@ import dayjs from "dayjs";
 import { File } from "formidable";
 import { Transaction } from "sequelize";
 
+import { API_ROOT } from "..";
+
 import { Couple, IRequestCreate, IUpdateWithService } from "../model/couple.model";
 import { User } from "../model/user.model";
 
@@ -12,6 +14,10 @@ import { deleteFile, isDefaultFile, uploadFile } from "../util/firebase";
 
 class CoupleService extends Service {
     private FOLDER_NAME = "couples";
+
+    getURL(cupId: string): string {
+        return `${API_ROOT}/couple/${cupId}`;
+    }
 
     async select(cupId: string, exclude: string[] = []): Promise<Couple | null> {
         const couple: Couple | null = await Couple.findOne({

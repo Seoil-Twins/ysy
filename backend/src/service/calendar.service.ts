@@ -1,11 +1,16 @@
-import dayjs from "dayjs";
 import { Op, Transaction } from "sequelize";
+
+import { API_ROOT } from "..";
 
 import { Calendar, ICreate, IUpdate } from "../model/calendar.model";
 
 import { Service } from "./service";
 
-class CalendarService implements Service {
+class CalendarService extends Service {
+    getURL(cupId: string, year: number): string {
+        return `${API_ROOT}/calendar/${cupId}/${year}`;
+    }
+
     async select(calendarId: number): Promise<Calendar | null> {
         const calendar: Calendar | null = await Calendar.findOne({
             where: { calendarId }

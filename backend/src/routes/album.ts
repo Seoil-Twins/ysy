@@ -74,9 +74,9 @@ router.post("/:cup_id", async (req: Request, res: Response, next: NextFunction) 
             cupId: value.cupId,
             title: value.title
         };
-        const album: Album = await albumController.addAlbumFolder(data);
+        const url: string = await albumController.addAlbumFolder(data);
 
-        return res.status(StatusCode.CREATED).json(album);
+        return res.header({ Location: url }).status(StatusCode.CREATED).json({});
     } catch (error) {
         next(error);
     }

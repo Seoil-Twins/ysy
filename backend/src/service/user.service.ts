@@ -3,6 +3,8 @@ import { File } from "formidable";
 import randomString from "randomstring";
 import { Op, Transaction, WhereOptions } from "sequelize";
 
+import { API_ROOT } from "..";
+
 import { Service } from "./service";
 
 import logger from "../logger/logger";
@@ -53,6 +55,10 @@ class UserService extends Service {
         else path = `${this.FOLDER_NAME}/${userId}/profile/${dayjs().valueOf()}.${reqFileName}`;
 
         return path;
+    }
+
+    getURL(): string {
+        return `${API_ROOT}/user/me`;
     }
 
     async select(where: WhereOptions<User>): Promise<User | null> {

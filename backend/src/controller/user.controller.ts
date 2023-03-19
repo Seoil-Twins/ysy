@@ -26,13 +26,16 @@ class UserController {
         return result;
     }
 
-    async createUser(data: ICreate): Promise<void> {
+    async createUser(data: ICreate): Promise<string> {
         const transaction: Transaction = await sequelize.transaction();
 
         try {
             const user: User = await this.userService.create(transaction, data);
             await this.userRoleService.create(transaction, user.userId);
             await transaction.commit();
+
+            const url: string = this.userService.getURL();
+            return url;
         } catch (error) {
             await transaction.rollback();
             logger.error(`User create error => ${JSON.stringify(error)}`);

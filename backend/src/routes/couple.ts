@@ -76,10 +76,10 @@ router.post("/", async (req: Request, res: Response, next: NextFunction) => {
                 title: value.title
             };
 
-            const result: ITokenResponse = await coupleController.createCouple(data, file);
+            const [result, url]: [ITokenResponse, string] = await coupleController.createCouple(data, file);
 
             logger.debug(`Response Data : ${JSON.stringify(result)}`);
-            return res.status(StatusCode.CREATED).json(result);
+            return res.header({ Location: url }).status(StatusCode.CREATED).json(result);
         } catch (error) {
             next(error);
         }

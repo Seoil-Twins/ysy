@@ -43,11 +43,12 @@ class AlbumController {
         return result;
     }
 
-    async addAlbumFolder(data: ICreate): Promise<Album> {
+    async addAlbumFolder(data: ICreate): Promise<string> {
         const album: Album = await this.albumService.create(null, data);
-        logger.debug(`Create Data => ${JSON.stringify(data)}`);
+        logger.debug(`Create Data => ${JSON.stringify(album.dataValues)}`);
 
-        return album;
+        const url: string = this.albumService.getFolderUrl(data.cupId);
+        return url;
     }
 
     async addImages(cupId: string, albumId: number, images: File | File[]): Promise<string> {
@@ -66,7 +67,7 @@ class AlbumController {
             await transaction.commit();
             logger.debug(`Success add albums => ${cupId} | ${albumId} | ${JSON.stringify(images)}`);
 
-            const url = `http://localhost:3000/${cupId}/${albumId}`;
+            const url: string = this.albumService.getAlbumUrl(cupId, albumId);
             return url;
         } catch (error) {
             if (transaction) await transaction.rollback();
