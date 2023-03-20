@@ -1,190 +1,125 @@
 import dayjs from "dayjs";
 import { File } from "formidable";
+import { Transaction } from "sequelize";
 
 import NotFoundError from "../error/notFound";
 import ConflictError from "../error/conflict";
 
 import sequelize from "../model";
-import { ICreate, Inquire, IUpdate } from "../model/inquire.model";
+import { ICreate, Inquire, IUpdateWithController, IUpdateWithService } from "../model/inquire.model";
 import { InquireImage } from "../model/inquireImage.model";
-import { Solution } from "../model/solution.model";
 
 import logger from "../logger/logger";
-import { deleteFile, deleteFiles, deleteFolder, uploadFile, uploadFiles } from "../util/firebase";
-import { SolutionImage } from "../model/solutionImage.model";
-import { Transaction } from "sequelize";
+import { deleteFiles, deleteFolder, uploadFile, uploadFiles } from "../util/firebase";
 
-const FOLDER_NAME = "users";
+import InquireService from "../service/inquire.service";
+import InquireImageService from "../service/inquireImage.service";
 
-/**
- * inquireImage 다중 Image 생성 및 변경을 해주는 함수
- * @param inquireId Inquire Id
- * @param userId User Id (이미지 path 생성할 때 사용)
- * @param images Request로 받은 Image
- * @param transaction transaction
- */
-const uploads = async (inquireId: number, userId: number, images: File | File[], transaction: Transaction): Promise<void> => {
-    try {
-        if (images instanceof Array<File>) {
-            const filePaths: string[] = [];
-            const imagePaths: string[] = [];
+class InquireController {
+    private FOLDER_NAME = "users";
 
-            images.forEach((image: File) => {
-                filePaths.push(image.filepath);
-                imagePaths.push(`${FOLDER_NAME}/${userId}/inquires/${inquireId}/${dayjs().valueOf()}.${image.originalFilename}`);
-            });
+    private inquireService: InquireService;
+    private inquireImageService: InquireImageService;
 
-            const [successResults, failedResults]: PromiseSettledResult<any>[][] = await uploadFiles(filePaths, imagePaths);
-
-            failedResults.forEach((failed) => {
-                logger.error(`Add inquire image error and ignore => ${JSON.stringify(failed)}`);
-            });
-
-            for (const result of successResults) {
-                if (result.status === "fulfilled") {
-                    const path = result.value.metadata.fullPath;
-                    logger.debug(`Create Inquire Image => ${path}`);
-
-                    await InquireImage.create(
-                        {
-                            inquireId: inquireId,
-                            image: path
-                        },
-                        { transaction }
-                    );
-                }
-            }
-        } else if (images instanceof File) {
-            const path = `${FOLDER_NAME}/${userId}/inquires/${inquireId}/${dayjs().valueOf()}.${images.originalFilename}`;
-
-            await InquireImage.create(
-                {
-                    inquireId: inquireId,
-                    image: path
-                },
-                { transaction }
-            );
-
-            await uploadFile(path, images.filepath);
-
-            logger.debug(`Create inquire image => ${path}`);
-        }
-    } catch (error) {
-        logger.error(`Inquire image create error ${JSON.stringify(error)}`);
-        throw error;
+    constructor(inquireService: InquireService, inquireImageService: InquireImageService) {
+        this.inquireService = inquireService;
+        this.inquireImageService = inquireImageService;
     }
-};
 
-const controller = {
     /**
-     * 문의사항들을 가져옵니다.
-     * @param userId User ID
-     * @returns A {@link Inquire} List
+     * inquireImage 다중 Image 생성 및 변경을 해주는 함수
+     * @param inquireId Inquire Id
+     * @param userId User Id (이미지 path 생성할 때 사용)
+     * @param images Request로 받은 Image
+     * @param transaction transaction
      */
-    getInquires: async (userId: number): Promise<Inquire[]> => {
-        const inquires: Inquire[] = await Inquire.findAll({
-            where: { userId },
-            include: [
-                {
-                    model: InquireImage,
-                    as: "inquireImages",
-                    attributes: { exclude: ["inquireId"] }
-                },
-                {
-                    model: Solution,
-                    as: "solution",
-                    attributes: { exclude: ["inquireId"] },
-                    include: [
-                        {
-                            model: SolutionImage,
-                            as: "solutionImages",
-                            attributes: { exclude: ["solutionId"] }
-                        }
-                    ]
-                }
-            ]
-        });
+    private async uploads(inquireId: number, userId: number, images: File | File[], transaction: Transaction): Promise<void> {
+        try {
+            if (images instanceof Array<File>) await this.inquireImageService.createMutiple(transaction, inquireId, userId, images);
+            else if (images instanceof File) await this.inquireImageService.create(transaction, inquireId, userId, images);
+        } catch (error) {
+            logger.error(`Inquire image create error ${JSON.stringify(error)}`);
+            throw error;
+        }
+    }
 
-        if (inquires.length <= 0) throw new NotFoundError("Not Found Inquires");
+    async getInquires(userId: number): Promise<Inquire[]> {
+        const inquires: Inquire[] = await this.inquireService.selectAll(userId);
+        if (inquires.length <= 0) throw new NotFoundError("Not found inquires");
 
         return inquires;
-    },
-    /**
-     * 문의사항을 추가합니다.
-     * @param inquireData {@link ICreate}
-     * @param imageData {@link File} 또는 File[]
-     */
-    addInquire: async (inquireData: ICreate, imageData: File | File[]): Promise<void> => {
+    }
+
+    async addInquire(data: ICreate, images: File | File[]): Promise<string> {
         let transaction: Transaction | undefined = undefined;
 
         try {
             transaction = await sequelize.transaction();
 
-            const inquire: Inquire = await Inquire.create(inquireData, { transaction });
-            logger.debug(`Create Inquire => ${JSON.stringify(inquire)}`);
+            const createdInquire: Inquire = await this.inquireService.create(transaction, data);
+            if (images) await this.uploads(createdInquire.inquireId, createdInquire.userId, images, transaction);
 
-            if (imageData) await uploads(inquire.inquireId, inquire.userId, imageData, transaction);
             await transaction.commit();
+            logger.debug(`Create Inquire => ${JSON.stringify(createdInquire)}`);
+
+            const url: string = this.inquireService.getURL(createdInquire.inquireId);
+            return url;
         } catch (error) {
             if (transaction) await transaction.rollback();
+            logger.error(`Inquire create error => ${JSON.stringify(error)}`);
 
             throw error;
         }
-    },
-    /**
-     * 문의사항을 수정합니다.
-     * @param inquireData {@link IUpdate}
-     * @param imageData {@link File} or {@link File} List
-     */
-    updateInquire: async (inquireData: IUpdate, imageData: File | File[]): Promise<void> => {
+    }
+
+    async updateInquire(data: IUpdateWithController, images: File | File[]): Promise<Inquire> {
         let transaction: Transaction | undefined = undefined;
 
         try {
-            const inquire: Inquire | null = await Inquire.findByPk(inquireData.inquireId);
+            const inquire: Inquire | null = await this.inquireService.select(data.inquireId);
             if (!inquire) throw new NotFoundError("Not Found inquire");
             else if (inquire.solution) throw new ConflictError("This inquiry has already been answered");
 
-            const images: InquireImage[] = await InquireImage.findAll({ where: { inquireId: inquire.inquireId } });
-
             transaction = await sequelize.transaction();
 
-            if (imageData) {
-                const imagePaths: string[] = [];
-                const imageIds: number[] = [];
+            const imagePaths: string[] = [];
+            const imageIds: number[] = [];
 
-                images.forEach((image: InquireImage) => {
-                    imagePaths.push(image.image);
-                    imageIds.push(image.imageId);
-                });
+            inquire.inquireImages?.forEach((image: InquireImage) => {
+                imagePaths.push(image.image);
+                imageIds.push(image.imageId);
+            });
 
-                await InquireImage.destroy({ where: { imageId: imageIds }, transaction });
-                await inquire.update(inquireData, { transaction });
+            await this.inquireImageService.delete(transaction, imageIds);
 
-                await deleteFiles(imagePaths);
-                await uploads(inquire.inquireId, inquire.userId, imageData, transaction);
-            }
+            const updateData: IUpdateWithService = {
+                title: data.title,
+                contents: data.contents
+            };
+            const updatedInquire: Inquire = await this.inquireService.update(transaction, inquire, updateData);
+
+            await deleteFiles(imagePaths);
+            await this.uploads(inquire.inquireId, inquire.userId, images, transaction);
 
             await transaction.commit();
+            return updatedInquire;
         } catch (error) {
             if (transaction) await transaction.rollback();
-            logger.error(`Inquire update error | ${inquireData.inquireId} => ${JSON.stringify(error)}`);
+            logger.error(`Inquire update error | ${data.inquireId} => ${JSON.stringify(error)}`);
 
             throw error;
         }
-    },
-    /**
-     * 문의사항을 삭제합니다.
-     * @param inquireId Inquire Id
-     */
-    deleteInquire: async (inquireId: number): Promise<void> => {
+    }
+
+    async deleteInquire(inquireId: number): Promise<void> {
         let transaction: Transaction | undefined = undefined;
+        const inquire: Inquire | null = await this.inquireService.select(inquireId);
+        if (!inquire) throw new NotFoundError("Not Found Inquire");
+        else if (inquire.solution) throw new ConflictError("This inquiry has already been answered");
 
         try {
-            const inquire: Inquire | null = await Inquire.findByPk(inquireId);
-            if (!inquire) throw new NotFoundError("Not Found Inquire");
-            else if (inquire.solution) throw new ConflictError("This inquiry has already been answered");
-
             transaction = await sequelize.transaction();
+
             const inquireImage: InquireImage[] = await InquireImage.findAll({ where: { inquireId } });
             const imageIds: number[] = [];
 
@@ -192,21 +127,22 @@ const controller = {
                 imageIds.push(image.imageId);
             });
 
-            await InquireImage.destroy({ where: { imageId: imageIds }, transaction });
-            await inquire.destroy({ transaction });
+            await this.inquireImageService.delete(transaction, imageIds);
+            await this.inquireService.delete(transaction, inquire);
 
             if (inquireImage.length > 0) {
-                const path = `${FOLDER_NAME}/${inquire.userId}/inquires/${inquireId}`;
+                const path = `${this.FOLDER_NAME}/${inquire.userId}/inquires/${inquireId}`;
                 await deleteFolder(path);
             }
 
             await transaction.commit();
         } catch (error) {
             if (transaction) await transaction.rollback();
+            logger.error(`Inquire delete error => ${JSON.stringify(error)}`);
 
             throw error;
         }
     }
-};
+}
 
-export default controller;
+export default InquireController;

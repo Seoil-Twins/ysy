@@ -1,4 +1,3 @@
-import dayjs from "dayjs";
 import { DataTypes, Model, literal, NonAttribute } from "sequelize";
 import { HasManyGetAssociationsMixin } from "sequelize/types/associations";
 import { CreationOptional, InferAttributes, InferCreationAttributes } from "sequelize/types/model";
@@ -15,11 +14,13 @@ export interface ICreate {
     contents: string;
 }
 
-export interface IUpdate {
+export interface IUpdateWithController {
     inquireId: number;
     title?: string;
     contents?: string;
 }
+
+export type IUpdateWithService = Omit<IUpdateWithController, "inquireId">;
 // ------------------------------------------ Interface End ---------------------------------------- //
 
 export class Inquire extends Model<InferAttributes<Inquire>, InferCreationAttributes<Inquire>> {
