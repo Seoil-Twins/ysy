@@ -1,10 +1,10 @@
 import express, { Router, Request, Response, NextFunction } from "express";
 import joi, { ValidationResult } from "joi";
-import formidable from "formidable";
+import formidable, { File } from "formidable";
 
-import { IUserResponse } from "../model/user.model";
+import { ICreate, IUpdateWithController, IUserResponse } from "../model/user.model";
 
-import userController from "../controller/user.controller";
+import UserController from "../controller/user.controller";
 
 import logger from "../logger/logger";
 import validator from "../util/validator";
@@ -13,8 +13,14 @@ import StatusCode from "../util/statusCode";
 import BadRequestError from "../error/badRequest";
 import ForbiddenError from "../error/forbidden";
 import InternalServerError from "../error/internalServer";
+import UserService from "../service/user.service";
+import UserRoleService from "../service/userRole.service";
+import { boolean } from "boolean";
 
 const router: Router = express.Router();
+const userService = new UserService();
+const userRoleService = new UserRoleService();
+const userController = new UserController(userService, userRoleService);
 
 const pwPattern = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[$@$!%*#?&])[A-Za-z\d$@$!%*#?&]{8,15}$/;
 const phonePattern = /^[0-9]+$/;
@@ -40,17 +46,13 @@ const updateSchema: joi.Schema = joi.object({
     eventNofi: joi.boolean()
 });
 
-const deleteSchema: joi.Schema = joi.object({
-    userId: joi.number().required()
-});
-
 // Get My Info
 router.get("/me", async (req: Request, res: Response, next: NextFunction) => {
     const userId: number = Number(req.body.userId);
 
     try {
         if (isNaN(userId)) throw new BadRequestError("User ID must be a number type");
-        const result: IUserResponse = await userController.getUsers(userId);
+        const result: IUserResponse = await userController.getUser(userId);
 
         logger.debug(`Response Data : ${JSON.stringify(result)}`);
         return res.status(StatusCode.OK).json(result);
@@ -65,7 +67,7 @@ router.get("/:user_id", async (req: Request, res: Response, next: NextFunction) 
 
     try {
         if (isNaN(userId)) throw new BadRequestError("User ID must be a number type");
-        const result: IUserResponse = await userController.getUsers(userId);
+        const result: IUserResponse = await userController.getUser(userId);
 
         logger.debug(`Response Data : ${JSON.stringify(result)}`);
         return res.status(StatusCode.OK).json(result);
@@ -80,9 +82,20 @@ router.post("/", async (req: Request, res: Response, next: NextFunction) => {
 
     try {
         if (error) throw new BadRequestError(error.message);
-        await userController.createUser(value);
 
-        return res.status(StatusCode.CREATED).json({});
+        const data: ICreate = {
+            snsId: value.snsId,
+            name: value.name,
+            email: value.email,
+            birthday: new Date(value.birthday),
+            password: value.password,
+            phone: value.phone,
+            eventNofi: boolean(value.eventNofi)
+        };
+
+        const url: string = await userController.createUser(data);
+
+        return res.header({ Location: url }).status(StatusCode.CREATED).json({});
     } catch (error) {
         next(error);
     }
@@ -102,15 +115,22 @@ router.patch("/:user_id", async (req: Request, res: Response, next: NextFunction
 
             if (req.params.user_id != req.body.userId) throw new ForbiddenError("You don't same token user ID and path parameter user ID");
             else if (error) throw new BadRequestError(error.message);
-            else if (!value.name && value.dateNofi === undefined && !value.primaryNofi === undefined && !value.file)
+            else if (!value.name && value.dateNofi === undefined && value.primaryNofi === undefined && value.eventNofi && !value.file)
                 throw new BadRequestError("Bad Request Error");
             else if (value.name && value.name.length <= 1) throw new BadRequestError("Bad Request Error");
+            else if (files.file instanceof Array<formidable.File>) throw new BadRequestError("You must request only one profile");
 
-            let file: any = undefined;
-            if (Object.keys(files).length === 1) file = files.file;
+            const data: IUpdateWithController = {
+                userId: value.userId,
+                name: value.password,
+                profile: undefined,
+                primaryNofi: value.primaryNofi,
+                dateNofi: value.dateNofi,
+                eventNofi: value.eventNofi
+            };
+            const file: File | undefined = files.file;
 
-            logger.debug(`${JSON.stringify(req.body)}`);
-            await userController.updateUser(req.body, file);
+            await userController.updateUser(data, file);
 
             return res.status(204).json({});
         } catch (error) {
@@ -121,15 +141,15 @@ router.patch("/:user_id", async (req: Request, res: Response, next: NextFunction
 
 // Delete User Info
 router.delete("/:user_id", async (req: Request, res: Response, next: NextFunction) => {
-    const { value, error }: ValidationResult = validator(req.body, deleteSchema);
+    const userId: number = Number(req.body.userId);
 
     try {
         // Couple 정보를 삭제 후 요청
         if (req.body.cupId) throw new BadRequestError("Bad Request Error");
         else if (req.params.user_id != req.body.userId) throw new ForbiddenError("You don't same token user ID and path parameter user ID");
-        else if (error) throw new BadRequestError(error.message);
+        else if (isNaN(userId)) throw new BadRequestError(`User ID must be a number type`);
 
-        await userController.deleteUser(req.body.userId);
+        await userController.deleteUser(userId);
 
         return res.status(204).json({});
     } catch (error) {

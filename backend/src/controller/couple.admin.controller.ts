@@ -158,7 +158,7 @@ const controller = {
 
                     albums.forEach(async (album: Album) => {
                         try {
-                            await albumController.deleteAlbum(couple.cupId, album.albumId);
+                            // await albumController.deleteAlbum(couple.cupId, album.albumId);
                         } catch (error) {
                             if (error instanceof NotFoundError) return;
                         }

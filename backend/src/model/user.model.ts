@@ -1,16 +1,14 @@
 import dayjs from "dayjs";
 import { DataTypes, Model, literal, NonAttribute, InferAttributes, InferCreationAttributes, CreationOptional } from "sequelize";
 
-import sequelize from ".";
+import sequelize, { applyDateHook } from ".";
 import { Couple } from "./couple.model";
 import { Inquire } from "./inquire.model";
-import { Role } from "./role.model";
 import { UserRole } from "./userRole.model";
 
 // -------------------------------------------- Interface ------------------------------------------ //
 export interface ICreate {
     snsId: string;
-    code: string;
     name: string;
     password: string;
     email: string;
@@ -19,14 +17,17 @@ export interface ICreate {
     eventNofi: boolean;
 }
 
-export interface IUpdate {
+export interface IUpdateWithController {
     userId: number;
+    cupId?: string | null;
     name?: string;
     profile?: string | null;
     primaryNofi?: boolean;
     dateNofi?: boolean;
     eventNofi?: boolean;
 }
+
+export type IUpdateWithService = Omit<IUpdateWithController, "userId">;
 
 export interface IUserResponse {
     userId: number;
@@ -44,7 +45,7 @@ export interface IUserResponse {
     createdTime: Date;
     deleted: boolean;
     deletedTime: Date | null;
-    couple: User | null;
+    couple: User | undefined;
 }
 // -------------------------------------------- Admin ------------------------------------------ //
 
@@ -201,13 +202,7 @@ User.init(
         createdTime: {
             field: "created_time",
             type: "TIMESTAMP",
-            defaultValue: literal("CURRENT_TIMESTAMP"),
-            get(this: User): string | null {
-                const date = dayjs(this.getDataValue("createdTime"));
-                const formatDate = date.format("YYYY-MM-DD HH:mm:ss");
-
-                return date.isValid() ? formatDate : null;
-            }
+            defaultValue: literal("CURRENT_TIMESTAMP")
         },
         deleted: {
             type: DataTypes.BOOLEAN,
@@ -216,13 +211,7 @@ User.init(
         },
         deletedTime: {
             field: "deleted_time",
-            type: "TIMESTAMP",
-            get(this: User): string | null {
-                const date = dayjs(this.getDataValue("deletedTime"));
-                const formatDate = date.format("YYYY-MM-DD HH:mm:ss");
-
-                return date.isValid() ? formatDate : null;
-            }
+            type: "TIMESTAMP"
         }
     },
     {
@@ -231,3 +220,5 @@ User.init(
         tableName: "user"
     }
 );
+
+applyDateHook(User);

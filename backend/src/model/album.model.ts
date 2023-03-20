@@ -1,9 +1,8 @@
 import dayjs from "dayjs";
-import { File } from "formidable";
 import { DataTypes, Model, literal, NonAttribute, HasManyGetAssociationsMixin } from "sequelize";
 import { CreationOptional, InferAttributes, InferCreationAttributes } from "sequelize/types/model";
 
-import sequelize from ".";
+import sequelize, { applyDateHook } from ".";
 import { AlbumImage } from "./albnmImage.model";
 import { Couple } from "./couple.model";
 // -------------------------------------------- Interface ------------------------------------------ //
@@ -14,23 +13,19 @@ export interface ICreate {
 
 export interface IRequestGet {
     albumId: number;
-    cupId: string;
     page: number;
     count: number;
 }
 
 export interface IRequestUpadteTitle {
-    userId: number;
     cupId: string;
     albumId: number;
     title: string;
 }
 
 export interface IRequestUpadteThumbnail {
-    userId: number;
     cupId: string;
     albumId: number;
-    thumbnail: File;
 }
 
 export interface IResponse {
@@ -112,13 +107,7 @@ Album.init(
         createdTime: {
             field: "created_time",
             type: "TIMESTAMP",
-            defaultValue: literal("CURRENT_TIMESTAMP"),
-            get(this: Album): string | null {
-                const date = dayjs(this.getDataValue("createdTime"));
-                const formatDate = date.format("YYYY-MM-DD HH:mm:ss");
-
-                return date.isValid() ? formatDate : null;
-            }
+            defaultValue: literal("CURRENT_TIMESTAMP")
         }
     },
     {
@@ -127,3 +116,5 @@ Album.init(
         timestamps: false
     }
 );
+
+applyDateHook(Album);

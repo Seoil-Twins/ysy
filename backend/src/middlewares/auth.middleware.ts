@@ -6,7 +6,7 @@ import UnauthorizedError from "../error/unauthorized";
 import logger from "../logger/logger";
 import jwt from "../util/jwt";
 
-const checkToken = (req: Request, res: Response, next: NextFunction) => {
+const checkToken = (req: Request, _res: Response, next: NextFunction) => {
     // 해당 URL은 검증을 하지 않아도 됨.
     if (req.originalUrl === "/user" && req.method === "POST") return next();
 

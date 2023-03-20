@@ -1,8 +1,8 @@
 import express, { Router, Request, Response, NextFunction } from "express";
 import joi, { ValidationResult } from "joi";
-import formidable from "formidable";
+import formidable, { File } from "formidable";
 
-import albumController from "../controller/album.controller";
+import AlbumController from "../controller/album.controller";
 
 import logger from "../logger/logger";
 import validator from "../util/validator";
@@ -12,9 +12,14 @@ import BadRequestError from "../error/badRequest";
 import ForbiddenError from "../error/forbidden";
 import InternalServerError from "../error/internalServer";
 
-import { Album, IRequestGet, IResponse } from "../model/album.model";
+import { Album, ICreate, IRequestGet, IRequestUpadteThumbnail, IRequestUpadteTitle, IResponse } from "../model/album.model";
+import AlbumService from "../service/album.service";
+import AlbumImageService from "../service/albumImage.service";
 
 const router: Router = express.Router();
+const albumService = new AlbumService();
+const albumImageService = new AlbumImageService();
+const albumController = new AlbumController(albumService, albumImageService);
 
 const titleSchema: joi.Schema = joi.object({
     userId: joi.number().required(),
@@ -46,7 +51,6 @@ router.get("/:cup_id/:album_id", async (req: Request, res: Response, next: NextF
 
         const data: IRequestGet = {
             albumId: albumId,
-            cupId: req.body.cupId,
             page: page,
             count: count
         };
@@ -66,9 +70,13 @@ router.post("/:cup_id", async (req: Request, res: Response, next: NextFunction) 
         if (error) throw new BadRequestError(error.message);
         else if (req.body.cupId !== req.params.cup_id) throw new ForbiddenError("You don't same token couple ID and path parameter couple ID");
 
-        await albumController.addAlbumFolder(req.body);
+        const data: ICreate = {
+            cupId: value.cupId,
+            title: value.title
+        };
+        const url: string = await albumController.addAlbumFolder(data);
 
-        return res.status(StatusCode.CREATED).json({});
+        return res.header({ Location: url }).status(StatusCode.CREATED).json({});
     } catch (error) {
         next(error);
     }
@@ -82,15 +90,13 @@ router.post("/:cup_id/:album_id", async (req: Request, res: Response, next: Next
             if (err) throw new InternalServerError(`Image Server Error : ${JSON.stringify(err)}`);
             const albumId = Number(req.params.album_id);
 
-            req.body = Object.assign({}, req.body);
-
             if (req.body.cupId !== req.params.cup_id) throw new ForbiddenError("You don't same token couple ID and path parameter couple ID");
             else if (isNaN(albumId)) throw new BadRequestError("Album ID must be a number type");
-            else if (Object.keys(files).length <= 0) throw new BadRequestError("You must request only one thumbnail");
+            else if (!files.images) throw new BadRequestError("You must request images");
 
-            await albumController.addAlbums(req.body.cupId, albumId, files.file);
+            const url: string = await albumController.addImages(req.body.cupId, albumId, files.images);
 
-            return res.status(StatusCode.CREATED).json({});
+            return res.header({ Location: url }).status(StatusCode.CREATED).json({});
         } catch (error) {
             next(error);
         }
@@ -106,10 +112,15 @@ router.patch("/:cup_id/:album_id/title", async (req: Request, res: Response, nex
         if (req.body.cupId !== req.params.cup_id) throw new ForbiddenError("You don't same token couple ID and path parameter couple ID");
         else if (isNaN(albumId)) throw new BadRequestError("Album ID must be a number type");
 
-        req.body.albumId = albumId;
-        await albumController.updateTitle(req.body);
+        const data: IRequestUpadteTitle = {
+            albumId: albumId,
+            cupId: req.body.cupId,
+            title: value.title
+        };
 
-        return res.status(StatusCode.NO_CONTENT).json({});
+        const album: Album = await albumController.updateTitle(data);
+
+        return res.status(StatusCode.OK).json(album);
     } catch (error) {
         next(error);
     }
@@ -125,14 +136,17 @@ router.patch("/:cup_id/:album_id/thumbnail", async (req: Request, res: Response,
 
             if (req.body.cupId !== req.params.cup_id) throw new ForbiddenError("You don't same token couple ID and path parameter couple ID");
             else if (isNaN(albumId)) throw new BadRequestError("Album ID must be a number type");
+            else if (!files.thumbnail) new BadRequestError("You must request only one thumbnail");
+            else if (files.thumbnail instanceof Array<formidable.File>) throw new BadRequestError("You must request only one thumbnail");
 
-            if (Object.keys(files).length === 1) req.body.thumbnail = files.file;
-            else throw new BadRequestError("You must request only one thumbnail");
+            const data: IRequestUpadteThumbnail = {
+                albumId: albumId,
+                cupId: req.body.cupId
+            };
+            const thumbnail: File = files.thumbnail;
+            const album: Album = await albumController.updateThumbnail(data, thumbnail);
 
-            req.body.albumId = albumId;
-            await albumController.updateThumbnail(req.body);
-
-            return res.status(StatusCode.NO_CONTENT).json({});
+            return res.status(StatusCode.OK).json(album);
         } catch (error) {
             next(error);
         }

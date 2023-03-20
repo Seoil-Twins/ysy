@@ -1,9 +1,8 @@
-import dayjs from "dayjs";
 import { DataTypes, Model, literal, NonAttribute } from "sequelize";
 import { HasManyGetAssociationsMixin } from "sequelize/types/associations";
 import { CreationOptional, InferAttributes, InferCreationAttributes } from "sequelize/types/model";
 
-import sequelize from ".";
+import sequelize, { applyDateHook } from ".";
 import { InquireImage } from "./inquireImage.model";
 import { Solution } from "./solution.model";
 import { User } from "./user.model";
@@ -15,11 +14,13 @@ export interface ICreate {
     contents: string;
 }
 
-export interface IUpdate {
+export interface IUpdateWithController {
     inquireId: number;
     title?: string;
     contents?: string;
 }
+
+export type IUpdateWithService = Omit<IUpdateWithController, "inquireId">;
 // ------------------------------------------ Interface End ---------------------------------------- //
 
 export class Inquire extends Model<InferAttributes<Inquire>, InferCreationAttributes<Inquire>> {
@@ -65,13 +66,7 @@ Inquire.init(
         createdTime: {
             field: "created_time",
             type: "TIMESTAMP",
-            defaultValue: literal("CURRENT_TIMESTAMP"),
-            get(this: Inquire): string | null {
-                const date = dayjs(this.getDataValue("createdTime"));
-                const formatDate = date.format("YYYY-MM-DD HH:mm:ss");
-
-                return date.isValid() ? formatDate : null;
-            }
+            defaultValue: literal("CURRENT_TIMESTAMP")
         }
     },
     {
@@ -80,3 +75,5 @@ Inquire.init(
         timestamps: false
     }
 );
+
+applyDateHook(Inquire);

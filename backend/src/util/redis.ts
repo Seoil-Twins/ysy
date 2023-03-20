@@ -12,12 +12,18 @@ const redisClient = redis.createClient({
     url: `redis://${username}:${password}@${host}:${port}`,
     legacyMode: true,
     socket: {
-        connectTimeout: 70000
+        connectTimeout: 70000,
+        reconnectStrategy: (retries) => Math.min(retries * 50, 5000)
     }
 });
 
-redisClient.on("error : ", (err: any) => logger.error(`Redis Error : ${err}`));
-redisClient.connect();
+redisClient.on("connect", () => {
+    logger.debug("Connected to Redis server");
+});
+
+redisClient.on("error", (err) => {
+    logger.error(`Redis Error: ${JSON.stringify(err)}`);
+});
 
 /**
  * Redis에 값을 저장합니다.
@@ -53,3 +59,5 @@ export const del = async (key: string): Promise<number | null> => {
 
     return data;
 };
+
+redisClient.connect();

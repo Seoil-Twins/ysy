@@ -10,7 +10,7 @@ import {
     SearchOptions as CoupleSearchOptions,
     FilterOptions as CoupleFilterOptions,
     IRequestCreate,
-    IUpdate
+    IUpdateWithController
 } from "../model/couple.model";
 import { ITokenResponse } from "../model/auth.model";
 
@@ -85,10 +85,10 @@ router.post("/", canModifyWithEditor, async (req: Request, res: Response, next: 
                 title: req.body.title
             };
 
-            const result: ITokenResponse = await coupleController.createCouple(data, file);
+            // const result: ITokenResponse = await coupleController.createCouple(data, file);
 
-            logger.debug(`Response Data : ${JSON.stringify(result)}`);
-            return res.status(StatusCode.CREATED).json(result);
+            // logger.debug(`Response Data : ${JSON.stringify(result)}`);
+            // return res.status(StatusCode.CREATED).json(result);
         } catch (error) {
             next(error);
         }
@@ -111,14 +111,14 @@ router.patch("/:cup_id", canModifyWithEditor, async (req: Request, res: Response
             if (error) throw new BadRequestError(error.message);
             else if (!file && !req.body.title && !req.body.cupDay) throw new BadRequestError("Request values is empty");
 
-            const data: IUpdate = {
+            const data: IUpdateWithController = {
                 userId: req.body.target,
                 cupId: req.body.cupId,
                 cupDay: req.body.cupDay,
                 title: req.body.title
             };
 
-            await coupleController.updateCouple(data, file);
+            // await coupleController.updateCouple(data, file);
 
             return res.status(StatusCode.NO_CONTENT).json({});
         } catch (error) {

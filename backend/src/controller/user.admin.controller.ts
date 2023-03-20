@@ -368,7 +368,7 @@ const controller = {
             // Inquire 삭제
             for (const user of userHasInquiry) {
                 for (const inquire of user.inquires!) {
-                    await inquireController.deleteInquire(inquire.inquireId);
+                    // await inquireController.deleteInquire(inquire.inquireId);
                     // soluton image 삭제
                     // if (inquire.solution) await solutionController.deleteSolution(inquire.solution.solutionId);
                 }
@@ -382,7 +382,7 @@ const controller = {
 
                 if (albums) {
                     for (const album of albums) {
-                        await albumController.deleteAlbum(user.cupId!, album.albumId);
+                        // await albumController.deleteAlbum(user.cupId!, album.albumId);
                     }
                 }
 

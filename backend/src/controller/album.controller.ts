@@ -1,4 +1,3 @@
-import dayjs from "dayjs";
 import { File } from "formidable";
 import { Transaction } from "sequelize";
 
@@ -10,48 +9,30 @@ import { Album, ICreate, IRequestGet, IRequestUpadteThumbnail, IRequestUpadteTit
 import { AlbumImage } from "../model/albnmImage.model";
 
 import logger from "../logger/logger";
-import { deleteFile, deleteFiles, deleteFolder, uploadFile, uploadFiles } from "../util/firebase";
+import AlbumService from "../service/album.service";
+import AlbumImageService from "../service/albumImage.service";
 
-const FOLDER_NAME = "couples";
+class AlbumController {
+    private albumService: AlbumService;
+    private albumImageService: AlbumImageService;
 
-const controller = {
-    /**
-     * 앨범 폴더를 가져옵니다.
-     * @param cupId Couple Id
-     * @returns A {@link Album}
-     */
-    getAlbumsFolder: async (cupId: string): Promise<Album[]> => {
-        const albums: Album[] = await Album.findAll({
-            where: { cupId: cupId },
-            attributes: { include: [[sequelize.fn("COUNT", sequelize.col("albumImages.album_id")), "total"]] },
-            include: {
-                model: AlbumImage,
-                as: "albumImages",
-                attributes: []
-            },
-            group: "Album.album_id"
-        });
+    constructor(albumService: AlbumService, albumImageService: AlbumImageService) {
+        this.albumService = albumService;
+        this.albumImageService = albumImageService;
+    }
 
-        if (albums.length <= 0) throw new NotFoundError("Not Found Albums");
+    async getAlbumsFolder(cupId: string): Promise<Album[]> {
+        const albums: Album[] = await this.albumService.selectAll(cupId);
+        if (!albums) throw new NotFoundError("Not found albums using token couple ID");
 
         return albums;
-    },
-    /**
-     * 한 앨범의 목록을 가져옵니다.
-     * @param data A {@link IRequestGet}
-     * @returns A {@link IResponse}
-     */
-    getAlbums: async (data: IRequestGet): Promise<IResponse> => {
-        const album: Album | null = await Album.findOne({
-            where: { cupId: data.cupId }
-        });
+    }
 
+    async getAlbums(data: IRequestGet): Promise<IResponse> {
+        const album: Album | null = await this.albumService.select(data.albumId);
         if (!album) throw new NotFoundError("Not Found Albums");
 
-        const { rows, count }: { rows: AlbumImage[]; count: number } = await AlbumImage.findAndCountAll({
-            where: { albumId: data.albumId },
-            attributes: { exclude: ["albumId"] }
-        });
+        const { rows, count }: { rows: AlbumImage[]; count: number } = await this.albumImageService.selectCountWithTotal(data.albumId, data.page, data.count);
 
         const result: IResponse = {
             ...album.dataValues,
@@ -60,162 +41,101 @@ const controller = {
         };
 
         return result;
-    },
-    /**
-     * 앨범 폴더를 만듭니다.
-     *
-     * @param data A {@link IRequestCreate}
-     */
-    addAlbumFolder: async (data: ICreate): Promise<void> => {
-        await Album.create(data);
-        logger.debug(`Create Data => ${JSON.stringify(data)}`);
-    },
-    /**
-     * 앨범 폴더에 하나 또는 여러 개의 이미지를 추가합니다.
-     * @param cupId Couple Id
-     * @param albumId Album Id
-     * @param files 앨범 이미지 파일
-     */
-    addAlbums: async (cupId: string, albumId: number, files: File | File[]): Promise<void> => {
-        let transaction: Transaction | undefined = undefined;
-        const albumFolder = await Album.findByPk(albumId);
+    }
 
-        if (!albumFolder) throw new NotFoundError("Not Found Error");
+    async addAlbumFolder(data: ICreate): Promise<string> {
+        const album: Album = await this.albumService.create(null, data);
+        logger.debug(`Create Data => ${JSON.stringify(album.dataValues)}`);
+
+        const url: string = this.albumService.getFolderUrl(data.cupId);
+        return url;
+    }
+
+    async addImages(cupId: string, albumId: number, images: File | File[]): Promise<string> {
+        const albumFolder: Album | null = await this.albumService.select(albumId);
+        if (!albumFolder) throw new NotFoundError("Not found album using query parameter album ID");
         else if (albumFolder.cupId !== cupId) throw new ForbiddenError("The ID of the album folder and the body ID don't match.");
+
+        let transaction: Transaction | undefined = undefined;
 
         try {
             transaction = await sequelize.transaction();
 
-            if (files instanceof Array<File>) {
-                const filePaths: string[] = [];
-                const imagePaths: string[] = [];
-
-                files.forEach((file: File) => {
-                    filePaths.push(file.filepath);
-                    imagePaths.push(`${FOLDER_NAME}/${cupId}/${albumId}/${dayjs().valueOf()}.${file.originalFilename}`);
-                });
-
-                const [successResults, failedResults]: PromiseSettledResult<any>[][] = await uploadFiles(filePaths, imagePaths);
-
-                failedResults.forEach((failed) => {
-                    logger.error(`Add album error and ignore => ${JSON.stringify(failed)}`);
-                });
-
-                for (const result of successResults) {
-                    if (result.status === "fulfilled") {
-                        await AlbumImage.create(
-                            {
-                                albumId: albumId,
-                                image: result.value.metadata.fullPath
-                            },
-                            { transaction }
-                        );
-                    }
-                }
-            } else if (files instanceof File) {
-                const path = `${FOLDER_NAME}//${cupId}/${albumId}/${dayjs().valueOf()}.${files.originalFilename}`;
-
-                await AlbumImage.create(
-                    {
-                        albumId: albumId,
-                        image: path
-                    },
-                    { transaction }
-                );
-
-                await uploadFile(path, files.filepath);
-            }
+            if (images instanceof Array<File>) await this.albumImageService.createMutiple(transaction, cupId, albumId, images);
+            else if (images instanceof File) await this.albumImageService.create(transaction, cupId, albumId, images);
 
             await transaction.commit();
-            logger.debug(`Success add albums => ${cupId} | ${albumId} | ${JSON.stringify(files)}`);
+            logger.debug(`Success add albums => ${cupId} | ${albumId} | ${JSON.stringify(images)}`);
+
+            const url: string = this.albumService.getAlbumUrl(cupId, albumId);
+            return url;
         } catch (error) {
             if (transaction) await transaction.rollback();
+
             logger.error(`Album Create Error ${JSON.stringify(error)}`);
             throw error;
         }
-    },
-    /**
-     * 앨범 폴더명을 수정합니다.
-     * @param data A {@link IRequestUpadteTitle}
-     */
-    updateTitle: async (data: IRequestUpadteTitle): Promise<void> => {
-        const albumFolder = await Album.findByPk(data.albumId);
+    }
 
-        if (!albumFolder) throw new NotFoundError("Not Found Error");
+    async updateTitle(data: IRequestUpadteTitle): Promise<Album> {
+        const albumFolder = await this.albumService.select(data.albumId);
+        if (!albumFolder) throw new NotFoundError("Not found album using query parameter album ID");
         else if (albumFolder.cupId !== data.cupId) throw new ForbiddenError("The ID of the album folder and the body ID don't match.");
 
-        await albumFolder.update({
-            title: data.title
-        });
-
-        logger.debug(`Update Data => ${JSON.stringify(data)}`);
-    },
-    /**
-     * 앨범 대표 사진을 수정 또는 추가합니다.
-     * @param data A {@link IRequestUpadteThumbnail}
-     */
-    updateThumbnail: async (data: IRequestUpadteThumbnail): Promise<void> => {
-        let isUpload = false;
-        const path = `${FOLDER_NAME}/${data.cupId}/${data.albumId}/thumbnail/${dayjs().valueOf()}.${data.thumbnail.originalFilename}`;
-        const albumFolder = await Album.findByPk(data.albumId);
-
-        if (!albumFolder) throw new NotFoundError("Not Found Error");
-        else if (albumFolder.cupId !== data.cupId) throw new ForbiddenError("The ID of the album folder and the body ID don't match.");
-
-        const prevThumbnail: string | null = albumFolder.thumbnail;
         let transaction: Transaction | undefined = undefined;
 
         try {
             transaction = await sequelize.transaction();
-            await albumFolder.update(
-                {
-                    thumbnail: path
-                },
-                { transaction }
-            );
-            isUpload = true;
 
-            await uploadFile(path, data.thumbnail.filepath);
+            const updatedAlbum: Album = await this.albumService.updateTitle(transaction, albumFolder, data.title);
 
-            if (prevThumbnail) {
-                await deleteFile(prevThumbnail);
-                logger.debug(`Deleted Previous thumbnail => ${prevThumbnail}`);
-            }
+            await transaction.commit();
+            logger.debug(`Album update data => ${JSON.stringify(data)}`);
+
+            return updatedAlbum;
+        } catch (error) {
+            if (transaction) await transaction.rollback();
+
+            logger.error(`Album update title error => ${JSON.stringify(error)}`);
+            throw error;
+        }
+    }
+
+    async updateThumbnail(data: IRequestUpadteThumbnail, thumbnail: File): Promise<Album> {
+        const albumFolder: Album | null = await this.albumService.select(data.albumId);
+        if (!albumFolder) throw new NotFoundError("Not found album using query parameter album ID");
+        else if (albumFolder.cupId !== data.cupId) throw new ForbiddenError("The ID of the album folder and the body ID don't match.");
+
+        let transaction: Transaction | undefined = undefined;
+
+        try {
+            transaction = await sequelize.transaction();
+
+            const updatedAlbum: Album = await this.albumService.updateThumbnail(transaction, albumFolder, thumbnail);
 
             await transaction.commit();
             logger.debug(`Update Data => ${JSON.stringify(data)}`);
-        } catch (error) {
-            if (isUpload) {
-                await deleteFile(path);
-                logger.error(`After updating the firebase, a db error occurred and the firebase image is deleted => ${path}`);
-            }
 
+            return updatedAlbum;
+        } catch (error) {
             if (transaction) await transaction.rollback();
+
+            logger.error(`Album update thumbnail error => ${JSON.stringify(error)}`);
             throw error;
         }
-    },
-    /**
-     * 앨범을 삭제합니다.
-     * @param cupId Couple ID
-     * @param albumId Album ID
-     */
-    deleteAlbum: async (cupId: string, albumId: number): Promise<void> => {
-        const albumFolder = await Album.findByPk(albumId);
+    }
 
-        if (!albumFolder) throw new NotFoundError("Not Found Error");
+    async deleteAlbum(cupId: string, albumId: number): Promise<void> {
+        const albumFolder = await this.albumService.select(albumId);
+        if (!albumFolder) throw new NotFoundError("Not found album using query parameter album ID");
         else if (albumFolder.cupId !== cupId) throw new ForbiddenError("The ID of the album folder and the body ID don't match.");
 
-        const path = `${FOLDER_NAME}/${cupId}/${albumId}`;
         let transaction: Transaction | undefined = undefined;
 
         try {
             transaction = await sequelize.transaction();
 
-            await albumFolder.destroy({ transaction });
-
-            if (albumFolder.thumbnail) await deleteFile(albumFolder.thumbnail);
-            await deleteFolder(path);
-
+            await this.albumService.delete(transaction, albumFolder);
             await transaction.commit();
             logger.debug(`Success Deleted albums => ${cupId}, ${albumId}`);
         } catch (error) {
@@ -224,12 +144,14 @@ const controller = {
             logger.error(`Delete album error => ${JSON.stringify(error)}`);
             throw error;
         }
-    },
-    deleteAlbumImages: async (cupId: string, albumId: number, imageIds: number[]): Promise<void> => {
-        const albumFolder: Album | null = await Album.findByPk(albumId);
-        if (albumFolder && albumFolder.cupId !== cupId) throw new ForbiddenError("The ID of the album folder and the body ID don't match.");
+    }
 
-        const images: AlbumImage[] = await AlbumImage.findAll({ where: { imageId: imageIds } });
+    async deleteAlbumImages(cupId: string, albumId: number, imageIds: number[]): Promise<void> {
+        const albumFolder: Album | null = await this.albumService.select(albumId);
+        if (!albumFolder) throw new NotFoundError("Not found album using query parameter album ID");
+        else if (albumFolder.cupId !== cupId) throw new ForbiddenError("The ID of the album folder and the body ID don't match.");
+
+        const images: AlbumImage[] = await this.albumImageService.select(imageIds);
         if (!images.length || images.length <= 0) throw new NotFoundError("Not found images");
 
         const paths = images.map((image: AlbumImage) => {
@@ -240,9 +162,8 @@ const controller = {
 
         try {
             transaction = await sequelize.transaction();
-            await AlbumImage.destroy({ where: { imageId: imageIds }, transaction });
-            await deleteFiles(paths);
 
+            await this.albumImageService.delete(transaction, imageIds, paths);
             await transaction.commit();
         } catch (error) {
             logger.error(`Delete album error => ${JSON.stringify(error)}`);
@@ -251,6 +172,6 @@ const controller = {
             throw error;
         }
     }
-};
+}
 
-export default controller;
+export default AlbumController;

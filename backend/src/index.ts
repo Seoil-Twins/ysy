@@ -6,6 +6,7 @@
  */
 
 import express, { Application, Request, Response, NextFunction } from "express";
+import dotenv from "dotenv";
 
 import routes from "./routes/index";
 
@@ -16,11 +17,12 @@ import association from "./model/association.config";
 
 import logger from "./logger/logger";
 
+dotenv.config();
+association.config();
+
 const app: Application = express();
 const port = 3000;
 const boolParser = require("express-query-boolean");
-
-association.config();
 
 app.use(express.json());
 app.use(boolParser());
@@ -40,3 +42,5 @@ app.use(errorHandlerMiddleware);
 app.listen(port, () => {
     logger.debug(`Server Listen on port : ${port}!`);
 });
+
+export const API_ROOT = process.env.API_ROOT || `http://localhost:${port}`;
