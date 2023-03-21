@@ -1,9 +1,13 @@
 import express, { Router, Request, Response, NextFunction } from "express";
 
-import noticeController from "../controller/notice.controller";
+import NoticeController from "../controller/notice.controller";
+import NoticeSerivce from "../service/notice.service";
+
 import StatusCode from "../util/statusCode";
 
 const router: Router = express.Router();
+const noticeService: NoticeSerivce = new NoticeSerivce();
+const noticeController: NoticeController = new NoticeController(noticeService);
 
 router.get("/", async (req: Request, res: Response, next: NextFunction) => {
     let count = Number(req.query.count),
