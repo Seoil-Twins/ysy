@@ -20,7 +20,7 @@ class AlbumImageService extends Service {
         return images;
     }
 
-    async selectCountWithTotal(albumId: number, page: number, limit: number): Promise<{ rows: AlbumImage[]; count: number }> {
+    async selectWithTotal(albumId: number, page: number, limit: number): Promise<{ rows: AlbumImage[]; count: number }> {
         const offset: number = (page - 1) * limit;
         const { rows, count }: { rows: AlbumImage[]; count: number } = await AlbumImage.findAndCountAll({
             where: { albumId },

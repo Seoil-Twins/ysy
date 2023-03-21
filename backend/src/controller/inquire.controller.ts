@@ -96,13 +96,15 @@ class InquireController {
                 title: data.title,
                 contents: data.contents
             };
-            const updatedInquire: Inquire = await this.inquireService.update(transaction, inquire, updateData);
 
+            await this.inquireService.update(transaction, inquire, updateData);
             await deleteFiles(imagePaths);
             await this.uploads(inquire.inquireId, inquire.userId, images, transaction);
 
             await transaction.commit();
-            return updatedInquire;
+
+            const updatedInquire: Inquire | null = await this.inquireService.select(data.inquireId);
+            return updatedInquire!;
         } catch (error) {
             if (transaction) await transaction.rollback();
             logger.error(`Inquire update error | ${data.inquireId} => ${JSON.stringify(error)}`);
@@ -121,13 +123,8 @@ class InquireController {
             transaction = await sequelize.transaction();
 
             const inquireImage: InquireImage[] = await InquireImage.findAll({ where: { inquireId } });
-            const imageIds: number[] = [];
 
-            inquireImage.forEach((image: InquireImage) => {
-                imageIds.push(image.imageId);
-            });
-
-            await this.inquireImageService.delete(transaction, imageIds);
+            // inquire Image Table은 delete cascade에 의해 삭제됨.
             await this.inquireService.delete(transaction, inquire);
 
             if (inquireImage.length > 0) {

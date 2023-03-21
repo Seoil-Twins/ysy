@@ -7,7 +7,7 @@ import { Calendar, ICreate, IUpdate, IResponse } from "../model/calendar.model";
 
 import logger from "../logger/logger";
 
-import CalendarService from "../service/Calendar.service";
+import CalendarService from "../service/calendar.service";
 import CoupleService from "../service/couple.service";
 
 dayjs().locale("ko");

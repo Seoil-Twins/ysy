@@ -1,10 +1,9 @@
 import express, { Router, Request, Response, NextFunction } from "express";
 import joi, { ValidationResult } from "joi";
 import formidable, { File } from "formidable";
+import { boolean } from "boolean";
 
-import { ICreate, IUpdateWithController, IUserResponse } from "../model/user.model";
-
-import UserController from "../controller/user.controller";
+import { ICreate, IUpdateWithController, IUserResponse, User } from "../model/user.model";
 
 import logger from "../logger/logger";
 import validator from "../util/validator";
@@ -13,9 +12,10 @@ import StatusCode from "../util/statusCode";
 import BadRequestError from "../error/badRequest";
 import ForbiddenError from "../error/forbidden";
 import InternalServerError from "../error/internalServer";
+
+import UserController from "../controller/user.controller";
 import UserService from "../service/user.service";
 import UserRoleService from "../service/userRole.service";
-import { boolean } from "boolean";
 
 const router: Router = express.Router();
 const userService = new UserService();
@@ -130,9 +130,9 @@ router.patch("/:user_id", async (req: Request, res: Response, next: NextFunction
             };
             const file: File | undefined = files.file;
 
-            await userController.updateUser(data, file);
+            const user: User = await userController.updateUser(data, file);
 
-            return res.status(204).json({});
+            return res.status(StatusCode.OK).json(user);
         } catch (error) {
             next(error);
         }
@@ -151,7 +151,7 @@ router.delete("/:user_id", async (req: Request, res: Response, next: NextFunctio
 
         await userController.deleteUser(userId);
 
-        return res.status(204).json({});
+        return res.status(StatusCode.NO_CONTENT).json({});
     } catch (error) {
         next(error);
     }

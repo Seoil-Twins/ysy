@@ -32,7 +32,7 @@ class AlbumController {
         const album: Album | null = await this.albumService.select(data.albumId);
         if (!album) throw new NotFoundError("Not Found Albums");
 
-        const { rows, count }: { rows: AlbumImage[]; count: number } = await this.albumImageService.selectCountWithTotal(data.albumId, data.page, data.count);
+        const { rows, count }: { rows: AlbumImage[]; count: number } = await this.albumImageService.selectWithTotal(data.albumId, data.page, data.count);
 
         const result: IResponse = {
             ...album.dataValues,

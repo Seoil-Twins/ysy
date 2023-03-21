@@ -2,8 +2,6 @@ import express, { Router, Request, Response, NextFunction } from "express";
 import joi, { ValidationResult } from "joi";
 import formidable, { File } from "formidable";
 
-import CoupleController from "../controller/couple.controller";
-
 import logger from "../logger/logger";
 import validator from "../util/validator";
 import StatusCode from "../util/statusCode";
@@ -14,6 +12,8 @@ import BadRequestError from "../error/badRequest";
 
 import { ITokenResponse } from "../model/auth.model";
 import { Couple, IRequestCreate, IUpdateWithController } from "../model/couple.model";
+
+import CoupleController from "../controller/couple.controller";
 import CoupleService from "../service/couple.service";
 import UserService from "../service/user.service";
 import UserRoleService from "../service/userRole.service";
@@ -110,9 +110,9 @@ router.patch("/:cup_id", async (req: Request, res: Response, next: NextFunction)
                 title: value.title
             };
 
-            await coupleController.updateCouple(data, file);
+            const couple: Couple = await coupleController.updateCouple(data, file);
 
-            return res.status(StatusCode.NO_CONTENT).json({});
+            return res.status(StatusCode.OK).json(couple);
         } catch (error) {
             next(error);
         }
@@ -132,7 +132,7 @@ router.delete("/:cup_id", async (req: Request, res: Response, next: NextFunction
         const result: ITokenResponse = await coupleController.deleteCouple(userId, cupId);
 
         logger.debug(`Response Data : ${JSON.stringify(result)}`);
-        return res.status(StatusCode.NO_CONTENT).json(result);
+        return res.status(StatusCode.OK).json(result);
     } catch (error) {
         next(error);
     }

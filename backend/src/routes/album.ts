@@ -3,6 +3,8 @@ import joi, { ValidationResult } from "joi";
 import formidable, { File } from "formidable";
 
 import AlbumController from "../controller/album.controller";
+import AlbumService from "../service/album.service";
+import AlbumImageService from "../service/albumImage.service";
 
 import logger from "../logger/logger";
 import validator from "../util/validator";
@@ -13,8 +15,6 @@ import ForbiddenError from "../error/forbidden";
 import InternalServerError from "../error/internalServer";
 
 import { Album, ICreate, IRequestGet, IRequestUpadteThumbnail, IRequestUpadteTitle, IResponse } from "../model/album.model";
-import AlbumService from "../service/album.service";
-import AlbumImageService from "../service/albumImage.service";
 
 const router: Router = express.Router();
 const albumService = new AlbumService();

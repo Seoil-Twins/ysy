@@ -2,6 +2,8 @@ import express, { Router, Request, Response, NextFunction } from "express";
 import joi, { ValidationResult } from "joi";
 
 import CalendarController from "../controller/calendar.controller";
+import CalendarService from "../service/calendar.service";
+import CoupleService from "../service/couple.service";
 
 import logger from "../logger/logger";
 import validator from "../util/validator";
@@ -11,9 +13,6 @@ import BadRequestError from "../error/badRequest";
 import ForbiddenError from "../error/forbidden";
 
 import { Calendar, IResponse } from "../model/calendar.model";
-
-import CalendarService from "../service/Calendar.service";
-import CoupleService from "../service/couple.service";
 
 const router: Router = express.Router();
 const calendarService: CalendarService = new CalendarService();
