@@ -10,10 +10,9 @@ import {
     IUserResponseWithCount,
     PageOptions as UserPageOptions,
     SearchOptions as UserSearchOptions,
-    FilterOptions as UserFilterOptions
+    FilterOptions as UserFilterOptions,
+    User
 } from "../model/user.model";
-
-import userAdminController from "../controller/user.admin.controller";
 
 import logger from "../logger/logger";
 import validator from "../util/validator";
@@ -23,9 +22,37 @@ import { canModifyWithEditor, canView } from "../util/checkRole";
 import BadRequestError from "../error/badRequest";
 import InternalServerError from "../error/internalServer";
 
+import UserAdminController from "../controller/user.admin.controller";
+import UserService from "../service/user.service";
+import UserAdminService from "../service/user.admin.service";
+import UserRoleService from "../service/userRole.service";
+import CoupleAdminService from "../service/couple.admin.service";
+import AlbumService from "../service/album.service";
+import InquireService from "../service/inquire.service";
+import CalendarService from "../service/calendar.service";
+import InquireImageService from "../service/inquireImage.service";
+
 dayjs.locale("ko");
 
 const router: Router = express.Router();
+const userService: UserService = new UserService();
+const userAdminService: UserAdminService = new UserAdminService();
+const userRoleService: UserRoleService = new UserRoleService();
+const coupleAdminService: CoupleAdminService = new CoupleAdminService();
+const albumService: AlbumService = new AlbumService();
+const calendarservice: CalendarService = new CalendarService();
+const inquireService: InquireService = new InquireService();
+const inquireImageService: InquireImageService = new InquireImageService();
+const userAdminController: UserAdminController = new UserAdminController(
+    userService,
+    userAdminService,
+    userRoleService,
+    coupleAdminService,
+    albumService,
+    calendarservice,
+    inquireService,
+    inquireImageService
+);
 
 const pwPattern = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[$@$!%*#?&])[A-Za-z\d$@$!%*#?&]{8,15}$/;
 const phonePattern = /^[0-9]+$/;
@@ -101,22 +128,21 @@ router.post("/", canModifyWithEditor, async (req: Request, res: Response, next: 
             else if (files.file instanceof Array<formidable.File>) throw new BadRequestError("You must request only one profile");
 
             const data: ICreateWithAdmin = {
-                snsId: req.body.snsId,
-                name: req.body.name,
-                email: req.body.email,
-                code: req.body.code,
-                password: req.body.password,
-                phone: req.body.phone,
-                birthday: req.body.birthday,
-                primaryNofi: req.body.primaryNofi,
-                eventNofi: req.body.eventNofi,
-                dateNofi: req.body.dateNofi,
-                role: req.body.role
+                snsId: value.snsId,
+                name: value.name,
+                email: value.email,
+                code: value.code,
+                password: value.password,
+                phone: value.phone,
+                birthday: value.birthday,
+                primaryNofi: value.primaryNofi,
+                eventNofi: value.eventNofi,
+                dateNofi: value.dateNofi,
+                role: value.role
             };
 
-            await userAdminController.createUser(data, files.file);
-
-            return res.status(StatusCode.CREATED).json({});
+            const url: string = await userAdminController.createUser(data, files.file);
+            return res.header({ Location: url }).status(StatusCode.CREATED).json({});
         } catch (error) {
             next(error);
         }
@@ -138,22 +164,22 @@ router.patch("/:user_id", canModifyWithEditor, async (req: Request, res: Respons
             else if (files.file instanceof Array<formidable.File>) throw new BadRequestError("You must request only one profile");
 
             const data: IUpdateWithAdmin = {
-                name: req.body.name,
-                email: req.body.email,
-                code: req.body.code,
-                password: req.body.password,
-                phone: req.body.phone,
-                birthday: req.body.birthday,
-                primaryNofi: req.body.primaryNofi,
-                eventNofi: req.body.eventNofi,
-                dateNofi: req.body.dateNofi,
-                deleted: req.body.deleted,
-                role: req.body.role
+                name: value.name,
+                email: value.email,
+                code: value.code,
+                password: value.password,
+                phone: value.phone,
+                birthday: value.birthday,
+                primaryNofi: value.primaryNofi,
+                eventNofi: value.eventNofi,
+                dateNofi: value.dateNofi,
+                deleted: value.deleted,
+                role: value.role
             };
 
-            await userAdminController.updateUser(userId, data, files.file);
+            const user: User = await userAdminController.updateUser(userId, data, files.file);
 
-            return res.status(StatusCode.NO_CONTENT).json({});
+            return res.status(StatusCode.OK).json(user);
         } catch (error) {
             next(error);
         }
@@ -170,7 +196,6 @@ router.delete("/:user_ids", canView, async (req: Request, res: Response, next: N
         if (!numberUserIds || numberUserIds.length <= 0) throw new BadRequestError("user ID must be a number type");
 
         await userAdminController.deleteUser(numberUserIds);
-
         return res.status(StatusCode.OK).json({});
     } catch (error) {
         next(error);

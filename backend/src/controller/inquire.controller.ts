@@ -122,15 +122,17 @@ class InquireController {
         try {
             transaction = await sequelize.transaction();
 
-            const inquireImage: InquireImage[] = await InquireImage.findAll({ where: { inquireId } });
+            const imageIds: number[] = [];
+            const inquireImages: InquireImage[] = await InquireImage.findAll({ where: { inquireId } });
 
             // inquire Image Table은 delete cascade에 의해 삭제됨.
             await this.inquireService.delete(transaction, inquire);
 
-            if (inquireImage.length > 0) {
-                const path = `${this.FOLDER_NAME}/${inquire.userId}/inquires/${inquireId}`;
-                await deleteFolder(path);
-            }
+            inquireImages.forEach((inquire: InquireImage) => {
+                imageIds.push(inquire.imageId);
+            });
+
+            await this.inquireImageService.deleteWitFirebase(transaction, imageIds, inquire);
 
             await transaction.commit();
         } catch (error) {

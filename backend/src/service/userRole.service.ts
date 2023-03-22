@@ -17,25 +17,29 @@ class UserRoleService extends Service {
                 model: Role,
                 as: "role",
                 attributes: { exclude: ["roleId"] }
-            },
-            raw: true
+            }
         });
 
         return role;
     }
 
-    async create(transaction: Transaction | null = null, userId: number): Promise<void> {
+    async create(transaction: Transaction | null = null, userId: number, roleId: number): Promise<void> {
         await UserRole.create(
             {
-                userId: userId,
-                roleId: 4
+                userId,
+                roleId
             },
             { transaction }
         );
     }
 
-    async update(transaction: Transaction, ...args: any[]): Promise<void> {
-        throw new Error("Method not implemented.");
+    async update(transaction: Transaction | null = null, userRole: UserRole, roleId: number): Promise<void> {
+        await userRole.update(
+            {
+                roleId
+            },
+            { transaction }
+        );
     }
 
     async delete(transaction: Transaction, ...args: any[]): Promise<any> {

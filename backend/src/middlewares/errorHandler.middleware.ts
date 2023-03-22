@@ -16,7 +16,7 @@ const globalErrorHandler: ErrorRequestHandler = (e: any, req: Request, res: Resp
             statusCode: e.statusCode
         });
     } else {
-        logger.error(`Server Error : ${e}`);
+        logger.error(`Server Error : ${JSON.stringify(e)} ${e.stack}`);
         res.status(StatusCode.INTERNAL_SERVER_ERROR).json({
             type: "Internal Server Error",
             message: "Unknown Error",

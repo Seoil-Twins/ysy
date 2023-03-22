@@ -9,6 +9,7 @@ import logger from "../logger/logger";
 import sequelize from "../model";
 import { AlbumImage } from "../model/albnmImage.model";
 import { Album, ICreate } from "../model/album.model";
+import { Couple } from "../model/couple.model";
 import { deleteFile, deleteFolder, uploadFile } from "../util/firebase";
 
 import { Service } from "./service";
@@ -66,6 +67,11 @@ class AlbumService extends Service {
         options!.where = { cupId };
 
         const albums: Album[] = await Album.findAll(options);
+        return albums;
+    }
+
+    async selectWithCouple(couple: Couple): Promise<Album[]> {
+        const albums: Album[] = await couple.getAlbums();
         return albums;
     }
 

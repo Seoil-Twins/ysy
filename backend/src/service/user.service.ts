@@ -9,20 +9,19 @@ import { Service } from "./service";
 
 import logger from "../logger/logger";
 import { User, IUserResponse, ICreate, IUpdateWithService } from "../model/user.model";
+import { Couple } from "../model/couple.model";
 
 import UnauthorizedError from "../error/unauthorized";
 import ConflictError from "../error/conflict";
 
-import { deleteFile, isDefaultFile, uploadFile } from "../util/firebase";
+import { deleteFile, uploadFile } from "../util/firebase";
 import { createDigest } from "../util/password";
 
 import NotFoundError from "../error/notFound";
 import ForbiddenError from "../error/forbidden";
 
 class UserService extends Service {
-    private FOLDER_NAME = "users";
-
-    private async createCode(): Promise<string> {
+    async createCode(): Promise<string> {
         let isNot = true;
         let code = "";
 
@@ -32,29 +31,11 @@ class UserService extends Service {
                 charset: "alphanumeric"
             });
 
-            const user: User | null = await User.findOne({
-                where: { code }
-            });
-
+            const user: User | null = await this.select({ code });
             if (!user) isNot = false;
         }
 
         return code;
-    }
-
-    private createProfilePath(userId: number, file: File): string | null {
-        let path: string | null = "";
-        const reqFileName = file.originalFilename!;
-        const isDefault = isDefaultFile(reqFileName);
-
-        /**
-         * Frontend에선 static으로 default.jpg,png,svg 셋 중 하나 갖고있다가
-         * 사용자가 profile을 내리면 그걸로 넣고 요청
-         */
-        if (isDefault) path = null;
-        else path = `${this.FOLDER_NAME}/${userId}/profile/${dayjs().valueOf()}.${reqFileName}`;
-
-        return path;
     }
 
     getURL(): string {
@@ -96,6 +77,11 @@ class UserService extends Service {
         return result;
     }
 
+    async selectWithCouple(couple: Couple): Promise<User[]> {
+        const users: User[] = await couple.getUsers();
+        return users;
+    }
+
     async create(transaction: Transaction | null = null, data: ICreate): Promise<User> {
         const user: User | null = await this.select({ email: data.email, phone: data.phone });
         if (user) throw new ConflictError("Duplicated User");
@@ -124,13 +110,12 @@ class UserService extends Service {
         if (user.deleted) throw new ForbiddenError("User is deleted");
 
         let isUpload = false;
-        let path: string | null = "";
         let prevProfile: string | null = user.profile;
 
         try {
-            if (file) {
-                data.profile = this.createProfilePath(user.userId, file);
+            const updatedUser: User = await user.update(data, { transaction });
 
+            if (file) {
                 // profile 있으면 업로드
                 if (data.profile) {
                     await uploadFile(data.profile, file.filepath);
@@ -143,14 +128,12 @@ class UserService extends Service {
                 }
             }
 
-            await user.update(data, { transaction });
-
-            return user;
+            return updatedUser;
         } catch (error) {
             // Firebase에는 업로드 되었지만 DB 오류가 발생했다면 Firebase Profile 삭제
             if (data.profile && isUpload) {
-                await deleteFile(path!);
-                logger.error(`After updating the firebase, a db error occurred and the firebase profile is deleted => ${path}`);
+                await deleteFile(data.profile);
+                logger.error(`After updating the firebase, a db error occurred and the firebase profile is deleted => ${data.profile}`);
             }
 
             throw error;

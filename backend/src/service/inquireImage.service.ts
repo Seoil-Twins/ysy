@@ -1,9 +1,14 @@
 import dayjs from "dayjs";
 import { File } from "formidable";
 import { Transaction } from "sequelize";
+
 import logger from "../logger/logger";
+
+import { Inquire } from "../model/inquire.model";
 import { InquireImage } from "../model/inquireImage.model";
-import { uploadFile, uploadFiles } from "../util/firebase";
+
+import { deleteFolder, uploadFile, uploadFiles } from "../util/firebase";
+
 import { Service } from "./service";
 
 class InquireImageService extends Service {
@@ -69,6 +74,13 @@ class InquireImageService extends Service {
 
     async delete(transaction: Transaction | null, imageIds: number[]): Promise<void> {
         await InquireImage.destroy({ where: { imageId: imageIds }, transaction });
+    }
+
+    async deleteWitFirebase(transaction: Transaction | null, imageIds: number[], inquire: Inquire): Promise<void> {
+        await InquireImage.destroy({ where: { imageId: imageIds }, transaction });
+
+        const path = `${this.FOLDER_NAME}/${inquire.userId}/inquires/${inquire.inquireId}`;
+        await deleteFolder(path);
     }
 }
 

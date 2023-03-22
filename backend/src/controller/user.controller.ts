@@ -31,7 +31,7 @@ class UserController {
 
         try {
             const user: User = await this.userService.create(transaction, data);
-            await this.userRoleService.create(transaction, user.userId);
+            await this.userRoleService.create(transaction, user.userId, 4);
             await transaction.commit();
 
             const url: string = this.userService.getURL();

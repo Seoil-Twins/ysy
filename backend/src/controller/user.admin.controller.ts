@@ -1,106 +1,62 @@
 import dayjs from "dayjs";
-import randomString from "randomstring";
-import { Op, OrderItem, Transaction, WhereOptions } from "sequelize";
+import { Op, Transaction } from "sequelize";
 import { File } from "formidable";
 import { boolean } from "boolean";
 
 import logger from "../logger/logger";
-import { deleteFile, isDefaultFile, uploadFile } from "../util/firebase";
+import { createProfilePath, deleteFile } from "../util/firebase";
 import { createDigest } from "../util/password";
 
 import sequelize from "../model";
 import { User, IUserResponseWithCount, PageOptions, SearchOptions, FilterOptions, IUpdateWithAdmin, ICreateWithAdmin } from "../model/user.model";
-import { Solution } from "../model/solution.model";
 import { UserRole } from "../model/userRole.model";
-import { Couple } from "../model/couple.model";
 import { Album } from "../model/album.model";
-import { Inquire } from "../model/inquire.model";
-
-import albumController from "./album.controller";
-import inquireController from "./inquire.controller";
+import { Calendar } from "../model/calendar.model";
+import { InquireImage } from "../model/inquireImage.model";
 
 import NotFoundError from "../error/notFound";
 import ConflictError from "../error/conflict";
 
-const FOLDER_NAME = "users";
+import UserAdminService from "../service/user.admin.service";
+import UserService from "../service/user.service";
+import UserRoleService from "../service/userRole.service";
+import InquireService from "../service/inquire.service";
+import AlbumService from "../service/album.service";
+import CalendarService from "../service/calendar.service";
+import CoupleAdminService from "../service/couple.admin.service";
+import InquireImageService from "../service/inquireImage.service";
 
-const createSort = (sort: string): OrderItem => {
-    let result: OrderItem = ["name", "ASC"];
+class UserAdminController {
+    private FOLDER_NAME = "users";
+    private userService: UserService;
+    private userAdminService: UserAdminService;
+    private userRoleService: UserRoleService;
+    private coupleAdminService: CoupleAdminService;
+    private albumService: AlbumService;
+    private calendarService: CalendarService;
+    private inquireService: InquireService;
+    private inquireImageService: InquireImageService;
 
-    switch (sort) {
-        case "na":
-            result = ["name", "ASC"];
-            break;
-        case "nd":
-            result = ["name", "DESC"];
-            break;
-        case "r":
-            result = ["createdTime", "DESC"];
-            break;
-        case "o":
-            result = ["createdTime", "ASC"];
-            break;
-        case "dr":
-            result = ["deletedTime", "DESC"];
-            break;
-        case "do":
-            result = ["deletedTime", "ASC"];
-            break;
-        default:
-            result = ["name", "ASC"];
-            break;
+    constructor(
+        userService: UserService,
+        userAdminService: UserAdminService,
+        userRoleService: UserRoleService,
+        coupleAdminService: CoupleAdminService,
+        albumService: AlbumService,
+        calendarService: CalendarService,
+        inquireService: InquireService,
+        inquireImageService: InquireImageService
+    ) {
+        this.userService = userService;
+        this.userAdminService = userAdminService;
+        this.userRoleService = userRoleService;
+        this.coupleAdminService = coupleAdminService;
+        this.albumService = albumService;
+        this.calendarService = calendarService;
+        this.inquireService = inquireService;
+        this.inquireImageService = inquireImageService;
     }
 
-    return result;
-};
-
-const createWhere = (searchOptions: SearchOptions, filterOptions: FilterOptions): WhereOptions => {
-    let result: WhereOptions = {};
-
-    if (searchOptions.name && searchOptions.name !== "undefined") result["name"] = { [Op.like]: `%${searchOptions.name}%` };
-    if (searchOptions.snsId && searchOptions.snsId !== "undefined") result["snsId"] = searchOptions.snsId;
-    if (filterOptions.isCouple) result["cupId"] = { [Op.not]: null };
-    if (filterOptions.isDeleted) result["deleted"] = true;
-
-    return result;
-};
-
-const createCode = async (): Promise<string> => {
-    let isNot = true;
-    let code = "";
-
-    while (isNot) {
-        code = randomString.generate({
-            length: 6,
-            charset: "alphanumeric"
-        });
-
-        const user: User | null = await User.findOne({
-            where: { code }
-        });
-
-        if (!user) isNot = false;
-    }
-
-    return code;
-};
-
-const createProfilePath = (userId: number, file: File): string | null => {
-    let path: string | null = "";
-    const reqFileName = file.originalFilename!;
-    const isDefault = isDefaultFile(reqFileName);
-
-    /**
-     * Frontend에선 static으로 default.jpg,png,svg 셋 중 하나 갖고있다가
-     * 사용자가 profile을 내리면 그걸로 넣고 요청
-     */
-    if (isDefault) path = null;
-    else path = `${FOLDER_NAME}/${userId}/profile/${dayjs().valueOf()}.${reqFileName}`;
-
-    return path;
-};
-
-const controller = {
     /**
      * Admin API 전용이며 Pagination, Sort, Search 등을 사용하여 검색할 수 있습니다.
      * ```typescript
@@ -126,17 +82,9 @@ const controller = {
      * @param filterOptions A {@link FilterOptions}
      * @returns A {@link IUserResponseWithCount}
      */
-    getUsersWithSearch: async (pageOptions: PageOptions, searchOptions: SearchOptions, filterOptions: FilterOptions): Promise<IUserResponseWithCount> => {
-        const offset = (pageOptions.page - 1) * pageOptions.count;
-        const sort: OrderItem = createSort(pageOptions.sort);
-        const where: WhereOptions = createWhere(searchOptions, filterOptions);
-
-        const { rows, count }: { rows: User[]; count: number } = await User.findAndCountAll({
-            offset: offset,
-            limit: pageOptions.count,
-            order: [sort],
-            where
-        });
+    async getUsersWithSearch(pageOptions: PageOptions, searchOptions: SearchOptions, filterOptions: FilterOptions): Promise<IUserResponseWithCount> {
+        const [rows, count]: [User[], number] = await this.userAdminService.select(pageOptions, searchOptions, filterOptions);
+        if (rows.length <= 0 && count === 0) throw new NotFoundError("Not found users");
 
         const result: IUserResponseWithCount = {
             users: rows,
@@ -144,7 +92,8 @@ const controller = {
         };
 
         return result;
-    },
+    }
+
     /**
      * Admin API 전용이며, 기존 Create보다 더 많은 정보를 생성할 수 있습니다.
      * ```typescript
@@ -167,70 +116,41 @@ const controller = {
      * @param data A {@link ICreateWithAdmin}
      * @param file A {@link File} | undefined
      */
-    createUser: async (data: ICreateWithAdmin, file?: File): Promise<void> => {
+    async createUser(data: ICreateWithAdmin, file?: File): Promise<string> {
         let isUpload = false;
-        let path: string | null = "";
-        const user: User | null = await User.findOne({
-            where: {
-                [Op.or]: [{ email: data.email }, { phone: data.phone }]
-            }
+
+        const user: User | null = await this.userService.select({
+            [Op.or]: [{ email: data.email }, { phone: data.phone }, { code: data.code }]
         });
 
         if (user) throw new ConflictError("Duplicated User");
-        if (data.code) {
-            const user: User | null = await User.findOne({
-                where: { code: data.code }
-            });
-
-            if (user) data.code = await createCode();
-        } else {
-            data.code = await createCode();
-        }
+        if (!data.code) data.code = await this.userService.createCode();
 
         let transaction: Transaction | undefined = undefined;
-        const hash: string = await createDigest(data.password);
-        data.password = hash;
+        data.password = await createDigest(data.password);
 
         try {
             transaction = await await sequelize.transaction();
 
-            const createdUser: User = await User.create(
-                {
-                    snsId: data.snsId,
-                    name: data.name,
-                    email: data.email,
-                    code: data.code,
-                    password: hash,
-                    phone: data.phone,
-                    birthday: data.birthday,
-                    primaryNofi: boolean(data.primaryNofi),
-                    eventNofi: boolean(data.eventNofi),
-                    dateNofi: boolean(data.dateNofi)
-                },
-                { transaction }
-            );
-
-            await UserRole.create(
-                {
-                    userId: createdUser.userId,
-                    roleId: data.role
-                },
-                { transaction }
-            );
+            const createdUser: User = await this.userAdminService.create(transaction, data);
+            await this.userRoleService.create(transaction, createdUser.userId, data.role);
 
             if (file) {
-                data.profile = createProfilePath(createdUser.userId, file);
-                await createdUser.update({ profile: data.profile }, { transaction });
-                await uploadFile(path, file.filepath);
+                data.profile = createProfilePath(this.FOLDER_NAME, createdUser.userId, file);
+                await this.userService.update(transaction, createdUser, { profile: data.profile! }, file);
                 isUpload = true;
             }
 
             await transaction.commit();
+            logger.debug(`Created User => ${data.email}`);
+
+            const url: string = this.userAdminService.getURL();
+            return url;
         } catch (error) {
             // Firebase에는 업로드 되었지만 DB 오류가 발생했다면 Firebase Profile 삭제
             if (file && isUpload) {
-                await deleteFile(path!);
-                logger.error(`After updating the firebase, a db error occurred and the firebase profile is deleted => ${path}`);
+                await deleteFile(data.profile!);
+                logger.error(`After updating the firebase, a db error occurred and the firebase profile is deleted => ${data.profile}`);
             }
 
             if (transaction) await transaction.rollback();
@@ -238,9 +158,8 @@ const controller = {
 
             throw error;
         }
+    }
 
-        logger.debug(`Created User => ${data.email}`);
-    },
     /**
      * Admin API이며 전용이며, 기존 Update보다 더 많은 정보를 수정할 수 있습니다.
      * ```typescript
@@ -268,88 +187,55 @@ const controller = {
      * @param data A {@link IUpdateAll}
      * @param file A {@link File}
      */
-    updateUser: async (userId: number, data: IUpdateWithAdmin, file?: File): Promise<void> => {
+    async updateUser(userId: number, data: IUpdateWithAdmin, file?: File): Promise<User> {
         let isUpload = false;
-        let path: string | null = "";
 
-        const user: User | null = await User.findOne({
-            where: { userId }
-        });
+        const user: User | null = await this.userService.select({ userId });
         if (!user) throw new NotFoundError("Not Found User");
 
-        let prevProfile: string | null = user.profile;
         let transaction: Transaction | undefined = undefined;
 
         try {
             transaction = await sequelize.transaction();
 
             if (data.role) {
-                const userRole: UserRole | null = await UserRole.findOne({ where: { userId } });
-
+                const userRole: UserRole | null = await this.userRoleService.select(userId);
                 if (!userRole) throw new NotFoundError(`Not found User Role. userId : ${userId}`);
-                await userRole.update({ roleId: data.role }, { transaction });
+
+                await this.userRoleService.update(transaction, userRole, data.role);
             }
 
             if (data.password) data.password = await createDigest(data.password);
             if (boolean(data.deleted)) data.deletedTime = new Date(dayjs().valueOf());
             else if (data.deleted !== undefined && boolean(data.deleted) === false) data.deletedTime = null;
 
-            if (file) {
-                data.profile = createProfilePath(userId, file);
-
-                // profile 있으면 업로드
-                if (data.profile) {
-                    await uploadFile(data.profile, file.filepath);
-                    isUpload = true;
-
-                    if (prevProfile) await deleteFile(prevProfile); // 전에 있던 profile 삭제
-                } else if (prevProfile && !data.profile) {
-                    // default 이미지로 변경시
-                    await deleteFile(prevProfile);
-                }
-            }
-
-            await user.update(data, { transaction });
-            logger.debug(`Update Data => ${JSON.stringify(data)}`);
+            if (file) data.profile = createProfilePath(this.FOLDER_NAME, userId, file);
+            const updatedUser: User = await this.userAdminService.update(transaction, user, data, file);
+            isUpload = true;
 
             await transaction.commit();
+            logger.debug(`Update Data => ${JSON.stringify(data)}`);
+
+            return updatedUser;
         } catch (error) {
             // Firebase에는 업로드 되었지만 DB 오류가 발생했다면 Firebase Profile 삭제
             if (data.profile && isUpload) {
-                await deleteFile(path!);
-                logger.error(`After updating the firebase, a db error occurred and the firebase profile is deleted => ${path}`);
+                await deleteFile(data.profile);
+                logger.error(`After updating the firebase, a db error occurred and the firebase profile is deleted => ${data.profile}`);
             }
 
             if (transaction) await transaction.rollback();
             throw error;
         }
-    },
+    }
+
     /**
      * Admin API 전용이며, 1개 이상의 유저를 DB 데이터에서 삭제합니다.
      * User에 관한 Couple, Album, Calendar, Inquire의 모든 정보가 삭제됩니다.
      * @param userIds User Id List
      */
-    deleteUser: async (userIds: number[]): Promise<void> => {
-        const users: User[] = await User.findAll({
-            where: { userId: userIds },
-            include: [
-                {
-                    model: Couple,
-                    as: "couple"
-                },
-                {
-                    model: Inquire,
-                    as: "inquires",
-                    include: [
-                        {
-                            model: Solution,
-                            as: "solution"
-                        }
-                    ]
-                }
-            ]
-        });
-
+    async deleteUser(userIds: number[]): Promise<void> {
+        const users: User[] = await this.userAdminService.selectAllWithAdditional(userIds);
         if (users.length <= 0) throw new NotFoundError("Not found users.");
 
         const userHasInquiry = users.filter((user: User) => {
@@ -368,38 +254,53 @@ const controller = {
             // Inquire 삭제
             for (const user of userHasInquiry) {
                 for (const inquire of user.inquires!) {
-                    // await inquireController.deleteInquire(inquire.inquireId);
+                    const imageIds: number[] = [];
+                    const inquireImages: InquireImage[] = await InquireImage.findAll({ where: { inquireId: inquire.inquireId } });
+
+                    await this.inquireService.delete(transaction, inquire);
+
+                    inquireImages.forEach((inquire: InquireImage) => {
+                        imageIds.push(inquire.imageId);
+                    });
+
+                    await this.inquireImageService.deleteWitFirebase(transaction, imageIds, inquire);
+
                     // soluton image 삭제
                     // if (inquire.solution) await solutionController.deleteSolution(inquire.solution.solutionId);
                 }
             }
 
             for (const user of userHasCouple) {
-                const otherUser: User[] = (await user.couple!.getUsers()).filter((coupleUser: User) => {
-                    if (coupleUser.userId != user.userId) return user;
-                });
-                const albums: Album[] = await user.couple!.getAlbums();
+                const albums: Album[] = await this.albumService.selectWithCouple(user.couple!);
+                const calendars: Calendar[] = await this.calendarService.selectWithCouple(user.couple!);
 
-                if (albums) {
+                if (albums && albums.length > 0) {
                     for (const album of albums) {
-                        // await albumController.deleteAlbum(user.cupId!, album.albumId);
+                        await this.albumService.delete(transaction, album);
                     }
                 }
 
-                await otherUser[0].update({ cupId: null });
+                if (calendars && calendars.length > 0) {
+                    const calendarIds: number[] = [];
+                    calendars.forEach((calendar: Calendar) => {
+                        calendarIds.push(calendar.calendarId);
+                    });
 
-                if (user.couple!.thumbnail) await deleteFile(user.couple!.thumbnail);
-                await user.couple!.destroy();
+                    await this.calendarService.deleteAll(transaction, calendarIds);
+                }
+
+                await this.coupleAdminService.delete(transaction, user.couple!);
             }
-        } catch (error) {}
 
-        users.forEach(async (user: User) => {
-            const profile: string | null = user.profile;
+            for (const user of users) {
+                await this.userAdminService.delete(transaction, user);
+            }
 
-            if (profile) await deleteFile(profile);
-            await user.destroy();
-        });
+            await transaction.commit();
+        } catch (error) {
+            if (transaction) await transaction.rollback();
+        }
     }
-};
+}
 
-export default controller;
+export default UserAdminController;
