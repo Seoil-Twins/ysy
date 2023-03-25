@@ -75,13 +75,6 @@ class InquireImageService extends Service {
     async delete(transaction: Transaction | null, imageIds: number[]): Promise<void> {
         await InquireImage.destroy({ where: { imageId: imageIds }, transaction });
     }
-
-    async deleteWitFirebase(transaction: Transaction | null, imageIds: number[], inquire: Inquire): Promise<void> {
-        await InquireImage.destroy({ where: { imageId: imageIds }, transaction });
-
-        const path = `${this.FOLDER_NAME}/${inquire.userId}/inquires/${inquire.inquireId}`;
-        await deleteFolder(path);
-    }
 }
 
 export default InquireImageService;

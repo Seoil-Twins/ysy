@@ -4,7 +4,7 @@ import { File } from "formidable";
 import { boolean } from "boolean";
 
 import logger from "../logger/logger";
-import { createProfilePath, deleteFile } from "../util/firebase";
+import { deleteFile, deleteFiles, deleteFolder } from "../util/firebase";
 import { createDigest } from "../util/password";
 
 import sequelize from "../model";
@@ -27,7 +27,6 @@ import CoupleAdminService from "../service/couple.admin.service";
 import InquireImageService from "../service/inquireImage.service";
 
 class UserAdminController {
-    private FOLDER_NAME = "users";
     private userService: UserService;
     private userAdminService: UserAdminService;
     private userRoleService: UserRoleService;
@@ -117,7 +116,7 @@ class UserAdminController {
      * @param file A {@link File} | undefined
      */
     async createUser(data: ICreateWithAdmin, file?: File): Promise<string> {
-        let isUpload = false;
+        let createdUser: User | null = null;
 
         const user: User | null = await this.userService.select({
             [Op.or]: [{ email: data.email }, { phone: data.phone }, { code: data.code }]
@@ -132,13 +131,16 @@ class UserAdminController {
         try {
             transaction = await await sequelize.transaction();
 
-            const createdUser: User = await this.userAdminService.create(transaction, data);
+            createdUser = await this.userAdminService.create(transaction, data);
             await this.userRoleService.create(transaction, createdUser.userId, data.role);
 
             if (file) {
-                data.profile = createProfilePath(this.FOLDER_NAME, createdUser.userId, file);
-                await this.userService.update(transaction, createdUser, { profile: data.profile! }, file);
-                isUpload = true;
+                const path: string | null = this.userService.createProfile(createdUser.userId, file);
+
+                if (path) {
+                    createdUser.profile = path;
+                    await this.userService.update(transaction, createdUser, { profile: path }, file);
+                }
             }
 
             await transaction.commit();
@@ -148,8 +150,8 @@ class UserAdminController {
             return url;
         } catch (error) {
             // Firebase에는 업로드 되었지만 DB 오류가 발생했다면 Firebase Profile 삭제
-            if (file && isUpload) {
-                await deleteFile(data.profile!);
+            if (createdUser?.profile) {
+                await deleteFile(createdUser.profile);
                 logger.error(`After updating the firebase, a db error occurred and the firebase profile is deleted => ${data.profile}`);
             }
 
@@ -188,8 +190,7 @@ class UserAdminController {
      * @param file A {@link File}
      */
     async updateUser(userId: number, data: IUpdateWithAdmin, file?: File): Promise<User> {
-        let isUpload = false;
-
+        let updatedUser: User | null = null;
         const user: User | null = await this.userService.select({ userId });
         if (!user) throw new NotFoundError("Not Found User");
 
@@ -197,6 +198,7 @@ class UserAdminController {
 
         try {
             transaction = await sequelize.transaction();
+            const prevProfile: string | null = user.profile;
 
             if (data.role) {
                 const userRole: UserRole | null = await this.userRoleService.select(userId);
@@ -209,18 +211,18 @@ class UserAdminController {
             if (boolean(data.deleted)) data.deletedTime = new Date(dayjs().valueOf());
             else if (data.deleted !== undefined && boolean(data.deleted) === false) data.deletedTime = null;
 
-            if (file) data.profile = createProfilePath(this.FOLDER_NAME, userId, file);
-            const updatedUser: User = await this.userAdminService.update(transaction, user, data, file);
-            isUpload = true;
-
+            updatedUser = await this.userAdminService.update(transaction, user, data, file);
             await transaction.commit();
-            logger.debug(`Update Data => ${JSON.stringify(data)}`);
+
+            if (prevProfile && file) await deleteFile(prevProfile);
+
+            logger.debug(`Update Data => UserId : ${user.userId} | ${JSON.stringify(data)}`);
 
             return updatedUser;
         } catch (error) {
             // Firebase에는 업로드 되었지만 DB 오류가 발생했다면 Firebase Profile 삭제
-            if (data.profile && isUpload) {
-                await deleteFile(data.profile);
+            if (updatedUser?.profile) {
+                await deleteFile(updatedUser.profile);
                 logger.error(`After updating the firebase, a db error occurred and the firebase profile is deleted => ${data.profile}`);
             }
 
@@ -235,6 +237,8 @@ class UserAdminController {
      * @param userIds User Id List
      */
     async deleteUser(userIds: number[]): Promise<void> {
+        const allDeleteFiles: string[] = [];
+        const albumFolders: string[] = [];
         const users: User[] = await this.userAdminService.selectAllWithAdditional(userIds);
         if (users.length <= 0) throw new NotFoundError("Not found users.");
 
@@ -261,9 +265,10 @@ class UserAdminController {
 
                     inquireImages.forEach((inquire: InquireImage) => {
                         imageIds.push(inquire.imageId);
+                        allDeleteFiles.push(inquire.image);
                     });
 
-                    await this.inquireImageService.deleteWitFirebase(transaction, imageIds, inquire);
+                    await this.inquireImageService.delete(transaction, imageIds);
 
                     // soluton image 삭제
                     // if (inquire.solution) await solutionController.deleteSolution(inquire.solution.solutionId);
@@ -276,6 +281,9 @@ class UserAdminController {
 
                 if (albums && albums.length > 0) {
                     for (const album of albums) {
+                        if (album.thumbnail) allDeleteFiles.push(album.thumbnail);
+                        albumFolders.push(this.albumService.getAlbumFolderPath(album.cupId, album.albumId));
+
                         await this.albumService.delete(transaction, album);
                     }
                 }
@@ -289,14 +297,21 @@ class UserAdminController {
                     await this.calendarService.deleteAll(transaction, calendarIds);
                 }
 
+                if (user.couple!.thumbnail) allDeleteFiles.push(user.couple!.thumbnail);
                 await this.coupleAdminService.delete(transaction, user.couple!);
             }
 
             for (const user of users) {
                 await this.userAdminService.delete(transaction, user);
+                if (user.profile) allDeleteFiles.push(user.profile);
             }
 
             await transaction.commit();
+
+            await deleteFiles(allDeleteFiles);
+            for (const albumPath of albumFolders) {
+                await deleteFolder(albumPath);
+            }
         } catch (error) {
             if (transaction) await transaction.rollback();
         }

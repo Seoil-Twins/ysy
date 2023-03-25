@@ -24,11 +24,7 @@ class CoupleAdminService extends Service {
     }
 
     async delete(transaction: Transaction | null, couple: Couple): Promise<any> {
-        console.log("is Dele!");
-        const thumbnail: string | null = couple.thumbnail;
         await couple.destroy({ transaction });
-
-        if (thumbnail) await deleteFile(thumbnail);
     }
 }
 

@@ -10,6 +10,7 @@ import UserService from "../service/user.service";
 import UserRoleService from "../service/userRole.service";
 
 import NotFoundError from "../error/notFound";
+import { deleteFile } from "../util/firebase";
 
 class UserController {
     private userService: UserService;
@@ -45,27 +46,37 @@ class UserController {
     }
 
     async updateUser(data: IUpdateWithController, file?: File): Promise<User> {
+        let updateUser: User | null = null;
         const transaction = await sequelize.transaction();
 
         try {
             const user: User | null = await this.userService.select({ userId: data.userId });
             if (!user) throw new NotFoundError("Not found user using token user ID");
 
+            const prevProfile: string | null = user.profile;
             const updateData: IUpdateWithService = {
                 cupId: data.cupId,
                 name: data.name,
-                profile: data.profile,
                 primaryNofi: data.primaryNofi,
                 dateNofi: data.dateNofi,
                 eventNofi: data.eventNofi
             };
-            const updateUser: User = await this.userService.update(transaction, user, updateData, file);
+
+            updateUser = await this.userService.update(transaction, user, updateData, file);
+
             await transaction.commit();
+            if (prevProfile && file) await deleteFile(prevProfile);
 
             return updateUser;
         } catch (error) {
+            // Firebase에는 업로드 되었지만 DB 오류가 발생했다면 Firebase Profile 삭제
+            if (updateUser?.profile) {
+                await deleteFile(updateUser.profile);
+                logger.error(`After updating the firebase, a db error occurred and the firebase profile is deleted => ${data.profile}`);
+            }
+
             await transaction.rollback();
-            logger.error(`User update error => ${JSON.stringify(error)}`);
+            logger.error(`User update error => UserId : ${data.userId} | ${JSON.stringify(error)}`);
 
             throw error;
         }

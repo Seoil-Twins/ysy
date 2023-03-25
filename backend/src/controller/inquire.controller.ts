@@ -132,7 +132,7 @@ class InquireController {
                 imageIds.push(inquire.imageId);
             });
 
-            await this.inquireImageService.deleteWitFirebase(transaction, imageIds, inquire);
+            // await this.inquireImageService.deleteWitFirebase(transaction, imageIds, inquire);
 
             await transaction.commit();
         } catch (error) {

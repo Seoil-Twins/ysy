@@ -210,19 +210,4 @@ export const deleteFolder = async (path: string): Promise<void> => {
     }
 };
 
-export const createProfilePath = (foldeName: string, userId: number, file: File): string | null => {
-    let path: string | null = "";
-    const reqFileName = file.originalFilename!;
-    const isDefault = isDefaultFile(reqFileName);
-
-    /**
-     * Frontend에선 static으로 default.jpg,png,svg 셋 중 하나 갖고있다가
-     * 사용자가 profile을 내리면 그걸로 넣고 요청
-     */
-    if (isDefault) path = null;
-    else path = `${foldeName}/${userId}/profile/${dayjs().valueOf()}.${reqFileName}`;
-
-    return path;
-};
-
 export default firebaseApp;

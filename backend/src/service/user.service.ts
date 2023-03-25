@@ -14,13 +14,30 @@ import { Couple } from "../model/couple.model";
 import UnauthorizedError from "../error/unauthorized";
 import ConflictError from "../error/conflict";
 
-import { deleteFile, uploadFile } from "../util/firebase";
+import { isDefaultFile, uploadFile } from "../util/firebase";
 import { createDigest } from "../util/password";
 
 import NotFoundError from "../error/notFound";
 import ForbiddenError from "../error/forbidden";
 
 class UserService extends Service {
+    private FOLDER_NAME = "users";
+
+    createProfile(userId: number, file: File): string | null {
+        let path: string | null = "";
+        const reqFileName = file.originalFilename!;
+        const isDefault = isDefaultFile(reqFileName);
+
+        /**
+         * Frontend에선 static으로 default.jpg,png,svg 셋 중 하나 갖고있다가
+         * 사용자가 profile을 내리면 그걸로 넣고 요청
+         */
+        if (isDefault) path = null;
+        else path = `${this.FOLDER_NAME}/${userId}/profile/${dayjs().valueOf()}.${reqFileName}`;
+
+        return path;
+    }
+
     async createCode(): Promise<string> {
         let isNot = true;
         let code = "";
@@ -109,35 +126,11 @@ class UserService extends Service {
     async update(transaction: Transaction | null = null, user: User, data: IUpdateWithService, file?: File): Promise<User> {
         if (user.deleted) throw new ForbiddenError("User is deleted");
 
-        let isUpload = false;
-        let prevProfile: string | null = user.profile;
+        if (file) data.profile = this.createProfile(user.userId, file);
+        const updatedUser: User = await user.update(data, { transaction });
 
-        try {
-            const updatedUser: User = await user.update(data, { transaction });
-
-            if (file) {
-                // profile 있으면 업로드
-                if (data.profile) {
-                    await uploadFile(data.profile, file.filepath);
-                    isUpload = true;
-
-                    if (prevProfile) await deleteFile(prevProfile); // 전에 있던 profile 삭제
-                } else if (prevProfile && !data.profile) {
-                    // default 이미지로 변경시
-                    await deleteFile(prevProfile);
-                }
-            }
-
-            return updatedUser;
-        } catch (error) {
-            // Firebase에는 업로드 되었지만 DB 오류가 발생했다면 Firebase Profile 삭제
-            if (data.profile && isUpload) {
-                await deleteFile(data.profile);
-                logger.error(`After updating the firebase, a db error occurred and the firebase profile is deleted => ${data.profile}`);
-            }
-
-            throw error;
-        }
+        if (file && data.profile) await uploadFile(data.profile, file.filepath);
+        return updatedUser;
     }
 
     async delete(transaction: Transaction | null = null, user: User): Promise<void> {

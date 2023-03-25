@@ -29,6 +29,10 @@ type SelectOptions =
 class AlbumService extends Service {
     private FOLDER_NAME = "couples";
 
+    getAlbumFolderPath(cupId: string, albumId: number): string {
+        return `${this.FOLDER_NAME}/${cupId}/${albumId}`;
+    }
+
     private getAlbumWithTotal(): SelectOptions {
         const data: SelectOptions = {
             attributes: { include: [[sequelize.fn("COUNT", sequelize.col("albumImages.album_id")), "total"]] },
@@ -122,12 +126,7 @@ class AlbumService extends Service {
     }
 
     async delete(transaction: Transaction | null = null, album: Album): Promise<void> {
-        const path = `${this.FOLDER_NAME}/${album.cupId}/${album.albumId}`;
-
         await album.destroy({ transaction });
-
-        if (album.thumbnail) await deleteFile(album.thumbnail);
-        await deleteFolder(path);
     }
 }
 
