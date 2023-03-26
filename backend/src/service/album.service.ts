@@ -10,7 +10,7 @@ import sequelize from "../model";
 import { AlbumImage } from "../model/albnmImage.model";
 import { Album, ICreate } from "../model/album.model";
 import { Couple } from "../model/couple.model";
-import { deleteFile, deleteFolder, uploadFile } from "../util/firebase";
+import { deleteFile, deleteFolder, uploadFile } from "../util/firebase.util";
 
 import { Service } from "./service";
 

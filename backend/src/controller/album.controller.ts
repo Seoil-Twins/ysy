@@ -1,8 +1,8 @@
 import { File } from "formidable";
 import { Transaction } from "sequelize";
 
-import ForbiddenError from "../error/forbidden";
-import NotFoundError from "../error/notFound";
+import ForbiddenError from "../error/forbidden.error";
+import NotFoundError from "../error/notFound.error";
 
 import sequelize from "../model";
 import { Album, ICreate, IRequestGet, IRequestUpadteThumbnail, IRequestUpadteTitle, IResponse } from "../model/album.model";
@@ -11,7 +11,7 @@ import { AlbumImage } from "../model/albnmImage.model";
 import logger from "../logger/logger";
 import AlbumService from "../service/album.service";
 import AlbumImageService from "../service/albumImage.service";
-import { deleteFile, deleteFiles, deleteFolder } from "../util/firebase";
+import { deleteFile, deleteFiles, deleteFolder } from "../util/firebase.util";
 
 class AlbumController {
     private albumService: AlbumService;

@@ -6,11 +6,11 @@ import CalendarService from "../service/calendar.service";
 import CoupleService from "../service/couple.service";
 
 import logger from "../logger/logger";
-import validator from "../util/validator";
-import StatusCode from "../util/statusCode";
+import validator from "../util/validator.util";
+import { STATUS_CODE } from "../constant/statusCode.constant";
 
-import BadRequestError from "../error/badRequest";
-import ForbiddenError from "../error/forbidden";
+import BadRequestError from "../error/badRequest.error";
+import ForbiddenError from "../error/forbidden.error";
 
 import { Calendar, IResponse } from "../model/calendar.model";
 
@@ -49,7 +49,7 @@ router.get("/:cup_id/:year", async (req: Request, res: Response, next: NextFunct
         const results: IResponse = await calendarController.getCalendars(reqCupId, year);
 
         logger.debug(`Response Data ${JSON.stringify(results)}`);
-        res.status(StatusCode.OK).json(results);
+        res.status(STATUS_CODE.OK).json(results);
     } catch (error) {
         next(error);
     }
@@ -63,7 +63,7 @@ router.post("/:cup_id", async (req: Request, res: Response, next: NextFunction) 
         else if (req.body.cupId !== req.params.cup_id) throw new ForbiddenError("You don't same token couple ID and path parameter couple ID");
 
         const url: string = await calendarController.addCalendar(value);
-        res.header({ Location: url }).status(StatusCode.CREATED).json({});
+        res.header({ Location: url }).status(STATUS_CODE.CREATED).json({});
     } catch (error) {
         next(error);
     }
@@ -79,7 +79,7 @@ router.patch("/:cup_id/:calendar_id", async (req: Request, res: Response, next: 
         else if (isNaN(calendarId)) throw new BadRequestError("Calendar ID must be a number type");
 
         const updatedCalendar: Calendar = await calendarController.updateCalendar(calendarId, value);
-        res.status(StatusCode.OK).json(updatedCalendar);
+        res.status(STATUS_CODE.OK).json(updatedCalendar);
     } catch (error) {
         next(error);
     }
@@ -93,7 +93,7 @@ router.delete("/:cup_id/:calendar_id", async (req: Request, res: Response, next:
         else if (isNaN(calendarId)) throw new BadRequestError("Calendar ID must be a number type");
 
         await calendarController.deleteCalendar(calendarId);
-        res.status(StatusCode.NO_CONTENT).json({});
+        res.status(STATUS_CODE.NO_CONTENT).json({});
     } catch (error) {
         next(error);
     }

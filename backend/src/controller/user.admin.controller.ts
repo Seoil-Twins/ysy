@@ -4,8 +4,8 @@ import { File } from "formidable";
 import { boolean } from "boolean";
 
 import logger from "../logger/logger";
-import { deleteFile, deleteFiles, deleteFolder } from "../util/firebase";
-import { createDigest } from "../util/password";
+import { deleteFile, deleteFiles, deleteFolder } from "../util/firebase.util";
+import { createDigest } from "../util/password.util";
 
 import sequelize from "../model";
 import { User, IUserResponseWithCount, PageOptions, SearchOptions, FilterOptions, IUpdateWithAdmin, ICreateWithAdmin } from "../model/user.model";
@@ -14,8 +14,8 @@ import { Album } from "../model/album.model";
 import { Calendar } from "../model/calendar.model";
 import { InquireImage } from "../model/inquireImage.model";
 
-import NotFoundError from "../error/notFound";
-import ConflictError from "../error/conflict";
+import NotFoundError from "../error/notFound.error";
+import ConflictError from "../error/conflict.error";
 
 import UserAdminService from "../service/user.admin.service";
 import UserService from "../service/user.service";

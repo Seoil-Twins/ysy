@@ -1,10 +1,10 @@
 import { Request, Response, NextFunction } from "express";
 import { TokenExpiredError, JsonWebTokenError, JwtPayload } from "jsonwebtoken";
 
-import UnauthorizedError from "../error/unauthorized";
+import UnauthorizedError from "../error/unauthorized.error";
 
 import logger from "../logger/logger";
-import jwt from "../util/jwt";
+import jwt from "../util/jwt.util";
 
 const checkToken = (req: Request, _res: Response, next: NextFunction) => {
     // 해당 URL은 검증을 하지 않아도 됨.

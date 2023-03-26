@@ -1,6 +1,6 @@
 import NoticeSerivce from "../service/notice.service";
 
-import NotFoundError from "../error/notFound";
+import NotFoundError from "../error/notFound.error";
 
 import { Notice } from "../model/notice.model";
 

@@ -11,14 +11,14 @@ import logger from "../logger/logger";
 import { User, IUserResponse, ICreate, IUpdateWithService } from "../model/user.model";
 import { Couple } from "../model/couple.model";
 
-import UnauthorizedError from "../error/unauthorized";
-import ConflictError from "../error/conflict";
+import UnauthorizedError from "../error/unauthorized.error";
+import ConflictError from "../error/conflict.error";
 
-import { isDefaultFile, uploadFile } from "../util/firebase";
-import { createDigest } from "../util/password";
+import { isDefaultFile, uploadFile } from "../util/firebase.util";
+import { createDigest } from "../util/password.util";
 
-import NotFoundError from "../error/notFound";
-import ForbiddenError from "../error/forbidden";
+import NotFoundError from "../error/notFound.error";
+import ForbiddenError from "../error/forbidden.error";
 
 class UserService extends Service {
     private FOLDER_NAME = "users";

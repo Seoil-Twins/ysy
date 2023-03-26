@@ -2,9 +2,9 @@ import dayjs from "dayjs";
 import dotenv from "dotenv";
 import jwt, { JwtPayload } from "jsonwebtoken";
 
-import UnauthorizedError from "../error/unauthorized";
+import UnauthorizedError from "../error/unauthorized.error";
 import { ITokenResponse } from "../model/auth.model";
-import { set } from "./redis";
+import { set } from "./redis.util";
 
 dotenv.config();
 

@@ -1,19 +1,19 @@
 import { File } from "formidable";
 import { Transaction } from "sequelize";
 
-import NotFoundError from "../error/notFound";
-import ConflictError from "../error/conflict";
+import NotFoundError from "../error/notFound.error";
+import ConflictError from "../error/conflict.error";
 
 import sequelize from "../model";
 import { ICreate, Inquire, IUpdateWithController, IUpdateWithService } from "../model/inquire.model";
 import { InquireImage } from "../model/inquireImage.model";
 
 import logger from "../logger/logger";
-import { deleteFile, deleteFiles, deleteFolder } from "../util/firebase";
+import { deleteFile, deleteFiles, deleteFolder } from "../util/firebase.util";
 
 import InquireService from "../service/inquire.service";
 import InquireImageService from "../service/inquireImage.service";
-import UploadError from "../error/firebaseUploadError";
+import UploadError from "../error/upload.error";
 
 class InquireController {
     private inquireService: InquireService;

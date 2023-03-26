@@ -1,14 +1,14 @@
 import dayjs from "dayjs";
 import { File } from "formidable";
 import { Transaction } from "sequelize";
-import UploadError from "../error/firebaseUploadError";
-import InternalServerError from "../error/internalServer";
+import UploadError from "../error/upload.error";
+import InternalServerError from "../error/internalServer.error";
 
 import logger from "../logger/logger";
 
 import { InquireImage } from "../model/inquireImage.model";
 
-import { deleteFile, deleteFiles, deleteFolder, uploadFile, uploadFiles } from "../util/firebase";
+import { deleteFile, deleteFiles, deleteFolder, uploadFile, uploadFiles } from "../util/firebase.util";
 
 import { Service } from "./service";
 

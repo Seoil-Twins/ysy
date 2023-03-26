@@ -2,13 +2,13 @@ import dayjs from "dayjs";
 import { JwtPayload } from "jsonwebtoken";
 import isSameOrBefore from "dayjs/plugin/isSameOrBefore";
 
-import UnauthorizedError from "../error/unauthorized";
+import UnauthorizedError from "../error/unauthorized.error";
 
 import { ILogin, ITokenResponse } from "../model/auth.model";
 
-import jwt from "../util/jwt";
-import { del, get } from "../util/redis";
-import { checkPassword } from "../util/password";
+import jwt from "../util/jwt.util";
+import { del, get } from "../util/redis.util";
+import { checkPassword } from "../util/password.util";
 
 import { UserRole } from "../model/userRole.model";
 import { User } from "../model/user.model";

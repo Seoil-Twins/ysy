@@ -6,7 +6,7 @@ import { Op, OrderItem, Transaction, WhereOptions } from "sequelize";
 import { API_ROOT } from "..";
 import { Service } from "./service";
 
-import { isDefaultFile, uploadFile } from "../util/firebase";
+import { isDefaultFile, uploadFile } from "../util/firebase.util";
 
 import { Couple } from "../model/couple.model";
 import { Inquire } from "../model/inquire.model";

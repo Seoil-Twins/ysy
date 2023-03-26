@@ -6,14 +6,14 @@ import InquireController from "../controller/inquire.controller";
 import InquireService from "../service/inquire.service";
 import InquireImageService from "../service/inquireImage.service";
 
-import validator from "../util/validator";
-import StatusCode from "../util/statusCode";
+import validator from "../util/validator.util";
+import { STATUS_CODE } from "../constant/statusCode.constant";
 
 import { ICreate, Inquire, IUpdateWithController } from "../model/inquire.model";
 
-import BadRequestError from "../error/badRequest";
-import ForbiddenError from "../error/forbidden";
-import InternalServerError from "../error/internalServer";
+import BadRequestError from "../error/badRequest.error";
+import ForbiddenError from "../error/forbidden.error";
+import InternalServerError from "../error/internalServer.error";
 
 const router: Router = express.Router();
 const inquireService: InquireService = new InquireService();
@@ -37,7 +37,7 @@ router.get("/", async (req: Request, res: Response, next: NextFunction) => {
         if (isNaN(userId)) throw new ForbiddenError("User ID must be a number type with token payload");
 
         const results: Inquire[] = await inquireController.getInquires(userId);
-        return res.status(StatusCode.OK).json(results);
+        return res.status(STATUS_CODE.OK).json(results);
     } catch (error) {
         next(error);
     }
@@ -61,7 +61,7 @@ router.post("/", async (req: Request, res: Response, next: NextFunction) => {
             if (error) throw new BadRequestError(error.message);
 
             const url: string = await inquireController.addInquire(inquireData, files.file);
-            res.header({ Location: url }).status(StatusCode.CREATED).json({});
+            res.header({ Location: url }).status(STATUS_CODE.CREATED).json({});
         } catch (error) {
             next(error);
         }
@@ -91,7 +91,7 @@ router.patch("/:inquire_id", async (req: Request, res: Response, next: NextFunct
 
             const updatedInquire: Inquire = await inquireController.updateInquire(inquireData, files.file);
 
-            res.status(StatusCode.OK).json(updatedInquire);
+            res.status(STATUS_CODE.OK).json(updatedInquire);
         } catch (error) {
             next(error);
         }
@@ -105,7 +105,7 @@ router.delete("/:inquire_id", async (req: Request, res: Response, next: NextFunc
         if (isNaN(inquireId)) throw new BadRequestError("Inquire ID must be a number type");
 
         await inquireController.deleteInquire(inquireId);
-        res.status(StatusCode.NO_CONTENT).json({});
+        res.status(STATUS_CODE.NO_CONTENT).json({});
     } catch (error) {
         next(error);
     }

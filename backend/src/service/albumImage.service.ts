@@ -4,7 +4,7 @@ import { File } from "formidable";
 import { Transaction } from "sequelize";
 import logger from "../logger/logger";
 import { AlbumImage } from "../model/albnmImage.model";
-import { deleteFile, deleteFiles, uploadFile, uploadFiles } from "../util/firebase";
+import { deleteFile, deleteFiles, uploadFile, uploadFiles } from "../util/firebase.util";
 
 import { Service } from "./service";
 

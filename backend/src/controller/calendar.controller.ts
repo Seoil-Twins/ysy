@@ -1,6 +1,6 @@
 import dayjs from "dayjs";
 
-import NotFoundError from "../error/notFound";
+import NotFoundError from "../error/notFound.error";
 
 import { Couple } from "../model/couple.model";
 import { Calendar, ICreate, IUpdate, IResponse } from "../model/calendar.model";

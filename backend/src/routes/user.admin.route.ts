@@ -15,12 +15,12 @@ import {
 } from "../model/user.model";
 
 import logger from "../logger/logger";
-import validator from "../util/validator";
-import StatusCode from "../util/statusCode";
-import { canModifyWithEditor, canView } from "../util/checkRole";
+import validator from "../util/validator.util";
+import { STATUS_CODE } from "../constant/statusCode.constant";
+import { canModifyWithEditor, canView } from "../util/checkRole.util";
 
-import BadRequestError from "../error/badRequest";
-import InternalServerError from "../error/internalServer";
+import BadRequestError from "../error/badRequest.error";
+import InternalServerError from "../error/internalServer.error";
 
 import UserAdminController from "../controller/user.admin.controller";
 import UserService from "../service/user.service";
@@ -109,7 +109,7 @@ router.get("/", canView, async (req: Request, res: Response, next: NextFunction)
         const result: IUserResponseWithCount = await userAdminController.getUsersWithSearch(pageOptions, searchOptions, filterOptions);
 
         logger.debug(`Response Data => ${JSON.stringify(result)}`);
-        return res.status(StatusCode.OK).json(result);
+        return res.status(STATUS_CODE.OK).json(result);
     } catch (error) {
         next(error);
     }
@@ -142,7 +142,7 @@ router.post("/", canModifyWithEditor, async (req: Request, res: Response, next: 
             };
 
             const url: string = await userAdminController.createUser(data, files.file);
-            return res.header({ Location: url }).status(StatusCode.CREATED).json({});
+            return res.header({ Location: url }).status(STATUS_CODE.CREATED).json({});
         } catch (error) {
             next(error);
         }
@@ -179,7 +179,7 @@ router.patch("/:user_id", canModifyWithEditor, async (req: Request, res: Respons
 
             const user: User = await userAdminController.updateUser(userId, data, files.file);
 
-            return res.status(StatusCode.OK).json(user);
+            return res.status(STATUS_CODE.OK).json(user);
         } catch (error) {
             next(error);
         }
@@ -196,7 +196,7 @@ router.delete("/:user_ids", canView, async (req: Request, res: Response, next: N
         if (!numberUserIds || numberUserIds.length <= 0) throw new BadRequestError("user ID must be a number type");
 
         await userAdminController.deleteUser(numberUserIds);
-        return res.status(StatusCode.OK).json({});
+        return res.status(STATUS_CODE.OK).json({});
     } catch (error) {
         next(error);
     }

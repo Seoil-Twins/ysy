@@ -9,8 +9,8 @@ import { User, ICreate, IUpdateWithController, IUserResponse, IUpdateWithService
 import UserService from "../service/user.service";
 import UserRoleService from "../service/userRole.service";
 
-import NotFoundError from "../error/notFound";
-import { deleteFile } from "../util/firebase";
+import NotFoundError from "../error/notFound.error";
+import { deleteFile } from "../util/firebase.util";
 
 class UserController {
     private userService: UserService;

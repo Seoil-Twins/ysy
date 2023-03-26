@@ -3,7 +3,7 @@ import express, { Router, Request, Response, NextFunction } from "express";
 import NoticeController from "../controller/notice.controller";
 import NoticeSerivce from "../service/notice.service";
 
-import StatusCode from "../util/statusCode";
+import { STATUS_CODE } from "../constant/statusCode.constant";
 
 const router: Router = express.Router();
 const noticeService: NoticeSerivce = new NoticeSerivce();
@@ -18,7 +18,7 @@ router.get("/", async (req: Request, res: Response, next: NextFunction) => {
         if (isNaN(page)) page = 1;
 
         const results = await noticeController.getNotices(count, page);
-        return res.status(StatusCode.OK).json(results);
+        return res.status(STATUS_CODE.OK).json(results);
     } catch (error) {
         next(error);
     }

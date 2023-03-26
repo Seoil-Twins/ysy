@@ -4,7 +4,7 @@ import { Service } from "./service";
 
 import { Couple } from "../model/couple.model";
 
-import { deleteFile } from "../util/firebase";
+import { deleteFile } from "../util/firebase.util";
 
 class CoupleAdminService extends Service {
     getURL(...args: any[]): string {

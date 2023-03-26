@@ -3,12 +3,12 @@ import joi, { ValidationResult } from "joi";
 import formidable, { File } from "formidable";
 
 import logger from "../logger/logger";
-import validator from "../util/validator";
-import StatusCode from "../util/statusCode";
+import validator from "../util/validator.util";
+import { STATUS_CODE } from "../constant/statusCode.constant";
 
-import InternalServerError from "../error/internalServer";
-import ForbiddenError from "../error/forbidden";
-import BadRequestError from "../error/badRequest";
+import InternalServerError from "../error/internalServer.error";
+import ForbiddenError from "../error/forbidden.error";
+import BadRequestError from "../error/badRequest.error";
 
 import { ITokenResponse } from "../model/auth.model";
 import { Couple, IRequestCreate, IUpdateWithController } from "../model/couple.model";
@@ -48,7 +48,7 @@ router.get("/:cup_id", async (req: Request, res: Response, next: NextFunction) =
         const result: Couple = await coupleController.getCouple(cupId);
 
         logger.debug(`Response Data : ${JSON.stringify(result)}`);
-        return res.status(StatusCode.OK).json(result);
+        return res.status(STATUS_CODE.OK).json(result);
     } catch (error) {
         next(error);
     }
@@ -79,7 +79,7 @@ router.post("/", async (req: Request, res: Response, next: NextFunction) => {
             const [result, url]: [ITokenResponse, string] = await coupleController.createCouple(data, file);
 
             logger.debug(`Response Data : ${JSON.stringify(result)}`);
-            return res.header({ Location: url }).status(StatusCode.CREATED).json(result);
+            return res.header({ Location: url }).status(STATUS_CODE.CREATED).json(result);
         } catch (error) {
             next(error);
         }
@@ -112,7 +112,7 @@ router.patch("/:cup_id", async (req: Request, res: Response, next: NextFunction)
 
             const couple: Couple = await coupleController.updateCouple(data, file);
 
-            return res.status(StatusCode.OK).json(couple);
+            return res.status(STATUS_CODE.OK).json(couple);
         } catch (error) {
             next(error);
         }
@@ -132,7 +132,7 @@ router.delete("/:cup_id", async (req: Request, res: Response, next: NextFunction
         const result: ITokenResponse = await coupleController.deleteCouple(userId, cupId);
 
         logger.debug(`Response Data : ${JSON.stringify(result)}`);
-        return res.status(StatusCode.OK).json(result);
+        return res.status(STATUS_CODE.OK).json(result);
     } catch (error) {
         next(error);
     }

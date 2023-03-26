@@ -7,21 +7,21 @@ import { User } from "../model/user.model";
 import { ITokenResponse } from "../model/auth.model";
 import { Couple, IRequestCreate, IUpdateWithController, IUpdateWithService } from "../model/couple.model";
 
-import NotFoundError from "../error/notFound";
-import UnauthorizedError from "../error/unauthorized";
-import ForbiddenError from "../error/forbidden";
-import InternalServerError from "../error/internalServer";
-import BadRequestError from "../error/badRequest";
-import ConflictError from "../error/conflict";
+import NotFoundError from "../error/notFound.error";
+import UnauthorizedError from "../error/unauthorized.error";
+import ForbiddenError from "../error/forbidden.error";
+import InternalServerError from "../error/internalServer.error";
+import BadRequestError from "../error/badRequest.error";
+import ConflictError from "../error/conflict.error";
 
 import logger from "../logger/logger";
-import jwt from "../util/jwt";
+import jwt from "../util/jwt.util";
 import { UserRole } from "../model/userRole.model";
 
 import UserService from "../service/user.service";
 import UserRoleService from "../service/userRole.service";
 import CoupleService from "../service/couple.service";
-import { deleteFile } from "../util/firebase";
+import { deleteFile } from "../util/firebase.util";
 
 class CoupleController {
     private coupleSerivce: CoupleService;

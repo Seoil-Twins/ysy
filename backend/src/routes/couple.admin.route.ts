@@ -12,18 +12,15 @@ import {
     IRequestCreate,
     IUpdateWithController
 } from "../model/couple.model";
-import { ITokenResponse } from "../model/auth.model";
-
-import coupleController from "../controller/couple.controller";
 import coupleAdminController from "../controller/couple.admin.controller";
 
 import logger from "../logger/logger";
-import validator from "../util/validator";
-import StatusCode from "../util/statusCode";
-import { canModifyWithEditor, canView } from "../util/checkRole";
+import validator from "../util/validator.util";
+import { STATUS_CODE } from "../constant/statusCode.constant";
+import { canModifyWithEditor, canView } from "../util/checkRole.util";
 
-import BadRequestError from "../error/badRequest";
-import InternalServerError from "../error/internalServer";
+import BadRequestError from "../error/badRequest.error";
+import InternalServerError from "../error/internalServer.error";
 
 dayjs.locale("ko");
 
@@ -57,7 +54,7 @@ router.get("/", canView, async (req: Request, res: Response, next: NextFunction)
         const result: ICoupleResponseWithCount = await coupleAdminController.getCouples(pageOptions, searchOptions, filterOptions);
 
         logger.debug(`Response Data => ${JSON.stringify(result)}`);
-        return res.status(StatusCode.OK).json(result);
+        return res.status(STATUS_CODE.OK).json(result);
     } catch (error) {
         next(error);
     }
@@ -79,16 +76,16 @@ router.post("/", canModifyWithEditor, async (req: Request, res: Response, next: 
             if (error) throw new BadRequestError(error.message);
 
             const data: IRequestCreate = {
-                userId: req.body.userId1,
-                userId2: req.body.userId2,
-                cupDay: req.body.cupDay,
-                title: req.body.title
+                userId: value.userId1,
+                userId2: value.userId2,
+                cupDay: value.cupDay,
+                title: value.title
             };
 
             // const result: ITokenResponse = await coupleController.createCouple(data, file);
 
             // logger.debug(`Response Data : ${JSON.stringify(result)}`);
-            // return res.status(StatusCode.CREATED).json(result);
+            // return res.status(STATUS_CODE.CREATED).json(result);
         } catch (error) {
             next(error);
         }
@@ -112,15 +109,15 @@ router.patch("/:cup_id", canModifyWithEditor, async (req: Request, res: Response
             else if (!file && !req.body.title && !req.body.cupDay) throw new BadRequestError("Request values is empty");
 
             const data: IUpdateWithController = {
-                userId: req.body.target,
-                cupId: req.body.cupId,
-                cupDay: req.body.cupDay,
-                title: req.body.title
+                userId: value.target,
+                cupId: value.cupId,
+                cupDay: value.cupDay,
+                title: value.title
             };
 
             // await coupleController.updateCouple(data, file);
 
-            return res.status(StatusCode.NO_CONTENT).json({});
+            return res.status(STATUS_CODE.NO_CONTENT).json({});
         } catch (error) {
             next(error);
         }
@@ -133,7 +130,7 @@ router.delete("/:couple_ids", canModifyWithEditor, async (req: Request, res: Res
     try {
         await coupleAdminController.deleteCouples(coupleIds);
 
-        res.status(StatusCode.NO_CONTENT).json({});
+        res.status(STATUS_CODE.NO_CONTENT).json({});
     } catch (error) {
         next(error);
     }
