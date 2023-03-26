@@ -21,6 +21,7 @@ import { UserRole } from "../model/userRole.model";
 import UserService from "../service/user.service";
 import UserRoleService from "../service/userRole.service";
 import CoupleService from "../service/couple.service";
+import { deleteFile } from "../util/firebase";
 
 class CoupleController {
     private coupleSerivce: CoupleService;
@@ -43,6 +44,7 @@ class CoupleController {
     async createCouple(data: IRequestCreate, file?: File): Promise<[ITokenResponse, string]> {
         let isNot = true;
         let cupId = "";
+        let createdCouple: Couple | null = null;
         let transaction: Transaction | undefined = undefined;
 
         try {
@@ -58,7 +60,7 @@ class CoupleController {
                 if (!user) isNot = false;
             }
 
-            const createdCouple = await this.coupleSerivce.create(transaction, cupId, data, file);
+            createdCouple = await this.coupleSerivce.create(transaction, cupId, data, file);
             const user1: User | null = await this.userService.select({ userId: data.userId });
             const user2: User | null = await this.userService.select({ userId: data.userId2 });
 
@@ -85,6 +87,10 @@ class CoupleController {
 
             return [result, url];
         } catch (error) {
+            if (createdCouple?.thumbnail) {
+                deleteFile(createdCouple.thumbnail);
+                logger.error(`After updating the firebase, a db error occurred and the firebase thumbnail is deleted => ${createdCouple.thumbnail}`);
+            }
             if (transaction) await transaction.rollback();
             logger.error(`Couple create Error => ${JSON.stringify(error)}`);
 
@@ -94,6 +100,7 @@ class CoupleController {
 
     async updateCouple(data: IUpdateWithController, thumbnail?: File): Promise<Couple> {
         let transaction: Transaction | undefined = undefined;
+        let updatedCouple: Couple | null = null;
         const user: User | null = await this.userService.select({ userId: data.userId });
 
         if (!user) throw new UnauthorizedError("Invalid Token (User not found using token)");
@@ -103,13 +110,14 @@ class CoupleController {
             transaction = await sequelize.transaction();
 
             const couple: Couple | null = await this.coupleSerivce.select(data.cupId);
+            const prevThumbnail: string | null | undefined = couple?.thumbnail;
 
             if (!couple) {
                 await this.userService.update(transaction, user, {
                     cupId: null
                 });
 
-                throw new InternalServerError("DB Error");
+                throw new ForbiddenError("You have a wrong couple ID and deleted this couple ID");
             } else if (couple.deleted) {
                 throw new ForbiddenError("Couple is deleted");
             }
@@ -119,11 +127,21 @@ class CoupleController {
                 cupDay: data.cupDay,
                 thumbnail: data.thumbnail
             };
-            const updatedCouple: Couple = await this.coupleSerivce.update(transaction, couple, updateData, thumbnail);
+            updatedCouple = await this.coupleSerivce.update(transaction, couple, updateData, thumbnail);
 
             await transaction.commit();
+
+            if (prevThumbnail && thumbnail) {
+                await deleteFile(prevThumbnail);
+                logger.debug(`Deleted Previous thumbnail => ${prevThumbnail}`);
+            }
+
             return updatedCouple;
         } catch (error) {
+            if (updatedCouple?.thumbnail) {
+                deleteFile(updatedCouple.thumbnail);
+                logger.error(`After updating the firebase, a db error occurred and the firebase thumbnail is deleted => ${updatedCouple.thumbnail}`);
+            }
             if (transaction) await transaction.rollback();
             logger.error(`User update error => ${JSON.stringify(error)}`);
 
