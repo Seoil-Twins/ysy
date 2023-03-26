@@ -4,7 +4,7 @@ import { File } from "formidable";
 import { Transaction } from "sequelize";
 import logger from "../logger/logger";
 import { AlbumImage } from "../model/albnmImage.model";
-import { deleteFiles, uploadFile, uploadFiles } from "../util/firebase";
+import { deleteFile, deleteFiles, uploadFile, uploadFiles } from "../util/firebase";
 
 import { Service } from "./service";
 
@@ -44,6 +44,7 @@ class AlbumImageService extends Service {
         );
 
         await uploadFile(path, image.filepath);
+        logger.debug(`Create album image => ${path}`);
 
         return createdImage;
     }
@@ -66,15 +67,24 @@ class AlbumImageService extends Service {
 
         for (const result of successResults) {
             if (result.status === "fulfilled") {
-                const createdImage: AlbumImage = await AlbumImage.create(
-                    {
-                        albumId: albumId,
-                        image: result.value.metadata.fullPath
-                    },
-                    { transaction }
-                );
+                let createdImage: AlbumImage;
+                const path: string = result.value.metadata.fullPath;
 
-                createdImages.push(createdImage);
+                try {
+                    createdImage = await AlbumImage.create(
+                        {
+                            albumId: albumId,
+                            image: path
+                        },
+                        { transaction }
+                    );
+
+                    createdImages.push(createdImage);
+                    logger.debug(`Create album image => ${path}`);
+                } catch (error) {
+                    logger.error(`Create album image error and ignore image => ${JSON.stringify(error)} | ${path}`);
+                    await deleteFile(path);
+                }
             }
         }
 
@@ -85,9 +95,8 @@ class AlbumImageService extends Service {
         throw new Error("Method not implemented.");
     }
 
-    async delete(transaction: Transaction | null = null, imageIds: number[], paths: string[]): Promise<any> {
+    async delete(transaction: Transaction | null = null, imageIds: number[]): Promise<any> {
         await AlbumImage.destroy({ where: { imageId: imageIds }, transaction });
-        await deleteFiles(paths);
     }
 }
 
