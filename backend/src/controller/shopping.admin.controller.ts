@@ -1,23 +1,11 @@
 import dayjs from "dayjs";
 import randomString from "randomstring";
 import { Op, OrderItem, Transaction, WhereOptions } from "sequelize";
-import { File } from "formidable";
-import { boolean } from "boolean";
 
 import logger from "../logger/logger";
-import { deleteFile, isDefaultFile, uploadFile } from "../util/firebase";
-import { createDigest } from "../util/password";
 
 import sequelize from "../model";
-import { Restaurant, IRestaurantResponseWithCount, PageOptions, SearchOptions } from "../model/restaurant.model";
-import { Solution } from "../model/solution.model";
-import { UserRole } from "../model/userRole.model";
-import { Couple } from "../model/couple.model";
-import { Album } from "../model/album.model";
-import { Inquire } from "../model/inquire.model";
-
-import albumController from "./album.controller";
-import inquireController from "./inquire.controller";
+import { Shopping, IShoppingResponseWithCount, PageOptions, SearchOptions } from "../model/shopping.model";
 
 import NotFoundError from "../error/notFound";
 import ConflictError from "../error/conflict";
@@ -27,7 +15,7 @@ import { Json } from "sequelize/types/utils";
 import fetch from "node-fetch";
 import { URLSearchParams } from "url";
 
-const FOLDER_NAME = "restaurant";
+const FOLDER_NAME = "shopping";
 const url = "https://apis.data.go.kr/B551011/KorService1/areaBasedList1";
 const detail_url = "http://apis.data.go.kr/B551011/KorService1/detailIntro1";
 const detail_common_url = "http://apis.data.go.kr/B551011/KorService1/detailCommon1";
@@ -48,16 +36,8 @@ const controller = {
      * @param searchOptions A {@link SearchOptions}
      * @returns A {@link IUserResponseWithCount}
      */
-    getRestaurantFromAPI: async (pageOptions: PageOptions, searchOptions: SearchOptions): Promise<any> => {
+    getShoppingFromAPI: async (pageOptions: PageOptions, searchOptions: SearchOptions): Promise<any> => {
         const offset = (pageOptions.page - 1) * pageOptions.numOfRows;
-        //        const where: WhereOptions = createWhere(searchOptions);
-
-        // const { rows, count }: { rows: User[]; count: number } = await User.findAndCountAll({
-        //     offset: offset,
-        //     limit: pageOptions.count,
-        //     order: [sort],
-        //     where
-        // });
 
         const params = {
             numOfRows: pageOptions.numOfRows.toString(),
@@ -83,8 +63,6 @@ const controller = {
         try {
             let res = await fetch(requrl);
             const result = await Promise.resolve(res.json());
-            // console.log(result.response.body.items.item[0]);
-            // console.log(result.response.body.items.item.length);
             console.log(result.response.body.items.item[0].contentid);
             for (let key in result.response.body.items.item[0]) {
                 console.log(key + " : " + result.response.body.items.item[0][key]);
@@ -101,7 +79,7 @@ const controller = {
      * @param searchOptions A {@link SearchOptions}
      * @returns A {@link IUserResponseWithCount}
      */
-    createRestaurantDB: async (pageOptions: PageOptions, searchOptions: SearchOptions): Promise<any> => {
+    createShoppingDB: async (pageOptions: PageOptions, searchOptions: SearchOptions): Promise<any> => {
         const offset = (pageOptions.page - 1) * pageOptions.numOfRows;
 
         const params = {
@@ -130,11 +108,6 @@ const controller = {
         try {
             let res = await fetch(requrl);
             const result = await Promise.resolve(res.json());
-            // console.log(result.response.body.items.item[0]);
-            // console.log(result.response.body.items.item.length);
-            // for (let key in result.response.body.items.item[0]) {
-            //     console.log(key + " : " + result.response.body.items.item[0][key]);
-            // }
 
             transaction = await sequelize.transaction();
 
@@ -174,13 +147,8 @@ const controller = {
                 const detail_common_requrl = `${detail_common_url}?${detail_common_queryString}`;
                 let detail_common_res = await fetch(detail_common_requrl);
                 const detail_common_result = await Promise.resolve(detail_common_res.json());
-                //console.log(detail_result.response.body.items.item[0].firstmenu);
-                const createdRestaraunt: Restaurant = await Restaurant.create(
+                const createdShopping: Shopping = await Shopping.create(
                     {
-                        //restaurantId: result.response.body.items.item[0]
-                        //restaurantId: result.response.body.items.item.length
-                        //restaurantId: result.response.body.items.item[0]
-                        // restaurantId: i,
                         contentTypeId: result.response.body.items.item[k].contenttypeid,
                         areaCode: result.response.body.items.item[k].areacode,
                         sigunguCode: result.response.body.items.item[k].sigungucode,
@@ -191,16 +159,15 @@ const controller = {
                         mapY: result.response.body.items.item[k].mapy,
                         contentId: result.response.body.items.item[k].contentid,
                         description: detail_common_result.response.body.items.item[0].overview,
-                        thumbnail: result.response.body.items.item[k].firstimage,
-                        signatureDish: detail_result.response.body.items.item[0].firstmenu,
+                        thumbnail: result.response.body.items.item[k].firstimage1,
+                        babyCarriage: detail_result.response.body.items.item[0].chkbabycarriageshopping,
                         phoneNumber: result.response.body.items.item[k].tel,
-                        kidsFacility: detail_result.response.body.items.item[0].kidsfacility,
-                        useTime: detail_result.response.body.items.item[0].opentimefood,
-                        parking: detail_result.response.body.items.item[0].parkingfood,
-                        restDate: detail_result.response.body.items.item[0].restdatefood,
-                        smoking: detail_result.response.body.items.item[0].smoking,
-                        reservation: detail_result.response.body.items.item[0].reservationfood,
-                        homepage: "주소"
+                        pet: detail_result.response.body.items.item[0].chkpetshopping,
+                        useTime: detail_result.response.body.items.item[0].opentime,
+                        saleItem: detail_result.response.body.items.item[0].saleitem,
+                        parking: detail_result.response.body.items.item[0].parkingshopping,
+                        restDate: detail_result.response.body.items.item[0].restdateshopping,
+                        homepage: detail_common_result.response.body.items.item[0].homepage
                     },
                     { transaction }
                 );
