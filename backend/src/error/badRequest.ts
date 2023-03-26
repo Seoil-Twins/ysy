@@ -1,5 +1,5 @@
 import AbstractError from "./abstractError";
-import StatusCode from "../util/statusCode"
+import StatusCode from "../util/statusCode";
 
 class BadRequestError extends AbstractError {
     constructor(...args: any) {

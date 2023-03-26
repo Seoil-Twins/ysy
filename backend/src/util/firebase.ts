@@ -180,6 +180,8 @@ export const deleteFolder = async (path: string): Promise<void> => {
     const fileList = await listAll(folderRef);
     const promises = [];
 
+    if (fileList.items.length <= 0) return;
+
     for (let item of fileList.items) {
         promises.push(deleteObject(item));
     }

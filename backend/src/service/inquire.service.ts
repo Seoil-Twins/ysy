@@ -10,6 +10,12 @@ import { SolutionImage } from "../model/solutionImage.model";
 import { Service } from "./service";
 
 class InquireService extends Service {
+    private FOLDER_NAME = "users";
+
+    getFolderPath(userId: number, inquireId: number): string {
+        return `${this.FOLDER_NAME}/${userId}/inquires/${inquireId}`;
+    }
+
     getURL(inquireId: number): string {
         return `${API_ROOT}/inquire/${inquireId}`;
     }
