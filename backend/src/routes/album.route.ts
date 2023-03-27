@@ -3,18 +3,18 @@ import joi, { ValidationResult } from "joi";
 import formidable, { File } from "formidable";
 
 import AlbumController from "../controller/album.controller";
-
-import logger from "../logger/logger";
-import validator from "../util/validator";
-import StatusCode from "../util/statusCode";
-
-import BadRequestError from "../error/badRequest";
-import ForbiddenError from "../error/forbidden";
-import InternalServerError from "../error/internalServer";
-
-import { Album, ICreate, IRequestGet, IRequestUpadteThumbnail, IRequestUpadteTitle, IResponse } from "../model/album.model";
 import AlbumService from "../service/album.service";
 import AlbumImageService from "../service/albumImage.service";
+
+import logger from "../logger/logger";
+import validator from "../util/validator.util";
+import { STATUS_CODE } from "../constant/statusCode.constant";
+
+import BadRequestError from "../error/badRequest.error";
+import ForbiddenError from "../error/forbidden.error";
+import InternalServerError from "../error/internalServer.error";
+
+import { Album, ICreate, IRequestGet, IRequestUpadteThumbnail, IRequestUpadteTitle, IResponse } from "../model/album.model";
 
 const router: Router = express.Router();
 const albumService = new AlbumService();
@@ -34,7 +34,7 @@ router.get("/:cup_id", async (req: Request, res: Response, next: NextFunction) =
         const results: Album[] = await albumController.getAlbumsFolder(req.body.cupId);
 
         logger.debug(`Response Data : ${JSON.stringify(results)}`);
-        return res.status(StatusCode.OK).json(results);
+        return res.status(STATUS_CODE.OK).json(results);
     } catch (error) {
         next(error);
     }
@@ -57,7 +57,7 @@ router.get("/:cup_id/:album_id", async (req: Request, res: Response, next: NextF
         const result: IResponse = await albumController.getAlbums(data);
 
         logger.debug(`Response Data : ${JSON.stringify(result)}`);
-        return res.status(StatusCode.OK).json(result);
+        return res.status(STATUS_CODE.OK).json(result);
     } catch (error) {
         next(error);
     }
@@ -76,7 +76,7 @@ router.post("/:cup_id", async (req: Request, res: Response, next: NextFunction) 
         };
         const url: string = await albumController.addAlbumFolder(data);
 
-        return res.header({ Location: url }).status(StatusCode.CREATED).json({});
+        return res.header({ Location: url }).status(STATUS_CODE.CREATED).json({});
     } catch (error) {
         next(error);
     }
@@ -96,7 +96,7 @@ router.post("/:cup_id/:album_id", async (req: Request, res: Response, next: Next
 
             const url: string = await albumController.addImages(req.body.cupId, albumId, files.images);
 
-            return res.header({ Location: url }).status(StatusCode.CREATED).json({});
+            return res.header({ Location: url }).status(STATUS_CODE.CREATED).json({});
         } catch (error) {
             next(error);
         }
@@ -120,7 +120,7 @@ router.patch("/:cup_id/:album_id/title", async (req: Request, res: Response, nex
 
         const album: Album = await albumController.updateTitle(data);
 
-        return res.status(StatusCode.OK).json(album);
+        return res.status(STATUS_CODE.OK).json(album);
     } catch (error) {
         next(error);
     }
@@ -146,7 +146,7 @@ router.patch("/:cup_id/:album_id/thumbnail", async (req: Request, res: Response,
             const thumbnail: File = files.thumbnail;
             const album: Album = await albumController.updateThumbnail(data, thumbnail);
 
-            return res.status(StatusCode.OK).json(album);
+            return res.status(STATUS_CODE.OK).json(album);
         } catch (error) {
             next(error);
         }
@@ -162,7 +162,7 @@ router.delete("/:cup_id/:album_id", async (req: Request, res: Response, next: Ne
 
         await albumController.deleteAlbum(req.body.cupId, albumId);
 
-        return res.status(StatusCode.NO_CONTENT).json({});
+        return res.status(STATUS_CODE.NO_CONTENT).json({});
     } catch (error) {
         next(error);
     }
@@ -184,7 +184,7 @@ router.delete("/:cup_id/:album_id/image/:image_ids", async (req: Request, res: R
         else if (isNaN(albumId)) throw new BadRequestError("Album Id must be a number type");
 
         await albumController.deleteAlbumImages(cupId, albumId, numImageIds);
-        res.status(StatusCode.NO_CONTENT).json({});
+        res.status(STATUS_CODE.NO_CONTENT).json({});
     } catch (error) {
         next(error);
     }

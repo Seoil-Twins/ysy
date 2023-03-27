@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from "express";
-import ForbiddenError from "../error/forbidden";
+import ForbiddenError from "../error/forbidden.error";
 
 export const canModifyWithAdmin = (req: Request, _res: Response, next: NextFunction) => {
     const role: number = Number(req.body.role);

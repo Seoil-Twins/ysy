@@ -2,13 +2,13 @@ import dayjs from "dayjs";
 import { File } from "formidable";
 import { Op, OrderItem, Transaction, WhereOptions } from "sequelize";
 
-import NotFoundError from "../error/notFound";
+import NotFoundError from "../error/notFound.error";
 
 import sequelize from "../model";
 import { Album, ICreate, IAlbumResponseWithCount, SearchOptions, PageOptions, FilterOptions, IAdminUpdate } from "../model/album.model";
 
 import logger from "../logger/logger";
-import { deleteFile, deleteFiles, deleteFolder, isDefaultFile, uploadFile, uploadFiles } from "../util/firebase";
+import { deleteFile, deleteFiles, deleteFolder, isDefaultFile, uploadFile, uploadFiles } from "../util/firebase.util";
 import { AlbumImage } from "../model/albnmImage.model";
 
 const FOLDER_NAME = "couples";

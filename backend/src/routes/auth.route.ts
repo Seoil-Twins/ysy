@@ -2,13 +2,13 @@ import express, { Router, Request, Response, NextFunction } from "express";
 import joi, { ValidationResult } from "joi";
 
 import logger from "../logger/logger";
-import validator from "../util/validator";
-import StatusCode from "../util/statusCode";
+import validator from "../util/validator.util";
+import { STATUS_CODE } from "../constant/statusCode.constant";
 
 import AuthController from "../controller/auth.controller";
 
-import BadRequestError from "../error/badRequest";
-import UnauthorizedError from "../error/unauthorized";
+import BadRequestError from "../error/badRequest.error";
+import UnauthorizedError from "../error/unauthorized.error";
 
 import AuthService from "../service/auth.service";
 import UserService from "../service/user.service";
@@ -43,7 +43,7 @@ router.post("/login", async (req: Request, res: Response, next: NextFunction) =>
         const result: ITokenResponse = await authController.login(data);
 
         logger.debug(`Response Data : ${JSON.stringify(result)}`);
-        return res.status(StatusCode.OK).json(result);
+        return res.status(STATUS_CODE.OK).json(result);
     } catch (error) {
         next(error);
     }
@@ -59,7 +59,7 @@ router.post("/refresh", async (req: Request, res: Response, next: NextFunction) 
         const result = await authController.updateToken(accessToken, refreshToken);
 
         logger.debug(`Response Data : ${JSON.stringify(result)}`);
-        return res.status(StatusCode.OK).json(result);
+        return res.status(STATUS_CODE.OK).json(result);
     } catch (error) {
         next(error);
     }

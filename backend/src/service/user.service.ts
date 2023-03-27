@@ -9,40 +9,21 @@ import { Service } from "./service";
 
 import logger from "../logger/logger";
 import { User, IUserResponse, ICreate, IUpdateWithService } from "../model/user.model";
+import { Couple } from "../model/couple.model";
 
-import UnauthorizedError from "../error/unauthorized";
-import ConflictError from "../error/conflict";
+import UnauthorizedError from "../error/unauthorized.error";
+import ConflictError from "../error/conflict.error";
 
-import { deleteFile, isDefaultFile, uploadFile } from "../util/firebase";
-import { createDigest } from "../util/password";
+import { isDefaultFile, uploadFile } from "../util/firebase.util";
+import { createDigest } from "../util/password.util";
 
-import NotFoundError from "../error/notFound";
-import ForbiddenError from "../error/forbidden";
+import NotFoundError from "../error/notFound.error";
+import ForbiddenError from "../error/forbidden.error";
 
 class UserService extends Service {
     private FOLDER_NAME = "users";
 
-    private async createCode(): Promise<string> {
-        let isNot = true;
-        let code = "";
-
-        while (isNot) {
-            code = randomString.generate({
-                length: 6,
-                charset: "alphanumeric"
-            });
-
-            const user: User | null = await User.findOne({
-                where: { code }
-            });
-
-            if (!user) isNot = false;
-        }
-
-        return code;
-    }
-
-    private createProfilePath(userId: number, file: File): string | null {
+    createProfile(userId: number, file: File): string | null {
         let path: string | null = "";
         const reqFileName = file.originalFilename!;
         const isDefault = isDefaultFile(reqFileName);
@@ -55,6 +36,23 @@ class UserService extends Service {
         else path = `${this.FOLDER_NAME}/${userId}/profile/${dayjs().valueOf()}.${reqFileName}`;
 
         return path;
+    }
+
+    async createCode(): Promise<string> {
+        let isNot = true;
+        let code = "";
+
+        while (isNot) {
+            code = randomString.generate({
+                length: 6,
+                charset: "alphanumeric"
+            });
+
+            const user: User | null = await this.select({ code });
+            if (!user) isNot = false;
+        }
+
+        return code;
     }
 
     getURL(): string {
@@ -96,6 +94,11 @@ class UserService extends Service {
         return result;
     }
 
+    async selectWithCouple(couple: Couple): Promise<User[]> {
+        const users: User[] = await couple.getUsers();
+        return users;
+    }
+
     async create(transaction: Transaction | null = null, data: ICreate): Promise<User> {
         const user: User | null = await this.select({ email: data.email, phone: data.phone });
         if (user) throw new ConflictError("Duplicated User");
@@ -123,38 +126,11 @@ class UserService extends Service {
     async update(transaction: Transaction | null = null, user: User, data: IUpdateWithService, file?: File): Promise<User> {
         if (user.deleted) throw new ForbiddenError("User is deleted");
 
-        let isUpload = false;
-        let path: string | null = "";
-        let prevProfile: string | null = user.profile;
+        if (file) data.profile = this.createProfile(user.userId, file);
+        const updatedUser: User = await user.update(data, { transaction });
 
-        try {
-            if (file) {
-                data.profile = this.createProfilePath(user.userId, file);
-
-                // profile 있으면 업로드
-                if (data.profile) {
-                    await uploadFile(data.profile, file.filepath);
-                    isUpload = true;
-
-                    if (prevProfile) await deleteFile(prevProfile); // 전에 있던 profile 삭제
-                } else if (prevProfile && !data.profile) {
-                    // default 이미지로 변경시
-                    await deleteFile(prevProfile);
-                }
-            }
-
-            await user.update(data, { transaction });
-
-            return user;
-        } catch (error) {
-            // Firebase에는 업로드 되었지만 DB 오류가 발생했다면 Firebase Profile 삭제
-            if (data.profile && isUpload) {
-                await deleteFile(path!);
-                logger.error(`After updating the firebase, a db error occurred and the firebase profile is deleted => ${path}`);
-            }
-
-            throw error;
-        }
+        if (file && data.profile) await uploadFile(data.profile, file.filepath);
+        return updatedUser;
     }
 
     async delete(transaction: Transaction | null = null, user: User): Promise<void> {

@@ -26,10 +26,15 @@ const formatDate = (results: any[]) => {
 
     results.forEach((result) => {
         for (const [key, value] of Object.entries(result.dataValues)) {
-            if (value instanceof Date) {
+            if (value instanceof Array) {
+                formatDate(value);
+            } else if (value instanceof Date) {
                 const date = dayjs(value);
                 const formatDate = date.format("YYYY-MM-DD HH:mm:ss");
                 result.dataValues[key] = date.isValid() ? formatDate : null;
+            } else if (value instanceof Object) {
+                // Date도 Object를 상속받기 때문에 맨 밑에 내려줘야 함.
+                formatDate([value]);
             }
         }
     });

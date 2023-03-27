@@ -1,16 +1,16 @@
 import express, { Router } from "express";
 
-import userRouter from "./user";
-import authRouter from "./auth";
-import coupleRouter from "./couple";
-import albumRouter from "./album";
-import calendarRouter from "./calendar";
-import inquireRouter from "./inquire";
-import noticeRouter from "./notice";
+import userRouter from "./user.route";
+import authRouter from "./auth.route";
+import coupleRouter from "./couple.route";
+import albumRouter from "./album.route";
+import calendarRouter from "./calendar.route";
+import inquireRouter from "./inquire.route";
+import noticeRouter from "./notice.route";
 
-import userAdminRouter from "./user.admin";
-import coupleAdminRouter from "./couple.admin";
-import albumAdminRouter from "./album.admin";
+import userAdminRouter from "./user.admin.route";
+import coupleAdminRouter from "./couple.admin.route";
+import albumAdminRouter from "./album.admin.route";
 import restaurantAdminRouter from "./restaurant.admin";
 import cultureAdminRouter from "./culture.admin";
 import shoppingAdminRouter from "./shopping.admin";

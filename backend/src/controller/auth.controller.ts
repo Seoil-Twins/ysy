@@ -2,7 +2,7 @@ import { User } from "../model/user.model";
 import { ILogin, ITokenResponse } from "../model/auth.model";
 import { UserRole } from "../model/userRole.model";
 
-import UnauthorizedError from "../error/unauthorized";
+import UnauthorizedError from "../error/unauthorized.error";
 
 import UserService from "../service/user.service";
 import UserRoleService from "../service/userRole.service";

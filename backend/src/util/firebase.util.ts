@@ -1,5 +1,7 @@
+import dayjs from "dayjs";
 import dotenv from "dotenv";
 import * as fs from "fs";
+import { File } from "formidable";
 import { initializeApp, FirebaseError } from "firebase/app";
 import { getStorage, ref, uploadBytes, deleteObject, ListResult, listAll } from "firebase/storage";
 
@@ -177,6 +179,8 @@ export const deleteFolder = async (path: string): Promise<void> => {
     const folderRef = ref(storage, path);
     const fileList = await listAll(folderRef);
     const promises = [];
+
+    if (fileList.items.length <= 0) return;
 
     for (let item of fileList.items) {
         promises.push(deleteObject(item));

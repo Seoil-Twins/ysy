@@ -2,7 +2,7 @@ import { Op } from "sequelize";
 import { boolean } from "boolean";
 
 import logger from "../logger/logger";
-import { deleteFile } from "../util/firebase";
+import { deleteFile } from "../util/firebase.util";
 
 import albumController from "./album.controller";
 
@@ -12,7 +12,7 @@ import { Couple, FilterOptions, ICoupleResponseWithCount, PageOptions, SearchOpt
 import { OrderItem, WhereOptions } from "sequelize/types/model";
 import { Album } from "../model/album.model";
 import { ErrorImage } from "../model/errorImage.model";
-import NotFoundError from "../error/notFound";
+import NotFoundError from "../error/notFound.error";
 
 const FOLDER_NAME = "couples";
 

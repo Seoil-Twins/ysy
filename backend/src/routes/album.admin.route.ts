@@ -8,12 +8,12 @@ import { IAlbumResponseWithCount, PageOptions, SearchOptions, FilterOptions, ICr
 import albumAdminController from "../controller/album.admin.controller";
 
 import logger from "../logger/logger";
-import validator from "../util/validator";
-import StatusCode from "../util/statusCode";
-import { canModifyWithEditor, canView } from "../util/checkRole";
+import validator from "../util/validator.util";
+import { STATUS_CODE } from "../constant/statusCode.constant";
+import { canModifyWithEditor, canView } from "../util/checkRole.util";
 
-import BadRequestError from "../error/badRequest";
-import InternalServerError from "../error/internalServer";
+import BadRequestError from "../error/badRequest.error";
+import InternalServerError from "../error/internalServer.error";
 
 const router: Router = express.Router();
 
@@ -45,7 +45,7 @@ router.get("/", canView, async (req: Request, res: Response, next: NextFunction)
         const result: IAlbumResponseWithCount = await albumAdminController.getAlbumFolders(pageOptions, searchOptions, filterOptions);
 
         logger.debug(`Response Data => ${JSON.stringify(result)}`);
-        return res.status(StatusCode.OK).json(result);
+        return res.status(STATUS_CODE.OK).json(result);
     } catch (error) {
         next(error);
     }
@@ -73,7 +73,7 @@ router.post("/:cup_id", canModifyWithEditor, async (req: Request, res: Response,
 
             await albumAdminController.createAlbum(data, thumbnail, images);
 
-            res.status(StatusCode.CREATED).json({});
+            res.status(STATUS_CODE.CREATED).json({});
         } catch (error) {
             next(error);
         }
@@ -95,7 +95,7 @@ router.post("/:cup_id/:album_id", canModifyWithEditor, async (req: Request, res:
 
             await albumAdminController.addAlbumImages(cupId, albumId, files.images);
 
-            res.status(StatusCode.CREATED).json({});
+            res.status(STATUS_CODE.CREATED).json({});
         } catch (error) {
             next(error);
         }
@@ -126,7 +126,7 @@ router.patch("/:cup_id/:album_id", canModifyWithEditor, async (req: Request, res
             const data: IAdminUpdate = { title, albumId, cupId };
             await albumAdminController.updateAlbum(data, thumbnail);
 
-            res.status(StatusCode.NO_CONTENT).json({});
+            res.status(STATUS_CODE.NO_CONTENT).json({});
         } catch (error) {
             next(error);
         }
@@ -143,7 +143,7 @@ router.delete("/:album_ids", canModifyWithEditor, async (req: Request, res: Resp
         if (!numAlbumIds || numAlbumIds.length <= 0) throw new BadRequestError("Album ID must be a number type");
 
         await albumAdminController.deleteAlbums(numAlbumIds);
-        res.status(StatusCode.NO_CONTENT).json({});
+        res.status(STATUS_CODE.NO_CONTENT).json({});
     } catch (error) {
         next(error);
     }
@@ -159,7 +159,7 @@ router.delete("/image/:image_ids", canModifyWithEditor, async (req: Request, res
         if (!numImageIds || numImageIds.length <= 0) throw new BadRequestError("Album ID must be a number type");
 
         await albumAdminController.deleteAlbumImages(numImageIds);
-        res.status(StatusCode.NO_CONTENT).json({});
+        res.status(STATUS_CODE.NO_CONTENT).json({});
     } catch (error) {
         next(error);
     }

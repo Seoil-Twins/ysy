@@ -1,21 +1,21 @@
 import express, { Router, Request, Response, NextFunction } from "express";
 import joi, { ValidationResult } from "joi";
 import formidable, { File } from "formidable";
+import { boolean } from "boolean";
 
-import { ICreate, IUpdateWithController, IUserResponse } from "../model/user.model";
-
-import UserController from "../controller/user.controller";
+import { ICreate, IUpdateWithController, IUserResponse, User } from "../model/user.model";
 
 import logger from "../logger/logger";
-import validator from "../util/validator";
-import StatusCode from "../util/statusCode";
+import validator from "../util/validator.util";
+import { STATUS_CODE } from "../constant/statusCode.constant";
 
-import BadRequestError from "../error/badRequest";
-import ForbiddenError from "../error/forbidden";
-import InternalServerError from "../error/internalServer";
+import BadRequestError from "../error/badRequest.error";
+import ForbiddenError from "../error/forbidden.error";
+import InternalServerError from "../error/internalServer.error";
+
+import UserController from "../controller/user.controller";
 import UserService from "../service/user.service";
 import UserRoleService from "../service/userRole.service";
-import { boolean } from "boolean";
 
 const router: Router = express.Router();
 const userService = new UserService();
@@ -55,7 +55,7 @@ router.get("/me", async (req: Request, res: Response, next: NextFunction) => {
         const result: IUserResponse = await userController.getUser(userId);
 
         logger.debug(`Response Data : ${JSON.stringify(result)}`);
-        return res.status(StatusCode.OK).json(result);
+        return res.status(STATUS_CODE.OK).json(result);
     } catch (error) {
         next(error);
     }
@@ -70,7 +70,7 @@ router.get("/:user_id", async (req: Request, res: Response, next: NextFunction) 
         const result: IUserResponse = await userController.getUser(userId);
 
         logger.debug(`Response Data : ${JSON.stringify(result)}`);
-        return res.status(StatusCode.OK).json(result);
+        return res.status(STATUS_CODE.OK).json(result);
     } catch (error) {
         next(error);
     }
@@ -95,7 +95,7 @@ router.post("/", async (req: Request, res: Response, next: NextFunction) => {
 
         const url: string = await userController.createUser(data);
 
-        return res.header({ Location: url }).status(StatusCode.CREATED).json({});
+        return res.header({ Location: url }).status(STATUS_CODE.CREATED).json({});
     } catch (error) {
         next(error);
     }
@@ -130,9 +130,9 @@ router.patch("/:user_id", async (req: Request, res: Response, next: NextFunction
             };
             const file: File | undefined = files.file;
 
-            await userController.updateUser(data, file);
+            const user: User = await userController.updateUser(data, file);
 
-            return res.status(204).json({});
+            return res.status(STATUS_CODE.OK).json(user);
         } catch (error) {
             next(error);
         }
@@ -151,7 +151,7 @@ router.delete("/:user_id", async (req: Request, res: Response, next: NextFunctio
 
         await userController.deleteUser(userId);
 
-        return res.status(204).json({});
+        return res.status(STATUS_CODE.NO_CONTENT).json({});
     } catch (error) {
         next(error);
     }

@@ -1,46 +1,27 @@
-import dayjs from "dayjs";
 import { File } from "formidable";
 import { Transaction } from "sequelize";
 
-import NotFoundError from "../error/notFound";
-import ConflictError from "../error/conflict";
+import NotFoundError from "../error/notFound.error";
+import ConflictError from "../error/conflict.error";
 
 import sequelize from "../model";
 import { ICreate, Inquire, IUpdateWithController, IUpdateWithService } from "../model/inquire.model";
 import { InquireImage } from "../model/inquireImage.model";
 
 import logger from "../logger/logger";
-import { deleteFiles, deleteFolder, uploadFile, uploadFiles } from "../util/firebase";
+import { deleteFile, deleteFiles, deleteFolder } from "../util/firebase.util";
 
 import InquireService from "../service/inquire.service";
 import InquireImageService from "../service/inquireImage.service";
+import UploadError from "../error/upload.error";
 
 class InquireController {
-    private FOLDER_NAME = "users";
-
     private inquireService: InquireService;
     private inquireImageService: InquireImageService;
 
     constructor(inquireService: InquireService, inquireImageService: InquireImageService) {
         this.inquireService = inquireService;
         this.inquireImageService = inquireImageService;
-    }
-
-    /**
-     * inquireImage 다중 Image 생성 및 변경을 해주는 함수
-     * @param inquireId Inquire Id
-     * @param userId User Id (이미지 path 생성할 때 사용)
-     * @param images Request로 받은 Image
-     * @param transaction transaction
-     */
-    private async uploads(inquireId: number, userId: number, images: File | File[], transaction: Transaction): Promise<void> {
-        try {
-            if (images instanceof Array<File>) await this.inquireImageService.createMutiple(transaction, inquireId, userId, images);
-            else if (images instanceof File) await this.inquireImageService.create(transaction, inquireId, userId, images);
-        } catch (error) {
-            logger.error(`Inquire image create error ${JSON.stringify(error)}`);
-            throw error;
-        }
     }
 
     async getInquires(userId: number): Promise<Inquire[]> {
@@ -51,13 +32,17 @@ class InquireController {
     }
 
     async addInquire(data: ICreate, images: File | File[]): Promise<string> {
+        let createdInquire: Inquire | null = null;
         let transaction: Transaction | undefined = undefined;
 
         try {
             transaction = await sequelize.transaction();
 
-            const createdInquire: Inquire = await this.inquireService.create(transaction, data);
-            if (images) await this.uploads(createdInquire.inquireId, createdInquire.userId, images, transaction);
+            createdInquire = await this.inquireService.create(transaction, data);
+
+            if (images instanceof Array<File>)
+                await this.inquireImageService.createMutiple(transaction, createdInquire.inquireId, createdInquire.userId, images);
+            else if (images instanceof File) await this.inquireImageService.create(transaction, createdInquire.inquireId, createdInquire.userId, images);
 
             await transaction.commit();
             logger.debug(`Create Inquire => ${JSON.stringify(createdInquire)}`);
@@ -65,6 +50,7 @@ class InquireController {
             const url: string = this.inquireService.getURL(createdInquire.inquireId);
             return url;
         } catch (error) {
+            if (createdInquire) await deleteFolder(this.inquireService.getFolderPath(createdInquire.userId, createdInquire.inquireId));
             if (transaction) await transaction.rollback();
             logger.error(`Inquire create error => ${JSON.stringify(error)}`);
 
@@ -73,7 +59,10 @@ class InquireController {
     }
 
     async updateInquire(data: IUpdateWithController, images: File | File[]): Promise<Inquire> {
+        let updatedInquireImages: InquireImage | InquireImage[] | null = null;
         let transaction: Transaction | undefined = undefined;
+        const imagePaths: string[] = [];
+        const imageIds: number[] = [];
 
         try {
             const inquire: Inquire | null = await this.inquireService.select(data.inquireId);
@@ -81,9 +70,6 @@ class InquireController {
             else if (inquire.solution) throw new ConflictError("This inquiry has already been answered");
 
             transaction = await sequelize.transaction();
-
-            const imagePaths: string[] = [];
-            const imageIds: number[] = [];
 
             inquire.inquireImages?.forEach((image: InquireImage) => {
                 imagePaths.push(image.image);
@@ -96,14 +82,45 @@ class InquireController {
                 title: data.title,
                 contents: data.contents
             };
-            const updatedInquire: Inquire = await this.inquireService.update(transaction, inquire, updateData);
 
-            await deleteFiles(imagePaths);
-            await this.uploads(inquire.inquireId, inquire.userId, images, transaction);
+            await this.inquireService.update(transaction, inquire, updateData);
+
+            if (images instanceof Array<File>)
+                updatedInquireImages = await this.inquireImageService.createMutiple(transaction, inquire.inquireId, inquire.userId, images);
+            else if (images instanceof File)
+                updatedInquireImages = await this.inquireImageService.create(transaction, inquire.inquireId, inquire.userId, images);
 
             await transaction.commit();
-            return updatedInquire;
+            await deleteFiles(imagePaths);
+
+            const result: Inquire | null = await this.inquireService.select(data.inquireId);
+            return result!;
         } catch (error) {
+            // createMultiple에서 N개는 성공하고 하나라도 실패한다면 모든 걸 없애줘야하기 때문에 error 객체에 따로 path 정보를 가지고 있음
+            if (error instanceof UploadError) {
+                const paths: string[] = error.paths;
+                for (const path of paths) await deleteFile(path);
+
+                logger.error(`After updating the firebase, a db error occurred and the firebase thumbnail is deleted => ${JSON.stringify(paths)}`);
+            } else if (updatedInquireImages instanceof InquireImage) {
+                // create or createMultiple은 성공했지만 commit에서 터진다면
+                await deleteFile(updatedInquireImages.image);
+                logger.error(
+                    `After updating the firebase, a db error occurred and the firebase thumbnail is deleted => ${JSON.stringify(updatedInquireImages)}`
+                );
+            } else if (updatedInquireImages instanceof Array<InquireImage>) {
+                // create or createMultiple은 성공했지만 commit에서 터진다면
+                const paths: string[] = [];
+                updatedInquireImages.forEach((image: InquireImage) => {
+                    paths.push(image.image);
+                });
+
+                await deleteFiles(paths);
+                logger.error(
+                    `After updating the firebase, a db error occurred and the firebase thumbnail is deleted => ${JSON.stringify(updatedInquireImages)}`
+                );
+            }
+
             if (transaction) await transaction.rollback();
             logger.error(`Inquire update error | ${data.inquireId} => ${JSON.stringify(error)}`);
 
@@ -120,22 +137,11 @@ class InquireController {
         try {
             transaction = await sequelize.transaction();
 
-            const inquireImage: InquireImage[] = await InquireImage.findAll({ where: { inquireId } });
-            const imageIds: number[] = [];
-
-            inquireImage.forEach((image: InquireImage) => {
-                imageIds.push(image.imageId);
-            });
-
-            await this.inquireImageService.delete(transaction, imageIds);
+            // inquire Image Table은 delete cascade에 의해 삭제됨.
             await this.inquireService.delete(transaction, inquire);
-
-            if (inquireImage.length > 0) {
-                const path = `${this.FOLDER_NAME}/${inquire.userId}/inquires/${inquireId}`;
-                await deleteFolder(path);
-            }
-
             await transaction.commit();
+
+            await deleteFolder(this.inquireService.getFolderPath(inquire.userId, inquire.inquireId));
         } catch (error) {
             if (transaction) await transaction.rollback();
             logger.error(`Inquire delete error => ${JSON.stringify(error)}`);

@@ -3,6 +3,7 @@ import { Op, Transaction } from "sequelize";
 import { API_ROOT } from "..";
 
 import { Calendar, ICreate, IUpdate } from "../model/calendar.model";
+import { Couple } from "../model/couple.model";
 
 import { Service } from "./service";
 
@@ -32,6 +33,11 @@ class CalendarService extends Service {
         return calendars;
     }
 
+    async selectWithCouple(couple: Couple): Promise<Calendar[]> {
+        const calendars: Calendar[] = await couple.getCalendars();
+        return calendars;
+    }
+
     async create(transaction: Transaction | null = null, data: ICreate): Promise<void> {
         await Calendar.create(data, { transaction });
     }
@@ -43,6 +49,10 @@ class CalendarService extends Service {
 
     async delete(transaction: Transaction | null = null, calendar: Calendar): Promise<any> {
         await calendar.destroy({ transaction });
+    }
+
+    async deleteAll(transaction: Transaction | null = null, calendarIds: number[]): Promise<any> {
+        await Calendar.destroy({ where: { calendarId: calendarIds }, transaction });
     }
 }
 
