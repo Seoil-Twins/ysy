@@ -48,6 +48,8 @@ export interface PageOptions {
 
 export interface SearchOptions {
     contentTypeId?: string;
+    title?: string;
+    contentId?: string;
 }
 
 export interface IRestaurantResponseWithCount {

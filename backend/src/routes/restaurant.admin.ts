@@ -58,4 +58,42 @@ router.post("/create", canView, async (req: Request, res: Response, next: NextFu
     }
 });
 
+router.get("/search/title", canView, async (req: Request, res: Response, next: NextFunction) => {
+    const pageOptions: ResPageOptions = {
+        numOfRows: Number(req.query.numOfRows) || 10,
+        page: Number(req.query.page) || 1
+    };
+    const searchOptions: ResSearchOptions = {
+        contentTypeId: String(req.query.contentTypeId) || undefined,
+        title: String(req.query.title) || undefined
+    };
+    try {
+        const result: IRestaurantResponseWithCount = await restaurantAdminController.getRestaurantWithTitle(pageOptions, searchOptions);
+
+        logger.debug(`Response Data => ${JSON.stringify(result)}`);
+        return res.status(StatusCode.OK).json(result);
+    } catch (error) {
+        next(error);
+    }
+});
+
+router.get("/search/contentId", canView, async (req: Request, res: Response, next: NextFunction) => {
+    const pageOptions: ResPageOptions = {
+        numOfRows: Number(req.query.numOfRows) || 10,
+        page: Number(req.query.page) || 1
+    };
+    const searchOptions: ResSearchOptions = {
+        contentTypeId: String(req.query.contentTypeId) || undefined,
+        contentId: String(req.query.contentId) || undefined
+    };
+    try {
+        const result: IRestaurantResponseWithCount = await restaurantAdminController.getRestaurantWithContentId(pageOptions, searchOptions);
+
+        logger.debug(`Response Data => ${JSON.stringify(result)}`);
+        return res.status(StatusCode.OK).json(result);
+    } catch (error) {
+        next(error);
+    }
+});
+
 export default router;

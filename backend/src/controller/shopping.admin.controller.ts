@@ -8,7 +8,7 @@ import sequelize from "../model";
 import { Shopping, IShoppingResponseWithCount, PageOptions, SearchOptions } from "../model/shopping.model";
 
 import NotFoundError from "../error/notFound";
-import ConflictError from "../error/conflict";
+import BadRequestError from "../error/badRequest";
 import { response } from "express";
 import { Json } from "sequelize/types/utils";
 
@@ -180,7 +180,39 @@ const controller = {
             if (transaction) await transaction.rollback();
             throw err;
         }
-    }
+    },
+
+    getShoppingWithTitle: async (pageOptions: PageOptions, searchOptions: SearchOptions): Promise<any> => {
+        try {
+            const res: Shopping[] | null = await Shopping.findAll({
+                where: {
+                    title :{ [Op.substring]: searchOptions.title }
+                }
+            });
+            return res;
+        }
+         catch (error) {
+            console.log("error : ", error);
+            throw error;
+        }
+    },
+    getShoppingWithContentId: async (pageOptions: PageOptions, searchOptions: SearchOptions): Promise<any> => {
+        try {
+
+            if(searchOptions.contentId == null) throw BadRequestError;
+
+            const rest: Shopping | null = await Shopping.findOne({
+                where: {
+                    contentId: searchOptions.contentId
+                }
+            });
+            return rest;
+        }
+         catch (error) {
+            console.log("error : ", error);
+            throw error;
+        }
+    },
 };
 
 export default controller;

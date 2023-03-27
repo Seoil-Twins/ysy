@@ -26,6 +26,7 @@ import { Json } from "sequelize/types/utils";
 
 import fetch from "node-fetch";
 import { URLSearchParams } from "url";
+import BadRequestError from "../error/badRequest";
 
 const FOLDER_NAME = "restaurant";
 const url = "https://apis.data.go.kr/B551011/KorService1/areaBasedList1";
@@ -213,7 +214,39 @@ const controller = {
             if (transaction) await transaction.rollback();
             throw err;
         }
-    }
+    },
+
+    getRestaurantWithTitle: async (pageOptions: PageOptions, searchOptions: SearchOptions): Promise<any> => {
+        try {
+            const res: Restaurant[] | null = await Restaurant.findAll({
+                where: {
+                    title :{ [Op.substring]: searchOptions.title }
+                }
+            });
+            return res;
+        }
+         catch (error) {
+            console.log("error : ", error);
+            throw error;
+        }
+    },
+    getRestaurantWithContentId: async (pageOptions: PageOptions, searchOptions: SearchOptions): Promise<any> => {
+        try {
+
+            if(searchOptions.contentId == null) throw BadRequestError;
+
+            const rest: Restaurant | null = await Restaurant.findOne({
+                where: {
+                    contentId: searchOptions.contentId
+                }
+            });
+            return rest;
+        }
+         catch (error) {
+            console.log("error : ", error);
+            throw error;
+        }
+    },
 };
 
 export default controller;
