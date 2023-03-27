@@ -11,6 +11,11 @@ import noticeRouter from "./notice";
 import userAdminRouter from "./user.admin";
 import coupleAdminRouter from "./couple.admin";
 import albumAdminRouter from "./album.admin";
+import restaurantAdminRouter from "./restaurant.admin";
+import cultureAdminRouter from "./culture.admin";
+import shoppingAdminRouter from "./shopping.admin";
+import sportsAdminRouter from "./sports.admin";
+import touristSpotAdminRouter from "./touristSpot.admin";
 
 import authMiddleware from "../middlewares/auth.middleware";
 
@@ -28,5 +33,10 @@ router.use("/inquire", authMiddleware, inquireRouter);
 router.use("/admin/user", authMiddleware, userAdminRouter);
 router.use("/admin/couple", authMiddleware, coupleAdminRouter);
 router.use("/admin/album", authMiddleware, albumAdminRouter);
+router.use("/admin/restaurant", authMiddleware, restaurantAdminRouter);
+router.use("/admin/culture", authMiddleware, cultureAdminRouter);
+router.use("/admin/shopping", authMiddleware, shoppingAdminRouter);
+router.use("/admin/sports", authMiddleware, sportsAdminRouter);
+router.use("/admin/tourist_spot", authMiddleware, touristSpotAdminRouter);
 
 export default router;
