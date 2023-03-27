@@ -1,14 +1,13 @@
-import { Op, OrderItem, Transaction, WhereOptions } from "sequelize";
+import { Op, Transaction } from "sequelize";
 
 import sequelize from "../model";
-import { Shopping, IShoppingResponseWithCount, PageOptions, SearchOptions } from "../model/shopping.model";
+import { Shopping, PageOptions, SearchOptions } from "../model/shopping.model";
 
-import BadRequestError from "../error/badRequest";
+import BadRequestError from "../error/badRequest.error";
 
 import fetch from "node-fetch";
 import { URLSearchParams } from "url";
 
-const FOLDER_NAME = "shopping";
 const url = "https://apis.data.go.kr/B551011/KorService1/areaBasedList1";
 const detail_url = "http://apis.data.go.kr/B551011/KorService1/detailIntro1";
 const detail_common_url = "http://apis.data.go.kr/B551011/KorService1/detailCommon1";
@@ -55,7 +54,7 @@ const controller = {
 
         try {
             let res = await fetch(requrl);
-            const result = await Promise.resolve(res.json());
+            const result: any = await Promise.resolve(res.json());
             console.log(result.response.body.items.item[0].contentid);
             for (let key in result.response.body.items.item[0]) {
                 console.log(key + " : " + result.response.body.items.item[0][key]);
@@ -100,7 +99,7 @@ const controller = {
 
         try {
             let res = await fetch(requrl);
-            const result = await Promise.resolve(res.json());
+            const result: any = await Promise.resolve(res.json());
 
             transaction = await sequelize.transaction();
 
@@ -118,7 +117,7 @@ const controller = {
                 const detail_queryString = new URLSearchParams(detail_params).toString();
                 const detail_requrl = `${detail_url}?${detail_queryString}`;
                 let detail_res = await fetch(detail_requrl);
-                const detail_result = await Promise.resolve(detail_res.json());
+                const detail_result: any = await Promise.resolve(detail_res.json());
 
                 // ?ServiceKey=인증키&contentTypeId=39&contentId=2869760&MobileOS=ETC&MobileApp=AppTest&defaultYN=Y&firstImageYN=Y&areacodeYN=Y&catcodeYN=Y&addrinfoYN=Y&mapinfoYN=Y&overviewYN=Y
                 const detail_common_params = {
@@ -138,8 +137,8 @@ const controller = {
                 };
                 const detail_common_queryString = new URLSearchParams(detail_common_params).toString();
                 const detail_common_requrl = `${detail_common_url}?${detail_common_queryString}`;
-                let detail_common_res = await fetch(detail_common_requrl);
-                const detail_common_result = await Promise.resolve(detail_common_res.json());
+                let detail_common_res: any = await fetch(detail_common_requrl);
+                const detail_common_result: any = await Promise.resolve(detail_common_res.json());
                 const createdShopping: Shopping = await Shopping.create(
                     {
                         contentTypeId: result.response.body.items.item[k].contenttypeid,

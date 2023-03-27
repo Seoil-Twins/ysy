@@ -1,34 +1,12 @@
-import dayjs from "dayjs";
-import randomString from "randomstring";
-import { Op, OrderItem, Transaction, WhereOptions } from "sequelize";
-import { File } from "formidable";
-import { boolean } from "boolean";
-
-import logger from "../logger/logger";
-import { deleteFile, isDefaultFile, uploadFile } from "../util/firebase";
-import { createDigest } from "../util/password";
+import { Op, Transaction } from "sequelize";
 
 import sequelize from "../model";
-import { Restaurant, IRestaurantResponseWithCount, PageOptions, SearchOptions } from "../model/restaurant.model";
-import { Solution } from "../model/solution.model";
-import { UserRole } from "../model/userRole.model";
-import { Couple } from "../model/couple.model";
-import { Album } from "../model/album.model";
-import { Inquire } from "../model/inquire.model";
-
-import albumController from "./album.controller";
-import inquireController from "./inquire.controller";
-
-import NotFoundError from "../error/notFound";
-import ConflictError from "../error/conflict";
-import { response } from "express";
-import { Json } from "sequelize/types/utils";
+import { Restaurant, PageOptions, SearchOptions } from "../model/restaurant.model";
 
 import fetch from "node-fetch";
 import { URLSearchParams } from "url";
-import BadRequestError from "../error/badRequest";
+import BadRequestError from "../error/badRequest.error";
 
-const FOLDER_NAME = "restaurant";
 const url = "https://apis.data.go.kr/B551011/KorService1/areaBasedList1";
 const detail_url = "http://apis.data.go.kr/B551011/KorService1/detailIntro1";
 const detail_common_url = "http://apis.data.go.kr/B551011/KorService1/detailCommon1";
@@ -83,7 +61,7 @@ const controller = {
 
         try {
             let res = await fetch(requrl);
-            const result = await Promise.resolve(res.json());
+            const result: any = await Promise.resolve(res.json());
             // console.log(result.response.body.items.item[0]);
             // console.log(result.response.body.items.item.length);
             console.log(result.response.body.items.item[0].contentid);
@@ -130,7 +108,7 @@ const controller = {
 
         try {
             let res = await fetch(requrl);
-            const result = await Promise.resolve(res.json());
+            const result: any = await Promise.resolve(res.json());
             // console.log(result.response.body.items.item[0]);
             // console.log(result.response.body.items.item.length);
             // for (let key in result.response.body.items.item[0]) {
@@ -153,7 +131,7 @@ const controller = {
                 const detail_queryString = new URLSearchParams(detail_params).toString();
                 const detail_requrl = `${detail_url}?${detail_queryString}`;
                 let detail_res = await fetch(detail_requrl);
-                const detail_result = await Promise.resolve(detail_res.json());
+                const detail_result: any = await Promise.resolve(detail_res.json());
 
                 // ?ServiceKey=인증키&contentTypeId=39&contentId=2869760&MobileOS=ETC&MobileApp=AppTest&defaultYN=Y&firstImageYN=Y&areacodeYN=Y&catcodeYN=Y&addrinfoYN=Y&mapinfoYN=Y&overviewYN=Y
                 const detail_common_params = {
@@ -174,7 +152,7 @@ const controller = {
                 const detail_common_queryString = new URLSearchParams(detail_common_params).toString();
                 const detail_common_requrl = `${detail_common_url}?${detail_common_queryString}`;
                 let detail_common_res = await fetch(detail_common_requrl);
-                const detail_common_result = await Promise.resolve(detail_common_res.json());
+                const detail_common_result: any = await Promise.resolve(detail_common_res.json());
                 //console.log(detail_result.response.body.items.item[0].firstmenu);
                 const createdRestaraunt: Restaurant = await Restaurant.create(
                     {
@@ -220,20 +198,18 @@ const controller = {
         try {
             const res: Restaurant[] | null = await Restaurant.findAll({
                 where: {
-                    title :{ [Op.substring]: searchOptions.title }
+                    title: { [Op.substring]: searchOptions.title }
                 }
             });
             return res;
-        }
-         catch (error) {
+        } catch (error) {
             console.log("error : ", error);
             throw error;
         }
     },
     getRestaurantWithContentId: async (pageOptions: PageOptions, searchOptions: SearchOptions): Promise<any> => {
         try {
-
-            if(searchOptions.contentId == null) throw BadRequestError;
+            if (searchOptions.contentId == null) throw BadRequestError;
 
             const rest: Restaurant | null = await Restaurant.findOne({
                 where: {
@@ -241,12 +217,11 @@ const controller = {
                 }
             });
             return rest;
-        }
-         catch (error) {
+        } catch (error) {
             console.log("error : ", error);
             throw error;
         }
-    },
+    }
 };
 
 export default controller;

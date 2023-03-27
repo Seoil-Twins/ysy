@@ -1,16 +1,7 @@
-import dayjs from "dayjs";
-import randomString from "randomstring";
-import { Op, OrderItem, Transaction, WhereOptions } from "sequelize";
-
-import logger from "../logger/logger";
+import { Transaction } from "sequelize";
 
 import sequelize from "../model";
-import { TouristSpot, ITouristSpotResponseWithCount, PageOptions, SearchOptions } from "../model/touristSpot.model";
-
-import NotFoundError from "../error/notFound";
-import ConflictError from "../error/conflict";
-import { response } from "express";
-import { Json } from "sequelize/types/utils";
+import { TouristSpot, PageOptions, SearchOptions } from "../model/touristSpot.model";
 
 import fetch from "node-fetch";
 import { URLSearchParams } from "url";
@@ -62,7 +53,7 @@ const controller = {
 
         try {
             let res = await fetch(requrl);
-            const result = await Promise.resolve(res.json());
+            const result: any = await Promise.resolve(res.json());
             console.log(result.response.body.items.item[0].contentid);
             for (let key in result.response.body.items.item[0]) {
                 console.log(key + " : " + result.response.body.items.item[0][key]);
@@ -107,7 +98,7 @@ const controller = {
 
         try {
             let res = await fetch(requrl);
-            const result = await Promise.resolve(res.json());
+            const result: any = await Promise.resolve(res.json());
 
             transaction = await sequelize.transaction();
 
@@ -125,7 +116,7 @@ const controller = {
                 const detail_queryString = new URLSearchParams(detail_params).toString();
                 const detail_requrl = `${detail_url}?${detail_queryString}`;
                 let detail_res = await fetch(detail_requrl);
-                const detail_result = await Promise.resolve(detail_res.json());
+                const detail_result: any = await Promise.resolve(detail_res.json());
 
                 // ?ServiceKey=인증키&contentTypeId=39&contentId=2869760&MobileOS=ETC&MobileApp=AppTest&defaultYN=Y&firstImageYN=Y&areacodeYN=Y&catcodeYN=Y&addrinfoYN=Y&mapinfoYN=Y&overviewYN=Y
                 const detail_common_params = {
@@ -146,7 +137,7 @@ const controller = {
                 const detail_common_queryString = new URLSearchParams(detail_common_params).toString();
                 const detail_common_requrl = `${detail_common_url}?${detail_common_queryString}`;
                 let detail_common_res = await fetch(detail_common_requrl);
-                const detail_common_result = await Promise.resolve(detail_common_res.json());
+                const detail_common_result: any = await Promise.resolve(detail_common_res.json());
                 //console.log(detail_result.response.body.items.item[0].firstmenu);
                 const createdSports: TouristSpot = await TouristSpot.create(
                     {

@@ -1,20 +1,13 @@
 import dayjs from "dayjs";
-import joi, { ValidationResult } from "joi";
 import express, { Router, Request, Response, NextFunction } from "express";
-import formidable from "formidable";
-import { boolean } from "boolean";
 
 import { IShoppingResponseWithCount, PageOptions as ShopPageOptions, SearchOptions as ShopSearchOptions } from "../model/shopping.model";
 
 import shoppingAdminController from "../controller/shopping.admin.controller";
 
 import logger from "../logger/logger";
-import validator from "../util/validator";
-import StatusCode from "../util/statusCode";
-import { canModifyWithEditor, canView } from "../util/checkRole";
-
-import BadRequestError from "../error/badRequest";
-import InternalServerError from "../error/internalServer";
+import { STATUS_CODE } from "../constant/statusCode.constant";
+import { canView } from "../util/checkRole.util";
 
 dayjs.locale("ko");
 
@@ -34,7 +27,7 @@ router.get("/", canView, async (req: Request, res: Response, next: NextFunction)
         const result: IShoppingResponseWithCount = await shoppingAdminController.getShoppingFromAPI(pageOptions, searchOptions);
 
         logger.debug(`Response Data => ${JSON.stringify(result)}`);
-        return res.status(StatusCode.OK).json(result);
+        return res.status(STATUS_CODE.OK).json(result);
     } catch (error) {
         next(error);
     }
@@ -52,7 +45,7 @@ router.post("/create", canView, async (req: Request, res: Response, next: NextFu
         const result: IShoppingResponseWithCount = await shoppingAdminController.createShoppingDB(pageOptions, searchOptions);
 
         logger.debug(`Response Data => ${JSON.stringify(result)}`);
-        return res.status(StatusCode.OK).json(result);
+        return res.status(STATUS_CODE.OK).json(result);
     } catch (error) {
         next(error);
     }
@@ -71,7 +64,7 @@ router.get("/search/title", canView, async (req: Request, res: Response, next: N
         const result: IShoppingResponseWithCount = await shoppingAdminController.getShoppingWithTitle(pageOptions, searchOptions);
 
         logger.debug(`Response Data => ${JSON.stringify(result)}`);
-        return res.status(StatusCode.OK).json(result);
+        return res.status(STATUS_CODE.OK).json(result);
     } catch (error) {
         next(error);
     }
@@ -90,7 +83,7 @@ router.get("/search/contentId", canView, async (req: Request, res: Response, nex
         const result: IShoppingResponseWithCount = await shoppingAdminController.getShoppingWithContentId(pageOptions, searchOptions);
 
         logger.debug(`Response Data => ${JSON.stringify(result)}`);
-        return res.status(StatusCode.OK).json(result);
+        return res.status(STATUS_CODE.OK).json(result);
     } catch (error) {
         next(error);
     }
