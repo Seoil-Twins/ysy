@@ -1,16 +1,9 @@
-import dayjs from "dayjs";
-import randomString from "randomstring";
 import { Op, OrderItem, Transaction, WhereOptions } from "sequelize";
-
-import logger from "../logger/logger";
 
 import sequelize from "../model";
 import { Shopping, IShoppingResponseWithCount, PageOptions, SearchOptions } from "../model/shopping.model";
 
-import NotFoundError from "../error/notFound";
 import BadRequestError from "../error/badRequest";
-import { response } from "express";
-import { Json } from "sequelize/types/utils";
 
 import fetch from "node-fetch";
 import { URLSearchParams } from "url";
@@ -44,7 +37,7 @@ const controller = {
             pageNo: pageOptions.page.toString(),
             MobileOS: "ETC",
             MobileApp: "AppTest",
-            ServiceKey: "+/HZpVR9TlY0YX1X6CbhFyyqCZDcTeqgCkaI87QvifdyB9PPg7LyFH46lWA5kG1u46bLFamCuKz3UyAONBiEOQ==",
+            ServiceKey: process.env.TOURAPI_API_KEY_DECODE!,
             listYN: "Y",
             arrange: "A",
             contentTypeId: searchOptions.contentTypeId!,
@@ -87,7 +80,7 @@ const controller = {
             pageNo: pageOptions.page.toString(),
             MobileOS: "ETC",
             MobileApp: "AppTest",
-            ServiceKey: "+/HZpVR9TlY0YX1X6CbhFyyqCZDcTeqgCkaI87QvifdyB9PPg7LyFH46lWA5kG1u46bLFamCuKz3UyAONBiEOQ==",
+            ServiceKey: process.env.TOURAPI_API_KEY_DECODE!,
             listYN: "Y",
             arrange: "A",
             contentTypeId: searchOptions.contentTypeId!,
@@ -186,20 +179,18 @@ const controller = {
         try {
             const res: Shopping[] | null = await Shopping.findAll({
                 where: {
-                    title :{ [Op.substring]: searchOptions.title }
+                    title: { [Op.substring]: searchOptions.title }
                 }
             });
             return res;
-        }
-         catch (error) {
+        } catch (error) {
             console.log("error : ", error);
             throw error;
         }
     },
     getShoppingWithContentId: async (pageOptions: PageOptions, searchOptions: SearchOptions): Promise<any> => {
         try {
-
-            if(searchOptions.contentId == null) throw BadRequestError;
+            if (searchOptions.contentId == null) throw BadRequestError;
 
             const rest: Shopping | null = await Shopping.findOne({
                 where: {
@@ -207,12 +198,11 @@ const controller = {
                 }
             });
             return rest;
-        }
-         catch (error) {
+        } catch (error) {
             console.log("error : ", error);
             throw error;
         }
-    },
+    }
 };
 
 export default controller;
