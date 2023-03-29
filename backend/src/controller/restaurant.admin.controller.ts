@@ -1,4 +1,4 @@
-import { Op, Transaction } from "sequelize";
+import { Op, OrderItem, Transaction } from "sequelize";
 
 import sequelize from "../model";
 import { Restaurant, PageOptions, SearchOptions } from "../model/restaurant.model";
@@ -11,7 +11,36 @@ const url = "https://apis.data.go.kr/B551011/KorService1/areaBasedList1";
 const detail_url = "http://apis.data.go.kr/B551011/KorService1/detailIntro1";
 const detail_common_url = "http://apis.data.go.kr/B551011/KorService1/detailCommon1";
 const SERVICEKEY = new String(process.env.TOURAPI_API_KEY);
+
+/*
+
+    createSort(sort: string): OrderItem {
+        let result: OrderItem = ["title", "ASC"];
+    
+        switch (sort) {
+            case "ta":
+                result = ["title", "ASC"];
+                break;
+            case "td":
+                result = ["title", "DESC"];
+                break;
+            case "r":
+                result = ["created_time", "DESC"];
+                break;
+            case "o":
+                result = ["created_time", "ASC"];
+                break;
+            default:
+                result = ["title", "ASC"];
+                break;
+        }
+    
+        return result;
+    },
+*/
+
 const controller = {
+
     /**
      * const pageOptions: PageOptions = {
      *      numOfRows: 1,
@@ -179,7 +208,8 @@ const controller = {
                         restDate: detail_result.response.body.items.item[0].restdatefood,
                         smoking: detail_result.response.body.items.item[0].smoking,
                         reservation: detail_result.response.body.items.item[0].reservationfood,
-                        homepage: "주소"
+                        homepage: detail_common_result.response.body.items.item[0].homepage,
+                        createdTime: result.response.body.items.item[k].createdtime
                     },
                     { transaction }
                 );
@@ -220,6 +250,21 @@ const controller = {
         } catch (error) {
             console.log("error : ", error);
             throw error;
+        }
+    },
+
+    getAllRestaurant: async (pageOption: PageOptions, searchOptions: SearchOptions): Promise<any> => {
+        
+        try{
+            const sort: OrderItem = ["created_time","DESC"];
+            const result: Restaurant[] | null = await Restaurant.findAll({
+                order: [sort]
+            });
+
+            return result;
+        } catch(err){
+            console.log("err : ",err);
+            throw err;
         }
     }
 };

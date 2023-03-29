@@ -39,11 +39,13 @@ export class Restaurant extends Model<InferAttributes<Restaurant>, InferCreation
     declare smoking: string; //20
     declare reservation: string; // 50
     declare homepage: string; // 50
+    declare createdTime: string;
 }
 
 export interface PageOptions {
     numOfRows: number;
     page: number;
+    sort: string | "na" | "nd" | "r" | "o";
 }
 
 export interface SearchOptions {
@@ -151,6 +153,10 @@ Restaurant.init(
         },
         homepage: {
             field: "homepage",
+            type: DataTypes.STRING
+        },
+        createdTime: {
+            field: "created_time",
             type: DataTypes.STRING
         }
     },

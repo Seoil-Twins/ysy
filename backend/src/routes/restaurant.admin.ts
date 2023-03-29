@@ -18,7 +18,8 @@ const router: Router = express.Router();
 router.get("/", canView, async (req: Request, res: Response, next: NextFunction) => {
     const pageOptions: ResPageOptions = {
         numOfRows: Number(req.query.count) || 10,
-        page: Number(req.query.page) || 1
+        page: Number(req.query.page) || 1,
+        sort: ""
     };
     const searchOptions: ResSearchOptions = {
         contentTypeId: String(req.query.contentTypeId) || undefined
@@ -36,7 +37,8 @@ router.get("/", canView, async (req: Request, res: Response, next: NextFunction)
 router.post("/create", canView, async (req: Request, res: Response, next: NextFunction) => {
     const pageOptions: ResPageOptions = {
         numOfRows: Number(req.query.numOfRows) || 10,
-        page: Number(req.query.page) || 1
+        page: Number(req.query.page) || 1,
+        sort: ""
     };
     const searchOptions: ResSearchOptions = {
         contentTypeId: String(req.query.contentTypeId) || undefined
@@ -51,10 +53,31 @@ router.post("/create", canView, async (req: Request, res: Response, next: NextFu
     }
 });
 
+router.get("/search/all", canView, async (req: Request, res: Response, next: NextFunction) => {
+    const pageOptions: ResPageOptions = {
+        numOfRows: Number(req.query.numOfRows) || 10,
+        page: Number(req.query.page) || 1,
+        sort: "r"
+    };
+    const searchOptions: ResSearchOptions = {
+        contentTypeId: String(req.query.contentTypeId) || undefined,
+        title: String(req.query.title) || undefined
+    };
+    try {
+        const result: IRestaurantResponseWithCount = await restaurantAdminController.getAllRestaurant(pageOptions, searchOptions);
+
+        logger.debug(`Response Data => ${JSON.stringify(result)}`);
+        return res.status(STATUS_CODE.OK).json(result);
+    } catch (error) {
+        next(error);
+    }
+});
+
 router.get("/search/title", canView, async (req: Request, res: Response, next: NextFunction) => {
     const pageOptions: ResPageOptions = {
         numOfRows: Number(req.query.numOfRows) || 10,
-        page: Number(req.query.page) || 1
+        page: Number(req.query.page) || 1,
+        sort: ""
     };
     const searchOptions: ResSearchOptions = {
         contentTypeId: String(req.query.contentTypeId) || undefined,
@@ -73,7 +96,8 @@ router.get("/search/title", canView, async (req: Request, res: Response, next: N
 router.get("/search/contentId", canView, async (req: Request, res: Response, next: NextFunction) => {
     const pageOptions: ResPageOptions = {
         numOfRows: Number(req.query.numOfRows) || 10,
-        page: Number(req.query.page) || 1
+        page: Number(req.query.page) || 1,
+        sort: ""
     };
     const searchOptions: ResSearchOptions = {
         contentTypeId: String(req.query.contentTypeId) || undefined,
