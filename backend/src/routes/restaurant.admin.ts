@@ -3,15 +3,18 @@ import express, { Router, Request, Response, NextFunction } from "express";
 
 import { IRestaurantResponseWithCount, PageOptions as ResPageOptions, SearchOptions as ResSearchOptions } from "../model/restaurant.model";
 
-import restaurantAdminController from "../controller/restaurant.admin.controller";
+import RestaurantAdminController from "../controller/restaurant.admin.controller";
 
 import logger from "../logger/logger";
 import { STATUS_CODE } from "../constant/statusCode.constant";
 import { canView } from "../util/checkRole.util";
+import RestaurantAdminService from "../service/restaurant.admin.service";
 
 dayjs.locale("ko");
 
 const router: Router = express.Router();
+const restaurantAdminService: RestaurantAdminService = new RestaurantAdminService();
+const restaurantAdminController:RestaurantAdminController = new RestaurantAdminController(restaurantAdminService);
 
 // let url = "https://apis.data.go.kr/B551011/KorService1/areaBasedList1?numOfRows=";
 
@@ -61,6 +64,7 @@ router.get("/search/all", canView, async (req: Request, res: Response, next: Nex
     };
     const searchOptions: ResSearchOptions = {
         contentTypeId: String(req.query.contentTypeId) || undefined,
+        contentId: String(req.query.contentId) || undefined,
         title: String(req.query.title) || undefined
     };
     try {
@@ -77,10 +81,11 @@ router.get("/search/title", canView, async (req: Request, res: Response, next: N
     const pageOptions: ResPageOptions = {
         numOfRows: Number(req.query.numOfRows) || 10,
         page: Number(req.query.page) || 1,
-        sort: ""
+        sort: String(req.query.sort) || "ta",
     };
     const searchOptions: ResSearchOptions = {
         contentTypeId: String(req.query.contentTypeId) || undefined,
+        contentId: String(req.query.contentId) || undefined,
         title: String(req.query.title) || undefined
     };
     try {

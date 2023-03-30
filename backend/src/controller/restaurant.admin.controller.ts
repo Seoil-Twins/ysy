@@ -7,6 +7,8 @@ import fetch from "node-fetch";
 import { URLSearchParams } from "url";
 import BadRequestError from "../error/badRequest.error";
 
+import RestaurantAdminService from "../service/restaurant.admin.service";
+
 const url = "https://apis.data.go.kr/B551011/KorService1/areaBasedList1";
 const detail_url = "http://apis.data.go.kr/B551011/KorService1/detailIntro1";
 const detail_common_url = "http://apis.data.go.kr/B551011/KorService1/detailCommon1";
@@ -39,8 +41,15 @@ const SERVICEKEY = new String(process.env.TOURAPI_API_KEY);
     },
 */
 
-const controller = {
+class RestaurantAdminController {
 
+    private restaurantAdminService: RestaurantAdminService;
+
+    constructor(
+        restaurantAdminService: RestaurantAdminService
+    ){
+        this.restaurantAdminService = restaurantAdminService;
+    }
     /**
      * const pageOptions: PageOptions = {
      *      numOfRows: 1,
@@ -56,7 +65,7 @@ const controller = {
      * @param searchOptions A {@link SearchOptions}
      * @returns A {@link IUserResponseWithCount}
      */
-    getRestaurantFromAPI: async (pageOptions: PageOptions, searchOptions: SearchOptions): Promise<any> => {
+    async getRestaurantFromAPI(pageOptions: PageOptions, searchOptions: SearchOptions): Promise<any> {
         const offset = (pageOptions.page - 1) * pageOptions.numOfRows;
         //        const where: WhereOptions = createWhere(searchOptions);
 
@@ -102,14 +111,14 @@ const controller = {
         } catch (err) {
             console.log("error: ", err);
         }
-    },
+    }
 
     /**
      * @param pageOptions A {@link PageOptions}
      * @param searchOptions A {@link SearchOptions}
      * @returns A {@link IUserResponseWithCount}
      */
-    createRestaurantDB: async (pageOptions: PageOptions, searchOptions: SearchOptions): Promise<any> => {
+    async createRestaurantDB(pageOptions: PageOptions, searchOptions: SearchOptions): Promise<any> {
         const offset = (pageOptions.page - 1) * pageOptions.numOfRows;
 
         const params = {
@@ -222,9 +231,9 @@ const controller = {
             if (transaction) await transaction.rollback();
             throw err;
         }
-    },
+    }
 
-    getRestaurantWithTitle: async (pageOptions: PageOptions, searchOptions: SearchOptions): Promise<any> => {
+    async getRestaurantWithTitle(pageOptions: PageOptions, searchOptions: SearchOptions): Promise<any> {
         try {
             const res: Restaurant[] | null = await Restaurant.findAll({
                 where: {
@@ -236,8 +245,9 @@ const controller = {
             console.log("error : ", error);
             throw error;
         }
-    },
-    getRestaurantWithContentId: async (pageOptions: PageOptions, searchOptions: SearchOptions): Promise<any> => {
+    }
+
+    async getRestaurantWithContentId(pageOptions: PageOptions, searchOptions: SearchOptions): Promise<any> {
         try {
             if (searchOptions.contentId == null) throw BadRequestError;
 
@@ -251,15 +261,12 @@ const controller = {
             console.log("error : ", error);
             throw error;
         }
-    },
+    }
 
-    getAllRestaurant: async (pageOption: PageOptions, searchOptions: SearchOptions): Promise<any> => {
+    async getAllRestaurant(pageOption: PageOptions, searchOptions: SearchOptions): Promise<any> {
         
         try{
-            const sort: OrderItem = ["created_time","DESC"];
-            const result: Restaurant[] | null = await Restaurant.findAll({
-                order: [sort]
-            });
+            const result: Restaurant[] = await this.restaurantAdminService.select(pageOption,searchOptions);
 
             return result;
         } catch(err){
@@ -269,4 +276,4 @@ const controller = {
     }
 };
 
-export default controller;
+export default RestaurantAdminController;

@@ -54,6 +54,10 @@ export interface SearchOptions {
     contentId?: string;
 }
 
+export interface FilterOptions {
+    
+}
+
 export interface IRestaurantResponseWithCount {
     restaurants: Restaurant[];
     count: number;
