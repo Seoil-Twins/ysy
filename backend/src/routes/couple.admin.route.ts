@@ -12,7 +12,7 @@ import {
     IRequestCreate,
     IUpdateWithController
 } from "../model/couple.model";
-import coupleAdminController from "../controller/couple.admin.controller";
+import coupleAdminController, { CoupleAdminController2 } from "../controller/couple.admin.controller";
 
 import logger from "../logger/logger";
 import validator from "../util/validator.util";
@@ -22,9 +22,13 @@ import { canModifyWithEditor, canView } from "../util/checkRole.util";
 import BadRequestError from "../error/badRequest.error";
 import InternalServerError from "../error/internalServer.error";
 
+import CoupleAdminService from "../service/couple.admin.service";
+
 dayjs.locale("ko");
 
 const router: Router = express.Router();
+const coupleAdminService: CoupleAdminService = new CoupleAdminService();
+const coupleAdminController2: CoupleAdminController2 = new CoupleAdminController2(coupleAdminService);
 
 const signupSchema: joi.Schema = joi.object({
     userId2: joi.number().required(),
@@ -51,7 +55,7 @@ router.get("/", canView, async (req: Request, res: Response, next: NextFunction)
     };
 
     try {
-        const result: ICoupleResponseWithCount = await coupleAdminController.getCouples(pageOptions, searchOptions, filterOptions);
+        const result: ICoupleResponseWithCount = await coupleAdminController2.getCouples(pageOptions, searchOptions, filterOptions);
 
         logger.debug(`Response Data => ${JSON.stringify(result)}`);
         return res.status(STATUS_CODE.OK).json(result);

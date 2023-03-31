@@ -4,53 +4,23 @@ import { boolean } from "boolean";
 import logger from "../logger/logger";
 import { deleteFile } from "../util/firebase.util";
 
-import albumController from "./album.controller";
+import CoupleAdminService from "../service/couple.admin.service";
 
 import sequelize from "../model";
 import { User } from "../model/user.model";
 import { Couple, FilterOptions, ICoupleResponseWithCount, PageOptions, SearchOptions } from "../model/couple.model";
-import { OrderItem, WhereOptions } from "sequelize/types/model";
+import { FindAndCountOptions, OrderItem, WhereOptions } from "sequelize/types/model";
 import { Album } from "../model/album.model";
 import { ErrorImage } from "../model/errorImage.model";
 import NotFoundError from "../error/notFound.error";
 
-const FOLDER_NAME = "couples";
+export class CoupleAdminController2 {
+    private coupleAdminService: CoupleAdminService;
 
-const createSort = (sort: string): OrderItem => {
-    let result: OrderItem = ["createdTime", "DESC"];
-
-    switch (sort) {
-        case "r":
-            result = ["createdTime", "DESC"];
-            break;
-        case "o":
-            result = ["createdTime", "ASC"];
-            break;
-        case "dr":
-            result = ["deletedTime", "DESC"];
-            break;
-        case "do":
-            result = ["deletedTime", "ASC"];
-            break;
-        default:
-            result = ["createdTime", "DESC"];
-            break;
+    constructor(coupleAdminService: CoupleAdminService) {
+        this.coupleAdminService = coupleAdminService;
     }
 
-    return result;
-};
-
-const createWhere = (filterOptions: FilterOptions, cupId?: string): WhereOptions => {
-    let result: WhereOptions = {};
-
-    if (cupId) result["cupId"] = cupId;
-    if (boolean(filterOptions.isDeleted)) result["deleted"] = true;
-    if (filterOptions.fromDate && filterOptions.toDate) result["createdTime"] = { [Op.between]: [filterOptions.fromDate, filterOptions.toDate] };
-
-    return result;
-};
-
-const controller = {
     /**
      * Admin API 전용이며 Pagination, Sort, Search 등을 사용하여 검색할 수 있습니다.
      *
@@ -74,64 +44,23 @@ const controller = {
      * @param filterOptions {@link FilterOptions}
      * @returns A {@link ICoupleResponseWithCount}
      */
-    getCouples: async (pageOptions: PageOptions, searchOptions: SearchOptions, filterOptions: FilterOptions): Promise<ICoupleResponseWithCount> => {
-        const offset = (pageOptions.page - 1) * pageOptions.count;
-        const sort: OrderItem = createSort(pageOptions.sort);
-        const reuslt: ICoupleResponseWithCount = {
+    async getCouples(pageOptions: PageOptions, searchOptions: SearchOptions, filterOptions: FilterOptions): Promise<ICoupleResponseWithCount> {
+        let result: ICoupleResponseWithCount = {
             couples: [],
             count: 0
         };
 
         if (searchOptions.name && searchOptions.name !== "undefined") {
-            let { rows, count }: { rows: User[]; count: number } = await User.findAndCountAll({
-                offset,
-                limit: pageOptions.count,
-                order: [sort],
-                where: {
-                    name: { [Op.like]: `%${searchOptions.name}%` },
-                    cupId: { [Op.not]: null }
-                }
-            });
-
-            if (rows.length > 0) {
-                rows = rows.filter((user: User, idx: number, self: User[]) => idx === self.findIndex((t) => t.cupId === user.cupId));
-
-                for (let i = 0; i < rows.length; i++) {
-                    const where = createWhere(filterOptions, rows[i].cupId!);
-                    const couple: Couple | null = await Couple.findOne({
-                        where,
-                        include: {
-                            model: User,
-                            as: "users"
-                        }
-                    });
-
-                    reuslt.couples.push(couple!);
-                }
-
-                reuslt.count = count - (count - rows.length);
-            }
+            result = await this.coupleAdminService.selectWithName(pageOptions, searchOptions, filterOptions);
         } else {
-            const where = createWhere(filterOptions);
-
-            let { rows, count }: { rows: Couple[]; count: number } = await Couple.findAndCountAll({
-                offset,
-                limit: pageOptions.count,
-                order: [sort],
-                where,
-                include: {
-                    model: User,
-                    as: "users"
-                },
-                distinct: true // Include로 인해 잘못 counting 되는 현상을 막아줌
-            });
-
-            reuslt.count = count;
-            reuslt.couples = rows;
+            result = await this.coupleAdminService.select(pageOptions, filterOptions);
         }
 
-        return reuslt;
-    },
+        return result;
+    }
+}
+
+const controller = {
     deleteCouples: async (coupleIds: string[]): Promise<void> => {
         const couples = await Couple.findAll({
             where: { cupId: coupleIds },
