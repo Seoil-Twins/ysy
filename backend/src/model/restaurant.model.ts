@@ -54,13 +54,34 @@ export interface SearchOptions {
     contentId?: string;
 }
 
-export interface FilterOptions {
-    
-}
+export interface FilterOptions {}
 
 export interface IRestaurantResponseWithCount {
     restaurants: Restaurant[];
     count: number;
+}
+
+export interface IUpdateWithAdmin {
+    areaCode?: string;
+    sigunguCode?: string;
+    view?: number;
+    title?: string;
+    address?: string;
+    mapX?: string;
+    mapY?: string;
+
+    description?: string;
+    thumbnail?: string;
+    signatureDish?: string;
+    phoneNumber?: string;
+    kidsFacility?: string;
+    useTime?: string;
+    parking?: string;
+    restDate?: string;
+    smoking?: string;
+    reservation?: string;
+    homepage?: string;
+    createdTime?: string;
 }
 
 Restaurant.init(
