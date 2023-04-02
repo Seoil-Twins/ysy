@@ -10,7 +10,6 @@ import { Couple, IRequestCreate, IUpdateWithController, IUpdateWithService } fro
 import NotFoundError from "../error/notFound.error";
 import UnauthorizedError from "../error/unauthorized.error";
 import ForbiddenError from "../error/forbidden.error";
-import InternalServerError from "../error/internalServer.error";
 import BadRequestError from "../error/badRequest.error";
 import ConflictError from "../error/conflict.error";
 
@@ -24,18 +23,18 @@ import CoupleService from "../service/couple.service";
 import { deleteFile } from "../util/firebase.util";
 
 class CoupleController {
-    private coupleSerivce: CoupleService;
+    private coupleService: CoupleService;
     private userService: UserService;
     private userRoleService: UserRoleService;
 
-    constructor(coupleSerivce: CoupleService, userService: UserService, userRoleService: UserRoleService) {
-        this.coupleSerivce = coupleSerivce;
+    constructor(coupleService: CoupleService, userService: UserService, userRoleService: UserRoleService) {
+        this.coupleService = coupleService;
         this.userService = userService;
         this.userRoleService = userRoleService;
     }
 
     async getCouple(cupId: string): Promise<Couple> {
-        const couple: Couple | null = await this.coupleSerivce.select(cupId, ["password"]);
+        const couple: Couple | null = await this.coupleService.select(cupId, ["password"]);
         if (!couple) throw new NotFoundError("Not Found Couple");
 
         return couple;
@@ -60,7 +59,7 @@ class CoupleController {
                 if (!user) isNot = false;
             }
 
-            createdCouple = await this.coupleSerivce.create(transaction, cupId, data, file);
+            createdCouple = await this.coupleService.create(transaction, cupId, data, file);
             const user1: User | null = await this.userService.select({ userId: data.userId });
             const user2: User | null = await this.userService.select({ userId: data.userId2 });
 
@@ -83,7 +82,7 @@ class CoupleController {
             await transaction.commit();
             logger.debug(`Create Data => ${JSON.stringify(data)}`);
 
-            const url: string = this.coupleSerivce.getURL(cupId);
+            const url: string = this.coupleService.getURL(cupId);
 
             return [result, url];
         } catch (error) {
@@ -109,7 +108,7 @@ class CoupleController {
         try {
             transaction = await sequelize.transaction();
 
-            const couple: Couple | null = await this.coupleSerivce.select(data.cupId);
+            const couple: Couple | null = await this.coupleService.select(data.cupId);
             const prevThumbnail: string | null | undefined = couple?.thumbnail;
 
             if (!couple) {
@@ -127,7 +126,7 @@ class CoupleController {
                 cupDay: data.cupDay,
                 thumbnail: data.thumbnail
             };
-            updatedCouple = await this.coupleSerivce.update(transaction, couple, updateData, thumbnail);
+            updatedCouple = await this.coupleService.update(transaction, couple, updateData, thumbnail);
 
             await transaction.commit();
 
@@ -150,7 +149,7 @@ class CoupleController {
     }
 
     async deleteCouple(userId: number, cupId: string): Promise<ITokenResponse> {
-        const couple: Couple | null = await this.coupleSerivce.select(cupId);
+        const couple: Couple | null = await this.coupleService.select(cupId);
         if (!couple) throw new NotFoundError("Not found couple using token couple ID");
         else if (!couple.users) throw new NotFoundError("Not found user or another user using token couple ID");
 
@@ -164,7 +163,7 @@ class CoupleController {
 
             await this.userService.update(transaction, user1, { cupId: null });
             await this.userService.update(transaction, user2, { cupId: null });
-            await this.coupleSerivce.delete(transaction, couple);
+            await this.coupleService.delete(transaction, couple);
 
             const role: UserRole | null = await this.userRoleService.select(userId);
             if (!role) throw new UnauthorizedError("Invalid Role");

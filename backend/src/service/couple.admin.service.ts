@@ -3,10 +3,15 @@ import { GroupedCountResultItem, Op, OrderItem, Transaction, WhereOptions } from
 
 import { Service } from "./service";
 
-import { Couple, FilterOptions, ICoupleResponseWithCount, PageOptions, SearchOptions } from "../model/couple.model";
+import { Couple, FilterOptions, ICoupleResponseWithCount, IUpdateWithAdmin, PageOptions, SearchOptions } from "../model/couple.model";
 
-import { deleteFile } from "../util/firebase.util";
+import { API_ROOT } from "..";
+import { deleteFile, isDefaultFile, uploadFile } from "../util/firebase.util";
+
 import { User } from "../model/user.model";
+import { File } from "formidable";
+import dayjs from "dayjs";
+import { Album } from "../model/album.model";
 
 class CoupleAdminService extends Service {
     private FOLDER_NAME = "couples";
@@ -46,8 +51,8 @@ class CoupleAdminService extends Service {
         return result;
     };
 
-    getURL(...args: any[]): string {
-        throw new Error("Method not implemented.");
+    getURL(cupId: string): string {
+        return `${API_ROOT}/admin/couple/${cupId}?sort=r&count=10&page=1`;
     }
 
     async select(pageOptions: PageOptions, filterOptions: FilterOptions): Promise<ICoupleResponseWithCount> {
@@ -122,12 +127,48 @@ class CoupleAdminService extends Service {
         return result;
     }
 
+    async selectAllWithAdditional(coupleIds: string[]): Promise<Couple[]> {
+        const couples: Couple[] = await Couple.findAll({
+            where: { cupId: coupleIds },
+            include: [
+                {
+                    model: Album,
+                    as: "albums"
+                },
+                {
+                    model: User,
+                    as: "users"
+                }
+            ]
+        });
+
+        return couples;
+    }
+
     create(transaction: Transaction | null, ...args: any[]): Promise<any> {
         throw new Error("Method not implemented.");
     }
 
-    update(transaction: Transaction | null, ...args: any[]): Promise<any> {
-        throw new Error("Method not implemented.");
+    async update(transaction: Transaction | null = null, couple: Couple, data: IUpdateWithAdmin): Promise<Couple> {
+        const updatedCouple: Couple = await couple.update(data, { transaction });
+        return updatedCouple;
+    }
+
+    async updateWithFile(transaction: Transaction | null = null, couple: Couple, data: IUpdateWithAdmin, thumbnail: File): Promise<Couple> {
+        if (thumbnail) {
+            const reqFileName = thumbnail.originalFilename!;
+            const isDefault = isDefaultFile(reqFileName);
+
+            if (isDefault) data.thumbnail = null;
+            else data.thumbnail = `${this.FOLDER_NAME}/${couple.cupId}/thumbnail/${dayjs().valueOf()}.${reqFileName}`;
+        }
+
+        const updatedCouple: Couple = await couple.update(data, { transaction });
+
+        console.log(data.thumbnail, thumbnail);
+        if (data.thumbnail && thumbnail) await uploadFile(data.thumbnail, thumbnail.filepath);
+
+        return updatedCouple;
     }
 
     async delete(transaction: Transaction | null, couple: Couple): Promise<any> {

@@ -1,24 +1,35 @@
-import { Op } from "sequelize";
-import { boolean } from "boolean";
+import { File } from "formidable";
+import { Transaction } from "sequelize";
+import randomstring from "randomstring";
 
 import logger from "../logger/logger";
-import { deleteFile } from "../util/firebase.util";
+import { deleteFile, deleteFiles, deleteFolder } from "../util/firebase.util";
 
+import UserService from "../service/user.service";
+import CoupleService from "../service/couple.service";
 import CoupleAdminService from "../service/couple.admin.service";
+import AlbumService from "../service/album.service";
 
 import sequelize from "../model";
 import { User } from "../model/user.model";
-import { Couple, FilterOptions, ICoupleResponseWithCount, PageOptions, SearchOptions } from "../model/couple.model";
-import { FindAndCountOptions, OrderItem, WhereOptions } from "sequelize/types/model";
+import { Couple, FilterOptions, ICoupleResponseWithCount, IRequestCreate, IUpdateWithAdmin, PageOptions, SearchOptions } from "../model/couple.model";
 import { Album } from "../model/album.model";
-import { ErrorImage } from "../model/errorImage.model";
+
 import NotFoundError from "../error/notFound.error";
+import BadRequestError from "../error/badRequest.error";
+import ConflictError from "../error/conflict.error";
 
-export class CoupleAdminController2 {
+export class CoupleAdminController {
+    private userService: UserService;
+    private coupleService: CoupleService;
     private coupleAdminService: CoupleAdminService;
+    private albumService: AlbumService;
 
-    constructor(coupleAdminService: CoupleAdminService) {
+    constructor(userService: UserService, coupleService: CoupleService, coupleAdminService: CoupleAdminService, albumService: AlbumService) {
+        this.userService = userService;
+        this.coupleService = coupleService;
         this.coupleAdminService = coupleAdminService;
+        this.albumService = albumService;
     }
 
     /**
@@ -58,54 +69,131 @@ export class CoupleAdminController2 {
 
         return result;
     }
-}
 
-const controller = {
-    deleteCouples: async (coupleIds: string[]): Promise<void> => {
-        const couples = await Couple.findAll({
-            where: { cupId: coupleIds },
-            include: [
-                {
-                    model: Album,
-                    as: "albums"
-                },
-                {
-                    model: User,
-                    as: "users"
-                }
-            ]
-        });
+    async createCouple(data: IRequestCreate, file?: File): Promise<string> {
+        let isNot = true;
+        let cupId = "";
+        let createdCouple: Couple | null = null;
+        let transaction: Transaction | undefined = undefined;
 
-        couples.forEach(async (couple: Couple) => {
-            const transaction = await sequelize.transaction();
+        try {
+            transaction = await sequelize.transaction();
 
-            try {
-                if (couple.thumbnail) await deleteFile(couple.thumbnail!);
-
-                if (couple.albums) {
-                    const albums: Album[] = await couple.albums!;
-
-                    albums.forEach(async (album: Album) => {
-                        try {
-                            // await albumController.deleteAlbum(couple.cupId, album.albumId);
-                        } catch (error) {
-                            if (error instanceof NotFoundError) return;
-                        }
-                    });
-                }
-
-                couple.users!.forEach(async (user: User) => {
-                    await user.update({ cupId: null }, { transaction });
+            while (isNot) {
+                cupId = randomstring.generate({
+                    length: 8,
+                    charset: "alphanumeric"
                 });
 
-                await couple.destroy({ transaction });
-
-                transaction.commit();
-            } catch (error) {
-                transaction.rollback();
+                const user: User | null = await this.userService.select({ cupId });
+                if (!user) isNot = false;
             }
-        });
-    }
-};
 
-export default controller;
+            createdCouple = await this.coupleService.create(transaction, cupId, data, file);
+            const user1: User | null = await this.userService.select({ userId: data.userId });
+            const user2: User | null = await this.userService.select({ userId: data.userId2 });
+
+            if (!user1 || !user2) throw new BadRequestError("Bad Request");
+            else if (user1.cupId || user2.cupId) throw new ConflictError("Duplicated Cup Id");
+
+            await this.userService.update(transaction, user1, {
+                cupId: createdCouple.cupId
+            });
+
+            await this.userService.update(transaction, user2, {
+                cupId: createdCouple.cupId
+            });
+
+            await transaction.commit();
+            logger.debug(`Create Data => ${JSON.stringify(data)}`);
+
+            const url: string = this.coupleAdminService.getURL(cupId);
+
+            return url;
+        } catch (error) {
+            if (createdCouple?.thumbnail) {
+                deleteFile(createdCouple.thumbnail);
+                logger.error(`After updating the firebase, a db error occurred and the firebase thumbnail is deleted => ${createdCouple.thumbnail}`);
+            }
+            if (transaction) await transaction.rollback();
+            logger.error(`Couple create Error => ${JSON.stringify(error)}`);
+
+            throw error;
+        }
+    }
+
+    async updateCouple(cupId: string, data: IUpdateWithAdmin, thumbnail?: File): Promise<Couple> {
+        const couple: Couple | null = await this.coupleService.selectByPk(cupId);
+        if (!couple) throw new BadRequestError();
+
+        const prevThumbnail: string | null = couple?.thumbnail;
+
+        let transaction: Transaction | undefined = undefined;
+        let createdCouple: Couple | null = null;
+
+        try {
+            transaction = await sequelize.transaction();
+
+            if (thumbnail) {
+                createdCouple = await this.coupleAdminService.updateWithFile(transaction, couple, data, thumbnail);
+            } else {
+                createdCouple = await this.coupleAdminService.update(transaction, couple, data);
+            }
+
+            await transaction.commit();
+            if (thumbnail && prevThumbnail) {
+                await deleteFile(prevThumbnail);
+                logger.debug(`Deleted Previous thumbnail => ${prevThumbnail}`);
+            }
+
+            return createdCouple;
+        } catch (error) {
+            if (createdCouple?.thumbnail) await deleteFile(createdCouple.thumbnail);
+            if (transaction) await transaction.rollback();
+
+            logger.error(`Couple update error in couple admin api => ${JSON.stringify(error)}`);
+            throw error;
+        }
+    }
+
+    async deleteCouples(coupleIds: string[]): Promise<void> {
+        const couples: Couple[] = await this.coupleAdminService.selectAllWithAdditional(coupleIds);
+        if (couples.length === 0) throw new NotFoundError(`Not found couples with using ${coupleIds}`);
+
+        let transaction: Transaction | undefined = undefined;
+
+        try {
+            transaction = await sequelize.transaction();
+            const thumbnailPaths: string[] = [];
+            const folderPaths: string[] = [];
+
+            for (const couple of couples) {
+                if (couple.thumbnail) thumbnailPaths.push(couple.thumbnail);
+
+                const albums: Album[] | undefined = couple.albums;
+
+                if (albums) {
+                    for (const album of albums) {
+                        if (album.thumbnail) thumbnailPaths.push(album.thumbnail);
+                        folderPaths.push(this.albumService.getAlbumFolderPath(album.cupId, album.albumId));
+                    }
+                }
+
+                await this.coupleAdminService.delete(transaction, couple);
+            }
+
+            await transaction.commit();
+            await deleteFiles(thumbnailPaths);
+            for (const path of folderPaths) {
+                await deleteFolder(path);
+            }
+        } catch (error) {
+            if (transaction) await transaction.rollback();
+
+            logger.error(`Couple deletes error in couple admin api => ${JSON.stringify(error)}`);
+            throw error;
+        }
+    }
+}
+
+export default CoupleAdminController;

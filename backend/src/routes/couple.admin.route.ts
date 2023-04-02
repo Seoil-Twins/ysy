@@ -4,15 +4,21 @@ import express, { Router, Request, Response, NextFunction } from "express";
 import formidable, { File } from "formidable";
 import { boolean } from "boolean";
 
+import UserService from "../service/user.service";
+import CoupleService from "../service/couple.service";
+import CoupleAdminService from "../service/couple.admin.service";
+import AlbumService from "../service/album.service";
+
 import {
     ICoupleResponseWithCount,
     PageOptions as CouplePageOptions,
     SearchOptions as CoupleSearchOptions,
     FilterOptions as CoupleFilterOptions,
     IRequestCreate,
-    IUpdateWithController
+    IUpdateWithAdmin,
+    Couple
 } from "../model/couple.model";
-import coupleAdminController, { CoupleAdminController2 } from "../controller/couple.admin.controller";
+import CoupleAdminController from "../controller/couple.admin.controller";
 
 import logger from "../logger/logger";
 import validator from "../util/validator.util";
@@ -22,13 +28,14 @@ import { canModifyWithEditor, canView } from "../util/checkRole.util";
 import BadRequestError from "../error/badRequest.error";
 import InternalServerError from "../error/internalServer.error";
 
-import CoupleAdminService from "../service/couple.admin.service";
-
 dayjs.locale("ko");
 
 const router: Router = express.Router();
+const userService: UserService = new UserService();
+const coupleService: CoupleService = new CoupleService();
 const coupleAdminService: CoupleAdminService = new CoupleAdminService();
-const coupleAdminController2: CoupleAdminController2 = new CoupleAdminController2(coupleAdminService);
+const albumService: AlbumService = new AlbumService();
+const coupleAdminController: CoupleAdminController = new CoupleAdminController(userService, coupleService, coupleAdminService, albumService);
 
 const signupSchema: joi.Schema = joi.object({
     userId2: joi.number().required(),
@@ -38,7 +45,9 @@ const signupSchema: joi.Schema = joi.object({
 
 const updateSchema: joi.Schema = joi.object({
     title: joi.string(),
-    cupDay: joi.date()
+    cupDay: joi.date(),
+    deleted: joi.boolean(),
+    deletedTime: joi.when("deleted", { is: true, then: joi.required() })
 });
 
 router.get("/", canView, async (req: Request, res: Response, next: NextFunction) => {
@@ -55,7 +64,7 @@ router.get("/", canView, async (req: Request, res: Response, next: NextFunction)
     };
 
     try {
-        const result: ICoupleResponseWithCount = await coupleAdminController2.getCouples(pageOptions, searchOptions, filterOptions);
+        const result: ICoupleResponseWithCount = await coupleAdminController.getCouples(pageOptions, searchOptions, filterOptions);
 
         logger.debug(`Response Data => ${JSON.stringify(result)}`);
         return res.status(STATUS_CODE.OK).json(result);
@@ -86,10 +95,8 @@ router.post("/", canModifyWithEditor, async (req: Request, res: Response, next: 
                 title: value.title
             };
 
-            // const result: ITokenResponse = await coupleController.createCouple(data, file);
-
-            // logger.debug(`Response Data : ${JSON.stringify(result)}`);
-            // return res.status(STATUS_CODE.CREATED).json(result);
+            const url: string = await coupleAdminController.createCouple(data, file);
+            return res.header({ Location: url }).status(STATUS_CODE.CREATED).json({});
         } catch (error) {
             next(error);
         }
@@ -98,6 +105,7 @@ router.post("/", canModifyWithEditor, async (req: Request, res: Response, next: 
 
 // Update Couple Info
 router.patch("/:cup_id", canModifyWithEditor, async (req: Request, res: Response, next: NextFunction) => {
+    const cupId: string = String(req.params.cup_id);
     const form = formidable({ multiples: false, maxFileSize: 5 * 1024 * 1024 });
 
     form.parse(req, async (err, fields, files) => {
@@ -107,21 +115,20 @@ router.patch("/:cup_id", canModifyWithEditor, async (req: Request, res: Response
             req.body = Object.assign({}, req.body, fields);
 
             const { value, error }: ValidationResult = validator(req.body, updateSchema);
-            const file: File | undefined = !(files.file instanceof Array<formidable.File>) ? files.file : undefined;
+            const thumbnail: File | undefined = !(files.thumbnail instanceof Array<formidable.File>) ? files.thumbnail : undefined;
 
             if (error) throw new BadRequestError(error.message);
-            else if (!file && !req.body.title && !req.body.cupDay) throw new BadRequestError("Request values is empty");
+            else if (!thumbnail && !req.body.title && !req.body.cupDay) throw new BadRequestError("Request values is empty");
 
-            const data: IUpdateWithController = {
-                userId: value.target,
-                cupId: value.cupId,
+            const data: IUpdateWithAdmin = {
                 cupDay: value.cupDay,
-                title: value.title
+                title: value.title,
+                deleted: value.deleted,
+                deletedTime: value.deletedTime
             };
 
-            // await coupleController.updateCouple(data, file);
-
-            return res.status(STATUS_CODE.NO_CONTENT).json({});
+            const updatedCouple: Couple = await coupleAdminController.updateCouple(cupId, data, thumbnail);
+            return res.status(STATUS_CODE.OK).json(updatedCouple);
         } catch (error) {
             next(error);
         }
@@ -133,7 +140,6 @@ router.delete("/:couple_ids", canModifyWithEditor, async (req: Request, res: Res
 
     try {
         await coupleAdminController.deleteCouples(coupleIds);
-
         res.status(STATUS_CODE.NO_CONTENT).json({});
     } catch (error) {
         next(error);

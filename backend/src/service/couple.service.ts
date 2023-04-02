@@ -9,8 +9,7 @@ import { User } from "../model/user.model";
 
 import { Service } from "./service";
 
-import logger from "../logger/logger";
-import { deleteFile, isDefaultFile, uploadFile } from "../util/firebase.util";
+import { isDefaultFile, uploadFile } from "../util/firebase.util";
 
 class CoupleService extends Service {
     private FOLDER_NAME = "couples";
