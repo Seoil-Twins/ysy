@@ -58,10 +58,15 @@ export interface FilterOptions {
     toDate?: Date;
 }
 
-export interface IAdminUpdate {
+export interface ICreateWithAdmin {
     cupId: string;
-    albumId: number;
+    title: string;
+    thumbnail?: string | null;
+}
+
+export interface IUpdateWithAdmin {
     title?: string;
+    thumbnail?: string | null;
 }
 // ------------------------------------------ Interface End ---------------------------------------- //
 

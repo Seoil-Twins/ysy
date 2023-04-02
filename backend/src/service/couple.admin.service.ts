@@ -165,7 +165,6 @@ class CoupleAdminService extends Service {
 
         const updatedCouple: Couple = await couple.update(data, { transaction });
 
-        console.log(data.thumbnail, thumbnail);
         if (data.thumbnail && thumbnail) await uploadFile(data.thumbnail, thumbnail.filepath);
 
         return updatedCouple;

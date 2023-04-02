@@ -1,105 +1,30 @@
-import dayjs from "dayjs";
 import { File } from "formidable";
-import { Op, OrderItem, Transaction, WhereOptions } from "sequelize";
+import { Transaction } from "sequelize";
 
 import NotFoundError from "../error/notFound.error";
 
 import sequelize from "../model";
-import { Album, ICreate, IAlbumResponseWithCount, SearchOptions, PageOptions, FilterOptions, IAdminUpdate } from "../model/album.model";
-
-import logger from "../logger/logger";
-import { deleteFile, deleteFiles, deleteFolder, isDefaultFile, uploadFile, uploadFiles } from "../util/firebase.util";
+import { Album, IAlbumResponseWithCount, SearchOptions, PageOptions, FilterOptions, ICreateWithAdmin, IUpdateWithAdmin } from "../model/album.model";
 import { AlbumImage } from "../model/albnmImage.model";
 
-const FOLDER_NAME = "couples";
+import logger from "../logger/logger";
+import { deleteFile, deleteFiles, deleteFolder } from "../util/firebase.util";
 
-const createSort = (sort: string): OrderItem => {
-    let result: OrderItem = ["createdTime", "DESC"];
+import AlbumAdminService from "../service/album.admin.service";
+import AlbumService from "../service/album.service";
+import AlbumImageService from "../service/albumImage.service";
 
-    switch (sort) {
-        case "r":
-            result = ["createdTime", "DESC"];
-            break;
-        case "o":
-            result = ["createdTime", "ASC"];
-            break;
-        case "cd":
-            result = ["cupId", "DESC"];
-            break;
-        case "ca":
-            result = ["cupId", "ASC"];
-            break;
-        default:
-            result = ["createdTime", "DESC"];
-            break;
+class AlbumAdminController {
+    private albumService: AlbumService;
+    private albumAdminService: AlbumAdminService;
+    private albumImageService: AlbumImageService;
+
+    constructor(albumService: AlbumService, albumAdminService: AlbumAdminService, albumImageService: AlbumImageService) {
+        this.albumService = albumService;
+        this.albumAdminService = albumAdminService;
+        this.albumImageService = albumImageService;
     }
 
-    return result;
-};
-
-const createWhere = (searchOptions: SearchOptions, filterOptions: FilterOptions): WhereOptions => {
-    let result: WhereOptions = {};
-
-    if (searchOptions.cupId) result["cupId"] = { [Op.like]: `%${searchOptions.cupId}%` };
-    if (filterOptions.fromDate && filterOptions.toDate) result["createdTime"] = { [Op.between]: [filterOptions.fromDate, filterOptions.toDate] };
-
-    return result;
-};
-
-const thumbnailError = async (path: string) => {
-    await deleteFile(path);
-};
-
-const addImages = async (cupId: string, albumId: number, images: File | File[], transaction: Transaction) => {
-    try {
-        if (images && images instanceof Array<File>) {
-            const filePaths: string[] = [];
-            const imagePaths: string[] = [];
-
-            images.forEach((image: File) => {
-                filePaths.push(image.filepath);
-                imagePaths.push(`${FOLDER_NAME}/${cupId}/${albumId}/${dayjs().valueOf()}.${image.originalFilename}`);
-            });
-
-            const [successResults, failedResults]: PromiseSettledResult<any>[][] = await uploadFiles(filePaths, imagePaths);
-
-            failedResults.forEach((failed) => {
-                logger.error(`Add album error and ignore => ${JSON.stringify(failed)}`);
-            });
-
-            for (const result of successResults) {
-                if (result.status === "fulfilled") {
-                    await AlbumImage.create(
-                        {
-                            albumId: albumId,
-                            image: result.value.metadata.fullPath
-                        },
-                        { transaction }
-                    );
-                }
-            }
-        } else if (images && images instanceof File) {
-            const path = `${FOLDER_NAME}/${cupId}/${albumId}/${dayjs().valueOf()}.${images.originalFilename}`;
-
-            await AlbumImage.create(
-                {
-                    albumId: albumId,
-                    image: path
-                },
-                { transaction }
-            );
-
-            await uploadFile(path, images.filepath);
-        }
-
-        return true;
-    } catch (error) {
-        logger.error(`Album Create Error ${JSON.stringify(error)}`);
-        throw error;
-    }
-};
-
-const controller = {
     /**
      * 모든 Album Folder를 가져옵니다.
      * ```typescript
@@ -123,141 +48,125 @@ const controller = {
      * @param filterOptions {@link FilterOptions}
      * @returns A {@link IAlbumResponseWithCount}
      */
-    getAlbumFolders: async (pageOptions: PageOptions, searchOptions: SearchOptions, filterOptions: FilterOptions): Promise<IAlbumResponseWithCount> => {
-        const offset: number = (pageOptions.page - 1) * pageOptions.count;
-        const sort: OrderItem = createSort(pageOptions.sort);
-        const where: WhereOptions = createWhere(searchOptions, filterOptions);
-
-        const { rows }: { rows: Album[] } = await Album.findAndCountAll({
-            where,
-            offset,
-            limit: pageOptions.count,
-            order: [sort],
-            attributes: { include: [[sequelize.fn("COUNT", sequelize.col("albumImages.album_id")), "total"]] },
-            include: {
-                model: AlbumImage,
-                as: "albumImages",
-                attributes: [],
-                duplicating: false
-            },
-            group: "Album.album_id"
-        });
-
-        const count: number = await Album.count();
-
+    async getAlbumFolders(pageOptions: PageOptions, searchOptions: SearchOptions, filterOptions: FilterOptions): Promise<IAlbumResponseWithCount> {
+        const [albums, count]: [Album[], number] = await this.albumAdminService.select(pageOptions, searchOptions, filterOptions);
         const result: IAlbumResponseWithCount = {
-            albums: rows,
+            albums,
             total: count
         };
 
+        if (result.albums.length <= 0) throw new NotFoundError(`Not found albums`);
         return result;
-    },
-    createAlbum: async (data: ICreate, thumbnail?: File, images?: File | File[]): Promise<void> => {
-        let isImagesUpload = false;
-        let isThumbnailUpload = false;
-        let thumbnailPath = "";
-        let albumId = 0;
+    }
+
+    async createAlbum(data: ICreateWithAdmin, thumbnail?: File, images?: File | File[]): Promise<string> {
+        let createdAlbum: Album | undefined = undefined;
+        let updatedAlbum: Album | undefined = undefined;
+        let createdImages: AlbumImage | AlbumImage[] | undefined = undefined;
         let transaction: Transaction | undefined = undefined;
 
         try {
             transaction = await sequelize.transaction();
-            const album = await Album.create(data, { transaction });
-            albumId = album.albumId;
 
             if (thumbnail) {
-                thumbnailPath = `${FOLDER_NAME}/${data.cupId}/${album.albumId}/thumbnail/${dayjs().valueOf()}.${thumbnail.originalFilename}`;
-
-                await album.update(
-                    {
-                        thumbnail: thumbnailPath
-                    },
-                    { transaction }
-                );
-
-                await uploadFile(thumbnailPath, thumbnail.filepath);
-                isThumbnailUpload = true;
-
-                logger.debug(`Upload Firebase Album Thumbnail => ${JSON.stringify(thumbnail)}`);
+                createdAlbum = await this.albumAdminService.create(transaction, data);
+                updatedAlbum = await this.albumAdminService.updateThumbnail(transaction, createdAlbum, thumbnail);
+            } else {
+                createdAlbum = await this.albumAdminService.create(transaction, data);
             }
 
-            if (images) isImagesUpload = await addImages(data.cupId, album.albumId, images, transaction);
+            if (images instanceof Array<File>) {
+                createdImages = await this.albumImageService.createMutiple(transaction, data.cupId, createdAlbum.albumId, images);
+            } else if (images instanceof File) {
+                createdImages = await this.albumImageService.create(transaction, data.cupId, createdAlbum.albumId, images);
+            }
 
             await transaction.commit();
+
+            const url: string = this.albumAdminService.getURL(createdAlbum.cupId);
+            return url;
         } catch (error) {
             logger.error(`Album Create Error ${JSON.stringify(error)}`);
 
-            if (isThumbnailUpload) await thumbnailError(thumbnailPath);
-            if (isImagesUpload) await deleteFolder(`${FOLDER_NAME}/${data.cupId}/${albumId}`);
+            if (updatedAlbum?.thumbnail) await deleteFile(updatedAlbum.thumbnail);
+            if (createdAlbum && createdImages) await deleteFolder(`${this.albumAdminService.getAlbumFolderPath(createdAlbum.cupId, createdAlbum.albumId)}`);
             if (transaction) await transaction.rollback();
             throw error;
         }
-    },
-    addAlbumImages: async (cupId: string, albumId: number, images: File | File[]): Promise<void> => {
+    }
+
+    async addImages(albumId: number, images: File | File[]): Promise<string> {
+        let albumImages: AlbumImage | AlbumImage[] | null = null;
+        const album: Album | null = await this.albumService.select(albumId);
+        if (!album) throw new NotFoundError("Not found album using query parameter album ID");
+
         let transaction: Transaction | undefined = undefined;
 
         try {
             transaction = await sequelize.transaction();
-            await addImages(cupId, albumId, images, transaction);
+
+            if (images instanceof Array<File>) albumImages = await this.albumImageService.createMutiple(transaction, album.cupId, albumId, images);
+            else if (images instanceof File) albumImages = await this.albumImageService.create(transaction, album.cupId, albumId, images);
+
             await transaction.commit();
+            logger.debug(`Success add albums => ${album.cupId} | ${albumId} | ${JSON.stringify(images)}`);
+
+            const url: string = this.albumAdminService.getURL(album.cupId);
+            return url;
         } catch (error) {
-            if (transaction) await transaction.rollback();
-            throw error;
-        }
-    },
-    updateAlbum: async (data: IAdminUpdate, thumbnail?: File): Promise<void> => {
-        let isThumbnailUpload = false;
-        let thumbnailPath: string | null = null;
-        const updateData: any = {
-            title: undefined,
-            thumbnail: undefined
-        };
-        let transaction: Transaction | undefined = undefined;
-        const album: Album | null = await Album.findByPk(data.albumId);
+            if (albumImages && albumImages instanceof AlbumImage) {
+                await deleteFile(albumImages.image);
+                logger.error(`After updating the firebase, a db error occurred and the firebase thumbnail is deleted => ${albumImages.image}`);
+            } else if (albumImages && albumImages instanceof Array<AlbumImage>) {
+                const paths: string[] = [];
+                albumImages.forEach((image: AlbumImage) => {
+                    paths.push(image.image);
+                });
 
-        try {
-            if (!album) throw new NotFoundError("Not Found Album");
-
-            transaction = await sequelize.transaction();
-
-            if (data.title) updateData.title = data.title;
-            if (thumbnail) {
-                const isDefault = isDefaultFile(thumbnail.originalFilename!);
-
-                if (isDefault) thumbnailPath = null;
-                else thumbnailPath = `${FOLDER_NAME}/${data.cupId}/${album.albumId}/thumbnail/${dayjs().valueOf()}.${thumbnail.originalFilename}`;
-
-                updateData.thumbnail = thumbnailPath;
-
-                logger.debug(`Upload Firebase Album Thumbnail => ${JSON.stringify(thumbnail)}`);
+                await deleteFiles(paths);
+                logger.error(`After updating the firebase, a db error occurred and the firebase thumbnail is deleted => ${JSON.stringify(albumImages)}`);
             }
 
-            const prevThumbnail: string | null = album.thumbnail;
-            await album.update(updateData, { transaction });
+            if (transaction) await transaction.rollback();
+            logger.error(`Album Create Error ${JSON.stringify(error)}`);
+            throw error;
+        }
+    }
+
+    async updateAlbum(albumId: number, data: IUpdateWithAdmin, thumbnail?: File): Promise<Album> {
+        const album: Album | null = await this.albumService.select(albumId);
+        if (!album) throw new NotFoundError(`Not found album with using ${albumId}`);
+
+        let updatedAlbum: Album | undefined = undefined;
+        let transaction: Transaction | undefined = undefined;
+        const prevThumbnail: string | null = album.thumbnail;
+
+        try {
+            transaction = await sequelize.transaction();
+
+            updatedAlbum = await this.albumAdminService.update(transaction, album, data, thumbnail);
+            await transaction.commit();
 
             if (prevThumbnail) await deleteFile(prevThumbnail);
-            if (thumbnailPath) {
-                await uploadFile(thumbnailPath, thumbnail!.filepath);
-                isThumbnailUpload = true;
-            }
 
-            await transaction.commit();
+            return updatedAlbum;
         } catch (error) {
-            logger.error(`Album Update Error ${JSON.stringify(error)}`);
-
-            if (isThumbnailUpload) await thumbnailError(thumbnailPath!);
-
+            if (updatedAlbum?.thumbnail) await deleteFile(updatedAlbum?.thumbnail);
             if (transaction) await transaction.rollback();
+
+            logger.error(`Update album error in admin api => ${JSON.stringify(error)}`);
             throw error;
         }
-    },
-    deleteAlbums: async (albumIds: number[]): Promise<void> => {
+    }
+
+    async deleteAlbums(albumIds: number[]): Promise<void> {
+        const albums: Album[] = await this.albumAdminService.selectMutiple(albumIds);
+        if (!albums.length || albums.length <= 0) throw new NotFoundError("Not found albums");
         let transaction: Transaction | undefined = undefined;
 
         try {
             const thumbnailPaths: string[] = [];
             const albumPaths: string[] = [];
-            const albums: Album[] = await Album.findAll({ where: { albumId: albumIds } });
-            if (!albums.length || albums.length <= 0) throw new NotFoundError("Not found albums");
 
             transaction = await sequelize.transaction();
 
@@ -266,44 +175,48 @@ const controller = {
 
                 if (album.thumbnail) thumbnailPaths.push(album.thumbnail);
 
-                const albumPath = `${FOLDER_NAME}/${album.cupId}/${album.albumId}`;
+                const albumPath = `${this.albumAdminService.getAlbumFolderPath(album.cupId, album.albumId)}`;
                 albumPaths.push(albumPath);
             }
 
-            await deleteFiles(thumbnailPaths);
+            await transaction.commit();
 
             const promises = [];
-            for (const albumPath of albumPaths) promises.push(deleteFolder(albumPath));
-            await Promise.allSettled(promises);
 
-            await transaction.commit();
+            promises.push(deleteFiles(thumbnailPaths));
+            for (const albumPath of albumPaths) promises.push(deleteFolder(albumPath));
+
+            await Promise.allSettled(promises);
         } catch (error) {
             logger.error(`Delete album error => ${JSON.stringify(error)}`);
             if (transaction) await transaction.rollback();
+
+            throw error;
         }
-    },
-    deleteAlbumImages: async (imageIds: number[]): Promise<void> => {
+    }
+
+    async deleteAlbumImages(imageIds: number[]): Promise<void> {
+        const images: AlbumImage[] = await this.albumImageService.select(imageIds);
+        if (!images.length || images.length <= 0) throw new NotFoundError("Not found images");
         let transaction: Transaction | undefined = undefined;
 
         try {
-            const images: AlbumImage[] = await AlbumImage.findAll({ where: { imageId: imageIds } });
-            if (!images.length || images.length <= 0) throw new NotFoundError("Not found images");
-
             transaction = await sequelize.transaction();
 
             const paths = images.map((image: AlbumImage) => {
                 return image.image;
             });
 
-            await AlbumImage.destroy({ where: { imageId: imageIds }, transaction });
-            await deleteFiles(paths);
-
+            await this.albumImageService.delete(transaction, imageIds);
             await transaction.commit();
+
+            await deleteFiles(paths);
         } catch (error) {
             logger.error(`Delete album error => ${JSON.stringify(error)}`);
             if (transaction) await transaction.rollback();
+            throw error;
         }
     }
-};
+}
 
-export default controller;
+export default AlbumAdminController;

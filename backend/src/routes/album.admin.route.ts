@@ -3,9 +3,12 @@ import joi, { ValidationResult } from "joi";
 import express, { Router, Request, Response, NextFunction } from "express";
 import formidable, { File } from "formidable";
 
-import { IAlbumResponseWithCount, PageOptions, SearchOptions, FilterOptions, ICreate, IAdminUpdate } from "../model/album.model";
+import AlbumService from "../service/album.service";
+import AlbumAdminService from "../service/album.admin.service";
+import AlbumImageService from "../service/albumImage.service";
+import AlbumAdminController from "../controller/album.admin.controller";
 
-import albumAdminController from "../controller/album.admin.controller";
+import { IAlbumResponseWithCount, PageOptions, SearchOptions, FilterOptions, ICreateWithAdmin, IUpdateWithAdmin, Album } from "../model/album.model";
 
 import logger from "../logger/logger";
 import validator from "../util/validator.util";
@@ -16,6 +19,10 @@ import BadRequestError from "../error/badRequest.error";
 import InternalServerError from "../error/internalServer.error";
 
 const router: Router = express.Router();
+const albumSerivce: AlbumService = new AlbumService();
+const albumAdminService: AlbumAdminService = new AlbumAdminService();
+const albumImageService: AlbumImageService = new AlbumImageService();
+const albumAdminController: AlbumAdminController = new AlbumAdminController(albumSerivce, albumAdminService, albumImageService);
 
 const createSchema: joi.Schema = joi.object({
     cupId: joi.string().required(),
@@ -64,16 +71,16 @@ router.post("/:cup_id", canModifyWithEditor, async (req: Request, res: Response,
             else if (error) throw new BadRequestError(error.message);
             else if (files.thumbnail instanceof Array<formidable.File>) throw new BadRequestError("You must request only one thumbnail");
 
-            const data: ICreate = {
+            const data: ICreateWithAdmin = {
                 cupId: req.body.cupId,
                 title: String(req.body.title)
             };
             const thumbnail: File | undefined = files.thumbnail;
             const images: File | File[] | undefined = files.images;
 
-            await albumAdminController.createAlbum(data, thumbnail, images);
+            const url: string = await albumAdminController.createAlbum(data, thumbnail, images);
 
-            res.status(STATUS_CODE.CREATED).json({});
+            res.header({ Location: url }).status(STATUS_CODE.CREATED).json({});
         } catch (error) {
             next(error);
         }
@@ -93,9 +100,9 @@ router.post("/:cup_id/:album_id", canModifyWithEditor, async (req: Request, res:
             if (err) throw new InternalServerError(`Image Server Error : ${JSON.stringify(err)}`);
             else if (!files.images) throw new BadRequestError("You must be request album images");
 
-            await albumAdminController.addAlbumImages(cupId, albumId, files.images);
+            const url: string = await albumAdminController.addImages(albumId, files.images);
 
-            res.status(STATUS_CODE.CREATED).json({});
+            res.header({ Location: url }).status(STATUS_CODE.CREATED).json({});
         } catch (error) {
             next(error);
         }
@@ -123,10 +130,10 @@ router.patch("/:cup_id/:album_id", canModifyWithEditor, async (req: Request, res
             else if (!thumbnail && !title) throw new BadRequestError("Request values is empty");
             else if (thumbnail instanceof Array<formidable.File>) throw new BadRequestError("You must request only one thumbnail");
 
-            const data: IAdminUpdate = { title, albumId, cupId };
-            await albumAdminController.updateAlbum(data, thumbnail);
+            const data: IUpdateWithAdmin = { title };
+            const updatedAlbum: Album = await albumAdminController.updateAlbum(albumId, data, thumbnail);
 
-            res.status(STATUS_CODE.NO_CONTENT).json({});
+            res.status(STATUS_CODE.OK).json(updatedAlbum);
         } catch (error) {
             next(error);
         }
