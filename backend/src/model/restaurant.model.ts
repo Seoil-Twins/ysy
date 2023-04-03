@@ -39,11 +39,13 @@ export class Restaurant extends Model<InferAttributes<Restaurant>, InferCreation
     declare smoking: string; //20
     declare reservation: string; // 50
     declare homepage: string; // 50
+    declare createdTime: string;
 }
 
 export interface PageOptions {
     numOfRows: number;
     page: number;
+    sort: string | "na" | "nd" | "r" | "o";
 }
 
 export interface SearchOptions {
@@ -52,9 +54,34 @@ export interface SearchOptions {
     contentId?: string;
 }
 
+export interface FilterOptions {}
+
 export interface IRestaurantResponseWithCount {
     restaurants: Restaurant[];
     count: number;
+}
+
+export interface IUpdateWithAdmin {
+    areaCode?: string;
+    sigunguCode?: string;
+    view?: number;
+    title?: string;
+    address?: string;
+    mapX?: string;
+    mapY?: string;
+
+    description?: string;
+    thumbnail?: string;
+    signatureDish?: string;
+    phoneNumber?: string;
+    kidsFacility?: string;
+    useTime?: string;
+    parking?: string;
+    restDate?: string;
+    smoking?: string;
+    reservation?: string;
+    homepage?: string;
+    createdTime?: string;
 }
 
 Restaurant.init(
@@ -151,6 +178,10 @@ Restaurant.init(
         },
         homepage: {
             field: "homepage",
+            type: DataTypes.STRING
+        },
+        createdTime: {
+            field: "created_time",
             type: DataTypes.STRING
         }
     },

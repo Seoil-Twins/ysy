@@ -1,17 +1,27 @@
-import { Op, Transaction } from "sequelize";
+import { Op, OrderItem, Transaction } from "sequelize";
 
 import sequelize from "../model";
-import { Restaurant, PageOptions, SearchOptions } from "../model/restaurant.model";
+import { Restaurant, PageOptions, SearchOptions, IUpdateWithAdmin } from "../model/restaurant.model";
 
 import fetch from "node-fetch";
 import { URLSearchParams } from "url";
 import BadRequestError from "../error/badRequest.error";
 
-const url = "https://apis.data.go.kr/B551011/KorService1/areaBasedList1";
-const detail_url = "http://apis.data.go.kr/B551011/KorService1/detailIntro1";
-const detail_common_url = "http://apis.data.go.kr/B551011/KorService1/detailCommon1";
+import RestaurantAdminService from "../service/restaurant.admin.service";
+import logger from "../logger/logger";
+import NotFoundError from "../error/notFound.error";
+
+const url = process.env.TOURAPI_URL;
+const detail_url = process.env.TOURAPI_DETAIL_URL;
+const detail_common_url = process.env.TOURAPI_DETAIL_COMMON_URL;
 const SERVICEKEY = new String(process.env.TOURAPI_API_KEY);
-const controller = {
+
+class RestaurantAdminController {
+    private restaurantAdminService: RestaurantAdminService;
+
+    constructor(restaurantAdminService: RestaurantAdminService) {
+        this.restaurantAdminService = restaurantAdminService;
+    }
     /**
      * const pageOptions: PageOptions = {
      *      numOfRows: 1,
@@ -27,7 +37,7 @@ const controller = {
      * @param searchOptions A {@link SearchOptions}
      * @returns A {@link IUserResponseWithCount}
      */
-    getRestaurantFromAPI: async (pageOptions: PageOptions, searchOptions: SearchOptions): Promise<any> => {
+    async getRestaurantFromAPI(pageOptions: PageOptions, searchOptions: SearchOptions): Promise<any> {
         const offset = (pageOptions.page - 1) * pageOptions.numOfRows;
         //        const where: WhereOptions = createWhere(searchOptions);
 
@@ -43,7 +53,7 @@ const controller = {
             pageNo: pageOptions.page.toString(),
             MobileOS: "ETC",
             MobileApp: "AppTest",
-            ServiceKey: "+/HZpVR9TlY0YX1X6CbhFyyqCZDcTeqgCkaI87QvifdyB9PPg7LyFH46lWA5kG1u46bLFamCuKz3UyAONBiEOQ==",
+            ServiceKey: String(SERVICEKEY),
             listYN: "Y",
             arrange: "A",
             contentTypeId: searchOptions.contentTypeId!,
@@ -73,128 +83,34 @@ const controller = {
         } catch (err) {
             console.log("error: ", err);
         }
-    },
+    }
 
     /**
      * @param pageOptions A {@link PageOptions}
      * @param searchOptions A {@link SearchOptions}
      * @returns A {@link IUserResponseWithCount}
      */
-    createRestaurantDB: async (pageOptions: PageOptions, searchOptions: SearchOptions): Promise<any> => {
-        const offset = (pageOptions.page - 1) * pageOptions.numOfRows;
-
-        const params = {
-            numOfRows: pageOptions.numOfRows.toString(),
-            pageNo: pageOptions.page.toString(),
-            MobileOS: "ETC",
-            MobileApp: "AppTest",
-            ServiceKey: "+/HZpVR9TlY0YX1X6CbhFyyqCZDcTeqgCkaI87QvifdyB9PPg7LyFH46lWA5kG1u46bLFamCuKz3UyAONBiEOQ==",
-            listYN: "Y",
-            arrange: "A",
-            contentTypeId: searchOptions.contentTypeId!,
-            areaCode: "",
-            sigunguCode: "",
-            cat1: "",
-            cat2: "",
-            cat3: "",
-            _type: "json"
-        };
-
-        const queryString = new URLSearchParams(params).toString();
-        const requrl = `${url}?${queryString}`;
-        console.log(requrl);
-
+    async createRestaurantDB(pageOptions: PageOptions, searchOptions: SearchOptions): Promise<any> {
         let transaction: Transaction | undefined = undefined;
-
         try {
-            let res = await fetch(requrl);
-            const result: any = await Promise.resolve(res.json());
-            // console.log(result.response.body.items.item[0]);
-            // console.log(result.response.body.items.item.length);
-            // for (let key in result.response.body.items.item[0]) {
-            //     console.log(key + " : " + result.response.body.items.item[0][key]);
-            // }
-
             transaction = await sequelize.transaction();
 
-            let i = 1;
-            for (let k = 0; k < result.response.body.items.item.length; ++k) {
-                // ?ServiceKey=인증키&contentTypeId=39&contentId=2869760&MobileOS=ETC&MobileApp=AppTest
-                const detail_params = {
-                    ServiceKey: "+/HZpVR9TlY0YX1X6CbhFyyqCZDcTeqgCkaI87QvifdyB9PPg7LyFH46lWA5kG1u46bLFamCuKz3UyAONBiEOQ==",
-                    _type: "json",
-                    MobileOS: "ETC",
-                    MobileApp: "AppTest",
-                    contentTypeId: result.response.body.items.item[k].contenttypeid,
-                    contentId: result.response.body.items.item[k].contentid
-                };
-                const detail_queryString = new URLSearchParams(detail_params).toString();
-                const detail_requrl = `${detail_url}?${detail_queryString}`;
-                let detail_res = await fetch(detail_requrl);
-                const detail_result: any = await Promise.resolve(detail_res.json());
+            const result: Promise<any> = await this.restaurantAdminService.create(transaction, pageOptions, searchOptions);
 
-                // ?ServiceKey=인증키&contentTypeId=39&contentId=2869760&MobileOS=ETC&MobileApp=AppTest&defaultYN=Y&firstImageYN=Y&areacodeYN=Y&catcodeYN=Y&addrinfoYN=Y&mapinfoYN=Y&overviewYN=Y
-                const detail_common_params = {
-                    ServiceKey: "+/HZpVR9TlY0YX1X6CbhFyyqCZDcTeqgCkaI87QvifdyB9PPg7LyFH46lWA5kG1u46bLFamCuKz3UyAONBiEOQ==",
-                    _type: "json",
-                    MobileOS: "ETC",
-                    MobileApp: "AppTest",
-                    contentTypeId: result.response.body.items.item[k].contenttypeid,
-                    contentId: result.response.body.items.item[k].contentid,
-                    defaultYN: "Y",
-                    firstImageYN: "Y",
-                    areacodeYN: "Y",
-                    catcodeYN: "Y",
-                    addrinfoYN: "Y",
-                    mapinfoYN: "Y",
-                    overviewYN: "Y"
-                };
-                const detail_common_queryString = new URLSearchParams(detail_common_params).toString();
-                const detail_common_requrl = `${detail_common_url}?${detail_common_queryString}`;
-                let detail_common_res = await fetch(detail_common_requrl);
-                const detail_common_result: any = await Promise.resolve(detail_common_res.json());
-                //console.log(detail_result.response.body.items.item[0].firstmenu);
-                const createdRestaraunt: Restaurant = await Restaurant.create(
-                    {
-                        //restaurantId: result.response.body.items.item[0]
-                        //restaurantId: result.response.body.items.item.length
-                        //restaurantId: result.response.body.items.item[0]
-                        // restaurantId: i,
-                        contentTypeId: result.response.body.items.item[k].contenttypeid,
-                        areaCode: result.response.body.items.item[k].areacode,
-                        sigunguCode: result.response.body.items.item[k].sigungucode,
-                        view: 0,
-                        title: result.response.body.items.item[k].title,
-                        address: result.response.body.items.item[k].addr1,
-                        mapX: result.response.body.items.item[k].mapx,
-                        mapY: result.response.body.items.item[k].mapy,
-                        contentId: result.response.body.items.item[k].contentid,
-                        description: detail_common_result.response.body.items.item[0].overview,
-                        thumbnail: result.response.body.items.item[k].firstimage,
-                        signatureDish: detail_result.response.body.items.item[0].firstmenu,
-                        phoneNumber: result.response.body.items.item[k].tel,
-                        kidsFacility: detail_result.response.body.items.item[0].kidsfacility,
-                        useTime: detail_result.response.body.items.item[0].opentimefood,
-                        parking: detail_result.response.body.items.item[0].parkingfood,
-                        restDate: detail_result.response.body.items.item[0].restdatefood,
-                        smoking: detail_result.response.body.items.item[0].smoking,
-                        reservation: detail_result.response.body.items.item[0].reservationfood,
-                        homepage: "주소"
-                    },
-                    { transaction }
-                );
-                i++;
-            }
-            transaction.commit();
+            await transaction.commit();
+            logger.debug(`Created Restaurant`);
+
+            const url: string = this.restaurantAdminService.getURL();
+            return url;
         } catch (err) {
             console.log("error: ", err);
 
             if (transaction) await transaction.rollback();
             throw err;
         }
-    },
-
-    getRestaurantWithTitle: async (pageOptions: PageOptions, searchOptions: SearchOptions): Promise<any> => {
+    }
+    /* // not used
+    async getRestaurantWithTitle(pageOptions: PageOptions, searchOptions: SearchOptions): Promise<any> {
         try {
             const res: Restaurant[] | null = await Restaurant.findAll({
                 where: {
@@ -206,8 +122,9 @@ const controller = {
             console.log("error : ", error);
             throw error;
         }
-    },
-    getRestaurantWithContentId: async (pageOptions: PageOptions, searchOptions: SearchOptions): Promise<any> => {
+    }
+
+    async getRestaurantWithContentId(pageOptions: PageOptions, searchOptions: SearchOptions): Promise<any> {
         try {
             if (searchOptions.contentId == null) throw BadRequestError;
 
@@ -222,6 +139,81 @@ const controller = {
             throw error;
         }
     }
-};
+*/
 
-export default controller;
+    async getAllRestaurant(pageOption: PageOptions, searchOptions: SearchOptions): Promise<any> {
+        try {
+            const result: Restaurant | Restaurant[] = await this.restaurantAdminService.select(pageOption, searchOptions);
+
+            return result;
+        } catch (err) {
+            console.log("err : ", err);
+            throw err;
+        }
+    }
+
+    async updateRestaurant(pageOption: PageOptions, searchOptions: SearchOptions, data: IUpdateWithAdmin): Promise<any> {
+        let updatedRestaurant: Restaurant | null = null;
+        const restaurant: Restaurant | null = await this.restaurantAdminService.selectOne(searchOptions);
+
+        if (!restaurant) throw new BadRequestError(`parameter content_id is bad`);
+        let transaction: Transaction | undefined = undefined;
+        if (data.areaCode == "undefined") {
+            data.areaCode = restaurant.getDataValue("areaCode");
+        }
+        if (data.sigunguCode == "undefined") data.sigunguCode = restaurant.getDataValue("sigunguCode");
+        if (data.view == undefined) data.view = restaurant.getDataValue("view");
+        if (data.title == "undefined") data.title = restaurant.getDataValue("title");
+        if (data.address == "undefined") data.address = restaurant.getDataValue("address");
+        if (data.mapX == "undefined") data.mapX = restaurant.getDataValue("mapX");
+        if (data.mapY == "undefined") data.mapY = restaurant.getDataValue("mapY");
+        if (data.description == "undefined") data.description = restaurant.getDataValue("description");
+        if (data.thumbnail == "undefined") data.thumbnail = restaurant.getDataValue("thumbnail");
+        if (data.signatureDish == "undefined") data.signatureDish = restaurant.getDataValue("signatureDish");
+        if (data.phoneNumber == "undefined") data.phoneNumber = restaurant.getDataValue("phoneNumber");
+        if (data.kidsFacility == "undefined") data.kidsFacility = restaurant.getDataValue("kidsFacility");
+        if (data.useTime == "undefined") data.useTime = restaurant.getDataValue("useTime");
+        if (data.parking == "undefined") data.parking = restaurant.getDataValue("parking");
+        if (data.restDate == "undefined") data.restDate = restaurant.getDataValue("restDate");
+        if (data.smoking == "undefined") data.smoking = restaurant.getDataValue("smoking");
+        if (data.reservation == "undefined") data.reservation = restaurant.getDataValue("reservation");
+        if (data.homepage == "undefined") data.homepage = restaurant.getDataValue("homepage");
+        if (data.createdTime == "undefined") data.createdTime = restaurant.getDataValue("createdTime");
+
+        try {
+            transaction = await sequelize.transaction();
+
+            updatedRestaurant = await this.restaurantAdminService.update(transaction, restaurant, data);
+            await transaction.commit();
+
+            logger.debug(`Update Restaurant => content_id :  ${searchOptions.contentId}`);
+            return updatedRestaurant;
+        } catch (error) {
+            if (transaction) await transaction.rollback();
+            throw error;
+        }
+    }
+
+    async deleteRestaurant(contentIds: string[]): Promise<void> {
+        const allDeleteFiles: string[] = [];
+        const albumFolders: string[] = [];
+        const restaurants: Restaurant[] = await this.restaurantAdminService.selectMul(contentIds);
+        if (restaurants.length <= 0) throw new NotFoundError("Not found restaurants.");
+
+        let transaction: Transaction | undefined = undefined;
+
+        try {
+            transaction = await sequelize.transaction();
+
+            for (const restaurant of restaurants) {
+                await this.restaurantAdminService.delete(transaction, restaurant);
+            }
+
+            await transaction.commit();
+        } catch (error) {
+            if (transaction) await transaction.rollback();
+        }
+    }
+}
+
+export default RestaurantAdminController;
