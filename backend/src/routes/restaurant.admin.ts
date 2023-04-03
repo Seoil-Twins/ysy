@@ -16,6 +16,8 @@ import { STATUS_CODE } from "../constant/statusCode.constant";
 import { canView } from "../util/checkRole.util";
 import RestaurantAdminService from "../service/restaurant.admin.service";
 import { literal } from "sequelize";
+import BadRequestError from "../error/badRequest.error";
+import { isNull, isUndefined } from "util";
 
 dayjs.locale("ko");
 
@@ -27,7 +29,7 @@ const restaurantAdminController: RestaurantAdminController = new RestaurantAdmin
 
 router.get("/", canView, async (req: Request, res: Response, next: NextFunction) => {
     const pageOptions: ResPageOptions = {
-        numOfRows: Number(req.query.count) || 10,
+        numOfRows: Number(req.query.numOfRows) || 10,
         page: Number(req.query.page) || 1,
         sort: ""
     };
@@ -115,7 +117,7 @@ router.patch("/update", canView, async (req: Request, res: Response, next: NextF
         smoking: String(req.query.smoking) || undefined,
         reservation: String(req.query.reservation) || undefined,
         homepage: String(req.query.homepage) || undefined,
-        createdTime: String(req.query.createdTime || "2022-10-13 18:39:58")
+        createdTime: String(req.query.createdTime || "20220125140006")
     };
 
     try {
@@ -127,6 +129,24 @@ router.patch("/update", canView, async (req: Request, res: Response, next: NextF
         next(error);
     }
 });
+
+router.delete("/:content_ids", canView, async (req: Request, res: Response, next: NextFunction) => {
+    const contentIds: String[] = req.params.content_ids.split(",").map(String);
+    // const stringContentIds: String[] = contentIds.filter((val) => {
+    //     return !isUndefined(val);
+    // });
+
+    try {
+        if (!contentIds || contentIds.length <= 0) throw new BadRequestError("content ID must be a string type");
+
+        await restaurantAdminController.deleteRestaurant(contentIds);
+        return res.status(STATUS_CODE.OK).json({});
+    } catch (error) {
+        next(error);
+    }
+});
+
+
 
 // router.get("/search/title", canView, async (req: Request, res: Response, next: NextFunction) => {
 //     const pageOptions: ResPageOptions = {

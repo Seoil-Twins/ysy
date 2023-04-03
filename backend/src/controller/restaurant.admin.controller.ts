@@ -9,10 +9,11 @@ import BadRequestError from "../error/badRequest.error";
 
 import RestaurantAdminService from "../service/restaurant.admin.service";
 import logger from "../logger/logger";
+import NotFoundError from "../error/notFound.error";
 
-const url = "https://apis.data.go.kr/B551011/KorService1/areaBasedList1";
-const detail_url = "http://apis.data.go.kr/B551011/KorService1/detailIntro1";
-const detail_common_url = "http://apis.data.go.kr/B551011/KorService1/detailCommon1";
+const url = process.env.TOURAPI_URL;
+const detail_url = process.env.TOURAPI_DETAIL_URL;
+const detail_common_url = process.env.TOURAPI_DETAIL_COMMON_URL;
 const SERVICEKEY = new String(process.env.TOURAPI_API_KEY);
 
 class RestaurantAdminController {
@@ -52,7 +53,7 @@ class RestaurantAdminController {
             pageNo: pageOptions.page.toString(),
             MobileOS: "ETC",
             MobileApp: "AppTest",
-            ServiceKey: "+/HZpVR9TlY0YX1X6CbhFyyqCZDcTeqgCkaI87QvifdyB9PPg7LyFH46lWA5kG1u46bLFamCuKz3UyAONBiEOQ==",
+            ServiceKey: String(SERVICEKEY),
             listYN: "Y",
             arrange: "A",
             contentTypeId: searchOptions.contentTypeId!,
@@ -193,6 +194,28 @@ class RestaurantAdminController {
         } catch (error) {
             if (transaction) await transaction.rollback();
             throw error;
+        }
+    }
+
+    async deleteRestaurant(contentIds: String[]): Promise<void> {
+        const allDeleteFiles: string[] = [];
+        const albumFolders: string[] = [];
+        const restaurants: Restaurant[] = await this.restaurantAdminService.selectMul(contentIds);
+        if (restaurants.length <= 0) throw new NotFoundError("Not found restaurants.");
+
+        let transaction: Transaction | undefined = undefined;
+
+        try {
+            transaction = await sequelize.transaction();
+
+            for (const restaurant of restaurants) {
+                await this.restaurantAdminService.delete(transaction, restaurant);
+            }
+
+            await transaction.commit();
+
+        } catch (error) {
+            if (transaction) await transaction.rollback();
         }
     }
 }

@@ -11,16 +11,15 @@ import sequelize from "../model";
 
 import { IRestaurantResponseWithCount, PageOptions, SearchOptions, Restaurant, IUpdateWithAdmin } from "../model/restaurant.model";
 import NotFoundError from "../error/notFound.error";
+import BadRequestError from "../error/badRequest.error";
+import { Where } from "sequelize/types/utils";
 
-const url = "https://apis.data.go.kr/B551011/KorService1/areaBasedList1";
-const detail_url = "http://apis.data.go.kr/B551011/KorService1/detailIntro1";
-const detail_common_url = "http://apis.data.go.kr/B551011/KorService1/detailCommon1";
-const SERVICEKEY = new String(process.env.TOURAPI_API_KEY);
+const url = process.env.TOURAPI_URL;
+const detail_url = process.env.TOURAPI_DETAIL_URL;
+const detail_common_url = process.env.TOURAPI_DETAIL_COMMON_URL;
+const SERVICEKEY = process.env.TOURAPI_API_KEY;
 
 class RestaurantAdminService extends Service {
-    delete(transaction: Transaction | null, ...args: any[]): Promise<any> {
-        throw new Error("Method not implemented.");
-    }
     private FOLDER_NAME = "restaurant";
 
     private createSort(sort: string): OrderItem {
@@ -96,13 +95,32 @@ class RestaurantAdminService extends Service {
         }
     }
 
+    async selectMul(contentIds: String[]): Promise<Restaurant[]> {
+        try {
+            const where: WhereOptions = { contentId : contentIds};
+            if(!contentIds) throw new BadRequestError('BadRequest contentIds');
+
+            const restaurants: Restaurant[] = await Restaurant.findAll({
+                where
+            });
+
+
+            if (!restaurants) throw new NotFoundError(`Not Exist Restaurant`);
+
+            return restaurants;
+        } catch (err) {
+            console.log("err : ", err);
+            throw err;
+        }
+    }
+
     async create(transaction: Transaction | null = null, pageOptions: PageOptions, searchOptions: SearchOptions): Promise<any> {
         const params = {
             numOfRows: pageOptions.numOfRows.toString(),
             pageNo: pageOptions.page.toString(),
             MobileOS: "ETC",
             MobileApp: "AppTest",
-            ServiceKey: "+/HZpVR9TlY0YX1X6CbhFyyqCZDcTeqgCkaI87QvifdyB9PPg7LyFH46lWA5kG1u46bLFamCuKz3UyAONBiEOQ==",
+            ServiceKey: String(SERVICEKEY),
             listYN: "Y",
             arrange: "A",
             contentTypeId: searchOptions.contentTypeId!,
@@ -127,7 +145,7 @@ class RestaurantAdminService extends Service {
             let i = 1;
             for (let k = 0; k < result.response.body.items.item.length; ++k) {
                 const detail_params = {
-                    ServiceKey: "+/HZpVR9TlY0YX1X6CbhFyyqCZDcTeqgCkaI87QvifdyB9PPg7LyFH46lWA5kG1u46bLFamCuKz3UyAONBiEOQ==",
+                    ServiceKey: String(SERVICEKEY),
                     _type: "json",
                     MobileOS: "ETC",
                     MobileApp: "AppTest",
@@ -140,7 +158,7 @@ class RestaurantAdminService extends Service {
                 const detail_result: any = await Promise.resolve(detail_res.json());
 
                 const detail_common_params = {
-                    ServiceKey: "+/HZpVR9TlY0YX1X6CbhFyyqCZDcTeqgCkaI87QvifdyB9PPg7LyFH46lWA5kG1u46bLFamCuKz3UyAONBiEOQ==",
+                    ServiceKey: String(SERVICEKEY),
                     _type: "json",
                     MobileOS: "ETC",
                     MobileApp: "AppTest",
@@ -200,6 +218,10 @@ class RestaurantAdminService extends Service {
         const updateRestaurant: Restaurant = await restaurant.update(data, { transaction });
 
         return updateRestaurant;
+    }
+
+    async delete(transaction: Transaction | null = null, restaurant: Restaurant): Promise<void> {
+        await restaurant.destroy({ transaction });
     }
 }
 
