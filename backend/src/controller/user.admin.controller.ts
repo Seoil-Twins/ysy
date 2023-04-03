@@ -314,6 +314,7 @@ class UserAdminController {
             }
         } catch (error) {
             if (transaction) await transaction.rollback();
+            throw error;
         }
     }
 }

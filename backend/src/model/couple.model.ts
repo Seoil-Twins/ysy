@@ -49,6 +49,14 @@ export interface FilterOptions {
     toDate?: Date;
     isDeleted: boolean;
 }
+
+export interface IUpdateWithAdmin {
+    cupDay?: Date;
+    title?: string;
+    thumbnail?: string | null;
+    deleted?: boolean;
+    deletedTime?: Date;
+}
 // ------------------------------------------ Interface End ---------------------------------------- //
 
 export class Couple extends Model<InferAttributes<Couple>, InferCreationAttributes<Couple>> {

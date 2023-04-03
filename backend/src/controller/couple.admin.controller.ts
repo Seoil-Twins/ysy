@@ -1,56 +1,37 @@
-import { Op } from "sequelize";
-import { boolean } from "boolean";
+import { File } from "formidable";
+import { Transaction } from "sequelize";
+import randomstring from "randomstring";
 
 import logger from "../logger/logger";
-import { deleteFile } from "../util/firebase.util";
+import { deleteFile, deleteFiles, deleteFolder } from "../util/firebase.util";
 
-import albumController from "./album.controller";
+import UserService from "../service/user.service";
+import CoupleService from "../service/couple.service";
+import CoupleAdminService from "../service/couple.admin.service";
+import AlbumService from "../service/album.service";
 
 import sequelize from "../model";
 import { User } from "../model/user.model";
-import { Couple, FilterOptions, ICoupleResponseWithCount, PageOptions, SearchOptions } from "../model/couple.model";
-import { OrderItem, WhereOptions } from "sequelize/types/model";
+import { Couple, FilterOptions, ICoupleResponseWithCount, IRequestCreate, IUpdateWithAdmin, PageOptions, SearchOptions } from "../model/couple.model";
 import { Album } from "../model/album.model";
-import { ErrorImage } from "../model/errorImage.model";
+
 import NotFoundError from "../error/notFound.error";
+import BadRequestError from "../error/badRequest.error";
+import ConflictError from "../error/conflict.error";
 
-const FOLDER_NAME = "couples";
+export class CoupleAdminController {
+    private userService: UserService;
+    private coupleService: CoupleService;
+    private coupleAdminService: CoupleAdminService;
+    private albumService: AlbumService;
 
-const createSort = (sort: string): OrderItem => {
-    let result: OrderItem = ["createdTime", "DESC"];
-
-    switch (sort) {
-        case "r":
-            result = ["createdTime", "DESC"];
-            break;
-        case "o":
-            result = ["createdTime", "ASC"];
-            break;
-        case "dr":
-            result = ["deletedTime", "DESC"];
-            break;
-        case "do":
-            result = ["deletedTime", "ASC"];
-            break;
-        default:
-            result = ["createdTime", "DESC"];
-            break;
+    constructor(userService: UserService, coupleService: CoupleService, coupleAdminService: CoupleAdminService, albumService: AlbumService) {
+        this.userService = userService;
+        this.coupleService = coupleService;
+        this.coupleAdminService = coupleAdminService;
+        this.albumService = albumService;
     }
 
-    return result;
-};
-
-const createWhere = (filterOptions: FilterOptions, cupId?: string): WhereOptions => {
-    let result: WhereOptions = {};
-
-    if (cupId) result["cupId"] = cupId;
-    if (boolean(filterOptions.isDeleted)) result["deleted"] = true;
-    if (filterOptions.fromDate && filterOptions.toDate) result["createdTime"] = { [Op.between]: [filterOptions.fromDate, filterOptions.toDate] };
-
-    return result;
-};
-
-const controller = {
     /**
      * Admin API 전용이며 Pagination, Sort, Search 등을 사용하여 검색할 수 있습니다.
      *
@@ -74,109 +55,145 @@ const controller = {
      * @param filterOptions {@link FilterOptions}
      * @returns A {@link ICoupleResponseWithCount}
      */
-    getCouples: async (pageOptions: PageOptions, searchOptions: SearchOptions, filterOptions: FilterOptions): Promise<ICoupleResponseWithCount> => {
-        const offset = (pageOptions.page - 1) * pageOptions.count;
-        const sort: OrderItem = createSort(pageOptions.sort);
-        const reuslt: ICoupleResponseWithCount = {
+    async getCouples(pageOptions: PageOptions, searchOptions: SearchOptions, filterOptions: FilterOptions): Promise<ICoupleResponseWithCount> {
+        let result: ICoupleResponseWithCount = {
             couples: [],
             count: 0
         };
 
         if (searchOptions.name && searchOptions.name !== "undefined") {
-            let { rows, count }: { rows: User[]; count: number } = await User.findAndCountAll({
-                offset,
-                limit: pageOptions.count,
-                order: [sort],
-                where: {
-                    name: { [Op.like]: `%${searchOptions.name}%` },
-                    cupId: { [Op.not]: null }
-                }
-            });
-
-            if (rows.length > 0) {
-                rows = rows.filter((user: User, idx: number, self: User[]) => idx === self.findIndex((t) => t.cupId === user.cupId));
-
-                for (let i = 0; i < rows.length; i++) {
-                    const where = createWhere(filterOptions, rows[i].cupId!);
-                    const couple: Couple | null = await Couple.findOne({
-                        where,
-                        include: {
-                            model: User,
-                            as: "users"
-                        }
-                    });
-
-                    reuslt.couples.push(couple!);
-                }
-
-                reuslt.count = count - (count - rows.length);
-            }
+            result = await this.coupleAdminService.selectWithName(pageOptions, searchOptions, filterOptions);
         } else {
-            const where = createWhere(filterOptions);
-
-            let { rows, count }: { rows: Couple[]; count: number } = await Couple.findAndCountAll({
-                offset,
-                limit: pageOptions.count,
-                order: [sort],
-                where,
-                include: {
-                    model: User,
-                    as: "users"
-                },
-                distinct: true // Include로 인해 잘못 counting 되는 현상을 막아줌
-            });
-
-            reuslt.count = count;
-            reuslt.couples = rows;
+            result = await this.coupleAdminService.select(pageOptions, filterOptions);
         }
 
-        return reuslt;
-    },
-    deleteCouples: async (coupleIds: string[]): Promise<void> => {
-        const couples = await Couple.findAll({
-            where: { cupId: coupleIds },
-            include: [
-                {
-                    model: Album,
-                    as: "albums"
-                },
-                {
-                    model: User,
-                    as: "users"
-                }
-            ]
-        });
+        return result;
+    }
 
-        couples.forEach(async (couple: Couple) => {
-            const transaction = await sequelize.transaction();
+    async createCouple(data: IRequestCreate, file?: File): Promise<string> {
+        let isNot = true;
+        let cupId = "";
+        let createdCouple: Couple | null = null;
+        let transaction: Transaction | undefined = undefined;
 
-            try {
-                if (couple.thumbnail) await deleteFile(couple.thumbnail!);
+        try {
+            transaction = await sequelize.transaction();
 
-                if (couple.albums) {
-                    const albums: Album[] = await couple.albums!;
-
-                    albums.forEach(async (album: Album) => {
-                        try {
-                            // await albumController.deleteAlbum(couple.cupId, album.albumId);
-                        } catch (error) {
-                            if (error instanceof NotFoundError) return;
-                        }
-                    });
-                }
-
-                couple.users!.forEach(async (user: User) => {
-                    await user.update({ cupId: null }, { transaction });
+            while (isNot) {
+                cupId = randomstring.generate({
+                    length: 8,
+                    charset: "alphanumeric"
                 });
 
-                await couple.destroy({ transaction });
-
-                transaction.commit();
-            } catch (error) {
-                transaction.rollback();
+                const user: User | null = await this.userService.select({ cupId });
+                if (!user) isNot = false;
             }
-        });
-    }
-};
 
-export default controller;
+            createdCouple = await this.coupleService.create(transaction, cupId, data, file);
+            const user1: User | null = await this.userService.select({ userId: data.userId });
+            const user2: User | null = await this.userService.select({ userId: data.userId2 });
+
+            if (!user1 || !user2) throw new BadRequestError("Bad Request");
+            else if (user1.cupId || user2.cupId) throw new ConflictError("Duplicated Cup Id");
+
+            await this.userService.update(transaction, user1, {
+                cupId: createdCouple.cupId
+            });
+
+            await this.userService.update(transaction, user2, {
+                cupId: createdCouple.cupId
+            });
+
+            await transaction.commit();
+            logger.debug(`Create Data => ${JSON.stringify(data)}`);
+
+            const url: string = this.coupleAdminService.getURL(cupId);
+
+            return url;
+        } catch (error) {
+            if (createdCouple?.thumbnail) {
+                deleteFile(createdCouple.thumbnail);
+                logger.error(`After updating the firebase, a db error occurred and the firebase thumbnail is deleted => ${createdCouple.thumbnail}`);
+            }
+            if (transaction) await transaction.rollback();
+            logger.error(`Couple create Error => ${JSON.stringify(error)}`);
+
+            throw error;
+        }
+    }
+
+    async updateCouple(cupId: string, data: IUpdateWithAdmin, thumbnail?: File): Promise<Couple> {
+        const couple: Couple | null = await this.coupleService.selectByPk(cupId);
+        if (!couple) throw new BadRequestError();
+
+        const prevThumbnail: string | null = couple?.thumbnail;
+
+        let transaction: Transaction | undefined = undefined;
+        let createdCouple: Couple | null = null;
+
+        try {
+            transaction = await sequelize.transaction();
+
+            if (thumbnail) {
+                createdCouple = await this.coupleAdminService.updateWithFile(transaction, couple, data, thumbnail);
+            } else {
+                createdCouple = await this.coupleAdminService.update(transaction, couple, data);
+            }
+
+            await transaction.commit();
+            if (thumbnail && prevThumbnail) {
+                await deleteFile(prevThumbnail);
+                logger.debug(`Deleted Previous thumbnail => ${prevThumbnail}`);
+            }
+
+            return createdCouple;
+        } catch (error) {
+            if (createdCouple?.thumbnail) await deleteFile(createdCouple.thumbnail);
+            if (transaction) await transaction.rollback();
+
+            logger.error(`Couple update error in couple admin api => ${JSON.stringify(error)}`);
+            throw error;
+        }
+    }
+
+    async deleteCouples(coupleIds: string[]): Promise<void> {
+        const couples: Couple[] = await this.coupleAdminService.selectAllWithAdditional(coupleIds);
+        if (couples.length === 0) throw new NotFoundError(`Not found couples with using ${coupleIds}`);
+
+        let transaction: Transaction | undefined = undefined;
+
+        try {
+            transaction = await sequelize.transaction();
+            const thumbnailPaths: string[] = [];
+            const folderPaths: string[] = [];
+
+            for (const couple of couples) {
+                if (couple.thumbnail) thumbnailPaths.push(couple.thumbnail);
+
+                const albums: Album[] | undefined = couple.albums;
+
+                if (albums) {
+                    for (const album of albums) {
+                        if (album.thumbnail) thumbnailPaths.push(album.thumbnail);
+                        folderPaths.push(this.albumService.getAlbumFolderPath(album.cupId, album.albumId));
+                    }
+                }
+
+                await this.coupleAdminService.delete(transaction, couple);
+            }
+
+            await transaction.commit();
+            await deleteFiles(thumbnailPaths);
+            for (const path of folderPaths) {
+                await deleteFolder(path);
+            }
+        } catch (error) {
+            if (transaction) await transaction.rollback();
+
+            logger.error(`Couple deletes error in couple admin api => ${JSON.stringify(error)}`);
+            throw error;
+        }
+    }
+}
+
+export default CoupleAdminController;
