@@ -158,10 +158,7 @@ class RestaurantAdminController {
 
         if (!restaurant) throw new BadRequestError(`parameter content_id is bad`);
         let transaction: Transaction | undefined = undefined;
-        console.log(data.areaCode, " :: ", restaurant.getDataValue("areaCode"));
-        console.log(typeof data.areaCode);
         if (data.areaCode == "undefined") {
-            console.log("undefined 처리");
             data.areaCode = restaurant.getDataValue("areaCode");
         }
         if (data.sigunguCode == "undefined") data.sigunguCode = restaurant.getDataValue("sigunguCode");
@@ -197,7 +194,7 @@ class RestaurantAdminController {
         }
     }
 
-    async deleteRestaurant(contentIds: String[]): Promise<void> {
+    async deleteRestaurant(contentIds: string[]): Promise<void> {
         const allDeleteFiles: string[] = [];
         const albumFolders: string[] = [];
         const restaurants: Restaurant[] = await this.restaurantAdminService.selectMul(contentIds);
@@ -213,7 +210,6 @@ class RestaurantAdminController {
             }
 
             await transaction.commit();
-
         } catch (error) {
             if (transaction) await transaction.rollback();
         }

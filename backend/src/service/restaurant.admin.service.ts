@@ -94,16 +94,14 @@ class RestaurantAdminService extends Service {
             throw err;
         }
     }
-
-    async selectMul(contentIds: String[]): Promise<Restaurant[]> {
+    async selectMul(contentIds: string[]): Promise<Restaurant[]> {
         try {
-            const where: WhereOptions = { contentId : contentIds};
-            if(!contentIds) throw new BadRequestError('BadRequest contentIds');
+            // const where: WhereOptions = { contentId: contentIds };
+            if (!contentIds) throw new BadRequestError("BadRequest contentIds");
 
             const restaurants: Restaurant[] = await Restaurant.findAll({
-                where
+                where: { contentId: contentIds }
             });
-
 
             if (!restaurants) throw new NotFoundError(`Not Exist Restaurant`);
 

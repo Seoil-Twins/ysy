@@ -69,7 +69,7 @@ router.get("/search/all", canView, async (req: Request, res: Response, next: Nex
     const pageOptions: ResPageOptions = {
         numOfRows: Number(req.query.numOfRows) || 10,
         page: Number(req.query.page) || 1,
-        sort: "r"
+        sort: String(req.query.sort)
     };
     const searchOptions: ResSearchOptions = {
         contentTypeId: String(req.query.contentTypeId) || undefined,
@@ -116,8 +116,7 @@ router.patch("/update", canView, async (req: Request, res: Response, next: NextF
         restDate: String(req.query.restDate) || undefined,
         smoking: String(req.query.smoking) || undefined,
         reservation: String(req.query.reservation) || undefined,
-        homepage: String(req.query.homepage) || undefined,
-        createdTime: String(req.query.createdTime || "20220125140006")
+        homepage: String(req.query.homepage) || undefined
     };
 
     try {
@@ -131,7 +130,7 @@ router.patch("/update", canView, async (req: Request, res: Response, next: NextF
 });
 
 router.delete("/:content_ids", canView, async (req: Request, res: Response, next: NextFunction) => {
-    const contentIds: String[] = req.params.content_ids.split(",").map(String);
+    const contentIds: string[] = req.params.content_ids.split(",").map(String);
     // const stringContentIds: String[] = contentIds.filter((val) => {
     //     return !isUndefined(val);
     // });
@@ -145,8 +144,6 @@ router.delete("/:content_ids", canView, async (req: Request, res: Response, next
         next(error);
     }
 });
-
-
 
 // router.get("/search/title", canView, async (req: Request, res: Response, next: NextFunction) => {
 //     const pageOptions: ResPageOptions = {
