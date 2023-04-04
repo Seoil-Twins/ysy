@@ -9,8 +9,6 @@ import logger from "../logger/logger";
 import { STATUS_CODE } from "../constant/statusCode.constant";
 import { canView } from "../util/checkRole.util";
 
-dayjs.locale("ko");
-
 const router: Router = express.Router();
 
 // let url = "https://apis.data.go.kr/B551011/KorService1/areaBasedList1?numOfRows=";

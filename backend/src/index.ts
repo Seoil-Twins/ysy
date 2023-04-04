@@ -7,6 +7,8 @@
 
 import express, { Application, Request, Response, NextFunction } from "express";
 import dotenv from "dotenv";
+import utc from "dayjs/plugin/utc";
+import isSameOrBefore from "dayjs/plugin/isSameOrBefore";
 
 import routes from "./routes/index";
 
@@ -16,9 +18,14 @@ import morganMiddleware from "./middlewares/morgan.middleware";
 import association from "./model/association.config";
 
 import logger from "./logger/logger";
+import dayjs from "dayjs";
 
 dotenv.config();
 association.config();
+
+dayjs.locale("ko");
+dayjs.extend(utc);
+dayjs.extend(isSameOrBefore);
 
 const app: Application = express();
 const port = 3000;

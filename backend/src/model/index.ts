@@ -3,7 +3,6 @@ import dotenv from "dotenv";
 import { Sequelize } from "sequelize";
 
 dotenv.config();
-dayjs.locale("ko");
 
 const host = String(process.env.MYSQL_HOST),
     port = Number(process.env.MYSQL_PORT),
