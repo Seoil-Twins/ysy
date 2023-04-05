@@ -21,7 +21,6 @@ export interface IResponse {
 }
 
 export interface IUpdate {
-    cupId: string;
     title?: string;
     description?: string;
     fromDate?: Date;

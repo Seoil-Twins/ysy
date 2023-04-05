@@ -2,6 +2,7 @@ import { Op, OrderItem, Transaction, WhereOptions } from "sequelize";
 import { Service } from "./service";
 import { Calendar, FilterOptions, ICalendarResponseWithCount, PageOptions, SearchOptions } from "../model/calendar.model";
 import dayjs from "dayjs";
+import { API_ROOT } from "..";
 
 class CalendarAdminService extends Service {
     private createSort(sort: string): OrderItem {
@@ -30,25 +31,25 @@ class CalendarAdminService extends Service {
 
     private createWhere(searchOptions: SearchOptions, filterOptions: FilterOptions): WhereOptions<Calendar> {
         let result: WhereOptions<Calendar> = {};
-        const startDate = dayjs(`${filterOptions.year}-01-01`).startOf("day").format("YYYY-MM-DD HH:mm:ss");
-        const endDate = dayjs(`${filterOptions.year}-12-31`).startOf("day").format("YYYY-MM-DD HH:mm:ss");
+        const startDate = dayjs(`${filterOptions.year}-01-01`).startOf("day").formattedHour();
+        const endDate = dayjs(`${filterOptions.year}-12-31`).endOf("day").formattedHour();
         result.fromDate = { [Op.between]: [startDate, endDate] };
         result.toDate = { [Op.between]: [startDate, endDate] };
 
         if (searchOptions.cupId) result.cupId = { [Op.like]: `%${searchOptions.cupId}%` };
         if (filterOptions.fromDate && filterOptions.toDate) result.createdTime = { [Op.between]: [filterOptions.fromDate, filterOptions.toDate] };
         if (filterOptions.fromClrDate && filterOptions.toClrDate) {
-            result.fromDate = {
-                [Op.gt]: filterOptions.fromClrDate,
-                [Op.lt]: filterOptions.toClrDate
-            };
+            result.fromDate = { [Op.gte]: dayjs(filterOptions.fromClrDate).utc(true).startOf("day").formattedHour() };
+            result.toDate = { [Op.lte]: dayjs(filterOptions.toClrDate).utc(true).endOf("day").formattedHour() };
         }
 
         return result;
     }
 
-    getURL(...args: any[]): string {
-        throw new Error("Method not implemented.");
+    getURL(cupId: string, fromDate: Date, toDate: Date): string {
+        return `${API_ROOT}/admin/calendar/${fromDate.getFullYear()}?cup_id=${cupId}&from_clr_date=${dayjs(fromDate).formattedDate()}&to_clr_date=${dayjs(
+            toDate
+        ).formattedDate()}`;
     }
 
     async select(pageOptions: PageOptions, searchOptions: SearchOptions, filterOptions: FilterOptions): Promise<ICalendarResponseWithCount> {
@@ -61,12 +62,18 @@ class CalendarAdminService extends Service {
             limit: pageOptions.count,
             order: [sort]
         });
+        console.log("Where : ", where);
         const result: ICalendarResponseWithCount = {
             calendars: rows,
             count: count
         };
 
         return result;
+    }
+
+    async selectAll(calendarIds: number[]): Promise<Calendar[]> {
+        const calendars: Calendar[] = await Calendar.findAll({ where: { calendarId: calendarIds } });
+        return calendars;
     }
 
     create(transaction: Transaction | null, ...args: any[]): Promise<any> {
@@ -79,6 +86,10 @@ class CalendarAdminService extends Service {
 
     delete(transaction: Transaction | null, ...args: any[]): Promise<any> {
         throw new Error("Method not implemented.");
+    }
+
+    async deleteAll(transaction: Transaction | null, calendarIds: number[]): Promise<void> {
+        await Calendar.destroy({ where: { calendarId: calendarIds } });
     }
 }
 

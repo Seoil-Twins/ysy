@@ -7,6 +7,7 @@
 
 import express, { Application, Request, Response, NextFunction } from "express";
 import dotenv from "dotenv";
+import dayjs, { PluginFunc } from "dayjs";
 import utc from "dayjs/plugin/utc";
 import isSameOrBefore from "dayjs/plugin/isSameOrBefore";
 
@@ -18,7 +19,6 @@ import morganMiddleware from "./middlewares/morgan.middleware";
 import association from "./model/association.config";
 
 import logger from "./logger/logger";
-import dayjs from "dayjs";
 
 dotenv.config();
 association.config();
@@ -26,6 +26,23 @@ association.config();
 dayjs.locale("ko");
 dayjs.extend(utc);
 dayjs.extend(isSameOrBefore);
+
+// Dayjs 인터페이스 확장
+declare module "dayjs" {
+    interface Dayjs {
+        formattedHour(): string;
+        formattedDate(): string;
+    }
+}
+const formattedPlugin: PluginFunc = (_, dayjsClass) => {
+    dayjsClass.prototype.formattedDate = function () {
+        return this.format("YYYY-MM-DD");
+    };
+    dayjsClass.prototype.formattedHour = function () {
+        return this.format("YYYY-MM-DD HH:mm:ss");
+    };
+};
+dayjs.extend(formattedPlugin);
 
 const app: Application = express();
 const port = 3000;

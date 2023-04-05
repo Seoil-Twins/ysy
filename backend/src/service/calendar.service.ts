@@ -38,8 +38,9 @@ class CalendarService extends Service {
         return calendars;
     }
 
-    async create(transaction: Transaction | null = null, data: ICreate): Promise<void> {
-        await Calendar.create(data, { transaction });
+    async create(transaction: Transaction | null = null, data: ICreate): Promise<Calendar> {
+        const createdCalendar: Calendar = await Calendar.create(data, { transaction });
+        return createdCalendar;
     }
 
     async update(transaction: Transaction | null = null, calendar: Calendar, data: IUpdate): Promise<Calendar> {

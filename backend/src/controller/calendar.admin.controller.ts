@@ -1,14 +1,22 @@
+import { Transaction } from "sequelize";
+import BadRequestError from "../error/badRequest.error";
 import NotFoundError from "../error/notFound.error";
-import { Calendar, FilterOptions, ICalendarResponseWithCount, PageOptions, SearchOptions } from "../model/calendar.model";
+import logger from "../logger/logger";
+import { Calendar, FilterOptions, ICalendarResponseWithCount, ICreate, PageOptions, SearchOptions } from "../model/calendar.model";
+import { Couple } from "../model/couple.model";
 
 import CalendarAdminService from "../service/calendar.admin.service";
 import CalendarService from "../service/calendar.service";
+import CoupleService from "../service/couple.service";
+import sequelize from "../model";
 
 class CalendarAdminController {
+    private coupleService: CoupleService;
     private calendarService: CalendarService;
     private calendarAdminService: CalendarAdminService;
 
-    constructor(calendarService: CalendarService, calendarAdminService: CalendarAdminService) {
+    constructor(coupleService: CoupleService, calendarService: CalendarService, calendarAdminService: CalendarAdminService) {
+        this.coupleService = coupleService;
         this.calendarService = calendarService;
         this.calendarAdminService = calendarAdminService;
     }
@@ -18,6 +26,35 @@ class CalendarAdminController {
         if (result.count <= 0) throw new NotFoundError(`Not found calendars`);
 
         return result;
+    }
+
+    async addCalendar(data: ICreate): Promise<string> {
+        const couple: Couple | null = await this.coupleService.selectByPk(data.cupId);
+        if (!couple) throw new NotFoundError(`Not found calendar using query parameter cupId => ${data.cupId}`);
+
+        const createdCalendar: Calendar = await this.calendarService.create(null, data);
+        logger.debug(`Add Calendar => ${JSON.stringify(createdCalendar)}`);
+
+        const url: string = this.calendarAdminService.getURL(data.cupId, createdCalendar.fromDate, createdCalendar.toDate);
+        return url;
+    }
+
+    async deleteCalendars(calendarIds: number[]): Promise<void> {
+        const calendars: Calendar[] = await this.calendarAdminService.selectAll(calendarIds);
+        if (calendars.length <= 0) throw new BadRequestError(`Not found calendar with using => ${calendarIds}`);
+
+        let transaction: Transaction | undefined = undefined;
+
+        try {
+            transaction = await sequelize.transaction();
+
+            await this.calendarAdminService.deleteAll(transaction, calendarIds);
+            await transaction.commit();
+        } catch (error) {
+            if (transaction) transaction.rollback();
+            logger.error(`Calendars delete API error => ${JSON.stringify(error)}`);
+            throw error;
+        }
     }
 }
 
