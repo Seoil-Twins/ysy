@@ -42,6 +42,7 @@ Solution.init(
         inquireId: {
             field: "inquire_id",
             type: DataTypes.INTEGER.UNSIGNED,
+            unique: true,
             allowNull: false,
             references: {
                 model: Inquire,
