@@ -38,10 +38,10 @@ class CalendarController {
         const couple: Couple | null = await this.coupleService.selectByPk(data.cupId);
         if (!couple) throw new NotFoundError(`Not found calendar using query parameter cupId => ${data.cupId}`);
 
-        await this.calendarService.create(null, data);
+        const createdCalendar: Calendar = await this.calendarService.create(null, data);
         logger.debug(`Add Calendar => ${JSON.stringify(data)}`);
 
-        const url: string = this.calendarService.getURL(data.cupId, data.fromDate.getFullYear());
+        const url: string = this.calendarService.getURL(createdCalendar.cupId, createdCalendar.fromDate.getFullYear());
         return url;
     }
 

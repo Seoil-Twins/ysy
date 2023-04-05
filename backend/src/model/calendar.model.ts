@@ -1,4 +1,3 @@
-import dayjs from "dayjs";
 import { DataTypes, Model, literal, NonAttribute } from "sequelize";
 import { CreationOptional, InferAttributes, InferCreationAttributes } from "sequelize/types/model";
 

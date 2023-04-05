@@ -5,17 +5,17 @@ import express, { Router, Request, Response, NextFunction } from "express";
 import CoupleService from "../service/couple.service";
 import CalendarService from "../service/calendar.service";
 import CalendarAdminService from "../service/calendar.admin.service";
+import CalendarController from "../controller/calendar.controller";
 import CalendarAdminController from "../controller/calendar.admin.controller";
 
 import { Calendar, FilterOptions, ICalendarResponseWithCount, ICreate, IUpdate, SearchOptions } from "../model/calendar.model";
 import { PageOptions } from "../model/album.model";
 
-import { canModifyWithEditor, canView } from "../util/checkRole.util";
 import validator from "../util/validator.util";
-
+import { canModifyWithEditor, canView } from "../util/checkRole.util";
 import { STATUS_CODE } from "../constant/statusCode.constant";
+
 import BadRequestError from "../error/badRequest.error";
-import CalendarController from "../controller/calendar.controller";
 
 const router: Router = express.Router();
 const coupleService: CoupleService = new CoupleService();
@@ -29,7 +29,7 @@ const postSchema: joi.Schema = joi
         title: joi.string().required(),
         description: joi.string().required(),
         fromDate: joi.date().required(),
-        toDate: joi.date().required().when("fromDate", { is: true, then: joi.required() }),
+        toDate: joi.date().greater(joi.ref("fromDate")).required(),
         color: joi.string().required().default("#000000")
     })
     .with("fromDate", "toDate")
@@ -40,7 +40,7 @@ const updateSchema: joi.Schema = joi
         title: joi.string(),
         description: joi.string(),
         fromDate: joi.date(),
-        toDate: joi.date(),
+        toDate: joi.date().greater(joi.ref("fromDate")),
         color: joi.string()
     })
     .with("fromDate", "toDate")
@@ -58,13 +58,12 @@ router.get("/:year", canView, async (req: Request, res: Response, next: NextFunc
             page: !isNaN(page) ? page : 1,
             sort: req.query.sort ? String(req.query.sort) : "r"
         };
-        console.log(pageOptions, req.query.sort || "r");
         const searchOptions: SearchOptions = {
             cupId: req.query.cup_id ? String(req.query.cup_id) : undefined
         };
         const filterOptions: FilterOptions = {
             year: year,
-            fromDate: req.query.from_date ? dayjs(String(req.query.from_date)).startOf("day").toDate() : undefined,
+            fromDate: req.query.from_date ? dayjs(String(req.query.from_date)).startOf("day").utc(true).toDate() : undefined,
             toDate: req.query.to_date ? dayjs(String(req.query.to_date)).endOf("day").utc(true).toDate() : undefined,
             fromClrDate: req.query.from_clr_date ? dayjs(String(req.query.from_clr_date)).startOf("day").utc(true).toDate() : undefined,
             toClrDate: req.query.to_clr_date ? dayjs(String(req.query.to_clr_date)).endOf("day").utc(true).toDate() : undefined
@@ -94,7 +93,6 @@ router.post("/:cup_id", canModifyWithEditor, async (req: Request, res: Response,
         };
 
         const url: string = await calendarAdminController.addCalendar(data);
-        console.log(url);
         res.header({ Location: url }).status(STATUS_CODE.CREATED).json({});
     } catch (error) {
         next(error);

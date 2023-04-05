@@ -1,3 +1,5 @@
+import dayjs from "dayjs";
+import { File } from "formidable";
 import { boolean } from "boolean";
 import { GroupedCountResultItem, Op, OrderItem, Transaction, WhereOptions } from "sequelize";
 
@@ -6,11 +8,9 @@ import { Service } from "./service";
 import { Couple, FilterOptions, ICoupleResponseWithCount, IUpdateWithAdmin, PageOptions, SearchOptions } from "../model/couple.model";
 
 import { API_ROOT } from "..";
-import { deleteFile, isDefaultFile, uploadFile } from "../util/firebase.util";
+import { isDefaultFile, uploadFile } from "../util/firebase.util";
 
 import { User } from "../model/user.model";
-import { File } from "formidable";
-import dayjs from "dayjs";
 import { Album } from "../model/album.model";
 
 class CoupleAdminService extends Service {
@@ -63,7 +63,6 @@ class CoupleAdminService extends Service {
             couples: [],
             count: 0
         };
-
         const { rows, count }: { rows: Couple[]; count: number } = await Couple.findAndCountAll({
             offset,
             limit: pageOptions.count,
