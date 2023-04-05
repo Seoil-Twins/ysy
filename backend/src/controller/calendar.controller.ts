@@ -20,8 +20,8 @@ class CalendarController {
     }
 
     async getCalendars(cupId: string, year: number): Promise<IResponse> {
-        const startDate = dayjs(`${year}-01-01`).startOf("day").format("YYYY-MM-DD HH:mm:ss");
-        const endDate = dayjs(`${year}-12-31`).endOf("day").format("YYYY-MM-DD HH:mm:ss");
+        const startDate = dayjs(`${year}-01-01`).startOf("day").formattedHour();
+        const endDate = dayjs(`${year}-12-31`).endOf("day").formattedHour();
 
         const calendars: Calendar[] = await this.calendarService.selectAll(cupId, startDate, endDate);
         if (calendars.length <= 0) throw new NotFoundError(`Not found calendar using query parameter cupId => ${cupId}, year => ${year}`);
