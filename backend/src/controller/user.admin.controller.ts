@@ -253,22 +253,16 @@ class UserAdminController {
         try {
             transaction = await sequelize.transaction();
 
-            // inquire 삭제(image), couple 삭제(thumbnail), 다른 couple user cupId null 처리, user thumbnail 삭제, 유저 삭제
-
             // Inquire 삭제
             for (const user of userHasInquiry) {
                 for (const inquire of user.inquires!) {
-                    const imageIds: number[] = [];
-                    const inquireImages: InquireImage[] = await InquireImage.findAll({ where: { inquireId: inquire.inquireId } });
-
-                    await this.inquireService.delete(transaction, inquire);
+                    const inquireImages: InquireImage[] = await this.inquireImageService.select(inquire.inquireId);
 
                     inquireImages.forEach((inquire: InquireImage) => {
-                        imageIds.push(inquire.imageId);
                         allDeleteFiles.push(inquire.image);
                     });
 
-                    await this.inquireImageService.delete(transaction, imageIds);
+                    await this.inquireService.delete(transaction, inquire);
 
                     // soluton image 삭제
                     // if (inquire.solution) await solutionController.deleteSolution(inquire.solution.solutionId);

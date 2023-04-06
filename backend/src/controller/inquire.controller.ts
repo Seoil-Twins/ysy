@@ -31,7 +31,7 @@ class InquireController {
         return inquires;
     }
 
-    async addInquire(data: ICreate, images: File | File[]): Promise<string> {
+    async addInquire(data: ICreate, images?: File | File[]): Promise<string> {
         let createdInquire: Inquire | null = null;
         let transaction: Transaction | undefined = undefined;
 
@@ -58,7 +58,7 @@ class InquireController {
         }
     }
 
-    async updateInquire(data: IUpdateWithController, images: File | File[]): Promise<Inquire> {
+    async updateInquire(data: IUpdateWithController, images?: File | File[]): Promise<Inquire> {
         let updatedInquireImages: InquireImage | InquireImage[] | null = null;
         let transaction: Transaction | undefined = undefined;
         const imagePaths: string[] = [];

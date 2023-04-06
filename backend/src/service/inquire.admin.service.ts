@@ -5,6 +5,7 @@ import { Solution } from "../model/solution.model";
 import { InquireImage } from "../model/inquireImage.model";
 import { SolutionImage } from "../model/solutionImage.model";
 import sequelize from "../model";
+import { API_ROOT } from "..";
 
 class InquireAdminService extends Service {
     private createSort(sort: string): OrderItem {
@@ -40,8 +41,8 @@ class InquireAdminService extends Service {
         return result;
     }
 
-    getURL(...args: any[]): string {
-        throw new Error("Method not implemented.");
+    getURL(): string {
+        return `${API_ROOT}/admin/inquire?page=1&count=10&sort=r`;
     }
 
     async select(pageOptions: PageOptions, searchOptions: SearchOptions, filterOptions: FilterOptions): Promise<IInquireResponseWithCount> {
@@ -92,6 +93,30 @@ class InquireAdminService extends Service {
         return result;
     }
 
+    async selectByPk(inquireIds: number[]): Promise<Inquire[]> {
+        const inquires: Inquire[] = await Inquire.findAll({
+            where: { inquireId: inquireIds },
+            include: [
+                {
+                    model: InquireImage,
+                    as: "inquireImages"
+                },
+                {
+                    model: Solution,
+                    as: "solution",
+                    include: [
+                        {
+                            model: SolutionImage,
+                            as: "solutionImages"
+                        }
+                    ]
+                }
+            ]
+        });
+
+        return inquires;
+    }
+
     create(transaction: Transaction | null, ...args: any[]): Promise<any> {
         throw new Error("Method not implemented.");
     }
@@ -100,8 +125,8 @@ class InquireAdminService extends Service {
         throw new Error("Method not implemented.");
     }
 
-    delete(transaction: Transaction | null, ...args: any[]): Promise<any> {
-        throw new Error("Method not implemented.");
+    async delete(transaction: Transaction | null, inquireIds: number[]): Promise<void> {
+        await Inquire.destroy({ where: { inquireId: inquireIds }, transaction });
     }
 }
 
