@@ -1,24 +1,23 @@
+import dayjs from "dayjs";
+import { boolean } from "boolean";
 import express, { Router, Request, Response, NextFunction } from "express";
 import joi, { ValidationResult } from "joi";
 import formidable from "formidable";
 
+import InquireController from "../controller/inquire.controller";
 import InquireAdminController from "../controller/inquire.admin.controller";
 import InquireService from "../service/inquire.service";
 import InquireAdminService from "../service/inquire.admin.service";
 import InquireImageService from "../service/inquireImage.service";
 
 import validator from "../util/validator.util";
+import { canModifyWithEditor, canView } from "../util/checkRole.util";
 import { STATUS_CODE } from "../constant/statusCode.constant";
 
 import { FilterOptions, ICreate, IInquireResponseWithCount, Inquire, IUpdateWithController, PageOptions, SearchOptions } from "../model/inquire.model";
 
 import BadRequestError from "../error/badRequest.error";
-import ForbiddenError from "../error/forbidden.error";
 import InternalServerError from "../error/internalServer.error";
-import dayjs from "dayjs";
-import { boolean } from "boolean";
-import { canModifyWithEditor, canView } from "../util/checkRole.util";
-import InquireController from "../controller/inquire.controller";
 
 const router: Router = express.Router();
 const inquireService: InquireService = new InquireService();
@@ -48,7 +47,7 @@ router.get("/", canView, async (req: Request, res: Response, next: NextFunction)
     };
     const filterOptions: FilterOptions = {
         fromDate: req.query.from_date ? dayjs(String(req.query.from_date)).startOf("day").utc(true).toDate() : undefined,
-        toDate: req.query.to_date ? dayjs(String(req.query.to_date)).startOf("day").utc(true).toDate() : undefined,
+        toDate: req.query.to_date ? dayjs(String(req.query.to_date)).endOf("day").utc(true).toDate() : undefined,
         hasImage: req.query.has_image ? boolean(req.query.has_image) : undefined,
         isSolution: req.query.is_solution ? boolean(req.query.is_solution) : undefined
     };
@@ -67,7 +66,7 @@ router.post("/:user_id", canModifyWithEditor, async (req: Request, res: Response
 
     form.parse(req, async (err, fields, files) => {
         try {
-            if (isNaN(userId)) throw new BadRequestError(`Calendar ID must be a number type | ${req.params.user_id}`);
+            if (isNaN(userId)) throw new BadRequestError(`User ID must be a number type | ${req.params.user_id}`);
             else if (err) throw new InternalServerError(`Image Server Error : ${JSON.stringify(err)}`);
 
             req.body = Object.assign({}, req.body, fields);

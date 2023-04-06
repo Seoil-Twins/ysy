@@ -30,7 +30,7 @@ export interface IInquireResponseWithCount {
 export interface PageOptions {
     count: number;
     page: number;
-    sort: string | "r" | "o";
+    sort: string | "r" | "o" | "sr" | "so";
 }
 
 export interface SearchOptions {

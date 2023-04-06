@@ -1,4 +1,3 @@
-import dayjs from "dayjs";
 import { DataTypes, Model, literal } from "sequelize";
 import { CreationOptional, InferAttributes, InferCreationAttributes } from "sequelize/types/model";
 
@@ -8,6 +7,26 @@ import { Inquire } from "./inquire.model";
 // -------------------------------------------- Interface ------------------------------------------ //
 export interface IRequestCreate {
     image: File | File[];
+}
+
+export interface InquireImageResponseWithCount {
+    images: InquireImage[];
+    count: number;
+}
+
+export interface PageOptions {
+    count: number;
+    page: number;
+    sort: string | "r" | "o";
+}
+
+export interface SearchOptions {
+    inquireId?: number;
+}
+
+export interface FilterOptions {
+    fromDate?: Date;
+    toDate?: Date;
 }
 // ------------------------------------------ Interface End ---------------------------------------- //
 

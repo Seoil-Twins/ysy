@@ -1,10 +1,13 @@
-import { Op, OrderItem, Sequelize, Transaction, WhereOptions } from "sequelize";
+import { Op, OrderItem, Transaction, WhereOptions } from "sequelize";
+
 import { Service } from "./service";
+
+import sequelize from "../model";
 import { FilterOptions, IInquireResponseWithCount, Inquire, PageOptions, SearchOptions } from "../model/inquire.model";
 import { Solution } from "../model/solution.model";
 import { InquireImage } from "../model/inquireImage.model";
 import { SolutionImage } from "../model/solutionImage.model";
-import sequelize from "../model";
+
 import { API_ROOT } from "..";
 
 class InquireAdminService extends Service {
