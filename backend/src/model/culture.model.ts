@@ -26,15 +26,19 @@ export class Culture extends Model<InferAttributes<Culture>, InferCreationAttrib
     declare parking: string; // 40
     declare restDate: string; //20
     declare homepage: string; // 50
+    declare createdTime: string; // 15
 }
 
 export interface PageOptions {
     numOfRows: number;
     page: number;
+    sort: string | "na" | "nd" | "r" | "o";
 }
 
 export interface SearchOptions {
     contentTypeId?: string;
+    title?: string;
+    contentId?: string;
 }
 
 export interface ICultureResponseWithCount {
@@ -132,6 +136,10 @@ Culture.init(
         },
         homepage: {
             field: "homepage",
+            type: DataTypes.STRING
+        },
+        createdTime: {
+            field: "created_time",
             type: DataTypes.STRING
         }
     },

@@ -8,7 +8,7 @@ import { Service } from "./service";
 
 import sequelize from "../model";
 
-import { IRestaurantResponseWithCount, PageOptions, SearchOptions, Restaurant, IUpdateWithAdmin } from "../model/restaurant.model";
+import { ICultureResponseWithCount, PageOptions, SearchOptions, Culture } from "../model/culture.model";
 import NotFoundError from "../error/notFound.error";
 import BadRequestError from "../error/badRequest.error";
 import logger from "../logger/logger";
@@ -59,12 +59,12 @@ class RestaurantAdminService extends Service {
         return `${API_ROOT}/admin/restaurant/search/all?page=1&numOfRows=1&sort=r&contentTypeId=39`;
     }
 
-    async select(pageOptions: PageOptions, searchOptions: SearchOptions): Promise<Restaurant[]> {
+    async select(pageOptions: PageOptions, searchOptions: SearchOptions): Promise<Culture[]> {
       
             const sort: OrderItem = this.createSort(pageOptions.sort);
             const where: WhereOptions = this.createWhere(searchOptions);
 
-            const result: Restaurant[] | Restaurant = await Restaurant.findAll({
+            const result: Culture[] | Culture = await Culture.findAll({
                 order: [sort],
                 where
             });
@@ -73,11 +73,11 @@ class RestaurantAdminService extends Service {
    
     }
 
-    async selectOne(searchOptions: SearchOptions): Promise<Restaurant> {
+    async selectOne(searchOptions: SearchOptions): Promise<Culture> {
         
             const where: WhereOptions = this.createWhere(searchOptions);
 
-            const result: Restaurant | null = await Restaurant.findOne({
+            const result: Culture | null = await Culture.findOne({
                 where
             });
 
@@ -86,12 +86,12 @@ class RestaurantAdminService extends Service {
             return result;
   
     }
-    async selectMul(contentIds: string[]): Promise<Restaurant[]> {
+    async selectMul(contentIds: string[]): Promise<Culture[]> {
      
             // const where: WhereOptions = { contentId: contentIds };
             if (!contentIds) throw new BadRequestError("BadRequest contentIds");
 
-            const restaurants: Restaurant[] = await Restaurant.findAll({
+            const restaurants: Culture[] = await Culture.findAll({
                 where: { contentId: contentIds }
             });
 
@@ -164,7 +164,7 @@ class RestaurantAdminService extends Service {
                 let detail_common_res = await fetch(detail_common_requrl);
                 const detail_common_result: any = await Promise.resolve(detail_common_res.json());
 
-                const createdRestaraunt: Restaurant = await Restaurant.create(
+                const createdCulture: Culture = await Culture.create(
                     {
                         contentTypeId: result.response.body.items.item[k].contenttypeid,
                         areaCode: result.response.body.items.item[k].areacode,
@@ -177,14 +177,13 @@ class RestaurantAdminService extends Service {
                         contentId: result.response.body.items.item[k].contentid,
                         description: detail_common_result.response.body.items.item[0].overview,
                         thumbnail: result.response.body.items.item[k].firstimage,
-                        signatureDish: detail_result.response.body.items.item[0].firstmenu,
                         phoneNumber: result.response.body.items.item[k].tel,
-                        kidsFacility: detail_result.response.body.items.item[0].kidsfacility,
+                        babyCarriage: detail_result.response.body.items.item[0].babyCarriage,
+                        pet: detail_result.response.body.items.item[0].pet,
                         useTime: detail_result.response.body.items.item[0].opentimefood,
+                        useFee: detail_result.response.body.items.item[0].useFee,
                         parking: detail_result.response.body.items.item[0].parkingfood,
                         restDate: detail_result.response.body.items.item[0].restdatefood,
-                        smoking: detail_result.response.body.items.item[0].smoking,
-                        reservation: detail_result.response.body.items.item[0].reservationfood,
                         homepage: detail_common_result.response.body.items.item[0].homepage,
                         createdTime: result.response.body.items.item[k].createdtime
                     },
@@ -199,13 +198,13 @@ class RestaurantAdminService extends Service {
         }
     }
 
-    async update(transaction: Transaction | null = null, restaurant: Restaurant, data: IUpdateWithAdmin): Promise<any> {
-        const updateRestaurant: Restaurant = await restaurant.update(data, { transaction });
+    async update(transaction: Transaction | null = null, restaurant: Culture, data: IUpdateWithAdmin): Promise<any> {
+        const updateRestaurant: Culture = await restaurant.update(data, { transaction });
 
         return updateRestaurant;
     }
 
-    async delete(transaction: Transaction | null = null, restaurant: Restaurant): Promise<void> {
+    async delete(transaction: Transaction | null = null, restaurant: Culture): Promise<void> {
         await restaurant.destroy({ transaction });
     }
 }

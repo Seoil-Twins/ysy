@@ -15,9 +15,7 @@ import logger from "../logger/logger";
 import { STATUS_CODE } from "../constant/statusCode.constant";
 import { canView } from "../util/checkRole.util";
 import RestaurantAdminService from "../service/restaurant.admin.service";
-import { literal } from "sequelize";
 import BadRequestError from "../error/badRequest.error";
-import { isNull, isUndefined } from "util";
 
 dayjs.locale("ko");
 

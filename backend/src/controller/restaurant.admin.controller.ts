@@ -67,21 +67,18 @@ class RestaurantAdminController {
 
         const queryString = new URLSearchParams(params).toString();
         const requrl = `${url}?${queryString}`;
-        console.log(requrl);
 
         try {
             let res = await fetch(requrl);
             const result: any = await Promise.resolve(res.json());
-            // console.log(result.response.body.items.item[0]);
-            // console.log(result.response.body.items.item.length);
-            console.log(result.response.body.items.item[0].contentid);
+            // console.log(result.response.body.items.item[0].contentid);
             for (let key in result.response.body.items.item[0]) {
                 console.log(key + " : " + result.response.body.items.item[0][key]);
             }
 
             return result;
         } catch (err) {
-            console.log("error: ", err);
+            logger.debug(`Error Restaurant  :  ${err}`);
         }
     }
 
@@ -103,7 +100,7 @@ class RestaurantAdminController {
             const url: string = this.restaurantAdminService.getURL();
             return url;
         } catch (err) {
-            console.log("error: ", err);
+            logger.debug(`Error Restaurant  :  ${err}`);
 
             if (transaction) await transaction.rollback();
             throw err;
@@ -147,7 +144,7 @@ class RestaurantAdminController {
 
             return result;
         } catch (err) {
-            console.log("err : ", err);
+            logger.debug(`Error Restaurant  :  ${err}`);
             throw err;
         }
     }
