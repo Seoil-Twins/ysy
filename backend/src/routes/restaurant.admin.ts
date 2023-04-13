@@ -98,25 +98,25 @@ router.patch("/update", canView, async (req: Request, res: Response, next: NextF
         title: String(req.query.title) || undefined
     };
     const data: IUpdateWithAdmin = {
-        areaCode: String(req.query.areaCode) || undefined,
-        sigunguCode: String(req.query.sigunguCode) || undefined,
-        view: Number(req.query.view) || undefined,
-        title: String(req.query.title) || undefined,
-        address: String(req.query.address) || undefined,
-        mapX: String(req.query.mapX) || undefined,
-        mapY: String(req.query.mapY) || undefined,
+        areaCode: req.query.areaCode ? String(req.query.areaCode) : undefined,
+        sigunguCode: req.query.sigunguCode ? String(req.query.sigunguCode) : undefined,
+        view: req.query.view ? Number(req.query.view) : undefined,
+        title: req.query.title ? String(req.query.title) : undefined,
+        address: req.query.address ? String(req.query.address) : undefined,
+        mapX: req.query.mapX ? String(req.query.mapX) : undefined,
+        mapY: req.query.mapY ? String(req.query.mapY) : undefined,
 
-        description: String(req.query.description) || undefined,
-        thumbnail: String(req.query.thumbnail) || undefined,
-        signatureDish: String(req.query.signatureDish) || undefined,
-        phoneNumber: String(req.query.phoneNumber) || undefined,
-        kidsFacility: String(req.query.kidsFacility) || undefined,
-        useTime: String(req.query.useTime) || undefined,
-        parking: String(req.query.parking) || undefined,
-        restDate: String(req.query.restDate) || undefined,
-        smoking: String(req.query.smoking) || undefined,
-        reservation: String(req.query.reservation) || undefined,
-        homepage: String(req.query.homepage) || undefined
+        description: req.query.description ? String(req.query.description) : undefined,
+        thumbnail: req.query.thumbnail ? String(req.query.thumbnail) : undefined,
+        signatureDish: req.query.signatureDish ? String(req.query.signatureDish) : undefined,
+        phoneNumber: req.query.phoneNumber ? String(req.query.phoneNumber) : undefined,
+        kidsFacility: req.query.kidsFacility ? String(req.query.kidsFacility) : undefined,
+        useTime: req.query.useTime ? String(req.query.useTime) : undefined,
+        parking: req.query.parking ? String(req.query.parking) : undefined,
+        restDate: req.query.restDate ? String(req.query.restDate) : undefined,
+        smoking: req.query.smoking ? String(req.query.smoking) : undefined,
+        reservation: req.query.reservation ? String(req.query.reservation) : undefined,
+        homepage: req.query.homepage ? String(req.query.homepage) : undefined
     };
 
     try {

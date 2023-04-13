@@ -1,5 +1,7 @@
 import { Op, Transaction } from "sequelize";
 
+import { TOURAPI_CODE } from "../constant/statusCode.constant";
+
 import sequelize from "../model";
 import { Shopping, PageOptions, SearchOptions } from "../model/shopping.model";
 
@@ -34,18 +36,18 @@ const controller = {
         const params = {
             numOfRows: pageOptions.numOfRows.toString(),
             pageNo: pageOptions.page.toString(),
-            MobileOS: "ETC",
-            MobileApp: "AppTest",
+            MobileOS: TOURAPI_CODE.MobileOS,
+            MobileApp: TOURAPI_CODE.MobileAPP,
             ServiceKey: process.env.TOURAPI_API_KEY_DECODE!,
-            listYN: "Y",
-            arrange: "A",
+            listYN: TOURAPI_CODE.YES,
+            arrange: TOURAPI_CODE.sort,
             contentTypeId: searchOptions.contentTypeId!,
-            areaCode: "",
-            sigunguCode: "",
-            cat1: "",
-            cat2: "",
-            cat3: "",
-            _type: "json"
+            areaCode: TOURAPI_CODE.EMPTY,
+            sigunguCode: TOURAPI_CODE.EMPTY,
+            cat1: TOURAPI_CODE.EMPTY,
+            cat2: TOURAPI_CODE.EMPTY,
+            cat3: TOURAPI_CODE.EMPTY,
+            _type: TOURAPI_CODE.type
         };
 
         const queryString = new URLSearchParams(params).toString();
@@ -77,18 +79,18 @@ const controller = {
         const params = {
             numOfRows: pageOptions.numOfRows.toString(),
             pageNo: pageOptions.page.toString(),
-            MobileOS: "ETC",
-            MobileApp: "AppTest",
+            MobileOS: TOURAPI_CODE.MobileOS,
+            MobileApp: TOURAPI_CODE.MobileAPP,
             ServiceKey: process.env.TOURAPI_API_KEY_DECODE!,
-            listYN: "Y",
-            arrange: "A",
+            listYN: TOURAPI_CODE.YES,
+            arrange: TOURAPI_CODE.sort,
             contentTypeId: searchOptions.contentTypeId!,
-            areaCode: "",
-            sigunguCode: "",
-            cat1: "",
-            cat2: "",
-            cat3: "",
-            _type: "json"
+            areaCode: TOURAPI_CODE.EMPTY,
+            sigunguCode: TOURAPI_CODE.EMPTY,
+            cat1: TOURAPI_CODE.EMPTY,
+            cat2: TOURAPI_CODE.EMPTY,
+            cat3: TOURAPI_CODE.EMPTY,
+            _type: TOURAPI_CODE.type
         };
 
         const queryString = new URLSearchParams(params).toString();
@@ -107,10 +109,10 @@ const controller = {
             for (let k = 0; k < result.response.body.items.item.length; ++k) {
                 // ?ServiceKey=인증키&contentTypeId=39&contentId=2869760&MobileOS=ETC&MobileApp=AppTest
                 const detail_params = {
-                    ServiceKey: "+/HZpVR9TlY0YX1X6CbhFyyqCZDcTeqgCkaI87QvifdyB9PPg7LyFH46lWA5kG1u46bLFamCuKz3UyAONBiEOQ==",
-                    _type: "json",
-                    MobileOS: "ETC",
-                    MobileApp: "AppTest",
+                    ServiceKey: String(SERVICEKEY),
+                    _type: TOURAPI_CODE.type,
+                    MobileOS: TOURAPI_CODE.MobileOS,
+                    MobileApp: TOURAPI_CODE.MobileAPP,
                     contentTypeId: result.response.body.items.item[k].contenttypeid,
                     contentId: result.response.body.items.item[k].contentid
                 };
@@ -121,19 +123,19 @@ const controller = {
 
                 // ?ServiceKey=인증키&contentTypeId=39&contentId=2869760&MobileOS=ETC&MobileApp=AppTest&defaultYN=Y&firstImageYN=Y&areacodeYN=Y&catcodeYN=Y&addrinfoYN=Y&mapinfoYN=Y&overviewYN=Y
                 const detail_common_params = {
-                    ServiceKey: "+/HZpVR9TlY0YX1X6CbhFyyqCZDcTeqgCkaI87QvifdyB9PPg7LyFH46lWA5kG1u46bLFamCuKz3UyAONBiEOQ==",
-                    _type: "json",
-                    MobileOS: "ETC",
-                    MobileApp: "AppTest",
+                    ServiceKey: String(SERVICEKEY),
+                    _type: TOURAPI_CODE.type,
+                    MobileOS: TOURAPI_CODE.MobileOS,
+                    MobileApp: TOURAPI_CODE.MobileAPP,
                     contentTypeId: result.response.body.items.item[k].contenttypeid,
                     contentId: result.response.body.items.item[k].contentid,
-                    defaultYN: "Y",
-                    firstImageYN: "Y",
-                    areacodeYN: "Y",
-                    catcodeYN: "Y",
-                    addrinfoYN: "Y",
-                    mapinfoYN: "Y",
-                    overviewYN: "Y"
+                    defaultYN: TOURAPI_CODE.YES,
+                    firstImageYN: TOURAPI_CODE.YES,
+                    areacodeYN: TOURAPI_CODE.YES,
+                    catcodeYN: TOURAPI_CODE.YES,
+                    addrinfoYN: TOURAPI_CODE.YES,
+                    mapinfoYN: TOURAPI_CODE.YES,
+                    overviewYN: TOURAPI_CODE.YES
                 };
                 const detail_common_queryString = new URLSearchParams(detail_common_params).toString();
                 const detail_common_requrl = `${detail_common_url}?${detail_common_queryString}`;

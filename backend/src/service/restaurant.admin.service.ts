@@ -1,6 +1,6 @@
 import dayjs from "dayjs";
 import { boolean } from "boolean";
-import { File } from "formidable";
+import { TOURAPI_CODE } from "../constant/statusCode.constant";
 import { Op, OrderItem, Transaction, WhereOptions } from "sequelize";
 import fetch from "node-fetch";
 
@@ -13,6 +13,7 @@ import { IRestaurantResponseWithCount, PageOptions, SearchOptions, Restaurant, I
 import NotFoundError from "../error/notFound.error";
 import BadRequestError from "../error/badRequest.error";
 import { Where } from "sequelize/types/utils";
+import logger from "../logger/logger";
 
 const url = process.env.TOURAPI_URL;
 const detail_url = process.env.TOURAPI_DETAIL_URL;
@@ -48,7 +49,6 @@ class RestaurantAdminService extends Service {
 
     private createWhere(searchOptions: SearchOptions): WhereOptions {
         let result: WhereOptions = {};
-        console.log(searchOptions.contentId);
         if (searchOptions.contentId && searchOptions.contentId !== "undefined") result["contentId"] = searchOptions.contentId;
         else if (searchOptions.title && searchOptions.title !== "undefined") result["title"] = { [Op.substring]: `%${searchOptions.title}%` };
 
@@ -62,7 +62,7 @@ class RestaurantAdminService extends Service {
     }
 
     async select(pageOptions: PageOptions, searchOptions: SearchOptions): Promise<Restaurant[]> {
-        try {
+      
             const sort: OrderItem = this.createSort(pageOptions.sort);
             const where: WhereOptions = this.createWhere(searchOptions);
 
@@ -72,14 +72,11 @@ class RestaurantAdminService extends Service {
             });
 
             return result;
-        } catch (err) {
-            console.log("err : ", err);
-            throw err;
-        }
+   
     }
 
     async selectOne(searchOptions: SearchOptions): Promise<Restaurant> {
-        try {
+        
             const where: WhereOptions = this.createWhere(searchOptions);
 
             const result: Restaurant | null = await Restaurant.findOne({
@@ -89,13 +86,10 @@ class RestaurantAdminService extends Service {
             if (!result) throw new NotFoundError(`Not Exist Restaurant`);
 
             return result;
-        } catch (err) {
-            console.log("err : ", err);
-            throw err;
-        }
+  
     }
     async selectMul(contentIds: string[]): Promise<Restaurant[]> {
-        try {
+     
             // const where: WhereOptions = { contentId: contentIds };
             if (!contentIds) throw new BadRequestError("BadRequest contentIds");
 
@@ -106,33 +100,30 @@ class RestaurantAdminService extends Service {
             if (!restaurants) throw new NotFoundError(`Not Exist Restaurant`);
 
             return restaurants;
-        } catch (err) {
-            console.log("err : ", err);
-            throw err;
-        }
+     
     }
 
     async create(transaction: Transaction | null = null, pageOptions: PageOptions, searchOptions: SearchOptions): Promise<any> {
         const params = {
             numOfRows: pageOptions.numOfRows.toString(),
             pageNo: pageOptions.page.toString(),
-            MobileOS: "ETC",
-            MobileApp: "AppTest",
+            MobileOS: TOURAPI_CODE.MobileOS,
+            MobileApp: TOURAPI_CODE.MobileAPP,
             ServiceKey: String(SERVICEKEY),
-            listYN: "Y",
-            arrange: "A",
+            listYN: TOURAPI_CODE.YES,
+            arrange: TOURAPI_CODE.sort,
             contentTypeId: searchOptions.contentTypeId!,
-            areaCode: "",
-            sigunguCode: "",
-            cat1: "",
-            cat2: "",
-            cat3: "",
-            _type: "json"
+            areaCode: TOURAPI_CODE.EMPTY,
+            sigunguCode: TOURAPI_CODE.EMPTY,
+            cat1: TOURAPI_CODE.EMPTY,
+            cat2: TOURAPI_CODE.EMPTY,
+            cat3: TOURAPI_CODE.EMPTY,
+            _type: TOURAPI_CODE.type
         };
 
         const queryString = new URLSearchParams(params).toString();
         const requrl = `${url}?${queryString}`;
-        console.log(requrl);
+        logger.debug(`Response URL => ${requrl}`);
 
         try {
             let res = await fetch(requrl);
@@ -144,9 +135,9 @@ class RestaurantAdminService extends Service {
             for (let k = 0; k < result.response.body.items.item.length; ++k) {
                 const detail_params = {
                     ServiceKey: String(SERVICEKEY),
-                    _type: "json",
-                    MobileOS: "ETC",
-                    MobileApp: "AppTest",
+                    _type: TOURAPI_CODE.type,
+                    MobileOS: TOURAPI_CODE.MobileOS,
+                    MobileApp: TOURAPI_CODE.MobileAPP,
                     contentTypeId: result.response.body.items.item[k].contenttypeid,
                     contentId: result.response.body.items.item[k].contentid
                 };
@@ -157,18 +148,18 @@ class RestaurantAdminService extends Service {
 
                 const detail_common_params = {
                     ServiceKey: String(SERVICEKEY),
-                    _type: "json",
-                    MobileOS: "ETC",
-                    MobileApp: "AppTest",
+                    _type: TOURAPI_CODE.type,
+                    MobileOS: TOURAPI_CODE.MobileOS,
+                    MobileApp: TOURAPI_CODE.MobileAPP,
                     contentTypeId: result.response.body.items.item[k].contenttypeid,
                     contentId: result.response.body.items.item[k].contentid,
-                    defaultYN: "Y",
-                    firstImageYN: "Y",
-                    areacodeYN: "Y",
-                    catcodeYN: "Y",
-                    addrinfoYN: "Y",
-                    mapinfoYN: "Y",
-                    overviewYN: "Y"
+                    defaultYN: TOURAPI_CODE.YES,
+                    firstImageYN: TOURAPI_CODE.YES,
+                    areacodeYN: TOURAPI_CODE.YES,
+                    catcodeYN: TOURAPI_CODE.YES,
+                    addrinfoYN: TOURAPI_CODE.YES,
+                    mapinfoYN: TOURAPI_CODE.YES,
+                    overviewYN: TOURAPI_CODE.YES
                 };
                 const detail_common_queryString = new URLSearchParams(detail_common_params).toString();
                 const detail_common_requrl = `${detail_common_url}?${detail_common_queryString}`;
@@ -205,8 +196,6 @@ class RestaurantAdminService extends Service {
             }
             transaction.commit();
         } catch (err) {
-            console.log("error: ", err);
-
             if (transaction) await transaction.rollback();
             throw err;
         }

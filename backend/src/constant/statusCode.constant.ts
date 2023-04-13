@@ -25,6 +25,15 @@ export const ERROR_CODE = {
     FAILED_UPLOAD: 50010
 } as const;
 
+export const TOURAPI_CODE = {
+    YES: "Y",
+    MobileAPP: "AppTest",
+    MobileOS: "ETC",
+    type: "json",
+    sort: "A",
+    EMPTY: "",
+} as const;
+
 /*
     keyof typeof StatusCode
     key의 typeof 값을 가져오는데 as const로 인해서 키의 타입 값들이 string이 아닌 OK, CREATED처럼 나옴.

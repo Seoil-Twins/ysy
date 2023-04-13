@@ -1,5 +1,7 @@
 import { Op, OrderItem, Transaction } from "sequelize";
 
+import { TOURAPI_CODE } from "../constant/statusCode.constant";
+
 import sequelize from "../model";
 import { Restaurant, PageOptions, SearchOptions, IUpdateWithAdmin } from "../model/restaurant.model";
 
@@ -12,8 +14,6 @@ import logger from "../logger/logger";
 import NotFoundError from "../error/notFound.error";
 
 const url = process.env.TOURAPI_URL;
-const detail_url = process.env.TOURAPI_DETAIL_URL;
-const detail_common_url = process.env.TOURAPI_DETAIL_COMMON_URL;
 const SERVICEKEY = new String(process.env.TOURAPI_API_KEY);
 
 class RestaurantAdminController {
@@ -51,18 +51,18 @@ class RestaurantAdminController {
         const params = {
             numOfRows: pageOptions.numOfRows.toString(),
             pageNo: pageOptions.page.toString(),
-            MobileOS: "ETC",
-            MobileApp: "AppTest",
+            MobileOS: TOURAPI_CODE.MobileOS,
+            MobileApp: TOURAPI_CODE.MobileAPP,
             ServiceKey: String(SERVICEKEY),
-            listYN: "Y",
-            arrange: "A",
+            listYN: TOURAPI_CODE.YES,
+            arrange: TOURAPI_CODE.sort,
             contentTypeId: searchOptions.contentTypeId!,
-            areaCode: "",
-            sigunguCode: "",
-            cat1: "",
-            cat2: "",
-            cat3: "",
-            _type: "json"
+            areaCode: TOURAPI_CODE.EMPTY,
+            sigunguCode: TOURAPI_CODE.EMPTY,
+            cat1: TOURAPI_CODE.EMPTY,
+            cat2: TOURAPI_CODE.EMPTY,
+            cat3: TOURAPI_CODE.EMPTY,
+            _type: TOURAPI_CODE.type
         };
 
         const queryString = new URLSearchParams(params).toString();
@@ -158,27 +158,25 @@ class RestaurantAdminController {
 
         if (!restaurant) throw new BadRequestError(`parameter content_id is bad`);
         let transaction: Transaction | undefined = undefined;
-        if (data.areaCode == "undefined") {
-            data.areaCode = restaurant.getDataValue("areaCode");
-        }
-        if (data.sigunguCode == "undefined") data.sigunguCode = restaurant.getDataValue("sigunguCode");
-        if (data.view == undefined) data.view = restaurant.getDataValue("view");
-        if (data.title == "undefined") data.title = restaurant.getDataValue("title");
-        if (data.address == "undefined") data.address = restaurant.getDataValue("address");
-        if (data.mapX == "undefined") data.mapX = restaurant.getDataValue("mapX");
-        if (data.mapY == "undefined") data.mapY = restaurant.getDataValue("mapY");
-        if (data.description == "undefined") data.description = restaurant.getDataValue("description");
-        if (data.thumbnail == "undefined") data.thumbnail = restaurant.getDataValue("thumbnail");
-        if (data.signatureDish == "undefined") data.signatureDish = restaurant.getDataValue("signatureDish");
-        if (data.phoneNumber == "undefined") data.phoneNumber = restaurant.getDataValue("phoneNumber");
-        if (data.kidsFacility == "undefined") data.kidsFacility = restaurant.getDataValue("kidsFacility");
-        if (data.useTime == "undefined") data.useTime = restaurant.getDataValue("useTime");
-        if (data.parking == "undefined") data.parking = restaurant.getDataValue("parking");
-        if (data.restDate == "undefined") data.restDate = restaurant.getDataValue("restDate");
-        if (data.smoking == "undefined") data.smoking = restaurant.getDataValue("smoking");
-        if (data.reservation == "undefined") data.reservation = restaurant.getDataValue("reservation");
-        if (data.homepage == "undefined") data.homepage = restaurant.getDataValue("homepage");
-        if (data.createdTime == "undefined") data.createdTime = restaurant.getDataValue("createdTime");
+        if (!data.areaCode) { data.areaCode = restaurant.areaCode; }
+        if (!data.sigunguCode) data.sigunguCode = restaurant.sigunguCode;
+        if (!data.view) data.view = restaurant.view;
+        if (!data.title) data.title = restaurant.title;
+        if (!data.address) data.address = restaurant.address;
+        if (!data.mapX) data.mapX = restaurant.mapX;
+        if (!data.mapY) data.mapY = restaurant.mapY;
+        if (!data.description) data.description = restaurant.description;
+        if (!data.thumbnail) data.thumbnail = restaurant.thumbnail;
+        if (!data.signatureDish) data.signatureDish = restaurant.signatureDish;
+        if (!data.phoneNumber) data.phoneNumber = restaurant.phoneNumber;
+        if (!data.kidsFacility) data.kidsFacility = restaurant.kidsFacility;
+        if (!data.useTime) data.useTime = restaurant.useTime;
+        if (!data.parking) data.parking = restaurant.parking;
+        if (!data.restDate) data.restDate = restaurant.restDate;
+        if (!data.smoking) data.smoking = restaurant.smoking;
+        if (!data.reservation) data.reservation = restaurant.reservation;
+        if (!data.homepage) data.homepage = restaurant.homepage;
+        // if (!data.createdTime) data.createdTime = restaurant.createdTime;
 
         try {
             transaction = await sequelize.transaction();
