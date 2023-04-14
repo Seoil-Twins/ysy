@@ -8,7 +8,7 @@ import { Service } from "./service";
 
 import sequelize from "../model";
 
-import { ICultureResponseWithCount, PageOptions, SearchOptions, Culture } from "../model/culture.model";
+import { ICultureResponseWithCount, PageOptions, SearchOptions, Culture, IUpdateWithAdmin } from "../model/culture.model";
 import NotFoundError from "../error/notFound.error";
 import BadRequestError from "../error/badRequest.error";
 import logger from "../logger/logger";
@@ -18,8 +18,7 @@ const detail_url = process.env.TOURAPI_DETAIL_URL;
 const detail_common_url = process.env.TOURAPI_DETAIL_COMMON_URL;
 const SERVICEKEY = process.env.TOURAPI_API_KEY;
 
-class RestaurantAdminService extends Service {
-    private FOLDER_NAME = "restaurant";
+class CultureAdminService extends Service {
 
     private createSort(sort: string): OrderItem {
         let result: OrderItem = ["title", "ASC"];
@@ -56,7 +55,7 @@ class RestaurantAdminService extends Service {
     }
 
     getURL(): string {
-        return `${API_ROOT}/admin/restaurant/search/all?page=1&numOfRows=1&sort=r&contentTypeId=39`;
+        return `${API_ROOT}/admin/culture/search/all?page=1&numOfRows=1&sort=r&contentTypeId=39`;
     }
 
     async select(pageOptions: PageOptions, searchOptions: SearchOptions): Promise<Culture[]> {
@@ -81,7 +80,7 @@ class RestaurantAdminService extends Service {
                 where
             });
 
-            if (!result) throw new NotFoundError(`Not Exist Restaurant`);
+            if (!result) throw new NotFoundError(`Not Exist Culture`);
 
             return result;
   
@@ -91,13 +90,13 @@ class RestaurantAdminService extends Service {
             // const where: WhereOptions = { contentId: contentIds };
             if (!contentIds) throw new BadRequestError("BadRequest contentIds");
 
-            const restaurants: Culture[] = await Culture.findAll({
+            const cultures: Culture[] = await Culture.findAll({
                 where: { contentId: contentIds }
             });
 
-            if (!restaurants) throw new NotFoundError(`Not Exist Restaurant`);
+            if (!cultures) throw new NotFoundError(`Not Exist Culture`);
 
-            return restaurants;
+            return cultures;
      
     }
 
@@ -185,6 +184,7 @@ class RestaurantAdminService extends Service {
                         parking: detail_result.response.body.items.item[0].parkingfood,
                         restDate: detail_result.response.body.items.item[0].restdatefood,
                         homepage: detail_common_result.response.body.items.item[0].homepage,
+                        modifiedTime: "지금.",
                         createdTime: result.response.body.items.item[k].createdtime
                     },
                     { transaction }
@@ -198,15 +198,15 @@ class RestaurantAdminService extends Service {
         }
     }
 
-    async update(transaction: Transaction | null = null, restaurant: Culture, data: IUpdateWithAdmin): Promise<any> {
-        const updateRestaurant: Culture = await restaurant.update(data, { transaction });
+    async update(transaction: Transaction | null = null, culture: Culture, data: IUpdateWithAdmin): Promise<any> {
+        const updateCulture: Culture = await culture.update(data, { transaction });
 
-        return updateRestaurant;
+        return updateCulture;
     }
 
-    async delete(transaction: Transaction | null = null, restaurant: Culture): Promise<void> {
-        await restaurant.destroy({ transaction });
+    async delete(transaction: Transaction | null = null, culture: Culture): Promise<void> {
+        await culture.destroy({ transaction });
     }
 }
 
-export default RestaurantAdminService;
+export default CultureAdminService;
