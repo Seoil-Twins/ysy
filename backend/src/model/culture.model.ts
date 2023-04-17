@@ -43,7 +43,6 @@ export interface IUpdateWithAdmin {
     mapX?: string;
     mapY?: string;
 
-    contentId?: string; // 10 , default null
     description?: string; // 300
     thumbnail?: string; // 50
     phoneNumber?: string; // 13

@@ -100,7 +100,7 @@ router.patch("/update", canView, async (req: Request, res: Response, next: NextF
 
         description: req.query.description ? String(req.query.description) : undefined,
         thumbnail: req.query.thumbnail ? String(req.query.thumbnail) : undefined,
-        pet: req.query.signatureDish ? String(req.query.signatureDish) : undefined,
+        pet: req.query.pet ? String(req.query.pet) : undefined,
         phoneNumber: req.query.phoneNumber ? String(req.query.phoneNumber) : undefined,
         babyCarriage: req.query.kidsFacility ? String(req.query.kidsFacility) : undefined,
         useTime: req.query.useTime ? String(req.query.useTime) : undefined,
