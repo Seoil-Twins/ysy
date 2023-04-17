@@ -26,34 +26,37 @@ export class Culture extends Model<InferAttributes<Culture>, InferCreationAttrib
     declare parking: string; // 40
     declare restDate: string; //20
     declare homepage: string; // 50
+    declare scale: string; //50
+    declare spendTime: string; // 50
     declare modifiedTime: string; // 15
     declare createdTime: string; // 15
 }
 
 export interface IUpdateWithAdmin {
-    curtureId: number;
-    contentTypeId: string;
-    areaCode: string
-    sigunguCode: string;
-    view: number;
-    title: string;
-    address: string;
-    mapX: string;
-    mapY: string;
+    curtureId?: number;
+    contentTypeId?: string;
+    areaCode?: string
+    sigunguCode?: string;
+    view?: number;
+    title?: string;
+    address?: string;
+    mapX?: string;
+    mapY?: string;
 
-    contentId: string; // 10 , default null
-    description: string; // 300
-    thumbnail: string; // 50
-    phoneNumber: string; // 13
-    babyCarriage: string; // 10
-    pet: string; // 50
-    useTime: string; // 50
-    useFee: string; // 50
-    parking: string; // 40
-    restDate: string; //20
-    homepage: string; // 50
-    modifiedTime: string; // 15
-    createdTime: string; // 15
+    contentId?: string; // 10 , default null
+    description?: string; // 300
+    thumbnail?: string; // 50
+    phoneNumber?: string; // 13
+    babyCarriage?: string; // 10
+    pet?: string; // 50
+    useTime?: string; // 50
+    useFee?: string; // 50
+    parking?: string; // 40
+    restDate?: string; //20
+    homepage?: string; // 50
+    scale?: string; //50
+    spendTime?: string; // 50
+    modifiedTime?: string; // 15
 }
 
 export interface PageOptions {
@@ -163,6 +166,14 @@ Culture.init(
         },
         homepage: {
             field: "homepage",
+            type: DataTypes.STRING
+        },
+        scale: {
+            field: "scale",
+            type: DataTypes.STRING
+        },
+        spendTime: {
+            field: "spendtime",
             type: DataTypes.STRING
         },
         modifiedTime: {
