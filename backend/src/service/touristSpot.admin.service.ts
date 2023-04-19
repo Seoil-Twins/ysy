@@ -8,7 +8,7 @@ import { Service } from "./service";
 
 import sequelize from "../model";
 
-import { PageOptions, SearchOptions, Shopping, IUpdateWithAdmin } from "../model/shopping.model";
+import { PageOptions, SearchOptions, TouristSpot, IUpdateWithAdmin } from "../model/touristSpot.model";
 import NotFoundError from "../error/notFound.error";
 import BadRequestError from "../error/badRequest.error";
 import logger from "../logger/logger";
@@ -18,7 +18,7 @@ const detail_url = process.env.TOURAPI_DETAIL_URL;
 const detail_common_url = process.env.TOURAPI_DETAIL_COMMON_URL;
 const SERVICEKEY = process.env.TOURAPI_API_KEY;
 
-class ShoppingAdminService extends Service {
+class TouristSpotAdminService extends Service {
 
     private createSort(sort: string): OrderItem {
         let result: OrderItem = ["title", "ASC"];
@@ -55,15 +55,15 @@ class ShoppingAdminService extends Service {
     }
 
     getURL(): string {
-        return `${API_ROOT}/admin/culture/search/all?page=1&numOfRows=1&sort=r&contentTypeId=39`;
+        return `${API_ROOT}/admin/touristSpot/search/all?page=1&numOfRows=1&sort=r&contentTypeId=39`;
     }
 
-    async select(pageOptions: PageOptions, searchOptions: SearchOptions): Promise<Shopping[]> {
+    async select(pageOptions: PageOptions, searchOptions: SearchOptions): Promise<TouristSpot[]> {
       
             const sort: OrderItem = this.createSort(pageOptions.sort);
             const where: WhereOptions = this.createWhere(searchOptions);
 
-            const result: Shopping[] | Shopping = await Shopping.findAll({
+            const result: TouristSpot[] | TouristSpot = await TouristSpot.findAll({
                 order: [sort],
                 where
             });
@@ -72,31 +72,31 @@ class ShoppingAdminService extends Service {
    
     }
 
-    async selectOne(searchOptions: SearchOptions): Promise<Shopping> {
+    async selectOne(searchOptions: SearchOptions): Promise<TouristSpot> {
         
             const where: WhereOptions = this.createWhere(searchOptions);
 
-            const result: Shopping | null = await Shopping.findOne({
+            const result: TouristSpot | null = await TouristSpot.findOne({
                 where
             });
 
-            if (!result) throw new NotFoundError(`Not Exist Shopping`);
+            if (!result) throw new NotFoundError(`Not Exist TouristSpot`);
 
             return result;
   
     }
-    async selectMul(contentIds: string[]): Promise<Shopping[]> {
+    async selectMul(contentIds: string[]): Promise<TouristSpot[]> {
      
             // const where: WhereOptions = { contentId: contentIds };
             if (!contentIds) throw new BadRequestError("BadRequest contentIds");
 
-            const cultures: Shopping[] = await Shopping.findAll({
+            const touristSpots: TouristSpot[] = await TouristSpot.findAll({
                 where: { contentId: contentIds }
             });
 
-            if (!cultures) throw new NotFoundError(`Not Exist Shopping`);
+            if (!touristSpots) throw new NotFoundError(`Not Exist TouristSpot`);
 
-            return cultures;
+            return touristSpots;
      
     }
 
@@ -163,7 +163,7 @@ class ShoppingAdminService extends Service {
                 let detail_common_res = await fetch(detail_common_requrl);
                 const detail_common_result: any = await Promise.resolve(detail_common_res.json());
 
-                const createdCulture: Shopping = await Shopping.create(
+                const createdTouristSpot: TouristSpot = await TouristSpot.create(
                     {
                         contentTypeId: result.response.body.items.item[k].contenttypeid,
                         areaCode: result.response.body.items.item[k].areacode,
@@ -176,17 +176,14 @@ class ShoppingAdminService extends Service {
                         contentId: result.response.body.items.item[k].contentid,
                         description: detail_common_result.response.body.items.item[0].overview,
                         thumbnail: result.response.body.items.item[k].firstimage,
-                        babyCarriage: detail_result.response.body.items.item[0].chkbabycarriageshopping,
+                        babyCarriage: detail_result.response.body.items.item[0].chkbabycarriage,
                         phoneNumber: result.response.body.items.item[k].tel,
-                        pet: detail_result.response.body.items.item[0].chkpetshopping,
-                        useTime: detail_result.response.body.items.item[0].opentime,
-                        saleItem: detail_result.response.body.items.item[0].saleitem,
-                        parking: detail_result.response.body.items.item[0].parkingshopping,
-                        restDate: detail_result.response.body.items.item[0].restdateshopping,
+                        pet: detail_result.response.body.items.item[0].chkpet,
+                        useTime: detail_result.response.body.items.item[0].usetime,
+                        parking: detail_result.response.body.items.item[0].parking,
+                        restDate: detail_result.response.body.items.item[0].restdate,
                         homepage: detail_common_result.response.body.items.item[0].homepage,
-                        scale:detail_result.response.body.items.item[0].scaleshopping,
-                        openDateShopping:detail_result.response.body.items.item[0].opendateshopping,
-                        shopGuide:detail_result.response.body.items.item[0].shopguide,
+                        expguide:detail_result.response.body.items.item[0].expguide,
                         modifiedTime: "지금.",
                         createdTime: result.response.body.items.item[k].createdtime
                     },
@@ -201,15 +198,15 @@ class ShoppingAdminService extends Service {
         }
     }
 
-    async update(transaction: Transaction | null = null, shopping: Shopping, data: IUpdateWithAdmin): Promise<any> {
-        const updateShopping: Shopping = await shopping.update(data, { transaction });
+    async update(transaction: Transaction | null = null, touristSpot: TouristSpot, data: IUpdateWithAdmin): Promise<any> {
+        const updateTouristSpot: TouristSpot = await touristSpot.update(data, { transaction });
 
-        return updateShopping;
+        return updateTouristSpot;
     }
 
-    async delete(transaction: Transaction | null = null, shopping: Shopping): Promise<void> {
-        await shopping.destroy({ transaction });
+    async delete(transaction: Transaction | null = null, touristSpot: TouristSpot): Promise<void> {
+        await touristSpot.destroy({ transaction });
     }
 }
 
-export default ShoppingAdminService;
+export default TouristSpotAdminService;

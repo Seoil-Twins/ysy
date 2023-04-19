@@ -40,14 +40,12 @@ class ShoppingAdminController {
      * @returns A {@link IUserResponseWithCount}
      */
     async getShoppingFromAPI (pageOptions: PageOptions, searchOptions: SearchOptions): Promise<any> {
-        const offset = (pageOptions.page - 1) * pageOptions.numOfRows;
-
         const params = {
             numOfRows: pageOptions.numOfRows.toString(),
             pageNo: pageOptions.page.toString(),
             MobileOS: TOURAPI_CODE.MobileOS,
             MobileApp: TOURAPI_CODE.MobileAPP,
-            ServiceKey: process.env.TOURAPI_API_KEY_DECODE!,
+            ServiceKey: String(SERVICEKEY),
             listYN: TOURAPI_CODE.YES,
             arrange: TOURAPI_CODE.sort,
             contentTypeId: searchOptions.contentTypeId!,

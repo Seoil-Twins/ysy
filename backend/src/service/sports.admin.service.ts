@@ -8,7 +8,7 @@ import { Service } from "./service";
 
 import sequelize from "../model";
 
-import { PageOptions, SearchOptions, Shopping, IUpdateWithAdmin } from "../model/shopping.model";
+import { PageOptions, SearchOptions, Sports, IUpdateWithAdmin } from "../model/sports.model";
 import NotFoundError from "../error/notFound.error";
 import BadRequestError from "../error/badRequest.error";
 import logger from "../logger/logger";
@@ -18,7 +18,7 @@ const detail_url = process.env.TOURAPI_DETAIL_URL;
 const detail_common_url = process.env.TOURAPI_DETAIL_COMMON_URL;
 const SERVICEKEY = process.env.TOURAPI_API_KEY;
 
-class ShoppingAdminService extends Service {
+class SportsAdminService extends Service {
 
     private createSort(sort: string): OrderItem {
         let result: OrderItem = ["title", "ASC"];
@@ -55,15 +55,15 @@ class ShoppingAdminService extends Service {
     }
 
     getURL(): string {
-        return `${API_ROOT}/admin/culture/search/all?page=1&numOfRows=1&sort=r&contentTypeId=39`;
+        return `${API_ROOT}/admin/sports/search/all?page=1&numOfRows=1&sort=r&contentTypeId=39`;
     }
 
-    async select(pageOptions: PageOptions, searchOptions: SearchOptions): Promise<Shopping[]> {
+    async select(pageOptions: PageOptions, searchOptions: SearchOptions): Promise<Sports[]> {
       
             const sort: OrderItem = this.createSort(pageOptions.sort);
             const where: WhereOptions = this.createWhere(searchOptions);
 
-            const result: Shopping[] | Shopping = await Shopping.findAll({
+            const result: Sports[] | Sports = await Sports.findAll({
                 order: [sort],
                 where
             });
@@ -72,31 +72,31 @@ class ShoppingAdminService extends Service {
    
     }
 
-    async selectOne(searchOptions: SearchOptions): Promise<Shopping> {
+    async selectOne(searchOptions: SearchOptions): Promise<Sports> {
         
             const where: WhereOptions = this.createWhere(searchOptions);
 
-            const result: Shopping | null = await Shopping.findOne({
+            const result: Sports | null = await Sports.findOne({
                 where
             });
 
-            if (!result) throw new NotFoundError(`Not Exist Shopping`);
+            if (!result) throw new NotFoundError(`Not Exist Sports`);
 
             return result;
   
     }
-    async selectMul(contentIds: string[]): Promise<Shopping[]> {
+    async selectMul(contentIds: string[]): Promise<Sports[]> {
      
             // const where: WhereOptions = { contentId: contentIds };
             if (!contentIds) throw new BadRequestError("BadRequest contentIds");
 
-            const cultures: Shopping[] = await Shopping.findAll({
+            const sportss: Sports[] = await Sports.findAll({
                 where: { contentId: contentIds }
             });
 
-            if (!cultures) throw new NotFoundError(`Not Exist Shopping`);
+            if (!sportss) throw new NotFoundError(`Not Exist Sports`);
 
-            return cultures;
+            return sportss;
      
     }
 
@@ -163,7 +163,7 @@ class ShoppingAdminService extends Service {
                 let detail_common_res = await fetch(detail_common_requrl);
                 const detail_common_result: any = await Promise.resolve(detail_common_res.json());
 
-                const createdCulture: Shopping = await Shopping.create(
+                const createdSports: Sports = await Sports.create(
                     {
                         contentTypeId: result.response.body.items.item[k].contenttypeid,
                         areaCode: result.response.body.items.item[k].areacode,
@@ -176,17 +176,15 @@ class ShoppingAdminService extends Service {
                         contentId: result.response.body.items.item[k].contentid,
                         description: detail_common_result.response.body.items.item[0].overview,
                         thumbnail: result.response.body.items.item[k].firstimage,
-                        babyCarriage: detail_result.response.body.items.item[0].chkbabycarriageshopping,
+                        babyCarriage: detail_result.response.body.items.item[0].chkbabycarriageleports,
                         phoneNumber: result.response.body.items.item[k].tel,
-                        pet: detail_result.response.body.items.item[0].chkpetshopping,
-                        useTime: detail_result.response.body.items.item[0].opentime,
-                        saleItem: detail_result.response.body.items.item[0].saleitem,
-                        parking: detail_result.response.body.items.item[0].parkingshopping,
-                        restDate: detail_result.response.body.items.item[0].restdateshopping,
+                        pet: detail_result.response.body.items.item[0].chkpetleports,
+                        useTime: detail_result.response.body.items.item[0].usetimeleports,
+                        useFee: detail_result.response.body.items.item[0].usefeeleports,
+                        parking: detail_result.response.body.items.item[0].parkingleports,
+                        restDate: detail_result.response.body.items.item[0].restdateleports,
                         homepage: detail_common_result.response.body.items.item[0].homepage,
-                        scale:detail_result.response.body.items.item[0].scaleshopping,
-                        openDateShopping:detail_result.response.body.items.item[0].opendateshopping,
-                        shopGuide:detail_result.response.body.items.item[0].shopguide,
+                        openPeriod:detail_result.response.body.items.item[0].openperiod,
                         modifiedTime: "지금.",
                         createdTime: result.response.body.items.item[k].createdtime
                     },
@@ -201,15 +199,15 @@ class ShoppingAdminService extends Service {
         }
     }
 
-    async update(transaction: Transaction | null = null, shopping: Shopping, data: IUpdateWithAdmin): Promise<any> {
-        const updateShopping: Shopping = await shopping.update(data, { transaction });
+    async update(transaction: Transaction | null = null, sports: Sports, data: IUpdateWithAdmin): Promise<any> {
+        const updateSports: Sports = await sports.update(data, { transaction });
 
-        return updateShopping;
+        return updateSports;
     }
 
-    async delete(transaction: Transaction | null = null, shopping: Shopping): Promise<void> {
-        await shopping.destroy({ transaction });
+    async delete(transaction: Transaction | null = null, sports: Sports): Promise<void> {
+        await sports.destroy({ transaction });
     }
 }
 
-export default ShoppingAdminService;
+export default SportsAdminService;
