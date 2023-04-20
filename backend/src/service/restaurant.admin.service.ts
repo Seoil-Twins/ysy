@@ -12,6 +12,8 @@ import { IRestaurantResponseWithCount, PageOptions, SearchOptions, Restaurant, I
 import NotFoundError from "../error/notFound.error";
 import BadRequestError from "../error/badRequest.error";
 import logger from "../logger/logger";
+import { Wanted } from "../model/wanted.model";
+import { promises } from "dns";
 
 const url = process.env.TOURAPI_URL;
 const detail_url = process.env.TOURAPI_DETAIL_URL;
@@ -59,8 +61,10 @@ class RestaurantAdminService extends Service {
         return `${API_ROOT}/admin/restaurant/search/all?page=1&numOfRows=1&sort=r&contentTypeId=39`;
     }
 
-    async select(pageOptions: PageOptions, searchOptions: SearchOptions): Promise<Restaurant[]> {
-      
+    async select(pageOptions: PageOptions, searchOptions: SearchOptions, transaction: Transaction | null = null): Promise<Restaurant[]> {
+            let viewUpdate = {
+                view : 0
+            }
             const sort: OrderItem = this.createSort(pageOptions.sort);
             const where: WhereOptions = this.createWhere(searchOptions);
 
@@ -68,7 +72,10 @@ class RestaurantAdminService extends Service {
                 order: [sort],
                 where
             });
-
+            for(const restaurant of result){
+                viewUpdate.view = restaurant.view + 1;
+                let updateRestaurant: Restaurant = await restaurant.update(viewUpdate, { transaction });
+            }
             return result;
    
     }
@@ -207,6 +214,24 @@ class RestaurantAdminService extends Service {
 
     async delete(transaction: Transaction | null = null, restaurant: Restaurant): Promise<void> {
         await restaurant.destroy({ transaction });
+    }
+
+    async createWanted(transaction: Transaction | null = null, userId: number, contentId: string) : Promise<any>
+    {
+        try{
+            transaction = await sequelize.transaction();
+            const createdWanted: Wanted = await Wanted.create(
+                {
+                    user_id: userId,
+                    content_id: contentId
+                },
+                { transaction }
+            );
+            transaction.commit();
+        } catch (err) {
+            if (transaction) await transaction.rollback();
+            throw err;
+        }
     }
 }
 

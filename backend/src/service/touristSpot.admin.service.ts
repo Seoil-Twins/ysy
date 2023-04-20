@@ -12,6 +12,7 @@ import { PageOptions, SearchOptions, TouristSpot, IUpdateWithAdmin } from "../mo
 import NotFoundError from "../error/notFound.error";
 import BadRequestError from "../error/badRequest.error";
 import logger from "../logger/logger";
+import AdminJS from "adminjs/types/src";
 
 const url = process.env.TOURAPI_URL;
 const detail_url = process.env.TOURAPI_DETAIL_URL;
@@ -210,3 +211,4 @@ class TouristSpotAdminService extends Service {
 }
 
 export default TouristSpotAdminService;
+

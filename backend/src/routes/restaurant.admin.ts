@@ -16,6 +16,7 @@ import { STATUS_CODE } from "../constant/statusCode.constant";
 import { canView } from "../util/checkRole.util";
 import RestaurantAdminService from "../service/restaurant.admin.service";
 import BadRequestError from "../error/badRequest.error";
+import { Transaction } from "sequelize";
 
 dayjs.locale("ko");
 
@@ -141,6 +142,25 @@ router.delete("/:content_ids", canView, async (req: Request, res: Response, next
     } catch (error) {
         next(error);
     }
+});
+
+router.post("/wanted", canView, async (req: Request, res: Response, next: NextFunction) => {
+    const userId: number = Number(req.body.userId);
+    const contentId: string = String(req.query.content_id);
+
+    console.log(userId + " :: " + contentId); 
+
+    let transaction: Transaction | undefined = undefined;
+
+    try {
+        const result: Promise<any> = await restaurantAdminController.createWantedRestaurant(contentId, userId);
+
+        logger.debug(`Response Data => ${JSON.stringify(result)}`);
+        return res.status(STATUS_CODE.OK).json(result);
+    } catch (error) {
+        next(error);
+    }
+
 });
 
 // router.get("/search/title", canView, async (req: Request, res: Response, next: NextFunction) => {

@@ -139,11 +139,17 @@ class RestaurantAdminController {
 */
 
     async getAllRestaurant(pageOption: PageOptions, searchOptions: SearchOptions): Promise<any> {
+        
+        let transaction: Transaction | undefined = undefined;
+
         try {
-            const result: Restaurant | Restaurant[] = await this.restaurantAdminService.select(pageOption, searchOptions);
+            transaction = await sequelize.transaction();
+            const result: Restaurant | Restaurant[] = await this.restaurantAdminService.select(pageOption, searchOptions, transaction);
+            await transaction.commit();
 
             return result;
         } catch (err) {
+            if (transaction) await transaction.rollback();
             logger.debug(`Error Restaurant  :  ${err}`);
             throw err;
         }
@@ -207,6 +213,24 @@ class RestaurantAdminController {
             await transaction.commit();
         } catch (error) {
             if (transaction) await transaction.rollback();
+        }
+    }
+
+    async createWantedRestaurant(contentId: string, userId: number): Promise<any> {
+        let transaction: Transaction | undefined = undefined;
+        try {
+            transaction = await sequelize.transaction();
+
+            const result: Promise<any> = await this.restaurantAdminService.createWanted(transaction, userId, contentId);
+
+            await transaction.commit();
+            logger.debug(`Created Restaurant`);
+
+        } catch (err) {
+            logger.debug(`Error Restaurant  :  ${err}`);
+
+            if (transaction) await transaction.rollback();
+            throw err;
         }
     }
 }
