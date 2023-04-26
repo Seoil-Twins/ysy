@@ -175,6 +175,25 @@ class TouristSpotAdminController {
         }
     }
   
+    async createWantedTouristSpot(contentId: string, userId: number): Promise<any> {
+        let transaction: Transaction | undefined = undefined;
+        try {
+            transaction = await sequelize.transaction();
+
+            const contentTypeId = "12";
+
+            const result: Promise<any> = await this.touristSpotAdminService.createWanted(transaction, userId, contentId, contentTypeId);
+
+            await transaction.commit();
+            logger.debug(`Created Shopping`);
+
+        } catch (err) {
+            logger.debug(`Error Shopping  :  ${err}`);
+
+            if (transaction) await transaction.rollback();
+            throw err;
+        }
+    }
 }
 
 export default TouristSpotAdminController;

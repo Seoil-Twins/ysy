@@ -9,6 +9,7 @@ import { canView } from "../util/checkRole.util";
 import CultureAdminService from "../service/culture.admin.service";
 import CultureAdminController from "../controller/culture.admin.controller";
 import BadRequestError from "../error/badRequest.error";
+import { Transaction } from "sequelize";
 
 dayjs.locale("ko");
 
@@ -134,6 +135,23 @@ router.delete("/:content_ids", canView, async (req: Request, res: Response, next
 
         await cultureAdminController.deleteCulture(contentIds);
         return res.status(STATUS_CODE.OK).json({});
+    } catch (error) {
+        next(error);
+    }
+
+});
+
+router.post("/wanted", canView, async (req: Request, res: Response, next: NextFunction) => {
+    const userId: number = Number(req.body.userId);
+    const contentId: string = String(req.query.content_id);
+
+    let transaction: Transaction | undefined = undefined;
+
+    try {
+        const result: Promise<any> = await cultureAdminController.createWantedCulture(contentId, userId);
+
+        logger.debug(`Response Data => ${JSON.stringify(result)}`);
+        return res.status(STATUS_CODE.OK).json(result);
     } catch (error) {
         next(error);
     }

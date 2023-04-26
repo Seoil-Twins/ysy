@@ -221,7 +221,9 @@ class RestaurantAdminController {
         try {
             transaction = await sequelize.transaction();
 
-            const result: Promise<any> = await this.restaurantAdminService.createWanted(transaction, userId, contentId);
+            const contentTypeId = "39";
+
+            const result: Promise<any> = await this.restaurantAdminService.createWanted(transaction, userId, contentId, contentTypeId);
 
             await transaction.commit();
             logger.debug(`Created Restaurant`);

@@ -177,6 +177,26 @@ class SportsAdminController {
         }
     }
 
+    async createWantedSports(contentId: string, userId: number): Promise<any> {
+        let transaction: Transaction | undefined = undefined;
+        try {
+            transaction = await sequelize.transaction();
+
+            const contentTypeId = "28";
+
+            const result: Promise<any> = await this.sportsAdminService.createWanted(transaction, userId, contentId, contentTypeId);
+
+            await transaction.commit();
+            logger.debug(`Created Shopping`);
+
+        } catch (err) {
+            logger.debug(`Error Shopping  :  ${err}`);
+
+            if (transaction) await transaction.rollback();
+            throw err;
+        }
+    }
+
  }
 
 export default SportsAdminController;

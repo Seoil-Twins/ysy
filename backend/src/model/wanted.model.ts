@@ -8,6 +8,7 @@ export class Wanted extends Model<InferAttributes<Wanted>, InferCreationAttribut
     declare want_id: CreationOptional<number>;
     declare user_id: CreationOptional<number>;
     declare content_id: CreationOptional<string>;
+    declare content_type_id: CreationOptional<string>;
 }
 
 export interface PageOptions {
@@ -38,11 +39,16 @@ Wanted.init(
         },
         user_id: {
             field: "user_id",
-            type: DataTypes.STRING,
+            type: DataTypes.INTEGER.UNSIGNED,
             allowNull: false
         },
         content_id: {
             field: "content_id",
+            type: DataTypes.STRING,
+            allowNull: false
+        },
+        content_type_id: {
+            field: "content_type_id",
             type: DataTypes.STRING,
             allowNull: false
         }

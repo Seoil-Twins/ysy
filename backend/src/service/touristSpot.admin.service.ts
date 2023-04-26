@@ -13,6 +13,7 @@ import NotFoundError from "../error/notFound.error";
 import BadRequestError from "../error/badRequest.error";
 import logger from "../logger/logger";
 import AdminJS from "adminjs/types/src";
+import { Wanted } from "../model/wanted.model";
 
 const url = process.env.TOURAPI_URL;
 const detail_url = process.env.TOURAPI_DETAIL_URL;
@@ -207,6 +208,24 @@ class TouristSpotAdminService extends Service {
 
     async delete(transaction: Transaction | null = null, touristSpot: TouristSpot): Promise<void> {
         await touristSpot.destroy({ transaction });
+    }
+    async createWanted(transaction: Transaction | null = null, userId: number, contentId: string, contentTypeId: string) : Promise<any>
+    {
+        try{
+            transaction = await sequelize.transaction();
+            const createdWanted: Wanted = await Wanted.create(
+                {
+                    user_id: userId,
+                    content_id: contentId,
+                    content_type_id: contentTypeId
+                },
+                { transaction }
+            );
+            transaction.commit();
+        } catch (err) {
+            if (transaction) await transaction.rollback();
+            throw err;
+        }
     }
 }
 

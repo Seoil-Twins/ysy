@@ -216,14 +216,15 @@ class RestaurantAdminService extends Service {
         await restaurant.destroy({ transaction });
     }
 
-    async createWanted(transaction: Transaction | null = null, userId: number, contentId: string) : Promise<any>
+    async createWanted(transaction: Transaction | null = null, userId: number, contentId: string, contentTypeId: string) : Promise<any>
     {
         try{
             transaction = await sequelize.transaction();
             const createdWanted: Wanted = await Wanted.create(
                 {
                     user_id: userId,
-                    content_id: contentId
+                    content_id: contentId,
+                    content_type_id: contentTypeId
                 },
                 { transaction }
             );
