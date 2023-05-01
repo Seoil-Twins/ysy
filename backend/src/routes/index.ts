@@ -14,6 +14,7 @@ import albumAdminRouter from "./album.admin.route";
 import calendarAdminRouter from "./calendar.admin.route";
 import InquireAdminRouter from "./inquire.admin.route";
 import InquireImageAdminRouter from "./inquireImage.admin.route";
+import SolutionAdminRouter from "./solution.admin.route";
 import restaurantAdminRouter from "./restaurant.admin";
 import cultureAdminRouter from "./culture.admin";
 import shoppingAdminRouter from "./shopping.admin";
@@ -39,6 +40,8 @@ router.use("/admin/album", authMiddleware, albumAdminRouter);
 router.use("/admin/calendar", authMiddleware, calendarAdminRouter);
 router.use("/admin/inquire", authMiddleware, InquireAdminRouter);
 router.use("/admin/inquire-image", authMiddleware, InquireImageAdminRouter);
+router.use("/admin/solution", authMiddleware, SolutionAdminRouter);
+
 router.use("/admin/restaurant", authMiddleware, restaurantAdminRouter);
 router.use("/admin/culture", authMiddleware, cultureAdminRouter);
 router.use("/admin/shopping", authMiddleware, shoppingAdminRouter);

@@ -7,16 +7,8 @@ import { Inquire } from "./inquire.model";
 
 // -------------------------------------------- Interface ------------------------------------------ //
 export interface ICreate {
-    inquireId: number;
     title: string;
     contents: string;
-}
-
-export interface IUpdate {
-    inquireId: number;
-    title: string;
-    contents: string;
-    image: string;
 }
 // ------------------------------------------ Interface End ---------------------------------------- //
 
