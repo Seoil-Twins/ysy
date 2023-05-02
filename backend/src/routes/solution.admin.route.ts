@@ -4,14 +4,16 @@ import formidable from "formidable";
 
 import validator from "../util/validator.util";
 import { STATUS_CODE } from "../constant/statusCode.constant";
-import { canModifyWithEditor } from "../util/checkRole.util";
+import { canModifyWithEditor, canView } from "../util/checkRole.util";
 import InternalServerError from "../error/internalServer.error";
 import BadRequestError from "../error/badRequest.error";
-import { ICreate } from "../model/solution.model";
+import { FilterOptions, ICreate, ISolutionResponseWithCount, PageOptions, SearchOptions } from "../model/solution.model";
 import SolutionAdminService from "../service/solution.admin.service";
 import SolutionImageAdminService from "../service/solutionImage.admin.service";
 import InquireAdminService from "../service/inquire.admin.service";
 import SolutionAdminController from "../controller/solution.admin.controller";
+import dayjs from "dayjs";
+import { boolean } from "boolean";
 
 const createSchema = joi.object({
     title: joi.string().required(),
@@ -23,6 +25,31 @@ const solutionAdminService: SolutionAdminService = new SolutionAdminService();
 const solutionImageAdminService: SolutionImageAdminService = new SolutionImageAdminService();
 const inquireAdminService: InquireAdminService = new InquireAdminService();
 const solutionAdminController: SolutionAdminController = new SolutionAdminController(solutionAdminService, solutionImageAdminService, inquireAdminService);
+
+router.get("/", canView, async (req: Request, res: Response, next: NextFunction) => {
+    const pageOptions: PageOptions = {
+        count: Number(req.query.count) || 10,
+        page: Number(req.query.page) || 1,
+        sort: String(req.query.sort) || "r"
+    };
+    const searchOptions: SearchOptions = {
+        userId: req.query.user_id ? Number(req.query.user_id) : undefined,
+        username: req.query.name ? String(req.query.name) : undefined,
+        title: req.query.title ? String(req.query.title) : undefined
+    };
+    const filterOptions: FilterOptions = {
+        fromDate: req.query.from_date ? dayjs(String(req.query.from_date)).startOf("day").utc(true).toDate() : undefined,
+        toDate: req.query.to_date ? dayjs(String(req.query.to_date)).endOf("day").utc(true).toDate() : undefined,
+        hasImage: req.query.has_image ? boolean(req.query.has_image) : undefined
+    };
+
+    try {
+        const results: ISolutionResponseWithCount = await solutionAdminController.getSolution(pageOptions, searchOptions, filterOptions);
+        return res.status(STATUS_CODE.OK).json(results);
+    } catch (error) {
+        next(error);
+    }
+});
 
 router.post("/:user_id/:inquire_id", canModifyWithEditor, async (req: Request, res: Response, next: NextFunction) => {
     const userId: number = Number(req.params.user_id);

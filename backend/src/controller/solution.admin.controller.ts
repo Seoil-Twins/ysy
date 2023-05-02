@@ -1,7 +1,7 @@
 import { File } from "formidable";
 import BadRequestError from "../error/badRequest.error";
 import { Inquire } from "../model/inquire.model";
-import { ICreate, Solution } from "../model/solution.model";
+import { FilterOptions, ICreate, ISolutionResponseWithCount, PageOptions, SearchOptions, Solution } from "../model/solution.model";
 import InquireAdminService from "../service/inquire.admin.service";
 import SolutionAdminService from "../service/solution.admin.service";
 import SolutionImageAdminService from "../service/solutionImage.admin.service";
@@ -20,6 +20,23 @@ class SolutionAdminController {
         this.solutionAdminService = solutionAdminService;
         this.solutionImageAdminService = solutionImageAdminService;
         this.inquireAdminService = inquireAdminService;
+    }
+
+    async getSolution(pageOptions: PageOptions, searchOptions: SearchOptions, filterOptions: FilterOptions): Promise<ISolutionResponseWithCount> {
+        let result: ISolutionResponseWithCount = {
+            solutions: [],
+            count: 0
+        };
+
+        if (searchOptions.userId) {
+            result = await this.solutionAdminService.selectAllWithUserId(pageOptions, searchOptions, filterOptions);
+        } else if (searchOptions.username) {
+            result = await this.solutionAdminService.selectAllWithUserName(pageOptions, searchOptions, filterOptions);
+        } else {
+            result = await this.solutionAdminService.selectAll(pageOptions, searchOptions, filterOptions);
+        }
+
+        return result;
     }
 
     async addSolution(inquireId: number, data: ICreate) {
