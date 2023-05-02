@@ -59,8 +59,10 @@ class ShoppingAdminService extends Service {
         return `${API_ROOT}/admin/culture/search/all?page=1&numOfRows=1&sort=r&contentTypeId=39`;
     }
 
-    async select(pageOptions: PageOptions, searchOptions: SearchOptions): Promise<Shopping[]> {
-      
+    async select(pageOptions: PageOptions, searchOptions: SearchOptions, transaction: Transaction | null = null): Promise<Shopping[]> {
+            let viewUpdate = {
+                view : 0
+            }
             const sort: OrderItem = this.createSort(pageOptions.sort);
             const where: WhereOptions = this.createWhere(searchOptions);
 
@@ -68,6 +70,12 @@ class ShoppingAdminService extends Service {
                 order: [sort],
                 where
             });
+            
+            for(const shopping of result){
+                viewUpdate.view = shopping.view + 1;
+                let update: Shopping = await shopping.update(viewUpdate, { transaction });
+            }
+    
 
             return result;
    

@@ -104,11 +104,16 @@ class TouristSpotAdminController {
     }
 
     async getAllTouristSpot(pageOption: PageOptions, searchOptions: SearchOptions): Promise<any> {
+        let transaction: Transaction | undefined = undefined;
+
         try {
-            const result: TouristSpot | TouristSpot[] = await this.touristSpotAdminService.select(pageOption, searchOptions);
+            transaction = await sequelize.transaction();
+            const result: TouristSpot | TouristSpot[] = await this.touristSpotAdminService.select(pageOption, searchOptions,transaction);
+            await transaction.commit();
 
             return result;
         } catch (err) {
+            if (transaction) await transaction.rollback();
             logger.debug(`Error Culture  :  ${err}`);
             throw err;
         }

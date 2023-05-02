@@ -60,7 +60,7 @@ class TouristSpotAdminService extends Service {
         return `${API_ROOT}/admin/touristSpot/search/all?page=1&numOfRows=1&sort=r&contentTypeId=39`;
     }
 
-    async select(pageOptions: PageOptions, searchOptions: SearchOptions): Promise<TouristSpot[]> {
+    async select(pageOptions: PageOptions, searchOptions: SearchOptions, transaction: Transaction | null = null): Promise<TouristSpot[]> {
       
             const sort: OrderItem = this.createSort(pageOptions.sort);
             const where: WhereOptions = this.createWhere(searchOptions);
@@ -70,6 +70,13 @@ class TouristSpotAdminService extends Service {
                 where
             });
 
+            let viewUpdate = {
+                view : 0
+            }
+            for(const touristSpot of result){
+                viewUpdate.view = touristSpot.view + 1;
+                let update: TouristSpot = await touristSpot.update(viewUpdate, { transaction });
+            }
             return result;
    
     }

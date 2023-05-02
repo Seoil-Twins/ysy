@@ -59,7 +59,7 @@ class SportsAdminService extends Service {
         return `${API_ROOT}/admin/sports/search/all?page=1&numOfRows=1&sort=r&contentTypeId=39`;
     }
 
-    async select(pageOptions: PageOptions, searchOptions: SearchOptions): Promise<Sports[]> {
+    async select(pageOptions: PageOptions, searchOptions: SearchOptions, transaction: Transaction | null = null): Promise<Sports[]> {
       
             const sort: OrderItem = this.createSort(pageOptions.sort);
             const where: WhereOptions = this.createWhere(searchOptions);
@@ -68,6 +68,14 @@ class SportsAdminService extends Service {
                 order: [sort],
                 where
             });
+
+            let viewUpdate = {
+                view : 0
+            }
+            for(const sports of result){
+                viewUpdate.view = sports.view + 1;
+                let update: Sports = await sports.update(viewUpdate, { transaction });
+            }
 
             return result;
    

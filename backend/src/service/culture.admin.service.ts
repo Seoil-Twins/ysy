@@ -59,17 +59,25 @@ class CultureAdminService extends Service {
         return `${API_ROOT}/admin/culture/search/all?page=1&numOfRows=1&sort=r&contentTypeId=39`;
     }
 
-    async select(pageOptions: PageOptions, searchOptions: SearchOptions): Promise<Culture[]> {
-      
-            const sort: OrderItem = this.createSort(pageOptions.sort);
-            const where: WhereOptions = this.createWhere(searchOptions);
+    async select(pageOptions: PageOptions, searchOptions: SearchOptions, transaction: Transaction | null = null): Promise<Culture[]> {
+        let viewUpdate = {
+            view : 0
+        }
 
-            const result: Culture[] | Culture = await Culture.findAll({
-                order: [sort],
-                where
-            });
+        const sort: OrderItem = this.createSort(pageOptions.sort);
+        const where: WhereOptions = this.createWhere(searchOptions);
 
-            return result;
+        const result: Culture[] | Culture = await Culture.findAll({
+            order: [sort],
+            where
+        });
+
+        for(const culture of result){
+            viewUpdate.view = culture.view + 1;
+            let update: Culture = await culture.update(viewUpdate, { transaction });
+        }
+
+        return result;
    
     }
 
