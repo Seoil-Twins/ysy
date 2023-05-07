@@ -85,14 +85,16 @@ class InquireController {
 
             await this.inquireService.update(transaction, inquire, updateData);
 
-            if (images instanceof Array<File>)
-                updatedInquireImages = await this.inquireImageService.createMutiple(transaction, inquire.inquireId, inquire.userId, images);
-            else if (images instanceof File)
-                updatedInquireImages = await this.inquireImageService.create(transaction, inquire.inquireId, inquire.userId, images);
+            if (images) {
+                if (images instanceof Array<File>)
+                    updatedInquireImages = await this.inquireImageService.createMutiple(transaction, inquire.inquireId, inquire.userId, images);
+                else if (images instanceof File)
+                    updatedInquireImages = await this.inquireImageService.create(transaction, inquire.inquireId, inquire.userId, images);
+            }
 
             await transaction.commit();
-            await deleteFiles(imagePaths);
 
+            if (images) await deleteFiles(imagePaths);
             const result: Inquire | null = await this.inquireService.select(data.inquireId);
             return result!;
         } catch (error) {

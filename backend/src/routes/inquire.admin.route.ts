@@ -18,13 +18,20 @@ import { FilterOptions, ICreate, IInquireResponseWithCount, Inquire, IUpdateWith
 
 import BadRequestError from "../error/badRequest.error";
 import InternalServerError from "../error/internalServer.error";
+import SolutionImageAdminService from "../service/solutionImage.admin.service";
 
 const router: Router = express.Router();
 const inquireService: InquireService = new InquireService();
 const inquireAdminService: InquireAdminService = new InquireAdminService();
 const inquireImageService: InquireImageService = new InquireImageService();
+const solutionImageAdminService: SolutionImageAdminService = new SolutionImageAdminService();
 const inquireController: InquireController = new InquireController(inquireService, inquireImageService);
-const inquireAdminController: InquireAdminController = new InquireAdminController(inquireService, inquireAdminService, inquireImageService);
+const inquireAdminController: InquireAdminController = new InquireAdminController(
+    inquireService,
+    inquireAdminService,
+    inquireImageService,
+    solutionImageAdminService
+);
 
 const postSchema: joi.Schema = joi.object({
     title: joi.string().required(),

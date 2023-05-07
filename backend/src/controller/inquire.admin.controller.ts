@@ -14,16 +14,25 @@ import { deleteFiles, deleteFolder } from "../util/firebase.util";
 
 import NotFoundError from "../error/notFound.error";
 import BadRequestError from "../error/badRequest.error";
+import SolutionAdminService from "../service/solution.admin.service";
+import SolutionImageAdminService from "../service/solutionImage.admin.service";
 
 class InquireAdminController {
     private inquireService: InquireService;
     private inquireAdminService: InquireAdminService;
     private inquireImageService: InquireImageService;
+    private solutionAdminImageService: SolutionImageAdminService;
 
-    constructor(inquireService: InquireService, inquireAdminService: InquireAdminService, inquireImageService: InquireImageService) {
+    constructor(
+        inquireService: InquireService,
+        inquireAdminService: InquireAdminService,
+        inquireImageService: InquireImageService,
+        solutionAdminImageService: SolutionImageAdminService
+    ) {
         this.inquireService = inquireService;
         this.inquireAdminService = inquireAdminService;
         this.inquireImageService = inquireImageService;
+        this.solutionAdminImageService = solutionAdminImageService;
     }
 
     async getInquires(pageOptions: PageOptions, searchOptions: SearchOptions, filterOptions: FilterOptions): Promise<IInquireResponseWithCount> {
@@ -63,6 +72,7 @@ class InquireAdminController {
     }
 
     async deleteInquires(inquireIds: number[]): Promise<void> {
+        const promises: any[] = [];
         const allDeleteFiles: string[] = [];
         const inquires: Inquire[] = await this.inquireAdminService.selectByPk(inquireIds);
         if (inquires.length <= 0) throw new NotFoundError(`Not found inquire using query parameter inquireIds => ${inquireIds}`);
@@ -73,20 +83,19 @@ class InquireAdminController {
             transaction = await sequelize.transaction();
 
             for (const inquire of inquires) {
-                const inquireImages: InquireImage[] = await this.inquireImageService.select(inquire.inquireId);
+                if (inquire.solution?.solutionImages) {
+                    promises.push(await deleteFolder(this.solutionAdminImageService.getFolderPath(inquire.userId, inquire.inquireId)));
+                }
 
-                inquireImages.forEach((inquire: InquireImage) => {
+                inquire.inquireImages?.forEach((inquire: InquireImage) => {
                     allDeleteFiles.push(inquire.image);
                 });
-
-                await this.inquireService.delete(transaction, inquire);
-
-                // soluton image 삭제
-                // if (inquire.solution) await solutionController.deleteSolution(inquire.solution.solutionId);
             }
 
+            await this.inquireService.deletes(transaction, inquireIds);
             await transaction.commit();
 
+            if (promises.length > 0) await Promise.allSettled(promises);
             if (allDeleteFiles.length > 0) deleteFiles(allDeleteFiles);
         } catch (error) {
             logger.error(`Inquire delete error => ${JSON.stringify(error)}`);
