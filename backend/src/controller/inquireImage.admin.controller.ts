@@ -83,6 +83,16 @@ class InquireImageAdminController {
             throw error;
         }
     }
+
+    async deleteInquireImages(imageIds: number[]): Promise<void> {
+        const inquireImages: InquireImage[] = await this.inquireImageAdminService.selectAll(imageIds);
+        if (inquireImages.length <= 0) throw new BadRequestError(`Not found inquire images with using ${imageIds}`);
+
+        await this.inquireImageService.delete(null, imageIds);
+
+        const imagePaths: string[] = inquireImages.map((inquire: InquireImage) => inquire.image);
+        await deleteFiles(imagePaths);
+    }
 }
 
 export default InquireImageAdminController;

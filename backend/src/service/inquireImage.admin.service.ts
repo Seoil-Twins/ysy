@@ -57,6 +57,14 @@ class InquireImageAdminService extends Service {
         return result;
     }
 
+    async selectAll(imageIds: number[]): Promise<InquireImage[]> {
+        const inquireImages: InquireImage[] = await InquireImage.findAll({
+            where: { imageId: imageIds }
+        });
+
+        return inquireImages;
+    }
+
     create(transaction: Transaction | null, ...args: any[]): Promise<any> {
         throw new Error("Method not implemented.");
     }

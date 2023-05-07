@@ -63,50 +63,20 @@ router.post("/:inquire_id", canModifyWithEditor, async (req: Request, res: Respo
     });
 });
 
-// router.patch("/:inquire_id", canModifyWithEditor, async (req: Request, res: Response, next: NextFunction) => {
-//     const form = formidable({ multiples: true, maxFileSize: 5 * 1024 * 1024, maxFiles: 5 });
-//     const inquireId = Number(req.params.inquire_id);
+router.delete("/:image_ids", canModifyWithEditor, async (req: Request, res: Response, next: NextFunction) => {
+    const imageIds: number[] = req.params.image_ids.split(",").map(Number);
+    const numInquireIds: number[] = imageIds.filter((imageId: number) => {
+        if (!isNaN(imageId)) return imageId;
+    });
 
-//     form.parse(req, async (err, fields, files) => {
-//         if (err) throw new InternalServerError(`Image Server Error : ${JSON.stringify(err)}`);
-//         else if (isNaN(inquireId)) throw new BadRequestError("Inquire ID must be a number type");
+    try {
+        if (!numInquireIds || numInquireIds.length <= 0) throw new BadRequestError("Inquire image ID must be a number type");
 
-//         req.body = Object.assign({}, req.body, fields);
-
-//         const { value, error }: ValidationResult = validator(req.body, updateSchema);
-//         const inquireData: IUpdateWithController = {
-//             inquireId: inquireId,
-//             title: value.title ? value.title : undefined,
-//             contents: value.contents ? value.contents : undefined
-//         };
-
-//         try {
-//             if (error) throw new BadRequestError(error.message);
-//             else if (!inquireData.title && !inquireData.contents && !files.file) throw new BadRequestError("Request values is empty");
-
-//             const updatedInquire: Inquire = await inquireController.updateInquire(inquireData, files.file);
-
-//             res.status(STATUS_CODE.OK).json(updatedInquire);
-//         } catch (error) {
-//             next(error);
-//         }
-//     });
-// });
-
-// router.delete("/:inquire_ids", canModifyWithEditor, async (req: Request, res: Response, next: NextFunction) => {
-//     const inquireIds: number[] = req.params.inquire_ids.split(",").map(Number);
-//     const numInquireIds: number[] = inquireIds.filter((inquireId: number) => {
-//         if (!isNaN(inquireId)) return inquireId;
-//     });
-
-//     try {
-//         if (!numInquireIds || numInquireIds.length <= 0) throw new BadRequestError("Calendar ID must be a number type");
-
-//         await inquireAdminController.deleteInquires(numInquireIds);
-//         res.status(STATUS_CODE.NO_CONTENT).json({});
-//     } catch (error) {
-//         next(error);
-//     }
-// });
+        await inquireImageAdminController.deleteInquireImages(numInquireIds);
+        res.status(STATUS_CODE.NO_CONTENT).json({});
+    } catch (error) {
+        next(error);
+    }
+});
 
 export default router;
