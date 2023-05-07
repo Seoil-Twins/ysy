@@ -25,6 +25,7 @@ import AlbumService from "../service/album.service";
 import CalendarService from "../service/calendar.service";
 import CoupleAdminService from "../service/couple.admin.service";
 import InquireImageService from "../service/inquireImage.service";
+import SolutionImageAdminService from "../service/solutionImage.admin.service";
 
 class UserAdminController {
     private userService: UserService;
@@ -34,7 +35,7 @@ class UserAdminController {
     private albumService: AlbumService;
     private calendarService: CalendarService;
     private inquireService: InquireService;
-    private inquireImageService: InquireImageService;
+    private solutionImageAdminService: SolutionImageAdminService;
 
     constructor(
         userService: UserService,
@@ -44,7 +45,7 @@ class UserAdminController {
         albumService: AlbumService,
         calendarService: CalendarService,
         inquireService: InquireService,
-        inquireImageService: InquireImageService
+        solutionImageAdminService: SolutionImageAdminService
     ) {
         this.userService = userService;
         this.userAdminService = userAdminService;
@@ -53,7 +54,7 @@ class UserAdminController {
         this.albumService = albumService;
         this.calendarService = calendarService;
         this.inquireService = inquireService;
-        this.inquireImageService = inquireImageService;
+        this.solutionImageAdminService = solutionImageAdminService;
     }
 
     /**
@@ -238,7 +239,7 @@ class UserAdminController {
      */
     async deleteUser(userIds: number[]): Promise<void> {
         const allDeleteFiles: string[] = [];
-        const albumFolders: string[] = [];
+        const deleteFolders: string[] = [];
         const users: User[] = await this.userAdminService.selectAllWithAdditional(userIds);
         if (users.length <= 0) throw new NotFoundError("Not found users.");
 
@@ -255,17 +256,17 @@ class UserAdminController {
 
             // Inquire 삭제
             for (const user of userHasInquiry) {
-                for (const inquire of user.inquires!) {
-                    const inquireImages: InquireImage[] = await this.inquireImageService.select(inquire.inquireId);
+                const inquireIds: number[] = user.inquires!.map((inquire) => inquire.inquireId);
 
-                    inquireImages.forEach((inquire: InquireImage) => {
+                await this.inquireService.deletes(transaction, inquireIds);
+                for (const inquire of user.inquires!) {
+                    if (inquire.solution?.solutionImages) {
+                        deleteFolders.push(this.solutionImageAdminService.getFolderPath(inquire.userId, inquire.inquireId));
+                    }
+
+                    inquire.inquireImages?.forEach((inquire: InquireImage) => {
                         allDeleteFiles.push(inquire.image);
                     });
-
-                    await this.inquireService.delete(transaction, inquire);
-
-                    // soluton image 삭제
-                    // if (inquire.solution) await solutionController.deleteSolution(inquire.solution.solutionId);
                 }
             }
 
@@ -276,7 +277,7 @@ class UserAdminController {
                 if (albums && albums.length > 0) {
                     for (const album of albums) {
                         if (album.thumbnail) allDeleteFiles.push(album.thumbnail);
-                        albumFolders.push(this.albumService.getAlbumFolderPath(album.cupId, album.albumId));
+                        deleteFolders.push(this.albumService.getAlbumFolderPath(album.cupId, album.albumId));
 
                         await this.albumService.delete(transaction, album);
                     }
@@ -303,8 +304,8 @@ class UserAdminController {
             await transaction.commit();
 
             await deleteFiles(allDeleteFiles);
-            for (const albumPath of albumFolders) {
-                await deleteFolder(albumPath);
+            for (const folderPath of deleteFolders) {
+                await deleteFolder(folderPath);
             }
         } catch (error) {
             if (transaction) await transaction.rollback();

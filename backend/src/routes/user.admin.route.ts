@@ -30,7 +30,7 @@ import CoupleAdminService from "../service/couple.admin.service";
 import AlbumService from "../service/album.service";
 import InquireService from "../service/inquire.service";
 import CalendarService from "../service/calendar.service";
-import InquireImageService from "../service/inquireImage.service";
+import SolutionImageAdminService from "../service/solutionImage.admin.service";
 
 dayjs.locale("ko");
 
@@ -42,7 +42,7 @@ const coupleAdminService: CoupleAdminService = new CoupleAdminService();
 const albumService: AlbumService = new AlbumService();
 const calendarservice: CalendarService = new CalendarService();
 const inquireService: InquireService = new InquireService();
-const inquireImageService: InquireImageService = new InquireImageService();
+const solutionImageAdminService: SolutionImageAdminService = new SolutionImageAdminService();
 const userAdminController: UserAdminController = new UserAdminController(
     userService,
     userAdminService,
@@ -51,7 +51,7 @@ const userAdminController: UserAdminController = new UserAdminController(
     albumService,
     calendarservice,
     inquireService,
-    inquireImageService
+    solutionImageAdminService
 );
 
 const pwPattern = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[$@$!%*#?&])[A-Za-z\d$@$!%*#?&]{8,15}$/;

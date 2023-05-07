@@ -12,6 +12,8 @@ import { Couple } from "../model/couple.model";
 import { Inquire } from "../model/inquire.model";
 import { Solution } from "../model/solution.model";
 import { FilterOptions, ICreateWithAdmin, IUpdateWithAdmin, PageOptions, SearchOptions, User } from "../model/user.model";
+import { InquireImage } from "../model/inquireImage.model";
+import { SolutionImage } from "../model/solutionImage.model";
 
 class UserAdminService extends Service {
     private FOLDER_NAME = "users";
@@ -104,8 +106,18 @@ class UserAdminService extends Service {
                     as: "inquires",
                     include: [
                         {
+                            model: InquireImage,
+                            as: "inquireImages"
+                        },
+                        {
                             model: Solution,
-                            as: "solution"
+                            as: "solution",
+                            include: [
+                                {
+                                    model: SolutionImage,
+                                    as: "solutionImages"
+                                }
+                            ]
                         }
                     ]
                 }

@@ -14,25 +14,24 @@ import { deleteFiles, deleteFolder } from "../util/firebase.util";
 
 import NotFoundError from "../error/notFound.error";
 import BadRequestError from "../error/badRequest.error";
-import SolutionAdminService from "../service/solution.admin.service";
 import SolutionImageAdminService from "../service/solutionImage.admin.service";
 
 class InquireAdminController {
     private inquireService: InquireService;
     private inquireAdminService: InquireAdminService;
     private inquireImageService: InquireImageService;
-    private solutionAdminImageService: SolutionImageAdminService;
+    private solutionImageAdminService: SolutionImageAdminService;
 
     constructor(
         inquireService: InquireService,
         inquireAdminService: InquireAdminService,
         inquireImageService: InquireImageService,
-        solutionAdminImageService: SolutionImageAdminService
+        solutionImageAdminService: SolutionImageAdminService
     ) {
         this.inquireService = inquireService;
         this.inquireAdminService = inquireAdminService;
         this.inquireImageService = inquireImageService;
-        this.solutionAdminImageService = solutionAdminImageService;
+        this.solutionImageAdminService = solutionImageAdminService;
     }
 
     async getInquires(pageOptions: PageOptions, searchOptions: SearchOptions, filterOptions: FilterOptions): Promise<IInquireResponseWithCount> {
@@ -84,7 +83,7 @@ class InquireAdminController {
 
             for (const inquire of inquires) {
                 if (inquire.solution?.solutionImages) {
-                    promises.push(await deleteFolder(this.solutionAdminImageService.getFolderPath(inquire.userId, inquire.inquireId)));
+                    promises.push(await deleteFolder(this.solutionImageAdminService.getFolderPath(inquire.userId, inquire.inquireId)));
                 }
 
                 inquire.inquireImages?.forEach((inquire: InquireImage) => {
