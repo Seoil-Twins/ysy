@@ -1,10 +1,14 @@
-import { Transaction } from "sequelize";
-import { Service } from "./service";
-import { SolutionImage } from "../model/solutionImage.model";
-import { uploadFile } from "../util/firebase.util";
-import { File } from "formidable";
 import dayjs from "dayjs";
+import { File } from "formidable";
+import { Transaction } from "sequelize";
+
+import { Service } from "./service";
+
+import { SolutionImage } from "../model/solutionImage.model";
+
 import logger from "../logger/logger";
+import { uploadFile } from "../util/firebase.util";
+
 import UploadError from "../error/upload.error";
 
 class SolutionImageAdminService extends Service {
@@ -33,7 +37,7 @@ class SolutionImageAdminService extends Service {
         );
 
         await uploadFile(path, images.filepath);
-        logger.debug(`Create inquire image => ${path}`);
+        logger.debug(`Create solution image => ${path}`);
 
         return createdSolutionImage;
     }
@@ -76,8 +80,8 @@ class SolutionImageAdminService extends Service {
         throw new Error("Method not implemented.");
     }
 
-    delete(transaction: Transaction | null, ...args: any[]): Promise<any> {
-        throw new Error("Method not implemented.");
+    async delete(transaction: Transaction | null, imageIds: number[]): Promise<void> {
+        await SolutionImage.destroy({ where: { imageId: imageIds }, transaction });
     }
 }
 

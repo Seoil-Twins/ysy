@@ -1,11 +1,14 @@
 import { GroupedCountResultItem, Op, OrderItem, Transaction, WhereOptions } from "sequelize";
+
 import { Service } from "./service";
-import { FilterOptions, ICreate, ISolutionResponseWithCount, PageOptions, SearchOptions, Solution } from "../model/solution.model";
+
 import { API_ROOT } from "..";
-import { SolutionImage } from "../model/solutionImage.model";
-import { Inquire } from "../model/inquire.model";
-import { User } from "../model/user.model";
+
 import sequelize from "../model";
+import { User } from "../model/user.model";
+import { Inquire } from "../model/inquire.model";
+import { SolutionImage } from "../model/solutionImage.model";
+import { FilterOptions, ICreate, ISolutionResponseWithCount, IUpdate, PageOptions, SearchOptions, Solution } from "../model/solution.model";
 
 class SolutionAdminService extends Service {
     private createSort(sort: string): OrderItem {
@@ -39,7 +42,19 @@ class SolutionAdminService extends Service {
         return `${API_ROOT}/admin/inquire?page=1&count=10&sort=sr`;
     }
 
-    async select(inquireId: number): Promise<Solution | null> {
+    async select(solutionId: number): Promise<Solution | null> {
+        const solution: Solution | null = await Solution.findOne({
+            where: { solutionId },
+            include: {
+                model: SolutionImage,
+                as: "solutionImages"
+            }
+        });
+
+        return solution;
+    }
+
+    async selectByInId(inquireId: number): Promise<Solution | null> {
         const solution: Solution | null = await Solution.findOne({
             where: { inquireId }
         });
@@ -196,6 +211,14 @@ class SolutionAdminService extends Service {
         return result;
     }
 
+    async selectAllWithSolutionId(solutionIds: number[]): Promise<Solution[]> {
+        const solutions: Solution[] = await Solution.findAll({
+            where: { solutionId: solutionIds }
+        });
+
+        return solutions;
+    }
+
     async create(transaction: Transaction | null, inquireId: number, data: ICreate): Promise<Solution> {
         const createdSolution: Solution = await Solution.create(
             {
@@ -208,12 +231,19 @@ class SolutionAdminService extends Service {
         return createdSolution;
     }
 
-    update(transaction: Transaction | null, ...args: any[]): Promise<any> {
-        throw new Error("Method not implemented.");
+    async update(transaction: Transaction | null, solution: Solution, data: IUpdate): Promise<Solution> {
+        const updatedSolution = await solution.update(data, { transaction });
+        return updatedSolution;
     }
 
     delete(transaction: Transaction | null, ...args: any[]): Promise<any> {
         throw new Error("Method not implemented.");
+    }
+
+    async deletes(transaction: Transaction | null, solutionIds: number[]): Promise<any> {
+        await Solution.destroy({
+            where: { solutionId: solutionIds }
+        });
     }
 }
 

@@ -11,6 +11,12 @@ export interface ICreate {
     contents: string;
 }
 
+export interface IUpdate{
+    inquireId?: number;
+    title?: string;
+    contents?: string;
+}
+
 export interface ISolutionResponseWithCount {
     solutions: Solution[];
     count: number;
