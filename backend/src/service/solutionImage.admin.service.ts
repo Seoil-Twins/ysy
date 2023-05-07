@@ -1,11 +1,12 @@
 import dayjs from "dayjs";
 import { File } from "formidable";
-import { Transaction } from "sequelize";
+import { Op, OrderItem, Transaction, WhereOptions } from "sequelize";
 
 import { Service } from "./service";
 
-import { SolutionImage } from "../model/solutionImage.model";
+import { FilterOptions, PageOptions, SearchOptions, SolutionImage, SolutionImageResponseWithCount } from "../model/solutionImage.model";
 
+import { API_ROOT } from "..";
 import logger from "../logger/logger";
 import { uploadFile } from "../util/firebase.util";
 
@@ -14,16 +15,66 @@ import UploadError from "../error/upload.error";
 class SolutionImageAdminService extends Service {
     private FOLDER_NAME = "users";
 
+    private createSort(sort: string): OrderItem {
+        let result: OrderItem = ["createdTime", "DESC"];
+
+        switch (sort) {
+            case "r":
+                result = ["createdTime", "DESC"];
+                break;
+            case "o":
+                result = ["createdTime", "ASC"];
+                break;
+            default:
+                result = ["createdTime", "DESC"];
+                break;
+        }
+
+        return result;
+    }
+
+    private createWhere(searchOptions: SearchOptions, filterOptions: FilterOptions): WhereOptions {
+        let result: WhereOptions<SolutionImage> = {};
+
+        if (searchOptions.solutionId) result.solutionId = searchOptions.solutionId;
+        if (filterOptions.fromDate && filterOptions.toDate) result.createdTime = { [Op.between]: [filterOptions.fromDate, filterOptions.toDate] };
+
+        return result;
+    }
+
     getFolderPath(userId: number, inquireId: number): string {
         return `${this.FOLDER_NAME}/${userId}/inquires/${inquireId}/solution`;
     }
 
-    getURL(...args: any[]): string {
-        throw new Error("Method not implemented.");
+    getURL(): string {
+        return `${API_ROOT}/admin/solution-image?count=10&page=1`;
     }
 
-    select(...args: any[]): Promise<any> {
-        throw new Error("Method not implemented.");
+    async select(pageOptions: PageOptions, searchOptions: SearchOptions, filterOptions: FilterOptions): Promise<SolutionImageResponseWithCount> {
+        const offset: number = (pageOptions.page - 1) * pageOptions.count;
+        const sort: OrderItem = this.createSort(pageOptions.sort);
+        const where: WhereOptions<SolutionImage> = this.createWhere(searchOptions, filterOptions);
+
+        const { rows, count }: { rows: SolutionImage[]; count: number } = await SolutionImage.findAndCountAll({
+            where,
+            offset,
+            limit: pageOptions.count,
+            order: [sort]
+        });
+        const result: SolutionImageResponseWithCount = {
+            images: rows,
+            count: count
+        };
+
+        return result;
+    }
+
+    async selectAll(imageIds: number[]): Promise<SolutionImage[]> {
+        const solutionImages: SolutionImage[] = await SolutionImage.findAll({
+            where: { imageId: imageIds }
+        });
+
+        return solutionImages;
     }
 
     async create(transaction: Transaction | null = null, solutionId: number, inquireId: number, userId: number, images: File): Promise<SolutionImage> {
