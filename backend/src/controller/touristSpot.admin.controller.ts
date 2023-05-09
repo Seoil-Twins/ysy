@@ -1,3 +1,6 @@
+import fetch from "node-fetch";
+import { URLSearchParams } from "url";
+
 import { Transaction } from "sequelize";
 
 import { TOURAPI_CODE } from "../constant/statusCode.constant";
@@ -5,43 +8,31 @@ import { TOURAPI_CODE } from "../constant/statusCode.constant";
 import sequelize from "../model";
 import { TouristSpot, PageOptions, SearchOptions, IUpdateWithAdmin } from "../model/touristSpot.model";
 
-import fetch from "node-fetch";
-import { URLSearchParams } from "url";
 import TouristSpotAdminService from "../service/touristSpot.admin.service";
-import logger from "../logger/logger";
+
 import BadRequestError from "../error/badRequest.error";
 import NotFoundError from "../error/notFound.error";
 
-const FOLDER_NAME = "sports";
+import logger from "../logger/logger";
+
+
 const url = "https://apis.data.go.kr/B551011/KorService1/areaBasedList1";
-const detail_url = "http://apis.data.go.kr/B551011/KorService1/detailIntro1";
-const detail_common_url = "http://apis.data.go.kr/B551011/KorService1/detailCommon1";
 const SERVICEKEY = new String(process.env.TOURAPI_API_KEY);
 class TouristSpotAdminController {
 
     private touristSpotAdminService: TouristSpotAdminService;
+    private CONTENT_TYPE_ID: string = "12";
 
     constructor(touristSpotAdminService: TouristSpotAdminService) {
         this.touristSpotAdminService = touristSpotAdminService;
     }
 
     /**
-     * const pageOptions: PageOptions = {
-     *      numOfRows: 1,
-     *      count 5,\
-     * };
-     * const searchOptions: SearchOptions = {
-     *      contentTypeId: 39
-     * };
-     *
-     * const result = await getRestaurantWithSearch(pageOptions, SearchOptions);
-     * ```
      * @param pageOptions A {@link PageOptions}
      * @param searchOptions A {@link SearchOptions}
      * @returns A {@link IUserResponseWithCount}
      */
     async getTouristSpotFromAPI (pageOptions: PageOptions, searchOptions: SearchOptions): Promise<any> {
-        const offset = (pageOptions.page - 1) * pageOptions.numOfRows;
 
         const params = {
             numOfRows: pageOptions.numOfRows.toString(),
@@ -62,12 +53,11 @@ class TouristSpotAdminController {
 
         const queryString = new URLSearchParams(params).toString();
         const requrl = `${url}?${queryString}`;
-        console.log(requrl);
+        console.log("요청한 URL : " + requrl);
 
         try {
             let res = await fetch(requrl);
             const result: any = await Promise.resolve(res.json());
-            console.log(result.response.body.items.item[0].contentid);
             for (let key in result.response.body.items.item[0]) {
                 console.log(key + " : " + result.response.body.items.item[0][key]);
             }
@@ -75,6 +65,7 @@ class TouristSpotAdminController {
             return result;
         } catch (err) {
             console.log("error: ", err);
+            throw err;
         }
     }
 
@@ -91,7 +82,7 @@ class TouristSpotAdminController {
             const result: Promise<any> = await this.touristSpotAdminService.create(transaction, pageOptions, searchOptions);
 
             await transaction.commit();
-            logger.debug(`Created TouristSpot`);
+            logger.debug(`Created TouristSpot : ${JSON.stringify(result)}`);
 
             const url: string = this.touristSpotAdminService.getURL();
             return url;
@@ -114,7 +105,7 @@ class TouristSpotAdminController {
             return result;
         } catch (err) {
             if (transaction) await transaction.rollback();
-            logger.debug(`Error Culture  :  ${err}`);
+            logger.debug(`Error TouristSpot  :  ${err}`);
             throw err;
         }
     }
@@ -142,8 +133,7 @@ class TouristSpotAdminController {
         if (!data.restDate) data.restDate = touristSpot.restDate;
         if (!data.expguide) data.expguide = touristSpot.expguide;
         if (!data.homepage) data.homepage = touristSpot.homepage;
-        data.modifiedTime = "지금22"
-        // if (!data.createdTime) data.createdTime = restaurant.createdTime;
+        data.modifiedTime = "지금22";
 
         try {
             transaction = await sequelize.transaction();
@@ -151,7 +141,7 @@ class TouristSpotAdminController {
             updatedTouristSpot = await this.touristSpotAdminService.update(transaction, touristSpot, data);
             await transaction.commit();
 
-            logger.debug(`Update Restaurant => content_id :  ${searchOptions.contentId}`);
+            logger.debug(`Update TouristSpot => content_id :  ${searchOptions.contentId}`);
             return updatedTouristSpot;
         } catch (error) {
             if (transaction) await transaction.rollback();
@@ -160,10 +150,8 @@ class TouristSpotAdminController {
     }
 
     async deleteTouristSpot(contentIds: string[]): Promise<void> {
-        const allDeleteFiles: string[] = [];
-        const albumFolders: string[] = [];
         const touristSpots: TouristSpot[] = await this.touristSpotAdminService.selectMul(contentIds);
-        if (touristSpots.length <= 0) throw new NotFoundError("Not found restaurants.");
+        if (touristSpots.length <= 0) throw new NotFoundError("Not found TouristSpots.");
 
         let transaction: Transaction | undefined = undefined;
 
@@ -177,6 +165,7 @@ class TouristSpotAdminController {
             await transaction.commit();
         } catch (error) {
             if (transaction) await transaction.rollback();
+            throw error;
         }
     }
   
@@ -185,15 +174,13 @@ class TouristSpotAdminController {
         try {
             transaction = await sequelize.transaction();
 
-            const contentTypeId = "12";
-
-            const result: Promise<any> = await this.touristSpotAdminService.createWanted(transaction, userId, contentId, contentTypeId);
+            const result: Promise<any> = await this.touristSpotAdminService.createWanted(transaction, userId, contentId, this.CONTENT_TYPE_ID);
 
             await transaction.commit();
-            logger.debug(`Created Shopping`);
+            logger.debug(`Created TouristSpot => ${JSON.stringify(result)}`);
 
         } catch (err) {
-            logger.debug(`Error Shopping  :  ${err}`);
+            logger.debug(`Error TouristSpot  :  ${err}`);
 
             if (transaction) await transaction.rollback();
             throw err;

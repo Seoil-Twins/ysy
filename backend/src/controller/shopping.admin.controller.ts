@@ -1,40 +1,31 @@
-import { Op, Transaction } from "sequelize";
+import fetch from "node-fetch";
+import { URLSearchParams } from "url";
+
+import { Transaction } from "sequelize";
 
 import { TOURAPI_CODE } from "../constant/statusCode.constant";
 
 import sequelize from "../model";
 import { Shopping, PageOptions, SearchOptions, IUpdateWithAdmin } from "../model/shopping.model";
 
-import BadRequestError from "../error/badRequest.error";
-
-import fetch from "node-fetch";
-import { URLSearchParams } from "url";
 import ShoppingAdminService from "../service/shopping.admin.service";
+
 import logger from "../logger/logger";
+
+import BadRequestError from "../error/badRequest.error";
 import NotFoundError from "../error/notFound.error";
 
 const url = "https://apis.data.go.kr/B551011/KorService1/areaBasedList1";
-const detail_url = "http://apis.data.go.kr/B551011/KorService1/detailIntro1";
-const detail_common_url = "http://apis.data.go.kr/B551011/KorService1/detailCommon1";
 const SERVICEKEY = new String(process.env.TOURAPI_API_KEY);
 class ShoppingAdminController {
     private shoppingAdminService: ShoppingAdminService;
+    private CONTENT_TYPE_ID: string = "38";
 
     constructor(shoppingAdminService: ShoppingAdminService) {
         this.shoppingAdminService = shoppingAdminService;
     }
 
     /**
-     * const pageOptions: PageOptions = {
-     *      numOfRows: 1,
-     *      count 5,\
-     * };
-     * const searchOptions: SearchOptions = {
-     *      contentTypeId: 39
-     * };
-     *
-     * const result = await getRestaurantWithSearch(pageOptions, SearchOptions);
-     * ```
      * @param pageOptions A {@link PageOptions}
      * @param searchOptions A {@link SearchOptions}
      * @returns A {@link IUserResponseWithCount}
@@ -59,12 +50,10 @@ class ShoppingAdminController {
 
         const queryString = new URLSearchParams(params).toString();
         const requrl = `${url}?${queryString}`;
-        console.log(requrl);
 
         try {
             let res = await fetch(requrl);
             const result: any = await Promise.resolve(res.json());
-            console.log(result.response.body.items.item[0].contentid);
             for (let key in result.response.body.items.item[0]) {
                 console.log(key + " : " + result.response.body.items.item[0][key]);
             }
@@ -72,6 +61,7 @@ class ShoppingAdminController {
             return result;
         } catch (err) {
             console.log("error: ", err);
+            throw err;
         }
     }
 
@@ -88,7 +78,7 @@ class ShoppingAdminController {
             const result: Promise<any> = await this.shoppingAdminService.create(transaction, pageOptions, searchOptions);
 
             await transaction.commit();
-            logger.debug(`Created Shopping`);
+            logger.debug(`Created Shopping => ${JSON.stringify(result)}`);
 
             const url: string = this.shoppingAdminService.getURL();
             return url;
@@ -111,7 +101,7 @@ class ShoppingAdminController {
             return result;
         } catch (err) {
             if (transaction) await transaction.rollback();
-            logger.debug(`Error Culture  :  ${err}`);
+            logger.debug(`Error Shopping  :  ${err}`);
             throw err;
         }
     }
@@ -142,8 +132,7 @@ class ShoppingAdminController {
         if (!data.openDateShopping) data.openDateShopping = shopping.openDateShopping;
         if (!data.shopGuide) data.shopGuide = shopping.shopGuide;
         if (!data.homepage) data.homepage = shopping.homepage;
-        data.modifiedTime = "지금22"
-        // if (!data.createdTime) data.createdTime = restaurant.createdTime;
+        data.modifiedTime = "지금22";
 
         try {
             transaction = await sequelize.transaction();
@@ -151,7 +140,7 @@ class ShoppingAdminController {
             updatedShopping = await this.shoppingAdminService.update(transaction, shopping, data);
             await transaction.commit();
 
-            logger.debug(`Update Restaurant => content_id :  ${searchOptions.contentId}`);
+            logger.debug(`Update Shopping => content_id :  ${searchOptions.contentId}`);
             return updatedShopping;
         } catch (error) {
             if (transaction) await transaction.rollback();
@@ -160,10 +149,8 @@ class ShoppingAdminController {
     }
 
     async deleteShopping(contentIds: string[]): Promise<void> {
-        const allDeleteFiles: string[] = [];
-        const albumFolders: string[] = [];
         const shoppings: Shopping[] = await this.shoppingAdminService.selectMul(contentIds);
-        if (shoppings.length <= 0) throw new NotFoundError("Not found restaurants.");
+        if (shoppings.length <= 0) throw new NotFoundError("Not found Shoppings.");
 
         let transaction: Transaction | undefined = undefined;
 
@@ -177,6 +164,7 @@ class ShoppingAdminController {
             await transaction.commit();
         } catch (error) {
             if (transaction) await transaction.rollback();
+            throw error;
         }
     }
 
@@ -185,12 +173,10 @@ class ShoppingAdminController {
         try {
             transaction = await sequelize.transaction();
 
-            const contentTypeId = "38";
-
-            const result: Promise<any> = await this.shoppingAdminService.createWanted(transaction, userId, contentId, contentTypeId);
+            const result: Promise<any> = await this.shoppingAdminService.createWanted(transaction, userId, contentId, this.CONTENT_TYPE_ID);
 
             await transaction.commit();
-            logger.debug(`Created Shopping`);
+            logger.debug(`Created Shopping => ${JSON.stringify(result)}`);
 
         } catch (err) {
             logger.debug(`Error Shopping  :  ${err}`);

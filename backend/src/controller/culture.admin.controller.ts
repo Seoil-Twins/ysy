@@ -1,3 +1,6 @@
+import fetch from "node-fetch";
+import { URLSearchParams } from "url";
+
 import { Transaction } from "sequelize";
 
 import { TOURAPI_CODE } from "../constant/statusCode.constant";
@@ -5,43 +8,31 @@ import { TOURAPI_CODE } from "../constant/statusCode.constant";
 import sequelize from "../model";
 import { Culture, PageOptions, SearchOptions, IUpdateWithAdmin } from "../model/culture.model";
 
-import fetch from "node-fetch";
-import { URLSearchParams } from "url";
 import CultureAdminService from "../service/culture.admin.service";
+
 import logger from "../logger/logger";
+
 import BadRequestError from "../error/badRequest.error";
 import NotFoundError from "../error/notFound.error";
 
-const FOLDER_NAME = "culture";
 const url = "https://apis.data.go.kr/B551011/KorService1/areaBasedList1";
-const detail_url = "http://apis.data.go.kr/B551011/KorService1/detailIntro1";
-const detail_common_url = "http://apis.data.go.kr/B551011/KorService1/detailCommon1";
 const SERVICEKEY = new String(process.env.TOURAPI_API_KEY);
 
 class CultureAdminController {
     private cultureAdminService: CultureAdminService;
+    private CONTENT_TYPE_ID: string = "14";
 
     constructor(cultureAdminService: CultureAdminService) {
         this.cultureAdminService = cultureAdminService;
     }
 
     /**
-     * const pageOptions: PageOptions = {
-     *      numOfRows: 1,
-     *      count 5,\
-     * };
-     * const searchOptions: SearchOptions = {
-     *      contentTypeId: 39
-     * };
-     *
-     * const result = await getRestaurantWithSearch(pageOptions, SearchOptions);
      * ```
      * @param pageOptions A {@link PageOptions}
      * @param searchOptions A {@link SearchOptions}
      * @returns A {@link IUserResponseWithCount}
      */
     async getCultureFromAPI (pageOptions: PageOptions, searchOptions: SearchOptions): Promise<any> {
-        const offset = (pageOptions.page - 1) * pageOptions.numOfRows;
 
         const params = {
             numOfRows: pageOptions.numOfRows.toString(),
@@ -66,7 +57,6 @@ class CultureAdminController {
         try {
             let res = await fetch(requrl);
             const result: any = await Promise.resolve(res.json());
-            console.log(result.response.body.items.item[0].contentid);
             for (let key in result.response.body.items.item[0]) {
                 console.log(key + " : " + result.response.body.items.item[0][key]);
             }
@@ -74,6 +64,7 @@ class CultureAdminController {
             return result;
         } catch (err) {
             logger.debug(`Error Culture Controller  :  ${err}`);
+            throw err;
         }
     }
 
@@ -90,12 +81,12 @@ class CultureAdminController {
             const result: Promise<any> = await this.cultureAdminService.create(transaction, pageOptions, searchOptions);
 
             await transaction.commit();
-            logger.debug(`Created Restaurant`);
+            logger.debug(`Created Culture ${JSON.stringify(result)}`);
 
             const url: string = this.cultureAdminService.getURL();
             return url;
         } catch (err) {
-            logger.debug(`Error Restaurant  :  ${err}`);
+            logger.debug(`Error Culture  :  ${err}`);
 
             if (transaction) await transaction.rollback();
             throw err;
@@ -103,7 +94,6 @@ class CultureAdminController {
     }
 
     async getAllCulture(pageOption: PageOptions, searchOptions: SearchOptions): Promise<any> {
-        
         let transaction: Transaction | undefined = undefined;
 
         try {
@@ -120,7 +110,7 @@ class CultureAdminController {
     }
 
     async updateCulture(pageOption: PageOptions, searchOptions: SearchOptions, data: IUpdateWithAdmin): Promise<any> {
-        let updatedRestaurant: Culture | null = null;
+        let updatedCulture: Culture | null = null;
         const culture: Culture | null = await this.cultureAdminService.selectOne(searchOptions);
 
         if (!culture) throw new BadRequestError(`parameter content_id is bad`);
@@ -145,16 +135,15 @@ class CultureAdminController {
         if (!data.spendTime) data.spendTime = culture.spendTime;
         if (!data.homepage) data.homepage = culture.homepage;
         data.modifiedTime = "지금22"
-        // if (!data.createdTime) data.createdTime = restaurant.createdTime;
 
         try {
             transaction = await sequelize.transaction();
 
-            updatedRestaurant = await this.cultureAdminService.update(transaction, culture, data);
+            updatedCulture = await this.cultureAdminService.update(transaction, culture, data);
             await transaction.commit();
 
-            logger.debug(`Update Restaurant => content_id :  ${searchOptions.contentId}`);
-            return updatedRestaurant;
+            logger.debug(`Update Culture => content_id :  ${searchOptions.contentId}`);
+            return updatedCulture;
         } catch (error) {
             if (transaction) await transaction.rollback();
             throw error;
@@ -162,23 +151,22 @@ class CultureAdminController {
     }
 
     async deleteCulture(contentIds: string[]): Promise<void> {
-        const allDeleteFiles: string[] = [];
-        const albumFolders: string[] = [];
-        const restaurants: Culture[] = await this.cultureAdminService.selectMul(contentIds);
-        if (restaurants.length <= 0) throw new NotFoundError("Not found restaurants.");
+        const cultures: Culture[] = await this.cultureAdminService.selectMul(contentIds);
+        if (cultures.length <= 0) throw new NotFoundError("Not found cultures.");
 
         let transaction: Transaction | undefined = undefined;
 
         try {
             transaction = await sequelize.transaction();
 
-            for (const restaurant of restaurants) {
-                await this.cultureAdminService.delete(transaction, restaurant);
+            for (const culture of cultures) {
+                await this.cultureAdminService.delete(transaction, culture);
             }
 
             await transaction.commit();
         } catch (error) {
             if (transaction) await transaction.rollback();
+            throw error;
         }
     }
 
@@ -187,15 +175,13 @@ class CultureAdminController {
         try {
             transaction = await sequelize.transaction();
 
-            const contentTypeId = "14";
-
-            const result: Promise<any> = await this.cultureAdminService.createWanted(transaction, userId, contentId, contentTypeId);
+            const result: Promise<any> = await this.cultureAdminService.createWanted(transaction, userId, contentId, this.CONTENT_TYPE_ID);
 
             await transaction.commit();
-            logger.debug(`Created Shopping`);
+            logger.debug(`Created Culture ${JSON.stringify(result)}`);
 
         } catch (err) {
-            logger.debug(`Error Shopping  :  ${err}`);
+            logger.debug(`Error Culture  :  ${err}`);
 
             if (transaction) await transaction.rollback();
             throw err;

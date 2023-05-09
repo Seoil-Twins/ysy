@@ -1,4 +1,7 @@
-import { STRING, Transaction } from "sequelize";
+import fetch from "node-fetch";
+import { URLSearchParams } from "url";
+
+import { Transaction } from "sequelize";
 
 import { TOURAPI_CODE } from "../constant/statusCode.constant";
 
@@ -7,42 +10,28 @@ import { Sports, PageOptions, SearchOptions, IUpdateWithAdmin } from "../model/s
 
 import SportsAdminService from "../service/sports.admin.service";
 
-import fetch from "node-fetch";
-import { URLSearchParams } from "url";
 import BadRequestError from "../error/badRequest.error";
-import logger from "../logger/logger";
 import NotFoundError from "../error/notFound.error";
 
-const FOLDER_NAME = "sports";
+import logger from "../logger/logger";
+
 const url = "https://apis.data.go.kr/B551011/KorService1/areaBasedList1";
-const detail_url = "http://apis.data.go.kr/B551011/KorService1/detailIntro1";
-const detail_common_url = "http://apis.data.go.kr/B551011/KorService1/detailCommon1";
 const SERVICEKEY = new String(process.env.TOURAPI_API_KEY);
 class SportsAdminController {
     
     private sportsAdminService: SportsAdminService;
+    private CONTENT_TYPE_ID: string = "28";
 
     constructor(sportsAdminService: SportsAdminService) {
         this.sportsAdminService = sportsAdminService;
     }
 
     /**
-     * const pageOptions: PageOptions = {
-     *      numOfRows: 1,
-     *      count 5,\
-     * };
-     * const searchOptions: SearchOptions = {
-     *      contentTypeId: 39
-     * };
-     *
-     * const result = await getRestaurantWithSearch(pageOptions, SearchOptions);
-     * ```
      * @param pageOptions A {@link PageOptions}
      * @param searchOptions A {@link SearchOptions}
      * @returns A {@link IUserResponseWithCount}
      */
     async getSportsFromAPI(pageOptions: PageOptions, searchOptions: SearchOptions): Promise<any> {
-        const offset = (pageOptions.page - 1) * pageOptions.numOfRows;
 
         const params = {
             numOfRows: pageOptions.numOfRows.toString(),
@@ -63,12 +52,9 @@ class SportsAdminController {
 
         const queryString = new URLSearchParams(params).toString();
         const requrl = `${url}?${queryString}`;
-        console.log(requrl);
-
         try {
             let res = await fetch(requrl);
             const result: any = await Promise.resolve(res.json());
-            console.log(result.response.body.items.item[0].contentid);
             for (let key in result.response.body.items.item[0]) {
                 console.log(key + " : " + result.response.body.items.item[0][key]);
             }
@@ -76,6 +62,7 @@ class SportsAdminController {
             return result;
         } catch (err) {
             console.log("error: ", err);
+            throw err;
         }
     }
 
@@ -92,7 +79,7 @@ class SportsAdminController {
             const result: Promise<any> = await this.sportsAdminService.create(transaction, pageOptions, searchOptions);
 
             await transaction.commit();
-            logger.debug(`Created Sports`);
+            logger.debug(`Created Sports => ${JSON.stringify(result)}`);
 
             const url: string = this.sportsAdminService.getURL();
             return url;
@@ -115,7 +102,7 @@ class SportsAdminController {
             return result;
         } catch (err) {
             if (transaction) await transaction.rollback();
-            logger.debug(`Error Culture  :  ${err}`);
+            logger.debug(`Error Sports  :  ${err}`);
             throw err;
         }
     }
@@ -145,7 +132,6 @@ class SportsAdminController {
         if (!data.openPeriod) data.openPeriod = sports.openPeriod;
         if (!data.homepage) data.homepage = sports.homepage;
         data.modifiedTime = "지금22"
-        // if (!data.createdTime) data.createdTime = restaurant.createdTime;
 
         try {
             transaction = await sequelize.transaction();
@@ -153,7 +139,7 @@ class SportsAdminController {
             updatedSports = await this.sportsAdminService.update(transaction, sports, data);
             await transaction.commit();
 
-            logger.debug(`Update Restaurant => content_id :  ${searchOptions.contentId}`);
+            logger.debug(`Update Sports => content_id :  ${searchOptions.contentId}`);
             return updatedSports;
         } catch (error) {
             if (transaction) await transaction.rollback();
@@ -162,10 +148,8 @@ class SportsAdminController {
     }
 
     async deleteSports(contentIds: string[]): Promise<void> {
-        const allDeleteFiles: string[] = [];
-        const albumFolders: string[] = [];
         const sportss: Sports[] = await this.sportsAdminService.selectMul(contentIds);
-        if (sportss.length <= 0) throw new NotFoundError("Not found restaurants.");
+        if (sportss.length <= 0) throw new NotFoundError("Not found sports.");
 
         let transaction: Transaction | undefined = undefined;
 
@@ -179,6 +163,7 @@ class SportsAdminController {
             await transaction.commit();
         } catch (error) {
             if (transaction) await transaction.rollback();
+            throw error;
         }
     }
 
@@ -187,15 +172,13 @@ class SportsAdminController {
         try {
             transaction = await sequelize.transaction();
 
-            const contentTypeId = "28";
-
-            const result: Promise<any> = await this.sportsAdminService.createWanted(transaction, userId, contentId, contentTypeId);
+            const result: Promise<any> = await this.sportsAdminService.createWanted(transaction, userId, contentId, this.CONTENT_TYPE_ID);
 
             await transaction.commit();
-            logger.debug(`Created Shopping`);
+            logger.debug(`Created Sports => ${JSON.stringify(result)}`);
 
         } catch (err) {
-            logger.debug(`Error Shopping  :  ${err}`);
+            logger.debug(`Error Sports  :  ${err}`);
 
             if (transaction) await transaction.rollback();
             throw err;

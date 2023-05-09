@@ -1,53 +1,38 @@
-import { Op, OrderItem, Transaction } from "sequelize";
+import fetch from "node-fetch";
+import { URLSearchParams } from "url";
+
+import { Transaction } from "sequelize";
 
 import { TOURAPI_CODE } from "../constant/statusCode.constant";
 
 import sequelize from "../model";
 import { Restaurant, PageOptions, SearchOptions, IUpdateWithAdmin } from "../model/restaurant.model";
 
-import fetch from "node-fetch";
-import { URLSearchParams } from "url";
-import BadRequestError from "../error/badRequest.error";
-
 import RestaurantAdminService from "../service/restaurant.admin.service";
-import logger from "../logger/logger";
+
+import BadRequestError from "../error/badRequest.error";
 import NotFoundError from "../error/notFound.error";
+
+import logger from "../logger/logger";
 
 const url = process.env.TOURAPI_URL;
 const SERVICEKEY = new String(process.env.TOURAPI_API_KEY);
 
 class RestaurantAdminController {
     private restaurantAdminService: RestaurantAdminService;
+    private CONTENT_TYPE_ID: string = "39"
 
     constructor(restaurantAdminService: RestaurantAdminService) {
         this.restaurantAdminService = restaurantAdminService;
     }
     /**
-     * const pageOptions: PageOptions = {
-     *      numOfRows: 1,
-     *      count 5,\
-     * };
-     * const searchOptions: SearchOptions = {
-     *      contentTypeId: 39
-     * };
-     *
-     * const result = await getRestaurantWithSearch(pageOptions, SearchOptions);
-     * ```
+
      * @param pageOptions A {@link PageOptions}
      * @param searchOptions A {@link SearchOptions}
      * @returns A {@link IUserResponseWithCount}
      */
     async getRestaurantFromAPI(pageOptions: PageOptions, searchOptions: SearchOptions): Promise<any> {
-        const offset = (pageOptions.page - 1) * pageOptions.numOfRows;
-        //        const where: WhereOptions = createWhere(searchOptions);
-
-        // const { rows, count }: { rows: User[]; count: number } = await User.findAndCountAll({
-        //     offset: offset,
-        //     limit: pageOptions.count,
-        //     order: [sort],
-        //     where
-        // });
-
+ 
         const params = {
             numOfRows: pageOptions.numOfRows.toString(),
             pageNo: pageOptions.page.toString(),
@@ -71,7 +56,6 @@ class RestaurantAdminController {
         try {
             let res = await fetch(requrl);
             const result: any = await Promise.resolve(res.json());
-            // console.log(result.response.body.items.item[0].contentid);
             for (let key in result.response.body.items.item[0]) {
                 console.log(key + " : " + result.response.body.items.item[0][key]);
             }
@@ -79,6 +63,7 @@ class RestaurantAdminController {
             return result;
         } catch (err) {
             logger.debug(`Error Restaurant  :  ${err}`);
+            throw err;
         }
     }
 
@@ -95,7 +80,7 @@ class RestaurantAdminController {
             const result: Promise<any> = await this.restaurantAdminService.create(transaction, pageOptions, searchOptions);
 
             await transaction.commit();
-            logger.debug(`Created Restaurant`);
+            logger.debug(`Created Restaurant => ${JSON.stringify(result)}`);
 
             const url: string = this.restaurantAdminService.getURL();
             return url;
@@ -106,37 +91,6 @@ class RestaurantAdminController {
             throw err;
         }
     }
-    /* // not used
-    async getRestaurantWithTitle(pageOptions: PageOptions, searchOptions: SearchOptions): Promise<any> {
-        try {
-            const res: Restaurant[] | null = await Restaurant.findAll({
-                where: {
-                    title: { [Op.substring]: searchOptions.title }
-                }
-            });
-            return res;
-        } catch (error) {
-            console.log("error : ", error);
-            throw error;
-        }
-    }
-
-    async getRestaurantWithContentId(pageOptions: PageOptions, searchOptions: SearchOptions): Promise<any> {
-        try {
-            if (searchOptions.contentId == null) throw BadRequestError;
-
-            const rest: Restaurant | null = await Restaurant.findOne({
-                where: {
-                    contentId: searchOptions.contentId
-                }
-            });
-            return rest;
-        } catch (error) {
-            console.log("error : ", error);
-            throw error;
-        }
-    }
-*/
 
     async getAllRestaurant(pageOption: PageOptions, searchOptions: SearchOptions): Promise<any> {
         
@@ -196,8 +150,6 @@ class RestaurantAdminController {
     }
 
     async deleteRestaurant(contentIds: string[]): Promise<void> {
-        const allDeleteFiles: string[] = [];
-        const albumFolders: string[] = [];
         const restaurants: Restaurant[] = await this.restaurantAdminService.selectMul(contentIds);
         if (restaurants.length <= 0) throw new NotFoundError("Not found restaurants.");
 
@@ -213,6 +165,7 @@ class RestaurantAdminController {
             await transaction.commit();
         } catch (error) {
             if (transaction) await transaction.rollback();
+            throw error;
         }
     }
 
@@ -221,12 +174,10 @@ class RestaurantAdminController {
         try {
             transaction = await sequelize.transaction();
 
-            const contentTypeId = "39";
-
-            const result: Promise<any> = await this.restaurantAdminService.createWanted(transaction, userId, contentId, contentTypeId);
+            const result: Promise<any> = await this.restaurantAdminService.createWanted(transaction, userId, contentId, this.CONTENT_TYPE_ID);
 
             await transaction.commit();
-            logger.debug(`Created Restaurant`);
+            logger.debug(`Created Restaurant => ${JSON.stringify(result)}`);
 
         } catch (err) {
             logger.debug(`Error Restaurant  :  ${err}`);
