@@ -14,6 +14,7 @@ import logger from "../logger/logger";
 
 import BadRequestError from "../error/badRequest.error";
 import NotFoundError from "../error/notFound.error";
+import { Wanted } from "../model/wanted.model";
 
 const url = "https://apis.data.go.kr/B551011/KorService1/areaBasedList1";
 const SERVICEKEY = new String(process.env.TOURAPI_API_KEY);
@@ -73,18 +74,18 @@ class CultureAdminController {
      * @param searchOptions A {@link SearchOptions}
      * @returns A {@link IUserResponseWithCount}
      */
-    async createCultureDB (pageOptions: PageOptions, searchOptions: SearchOptions): Promise<any> {
+    async createCultureDB (pageOptions: PageOptions, searchOptions: SearchOptions): Promise<Culture[]> {
         let transaction: Transaction | undefined = undefined;
         try {
             transaction = await sequelize.transaction();
 
-            const result: Promise<any> = await this.cultureAdminService.create(transaction, pageOptions, searchOptions);
+            const result: Culture[] = await this.cultureAdminService.create(transaction, pageOptions, searchOptions);
 
             await transaction.commit();
             logger.debug(`Created Culture ${JSON.stringify(result)}`);
 
-            const url: string = this.cultureAdminService.getURL();
-            return url;
+            // const url: string = this.cultureAdminService.getURL();
+            return result;
         } catch (err) {
             logger.debug(`Error Culture  :  ${err}`);
 
@@ -109,7 +110,7 @@ class CultureAdminController {
         }
     }
 
-    async updateCulture(pageOption: PageOptions, searchOptions: SearchOptions, data: IUpdateWithAdmin): Promise<any> {
+    async updateCulture(pageOption: PageOptions, searchOptions: SearchOptions, data: IUpdateWithAdmin): Promise<Culture> {
         let updatedCulture: Culture | null = null;
         const culture: Culture | null = await this.cultureAdminService.selectOne(searchOptions);
 
@@ -170,15 +171,16 @@ class CultureAdminController {
         }
     }
 
-    async createWantedCulture(contentId: string, userId: number): Promise<any> {
+    async createWantedCulture(contentId: string, userId: number): Promise<Wanted> {
         let transaction: Transaction | undefined = undefined;
         try {
             transaction = await sequelize.transaction();
 
-            const result: Promise<any> = await this.cultureAdminService.createWanted(transaction, userId, contentId, this.CONTENT_TYPE_ID);
+            const result: Wanted = await this.cultureAdminService.createWanted(transaction, userId, contentId, this.CONTENT_TYPE_ID);
 
             await transaction.commit();
             logger.debug(`Created Culture ${JSON.stringify(result)}`);
+            return result;
 
         } catch (err) {
             logger.debug(`Error Culture  :  ${err}`);

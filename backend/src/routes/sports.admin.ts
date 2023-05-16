@@ -1,7 +1,9 @@
 import dayjs from "dayjs";
 import express, { Router, Request, Response, NextFunction } from "express";
+import { Transaction } from "sequelize";
 
 import { ISportsResponseWithCount, PageOptions as SportsPageOptions, SearchOptions as SportsSearchOptions, IUpdateWithAdmin, Sports } from "../model/sports.model";
+import { Wanted } from "../model/wanted.model";
 
 import SportsAdminController from "../controller/sports.admin.controller";
 import SportsAdminService from "../service/sports.admin.service";
@@ -9,8 +11,8 @@ import SportsAdminService from "../service/sports.admin.service";
 import logger from "../logger/logger";
 import { STATUS_CODE } from "../constant/statusCode.constant";
 import { canView } from "../util/checkRole.util";
+
 import BadRequestError from "../error/badRequest.error";
-import { Transaction } from "sequelize";
 
 dayjs.locale("ko");
 
@@ -50,7 +52,7 @@ router.post("/create", canView, async (req: Request, res: Response, next: NextFu
         contentTypeId: String(req.query.contentTypeId) || undefined
     };
     try {
-        const result: ISportsResponseWithCount = await sportsAdminController.createSportsDB(pageOptions, searchOptions);
+        const result: Sports[] = await sportsAdminController.createSportsDB(pageOptions, searchOptions);
 
         logger.debug(`Response Data => ${JSON.stringify(result)}`);
         return res.status(STATUS_CODE.OK).json(result);
@@ -147,7 +149,7 @@ router.post("/wanted", canView, async (req: Request, res: Response, next: NextFu
     let transaction: Transaction | undefined = undefined;
 
     try {
-        const result: Promise<any> = await sportsAdminController.createWantedSports(contentId, userId);
+        const result: Wanted = await sportsAdminController.createWantedSports(contentId, userId);
 
         logger.debug(`Response Data => ${JSON.stringify(result)}`);
         return res.status(STATUS_CODE.OK).json(result);

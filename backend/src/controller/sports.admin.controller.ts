@@ -14,6 +14,7 @@ import BadRequestError from "../error/badRequest.error";
 import NotFoundError from "../error/notFound.error";
 
 import logger from "../logger/logger";
+import { Wanted } from "../model/wanted.model";
 
 const url = "https://apis.data.go.kr/B551011/KorService1/areaBasedList1";
 const SERVICEKEY = new String(process.env.TOURAPI_API_KEY);
@@ -61,7 +62,7 @@ class SportsAdminController {
 
             return result;
         } catch (err) {
-            console.log("error: ", err);
+            logger.debug(`Error Sports  :  ${err}`);
             throw err;
         }
     }
@@ -71,18 +72,18 @@ class SportsAdminController {
      * @param searchOptions A {@link SearchOptions}
      * @returns A {@link IUserResponseWithCount}
      */
-    async createSportsDB (pageOptions: PageOptions, searchOptions: SearchOptions): Promise<any> {
+    async createSportsDB (pageOptions: PageOptions, searchOptions: SearchOptions): Promise<Sports[]> {
         let transaction: Transaction | undefined = undefined;
         try {
             transaction = await sequelize.transaction();
 
-            const result: Promise<any> = await this.sportsAdminService.create(transaction, pageOptions, searchOptions);
+            const result: Sports[] = await this.sportsAdminService.create(transaction, pageOptions, searchOptions);
 
             await transaction.commit();
             logger.debug(`Created Sports => ${JSON.stringify(result)}`);
 
-            const url: string = this.sportsAdminService.getURL();
-            return url;
+            // const url: string = this.sportsAdminService.getURL();
+            return result
         } catch (err) {
             logger.debug(`Error Sports  :  ${err}`);
 
@@ -107,7 +108,7 @@ class SportsAdminController {
         }
     }
 
-    async updateSports(pageOption: PageOptions, searchOptions: SearchOptions, data: IUpdateWithAdmin): Promise<any> {
+    async updateSports(pageOption: PageOptions, searchOptions: SearchOptions, data: IUpdateWithAdmin): Promise<Sports> {
         let updatedSports: Sports | null = null;
         const sports: Sports | null = await this.sportsAdminService.selectOne(searchOptions);
 
@@ -167,15 +168,17 @@ class SportsAdminController {
         }
     }
 
-    async createWantedSports(contentId: string, userId: number): Promise<any> {
+    async createWantedSports(contentId: string, userId: number): Promise<Wanted> {
         let transaction: Transaction | undefined = undefined;
         try {
             transaction = await sequelize.transaction();
 
-            const result: Promise<any> = await this.sportsAdminService.createWanted(transaction, userId, contentId, this.CONTENT_TYPE_ID);
+            const result: Wanted = await this.sportsAdminService.createWanted(transaction, userId, contentId, this.CONTENT_TYPE_ID);
 
             await transaction.commit();
             logger.debug(`Created Sports => ${JSON.stringify(result)}`);
+
+            return result;
 
         } catch (err) {
             logger.debug(`Error Sports  :  ${err}`);

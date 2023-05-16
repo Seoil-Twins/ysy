@@ -2,14 +2,16 @@ import dayjs from "dayjs";
 import express, { Router, Request, Response, NextFunction } from "express";
 
 import { ICultureResponseWithCount, PageOptions as CulPageOptions, SearchOptions as CulSearchOptions, IUpdateWithAdmin, Culture } from "../model/culture.model";
+import { Wanted } from "../model/wanted.model";
 
 import logger from "../logger/logger";
-import { STATUS_CODE } from "../constant/statusCode.constant";
 import { canView } from "../util/checkRole.util";
+import { STATUS_CODE } from "../constant/statusCode.constant";
+
 import CultureAdminService from "../service/culture.admin.service";
 import CultureAdminController from "../controller/culture.admin.controller";
+
 import BadRequestError from "../error/badRequest.error";
-import { Transaction } from "sequelize";
 
 dayjs.locale("ko");
 
@@ -49,7 +51,7 @@ router.post("/create", canView, async (req: Request, res: Response, next: NextFu
         contentTypeId: String(req.query.contentTypeId) || undefined
     };
     try {
-        const result: ICultureResponseWithCount = await cultureAdminController.createCultureDB(pageOptions, searchOptions);
+        const result: Culture[] = await cultureAdminController.createCultureDB(pageOptions, searchOptions);
 
         logger.debug(`Response Data => ${JSON.stringify(result)}`);
         return res.status(STATUS_CODE.OK).json(result);
@@ -145,13 +147,12 @@ router.post("/wanted", canView, async (req: Request, res: Response, next: NextFu
     const userId: number = Number(req.body.userId);
     const contentId: string = String(req.query.content_id);
 
-    let transaction: Transaction | undefined = undefined;
-
     try {
-        const result: Promise<any> = await cultureAdminController.createWantedCulture(contentId, userId);
+        const result: Wanted = await cultureAdminController.createWantedCulture(contentId, userId);
 
         logger.debug(`Response Data => ${JSON.stringify(result)}`);
         return res.status(STATUS_CODE.OK).json(result);
+
     } catch (error) {
         next(error);
     }

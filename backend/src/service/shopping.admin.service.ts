@@ -1,18 +1,21 @@
 
 import { TOURAPI_CODE } from "../constant/statusCode.constant";
+
 import { Op, OrderItem, Transaction, WhereOptions } from "sequelize";
 import fetch from "node-fetch";
 
 import { API_ROOT } from "..";
+
 import { Service } from "./service";
 
 import sequelize from "../model";
-
 import { PageOptions, SearchOptions, Shopping, IUpdateWithAdmin } from "../model/shopping.model";
+import { Wanted } from "../model/wanted.model";
+
+import logger from "../logger/logger";
+
 import NotFoundError from "../error/notFound.error";
 import BadRequestError from "../error/badRequest.error";
-import logger from "../logger/logger";
-import { Wanted } from "../model/wanted.model";
 
 const url = process.env.TOURAPI_URL;
 const detail_url = process.env.TOURAPI_DETAIL_URL;
@@ -109,7 +112,7 @@ class ShoppingAdminService extends Service {
      
     }
 
-    async create(transaction: Transaction | null = null, pageOptions: PageOptions, searchOptions: SearchOptions): Promise<any> {
+    async create(transaction: Transaction | null = null, pageOptions: PageOptions, searchOptions: SearchOptions): Promise<Shopping[]> {
         const params = {
             numOfRows: pageOptions.numOfRows.toString(),
             pageNo: pageOptions.page.toString(),
@@ -138,6 +141,7 @@ class ShoppingAdminService extends Service {
             transaction = await sequelize.transaction();
 
             let i = 1;
+            let resShopping : Shopping[] = [];
             for (let k = 0; k < result.response.body.items.item.length; ++k) {
                 const detail_params = {
                     ServiceKey: String(SERVICEKEY),
@@ -172,7 +176,7 @@ class ShoppingAdminService extends Service {
                 let detail_common_res = await fetch(detail_common_requrl);
                 const detail_common_result: any = await Promise.resolve(detail_common_res.json());
 
-                const createdCulture: Shopping = await Shopping.create(
+                const createdShopping: Shopping = await Shopping.create(
                     {
                         contentTypeId: result.response.body.items.item[k].contenttypeid,
                         areaCode: result.response.body.items.item[k].areacode,
@@ -202,15 +206,17 @@ class ShoppingAdminService extends Service {
                     { transaction }
                 );
                 i++;
+                resShopping.push(createdShopping);
             }
             transaction.commit();
+            return resShopping;
         } catch (err) {
             if (transaction) await transaction.rollback();
             throw err;
         }
     }
 
-    async update(transaction: Transaction | null = null, shopping: Shopping, data: IUpdateWithAdmin): Promise<any> {
+    async update(transaction: Transaction | null = null, shopping: Shopping, data: IUpdateWithAdmin): Promise<Shopping> {
         const updateShopping: Shopping = await shopping.update(data, { transaction });
 
         return updateShopping;
@@ -220,7 +226,7 @@ class ShoppingAdminService extends Service {
         await shopping.destroy({ transaction });
     }
 
-    async createWanted(transaction: Transaction | null = null, userId: number, contentId: string, contentTypeId: string) : Promise<any>
+    async createWanted(transaction: Transaction | null = null, userId: number, contentId: string, contentTypeId: string) : Promise<Wanted>
     {
         try{
             transaction = await sequelize.transaction();
@@ -233,6 +239,7 @@ class ShoppingAdminService extends Service {
                 { transaction }
             );
             transaction.commit();
+            return createdWanted;
         } catch (err) {
             if (transaction) await transaction.rollback();
             throw err;

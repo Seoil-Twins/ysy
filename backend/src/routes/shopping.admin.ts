@@ -1,15 +1,19 @@
 import dayjs from "dayjs";
 import express, { Router, Request, Response, NextFunction } from "express";
+import { Transaction } from "sequelize";
 
 import { IShoppingResponseWithCount, PageOptions as ShopPageOptions, SearchOptions as ShopSearchOptions, IUpdateWithAdmin, Shopping } from "../model/shopping.model";
+import { Wanted } from "../model/wanted.model";
 
 import logger from "../logger/logger";
 import { STATUS_CODE } from "../constant/statusCode.constant";
 import { canView } from "../util/checkRole.util";
+
 import ShoppingAdminService from "../service/shopping.admin.service";
 import ShoppingAdminController from "../controller/shopping.admin.controller";
+
 import BadRequestError from "../error/badRequest.error";
-import { Transaction } from "sequelize";
+
 
 dayjs.locale("ko");
 
@@ -50,7 +54,7 @@ router.post("/create", canView, async (req: Request, res: Response, next: NextFu
         contentTypeId: String(req.query.contentTypeId) || undefined
     };
     try {
-        const result: IShoppingResponseWithCount = await shoppingAdminController.createShoppingDB(pageOptions, searchOptions);
+        const result: Shopping[] = await shoppingAdminController.createShoppingDB(pageOptions, searchOptions);
 
         logger.debug(`Response Data => ${JSON.stringify(result)}`);
         return res.status(STATUS_CODE.OK).json(result);
@@ -149,7 +153,7 @@ router.post("/wanted", canView, async (req: Request, res: Response, next: NextFu
     let transaction: Transaction | undefined = undefined;
 
     try {
-        const result: Promise<any> = await shoppingAdminController.createWantedShopping(contentId, userId);
+        const result: Wanted = await shoppingAdminController.createWantedShopping(contentId, userId);
 
         logger.debug(`Response Data => ${JSON.stringify(result)}`);
         return res.status(STATUS_CODE.OK).json(result);

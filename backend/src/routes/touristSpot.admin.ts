@@ -1,15 +1,18 @@
 import dayjs from "dayjs";
 import express, { Router, Request, Response, NextFunction } from "express";
+import { Transaction } from "sequelize";
 
 import { ITouristSpotResponseWithCount, IUpdateWithAdmin, PageOptions as TSPageOptions, SearchOptions as TSSearchOptions, TouristSpot } from "../model/touristSpot.model";
+import { Wanted } from "../model/wanted.model";
 
 import logger from "../logger/logger";
 import { STATUS_CODE } from "../constant/statusCode.constant";
 import { canView } from "../util/checkRole.util";
+
 import TouristSpotAdminService from "../service/touristSpot.admin.service";
 import TouristSpotAdminController from "../controller/touristSpot.admin.controller";
+
 import BadRequestError from "../error/badRequest.error";
-import { Transaction } from "sequelize";
 
 dayjs.locale("ko");
 
@@ -49,7 +52,7 @@ router.post("/create", canView, async (req: Request, res: Response, next: NextFu
         contentTypeId: String(req.query.contentTypeId) || undefined
     };
     try {
-        const result: ITouristSpotResponseWithCount = await touristSpotAdminController.createTouristSpotDB(pageOptions, searchOptions);
+        const result: TouristSpot[] = await touristSpotAdminController.createTouristSpotDB(pageOptions, searchOptions);
 
         logger.debug(`Response Data => ${JSON.stringify(result)}`);
         return res.status(STATUS_CODE.OK).json(result);
@@ -70,7 +73,7 @@ router.get("/search/all", canView, async (req: Request, res: Response, next: Nex
         title: String(req.query.title) || undefined
     };
     try {
-        const result: ITouristSpotResponseWithCount = await touristSpotAdminController.getAllTouristSpot(pageOptions, searchOptions);
+        const result: TouristSpot[] = await touristSpotAdminController.getAllTouristSpot(pageOptions, searchOptions);
 
         logger.debug(`Response Data => ${JSON.stringify(result)}`);
         return res.status(STATUS_CODE.OK).json(result);
@@ -145,7 +148,7 @@ router.post("/wanted", canView, async (req: Request, res: Response, next: NextFu
     let transaction: Transaction | undefined = undefined;
 
     try {
-        const result: Promise<any> = await touristSpotAdminController.createWantedTouristSpot(contentId, userId);
+        const result: Wanted = await touristSpotAdminController.createWantedTouristSpot(contentId, userId);
 
         logger.debug(`Response Data => ${JSON.stringify(result)}`);
         return res.status(STATUS_CODE.OK).json(result);

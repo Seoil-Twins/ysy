@@ -14,6 +14,7 @@ import BadRequestError from "../error/badRequest.error";
 import NotFoundError from "../error/notFound.error";
 
 import logger from "../logger/logger";
+import { Wanted } from "../model/wanted.model";
 
 
 const url = "https://apis.data.go.kr/B551011/KorService1/areaBasedList1";
@@ -64,7 +65,7 @@ class TouristSpotAdminController {
 
             return result;
         } catch (err) {
-            console.log("error: ", err);
+            logger.debug(`Error TouristSpot  :  ${err}`);
             throw err;
         }
     }
@@ -74,18 +75,16 @@ class TouristSpotAdminController {
      * @param searchOptions A {@link SearchOptions}
      * @returns A {@link IUserResponseWithCount}
      */
-    async createTouristSpotDB (pageOptions: PageOptions, searchOptions: SearchOptions): Promise<any> {
+    async createTouristSpotDB (pageOptions: PageOptions, searchOptions: SearchOptions): Promise<TouristSpot[]> {
         let transaction: Transaction | undefined = undefined;
         try {
             transaction = await sequelize.transaction();
 
-            const result: Promise<any> = await this.touristSpotAdminService.create(transaction, pageOptions, searchOptions);
+            const result: TouristSpot[]= await this.touristSpotAdminService.create(transaction, pageOptions, searchOptions);
 
             await transaction.commit();
-            logger.debug(`Created TouristSpot : ${JSON.stringify(result)}`);
-
-            const url: string = this.touristSpotAdminService.getURL();
-            return url;
+            
+            return Promise.resolve(result);
         } catch (err) {
             logger.debug(`Error TouristSpot  :  ${err}`);
 
@@ -94,7 +93,7 @@ class TouristSpotAdminController {
         }
     }
 
-    async getAllTouristSpot(pageOption: PageOptions, searchOptions: SearchOptions): Promise<any> {
+    async getAllTouristSpot(pageOption: PageOptions, searchOptions: SearchOptions): Promise<TouristSpot[]> {
         let transaction: Transaction | undefined = undefined;
 
         try {
@@ -110,8 +109,7 @@ class TouristSpotAdminController {
         }
     }
 
-    async updateTouristSpot(pageOption: PageOptions, searchOptions: SearchOptions, data: IUpdateWithAdmin): Promise<any> {
-        let updatedTouristSpot: TouristSpot | null = null;
+    async updateTouristSpot(pageOption: PageOptions, searchOptions: SearchOptions, data: IUpdateWithAdmin): Promise<TouristSpot> {
         const touristSpot: TouristSpot | null = await this.touristSpotAdminService.selectOne(searchOptions);
 
         if (!touristSpot) throw new BadRequestError(`parameter content_id is bad`);
@@ -138,7 +136,7 @@ class TouristSpotAdminController {
         try {
             transaction = await sequelize.transaction();
 
-            updatedTouristSpot = await this.touristSpotAdminService.update(transaction, touristSpot, data);
+            let updatedTouristSpot = await this.touristSpotAdminService.update(transaction, touristSpot, data);
             await transaction.commit();
 
             logger.debug(`Update TouristSpot => content_id :  ${searchOptions.contentId}`);
@@ -169,15 +167,17 @@ class TouristSpotAdminController {
         }
     }
   
-    async createWantedTouristSpot(contentId: string, userId: number): Promise<any> {
+    async createWantedTouristSpot(contentId: string, userId: number): Promise<Wanted> {
         let transaction: Transaction | undefined = undefined;
         try {
             transaction = await sequelize.transaction();
 
-            const result: Promise<any> = await this.touristSpotAdminService.createWanted(transaction, userId, contentId, this.CONTENT_TYPE_ID);
+            const result: Wanted = await this.touristSpotAdminService.createWanted(transaction, userId, contentId, this.CONTENT_TYPE_ID);
 
             await transaction.commit();
             logger.debug(`Created TouristSpot => ${JSON.stringify(result)}`);
+
+            return result;
 
         } catch (err) {
             logger.debug(`Error TouristSpot  :  ${err}`);

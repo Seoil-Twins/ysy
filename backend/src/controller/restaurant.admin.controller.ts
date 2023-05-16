@@ -14,6 +14,7 @@ import BadRequestError from "../error/badRequest.error";
 import NotFoundError from "../error/notFound.error";
 
 import logger from "../logger/logger";
+import { Wanted } from "../model/wanted.model";
 
 const url = process.env.TOURAPI_URL;
 const SERVICEKEY = new String(process.env.TOURAPI_API_KEY);
@@ -72,18 +73,18 @@ class RestaurantAdminController {
      * @param searchOptions A {@link SearchOptions}
      * @returns A {@link IUserResponseWithCount}
      */
-    async createRestaurantDB(pageOptions: PageOptions, searchOptions: SearchOptions): Promise<any> {
+    async createRestaurantDB(pageOptions: PageOptions, searchOptions: SearchOptions): Promise<Restaurant[]> {
         let transaction: Transaction | undefined = undefined;
         try {
             transaction = await sequelize.transaction();
 
-            const result: Promise<any> = await this.restaurantAdminService.create(transaction, pageOptions, searchOptions);
+            const result: Restaurant[] = await this.restaurantAdminService.create(transaction, pageOptions, searchOptions);
 
             await transaction.commit();
             logger.debug(`Created Restaurant => ${JSON.stringify(result)}`);
 
-            const url: string = this.restaurantAdminService.getURL();
-            return url;
+            //const url: string = this.restaurantAdminService.getURL();
+            return result;
         } catch (err) {
             logger.debug(`Error Restaurant  :  ${err}`);
 
@@ -109,7 +110,7 @@ class RestaurantAdminController {
         }
     }
 
-    async updateRestaurant(pageOption: PageOptions, searchOptions: SearchOptions, data: IUpdateWithAdmin): Promise<any> {
+    async updateRestaurant(pageOption: PageOptions, searchOptions: SearchOptions, data: IUpdateWithAdmin): Promise<Restaurant> {
         let updatedRestaurant: Restaurant | null = null;
         const restaurant: Restaurant | null = await this.restaurantAdminService.selectOne(searchOptions);
 
@@ -169,15 +170,16 @@ class RestaurantAdminController {
         }
     }
 
-    async createWantedRestaurant(contentId: string, userId: number): Promise<any> {
+    async createWantedRestaurant(contentId: string, userId: number): Promise<Wanted> {
         let transaction: Transaction | undefined = undefined;
         try {
             transaction = await sequelize.transaction();
 
-            const result: Promise<any> = await this.restaurantAdminService.createWanted(transaction, userId, contentId, this.CONTENT_TYPE_ID);
+            const result: Wanted = await this.restaurantAdminService.createWanted(transaction, userId, contentId, this.CONTENT_TYPE_ID);
 
             await transaction.commit();
             logger.debug(`Created Restaurant => ${JSON.stringify(result)}`);
+            return result;
 
         } catch (err) {
             logger.debug(`Error Restaurant  :  ${err}`);

@@ -1,22 +1,17 @@
 import dayjs from "dayjs";
 import express, { Router, Request, Response, NextFunction } from "express";
 
-import {
-    IRestaurantResponseWithCount,
-    PageOptions as ResPageOptions,
-    SearchOptions as ResSearchOptions,
-    IUpdateWithAdmin,
-    Restaurant
-} from "../model/restaurant.model";
+import { IRestaurantResponseWithCount, PageOptions as ResPageOptions, SearchOptions as ResSearchOptions, IUpdateWithAdmin, Restaurant} from "../model/restaurant.model";
+import { Wanted } from "../model/wanted.model";
 
 import RestaurantAdminController from "../controller/restaurant.admin.controller";
+import RestaurantAdminService from "../service/restaurant.admin.service";
 
 import logger from "../logger/logger";
 import { STATUS_CODE } from "../constant/statusCode.constant";
 import { canView } from "../util/checkRole.util";
-import RestaurantAdminService from "../service/restaurant.admin.service";
+
 import BadRequestError from "../error/badRequest.error";
-import { Transaction } from "sequelize";
 
 dayjs.locale("ko");
 
@@ -55,7 +50,7 @@ router.post("/create", canView, async (req: Request, res: Response, next: NextFu
         contentTypeId: String(req.query.contentTypeId) || undefined
     };
     try {
-        const result: IRestaurantResponseWithCount = await restaurantAdminController.createRestaurantDB(pageOptions, searchOptions);
+        const result: Restaurant[] = await restaurantAdminController.createRestaurantDB(pageOptions, searchOptions);
 
         logger.debug(`Response Data => ${JSON.stringify(result)}`);
         return res.status(STATUS_CODE.OK).json(result);
@@ -147,13 +142,9 @@ router.delete("/:content_ids", canView, async (req: Request, res: Response, next
 router.post("/wanted", canView, async (req: Request, res: Response, next: NextFunction) => {
     const userId: number = Number(req.body.userId);
     const contentId: string = String(req.query.content_id);
-
-    console.log(userId + " :: " + contentId); 
-
-    let transaction: Transaction | undefined = undefined;
-
+    
     try {
-        const result: Promise<any> = await restaurantAdminController.createWantedRestaurant(contentId, userId);
+        const result: Wanted = await restaurantAdminController.createWantedRestaurant(contentId, userId);
 
         logger.debug(`Response Data => ${JSON.stringify(result)}`);
         return res.status(STATUS_CODE.OK).json(result);

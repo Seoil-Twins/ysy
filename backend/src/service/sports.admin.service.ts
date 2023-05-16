@@ -1,18 +1,20 @@
-
 import { TOURAPI_CODE } from "../constant/statusCode.constant";
+
 import { Op, OrderItem, Transaction, WhereOptions } from "sequelize";
 import fetch from "node-fetch";
 
 import { API_ROOT } from "..";
+
 import { Service } from "./service";
 
 import sequelize from "../model";
-
 import { PageOptions, SearchOptions, Sports, IUpdateWithAdmin } from "../model/sports.model";
+import { Wanted } from "../model/wanted.model";
+
+import logger from "../logger/logger";
+
 import NotFoundError from "../error/notFound.error";
 import BadRequestError from "../error/badRequest.error";
-import logger from "../logger/logger";
-import { Wanted } from "../model/wanted.model";
 
 const url = process.env.TOURAPI_URL;
 const detail_url = process.env.TOURAPI_DETAIL_URL;
@@ -109,7 +111,7 @@ class SportsAdminService extends Service {
      
     }
 
-    async create(transaction: Transaction | null = null, pageOptions: PageOptions, searchOptions: SearchOptions): Promise<any> {
+    async create(transaction: Transaction | null = null, pageOptions: PageOptions, searchOptions: SearchOptions): Promise<Sports[]> {
         const params = {
             numOfRows: pageOptions.numOfRows.toString(),
             pageNo: pageOptions.page.toString(),
@@ -138,6 +140,7 @@ class SportsAdminService extends Service {
             transaction = await sequelize.transaction();
 
             let i = 1;
+            let resSports : Sports[] = [];
             for (let k = 0; k < result.response.body.items.item.length; ++k) {
                 const detail_params = {
                     ServiceKey: String(SERVICEKEY),
@@ -200,15 +203,17 @@ class SportsAdminService extends Service {
                     { transaction }
                 );
                 i++;
+                resSports.push(createdSports);
             }
             transaction.commit();
+            return resSports;
         } catch (err) {
             if (transaction) await transaction.rollback();
             throw err;
         }
     }
 
-    async update(transaction: Transaction | null = null, sports: Sports, data: IUpdateWithAdmin): Promise<any> {
+    async update(transaction: Transaction | null = null, sports: Sports, data: IUpdateWithAdmin): Promise<Sports> {
         const updateSports: Sports = await sports.update(data, { transaction });
 
         return updateSports;
@@ -218,7 +223,7 @@ class SportsAdminService extends Service {
         await sports.destroy({ transaction });
     }
 
-    async createWanted(transaction: Transaction | null = null, userId: number, contentId: string, contentTypeId: string) : Promise<any>
+    async createWanted(transaction: Transaction | null = null, userId: number, contentId: string, contentTypeId: string) : Promise<Wanted>
     {
         try{
             transaction = await sequelize.transaction();
@@ -231,6 +236,7 @@ class SportsAdminService extends Service {
                 { transaction }
             );
             transaction.commit();
+            return createdWanted;
         } catch (err) {
             if (transaction) await transaction.rollback();
             throw err;

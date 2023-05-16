@@ -1,12 +1,14 @@
 
 import { DataTypes, Model, literal } from "sequelize";
-import { CreationOptional, InferAttributes, InferCreationAttributes } from "sequelize/types/model";
-
 import sequelize from ".";
 
+import { CreationOptional, InferAttributes, InferCreationAttributes } from "sequelize/types/model";
+import { User } from "./user.model";
+
+
 export class Wanted extends Model<InferAttributes<Wanted>, InferCreationAttributes<Wanted>> {
-    declare want_id: CreationOptional<number>;
-    declare user_id: CreationOptional<number>;
+    declare wantId: CreationOptional<number>;
+    declare userId: CreationOptional<number>;
     declare content_id: CreationOptional<string>;
     declare content_type_id: CreationOptional<string>;
 }
@@ -25,22 +27,26 @@ export interface SearchOptions {
 
 
 export interface IUpdateWithAdmin {
-    want_id?: number;
-    user_id?: number;
+    wantId?: number;
+    userId?: number;
     content_id?: string;
 }
 
 Wanted.init(
     {
-        want_id: {
+        wantId: {
             field: "want_id",
             type: DataTypes.INTEGER.UNSIGNED,
             primaryKey: true
         },
-        user_id: {
+        userId: {
             field: "user_id",
             type: DataTypes.INTEGER.UNSIGNED,
-            allowNull: false
+            allowNull: false,
+            references: {
+                model: User,
+                key: "userId"
+            }
         },
         content_id: {
             field: "content_id",

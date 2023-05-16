@@ -14,6 +14,7 @@ import logger from "../logger/logger";
 
 import BadRequestError from "../error/badRequest.error";
 import NotFoundError from "../error/notFound.error";
+import { Wanted } from "../model/wanted.model";
 
 const url = "https://apis.data.go.kr/B551011/KorService1/areaBasedList1";
 const SERVICEKEY = new String(process.env.TOURAPI_API_KEY);
@@ -60,7 +61,7 @@ class ShoppingAdminController {
 
             return result;
         } catch (err) {
-            console.log("error: ", err);
+            logger.debug(`Error Shopping  :  ${err}`);
             throw err;
         }
     }
@@ -70,18 +71,18 @@ class ShoppingAdminController {
      * @param searchOptions A {@link SearchOptions}
      * @returns A {@link IUserResponseWithCount}
      */
-    async createShoppingDB (pageOptions: PageOptions, searchOptions: SearchOptions): Promise<any> {
+    async createShoppingDB (pageOptions: PageOptions, searchOptions: SearchOptions): Promise<Shopping[]> {
         let transaction: Transaction | undefined = undefined;
         try {
             transaction = await sequelize.transaction();
 
-            const result: Promise<any> = await this.shoppingAdminService.create(transaction, pageOptions, searchOptions);
+            const result: Shopping[] = await this.shoppingAdminService.create(transaction, pageOptions, searchOptions);
 
             await transaction.commit();
             logger.debug(`Created Shopping => ${JSON.stringify(result)}`);
 
-            const url: string = this.shoppingAdminService.getURL();
-            return url;
+            //const url: string = this.shoppingAdminService.getURL();
+            return result;
         } catch (err) {
             logger.debug(`Error Shopping  :  ${err}`);
 
@@ -106,7 +107,7 @@ class ShoppingAdminController {
         }
     }
 
-    async updateShopping(pageOption: PageOptions, searchOptions: SearchOptions, data: IUpdateWithAdmin): Promise<any> {
+    async updateShopping(pageOption: PageOptions, searchOptions: SearchOptions, data: IUpdateWithAdmin): Promise<Shopping> {
         let updatedShopping: Shopping | null = null;
         const shopping: Shopping | null = await this.shoppingAdminService.selectOne(searchOptions);
 
@@ -168,15 +169,16 @@ class ShoppingAdminController {
         }
     }
 
-    async createWantedShopping(contentId: string, userId: number): Promise<any> {
+    async createWantedShopping(contentId: string, userId: number): Promise<Wanted> {
         let transaction: Transaction | undefined = undefined;
         try {
             transaction = await sequelize.transaction();
 
-            const result: Promise<any> = await this.shoppingAdminService.createWanted(transaction, userId, contentId, this.CONTENT_TYPE_ID);
+            const result: Wanted = await this.shoppingAdminService.createWanted(transaction, userId, contentId, this.CONTENT_TYPE_ID);
 
             await transaction.commit();
             logger.debug(`Created Shopping => ${JSON.stringify(result)}`);
+            return result;
 
         } catch (err) {
             logger.debug(`Error Shopping  :  ${err}`);

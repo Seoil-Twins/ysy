@@ -1,19 +1,20 @@
-
 import { TOURAPI_CODE } from "../constant/statusCode.constant";
+
 import { Op, OrderItem, Transaction, WhereOptions } from "sequelize";
 import fetch from "node-fetch";
 
 import { API_ROOT } from "..";
+
 import { Service } from "./service";
 
 import sequelize from "../model";
+import { PageOptions, SearchOptions, Restaurant, IUpdateWithAdmin } from "../model/restaurant.model";
+import { Wanted } from "../model/wanted.model";
 
-import { IRestaurantResponseWithCount, PageOptions, SearchOptions, Restaurant, IUpdateWithAdmin } from "../model/restaurant.model";
+import logger from "../logger/logger";
+
 import NotFoundError from "../error/notFound.error";
 import BadRequestError from "../error/badRequest.error";
-import logger from "../logger/logger";
-import { Wanted } from "../model/wanted.model";
-import { promises } from "dns";
 
 const url = process.env.TOURAPI_URL;
 const detail_url = process.env.TOURAPI_DETAIL_URL;
@@ -108,7 +109,7 @@ class RestaurantAdminService extends Service {
      
     }
 
-    async create(transaction: Transaction | null = null, pageOptions: PageOptions, searchOptions: SearchOptions): Promise<any> {
+    async create(transaction: Transaction | null = null, pageOptions: PageOptions, searchOptions: SearchOptions): Promise<Restaurant[]> {
         const params = {
             numOfRows: pageOptions.numOfRows.toString(),
             pageNo: pageOptions.page.toString(),
@@ -137,6 +138,7 @@ class RestaurantAdminService extends Service {
             transaction = await sequelize.transaction();
 
             let i = 1;
+            let resRestaurant : Restaurant[] = [];
             for (let k = 0; k < result.response.body.items.item.length; ++k) {
                 const detail_params = {
                     ServiceKey: String(SERVICEKEY),
@@ -198,15 +200,17 @@ class RestaurantAdminService extends Service {
                     { transaction }
                 );
                 i++;
+                resRestaurant.push(createdRestaraunt);
             }
             transaction.commit();
+            return resRestaurant;
         } catch (err) {
             if (transaction) await transaction.rollback();
             throw err;
         }
     }
 
-    async update(transaction: Transaction | null = null, restaurant: Restaurant, data: IUpdateWithAdmin): Promise<any> {
+    async update(transaction: Transaction | null = null, restaurant: Restaurant, data: IUpdateWithAdmin): Promise<Restaurant> {
         const updateRestaurant: Restaurant = await restaurant.update(data, { transaction });
 
         return updateRestaurant;
@@ -216,7 +220,7 @@ class RestaurantAdminService extends Service {
         await restaurant.destroy({ transaction });
     }
 
-    async createWanted(transaction: Transaction | null = null, userId: number, contentId: string, contentTypeId: string) : Promise<any>
+    async createWanted(transaction: Transaction | null = null, userId: number, contentId: string, contentTypeId: string) : Promise<Wanted>
     {
         try{
             transaction = await sequelize.transaction();
@@ -229,6 +233,7 @@ class RestaurantAdminService extends Service {
                 { transaction }
             );
             transaction.commit();
+            return createdWanted;
         } catch (err) {
             if (transaction) await transaction.rollback();
             throw err;

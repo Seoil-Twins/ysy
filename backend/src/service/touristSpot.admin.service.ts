@@ -1,19 +1,20 @@
-
 import { TOURAPI_CODE } from "../constant/statusCode.constant";
+
 import { Op, OrderItem, Transaction, WhereOptions } from "sequelize";
 import fetch from "node-fetch";
 
 import { API_ROOT } from "..";
+
 import { Service } from "./service";
 
 import sequelize from "../model";
-
 import { PageOptions, SearchOptions, TouristSpot, IUpdateWithAdmin } from "../model/touristSpot.model";
+import { Wanted } from "../model/wanted.model";
+
+import logger from "../logger/logger";
+
 import NotFoundError from "../error/notFound.error";
 import BadRequestError from "../error/badRequest.error";
-import logger from "../logger/logger";
-import AdminJS from "adminjs/types/src";
-import { Wanted } from "../model/wanted.model";
 
 const url = process.env.TOURAPI_URL;
 const detail_url = process.env.TOURAPI_DETAIL_URL;
@@ -57,7 +58,7 @@ class TouristSpotAdminService extends Service {
     }
 
     getURL(): string {
-        return `${API_ROOT}/admin/touristSpot/search/all?page=1&numOfRows=1&sort=r&contentTypeId=39`;
+        return `${API_ROOT}/admin/tourist_spot/search/all?page=1&numOfRows=1&sort=r&contentTypeId=39`;
     }
 
     async select(pageOptions: PageOptions, searchOptions: SearchOptions, transaction: Transaction | null = null): Promise<TouristSpot[]> {
@@ -109,7 +110,7 @@ class TouristSpotAdminService extends Service {
      
     }
 
-    async create(transaction: Transaction | null = null, pageOptions: PageOptions, searchOptions: SearchOptions): Promise<any> {
+    async create(transaction: Transaction | null = null, pageOptions: PageOptions, searchOptions: SearchOptions): Promise<TouristSpot[]> {
         const params = {
             numOfRows: pageOptions.numOfRows.toString(),
             pageNo: pageOptions.page.toString(),
@@ -138,6 +139,7 @@ class TouristSpotAdminService extends Service {
             transaction = await sequelize.transaction();
 
             let i = 1;
+            let resTouristSpot: TouristSpot[] = [];
             for (let k = 0; k < result.response.body.items.item.length; ++k) {
                 const detail_params = {
                     ServiceKey: String(SERVICEKEY),
@@ -151,7 +153,6 @@ class TouristSpotAdminService extends Service {
                 const detail_requrl = `${detail_url}?${detail_queryString}`;
                 let detail_res = await fetch(detail_requrl);
                 const detail_result: any = await Promise.resolve(detail_res.json());
-
                 const detail_common_params = {
                     ServiceKey: String(SERVICEKEY),
                     _type: TOURAPI_CODE.type,
@@ -171,7 +172,6 @@ class TouristSpotAdminService extends Service {
                 const detail_common_requrl = `${detail_common_url}?${detail_common_queryString}`;
                 let detail_common_res = await fetch(detail_common_requrl);
                 const detail_common_result: any = await Promise.resolve(detail_common_res.json());
-
                 const createdTouristSpot: TouristSpot = await TouristSpot.create(
                     {
                         contentTypeId: result.response.body.items.item[k].contenttypeid,
@@ -199,15 +199,18 @@ class TouristSpotAdminService extends Service {
                     { transaction }
                 );
                 i++;
+                resTouristSpot.push(createdTouristSpot);
             }
             transaction.commit();
+            return resTouristSpot;
+            
         } catch (err) {
             if (transaction) await transaction.rollback();
             throw err;
-        }
+        } 
     }
 
-    async update(transaction: Transaction | null = null, touristSpot: TouristSpot, data: IUpdateWithAdmin): Promise<any> {
+    async update(transaction: Transaction | null = null, touristSpot: TouristSpot, data: IUpdateWithAdmin): Promise<TouristSpot> {
         const updateTouristSpot: TouristSpot = await touristSpot.update(data, { transaction });
 
         return updateTouristSpot;
@@ -216,7 +219,7 @@ class TouristSpotAdminService extends Service {
     async delete(transaction: Transaction | null = null, touristSpot: TouristSpot): Promise<void> {
         await touristSpot.destroy({ transaction });
     }
-    async createWanted(transaction: Transaction | null = null, userId: number, contentId: string, contentTypeId: string) : Promise<any>
+    async createWanted(transaction: Transaction | null = null, userId: number, contentId: string, contentTypeId: string) : Promise<Wanted>
     {
         try{
             transaction = await sequelize.transaction();
@@ -229,6 +232,7 @@ class TouristSpotAdminService extends Service {
                 { transaction }
             );
             transaction.commit();
+            return createdWanted;
         } catch (err) {
             if (transaction) await transaction.rollback();
             throw err;
