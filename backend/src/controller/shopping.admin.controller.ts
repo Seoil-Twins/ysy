@@ -107,7 +107,7 @@ class ShoppingAdminController {
         }
     }
 
-    async updateShopping(pageOption: PageOptions, searchOptions: SearchOptions, data: IUpdateWithAdmin): Promise<Shopping> {
+    async updateShopping(searchOptions: SearchOptions, data: IUpdateWithAdmin): Promise<Shopping> {
         let updatedShopping: Shopping | null = null;
         const shopping: Shopping | null = await this.shoppingAdminService.selectOne(searchOptions);
 

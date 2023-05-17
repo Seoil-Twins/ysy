@@ -82,17 +82,13 @@ router.get("/search/all", canView, async (req: Request, res: Response, next: Nex
     }
 });
 
-router.patch("/update", canView, async (req: Request, res: Response, next: NextFunction) => {
-    const pageOptions: TSPageOptions = {
-        numOfRows: Number(req.query.numOfRows) || 10,
-        page: Number(req.query.page) || 1,
-        sort: String(req.query.sort) || "r"
+router.patch("/update/:content_id", canView, async (req: Request, res: Response, next: NextFunction) => {
+    const contentId: string = req.params.content_id
+   
+    const contentIdOptions: TSSearchOptions = {
+        contentId: contentId
     };
-    const searchOptions: TSSearchOptions = {
-        contentTypeId: String(req.query.contentTypeId) || undefined,
-        contentId: String(req.query.contentId) || undefined,
-        title: String(req.query.title) || undefined
-    };
+
     const data: IUpdateWithAdmin = {
         areaCode: req.query.areaCode ? String(req.query.areaCode) : undefined,
         sigunguCode: req.query.sigunguCode ? String(req.query.sigunguCode) : undefined,
@@ -116,8 +112,9 @@ router.patch("/update", canView, async (req: Request, res: Response, next: NextF
     };
 
     try {
+        if (!contentId || contentId.length <= 0) throw new BadRequestError("content ID error");
         //const userId = Number(req.params.content_id);
-        const touristSpot: TouristSpot = await touristSpotAdminController.updateTouristSpot(pageOptions, searchOptions, data);
+        const touristSpot: TouristSpot = await touristSpotAdminController.updateTouristSpot(contentIdOptions, data);
 
         return res.status(STATUS_CODE.OK).json(touristSpot);
     } catch (error) {

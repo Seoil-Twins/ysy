@@ -226,7 +226,7 @@ class RestaurantAdminService extends Service {
             transaction = await sequelize.transaction();
             const createdWanted: Wanted = await Wanted.create(
                 {
-                    user_id: userId,
+                    userId: userId,
                     content_id: contentId,
                     content_type_id: contentTypeId
                 },

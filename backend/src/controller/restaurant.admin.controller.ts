@@ -110,7 +110,7 @@ class RestaurantAdminController {
         }
     }
 
-    async updateRestaurant(pageOption: PageOptions, searchOptions: SearchOptions, data: IUpdateWithAdmin): Promise<Restaurant> {
+    async updateRestaurant(searchOptions: SearchOptions, data: IUpdateWithAdmin): Promise<Restaurant> {
         let updatedRestaurant: Restaurant | null = null;
         const restaurant: Restaurant | null = await this.restaurantAdminService.selectOne(searchOptions);
 

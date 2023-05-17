@@ -110,7 +110,7 @@ class CultureAdminController {
         }
     }
 
-    async updateCulture(pageOption: PageOptions, searchOptions: SearchOptions, data: IUpdateWithAdmin): Promise<Culture> {
+    async updateCulture(searchOptions: SearchOptions, data: IUpdateWithAdmin): Promise<Culture> {
         let updatedCulture: Culture | null = null;
         const culture: Culture | null = await this.cultureAdminService.selectOne(searchOptions);
 

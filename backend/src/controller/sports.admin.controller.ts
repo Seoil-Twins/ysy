@@ -108,7 +108,7 @@ class SportsAdminController {
         }
     }
 
-    async updateSports(pageOption: PageOptions, searchOptions: SearchOptions, data: IUpdateWithAdmin): Promise<Sports> {
+    async updateSports(searchOptions: SearchOptions, data: IUpdateWithAdmin): Promise<Sports> {
         let updatedSports: Sports | null = null;
         const sports: Sports | null = await this.sportsAdminService.selectOne(searchOptions);
 

@@ -82,16 +82,11 @@ router.get("/search/all", canView, async (req: Request, res: Response, next: Nex
     }
 });
 
-router.patch("/update", canView, async (req: Request, res: Response, next: NextFunction) => {
-    const pageOptions: SportsPageOptions = {
-        numOfRows: Number(req.query.numOfRows) || 10,
-        page: Number(req.query.page) || 1,
-        sort: String(req.query.sort) || "r"
-    };
+router.patch("/update/:content_id", canView, async (req: Request, res: Response, next: NextFunction) => {
+    const contentId: string = req.params.content_id
+   
     const searchOptions: SportsSearchOptions = {
-        contentTypeId: String(req.query.contentTypeId) || undefined,
-        contentId: String(req.query.contentId) || undefined,
-        title: String(req.query.title) || undefined
+        contentId: contentId || undefined
     };
     const data: IUpdateWithAdmin = {
         areaCode: req.query.areaCode ? String(req.query.areaCode) : undefined,
@@ -117,8 +112,9 @@ router.patch("/update", canView, async (req: Request, res: Response, next: NextF
     };
 
     try {
+        if (!contentId || contentId.length <= 0) throw new BadRequestError("content ID error");
         //const userId = Number(req.params.content_id);
-        const sports: Sports = await sportsAdminController.updateSports(pageOptions, searchOptions, data);
+        const sports: Sports = await sportsAdminController.updateSports(searchOptions, data);
 
         return res.status(STATUS_CODE.OK).json(sports);
     } catch (error) {

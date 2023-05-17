@@ -80,16 +80,11 @@ router.get("/search/all", canView, async (req: Request, res: Response, next: Nex
     }
 });
 
-router.patch("/update", canView, async (req: Request, res: Response, next: NextFunction) => {
-    const pageOptions: ResPageOptions = {
-        numOfRows: Number(req.query.numOfRows) || 10,
-        page: Number(req.query.page) || 1,
-        sort: String(req.query.sort) || "r"
-    };
+router.patch("/update/:content_id", canView, async (req: Request, res: Response, next: NextFunction) => {
+    const contentId = req.params.content_id;
+
     const searchOptions: ResSearchOptions = {
-        contentTypeId: String(req.query.contentTypeId) || undefined,
-        contentId: String(req.query.contentId) || undefined,
-        title: String(req.query.title) || undefined
+        contentId: contentId
     };
     const data: IUpdateWithAdmin = {
         areaCode: req.query.areaCode ? String(req.query.areaCode) : undefined,
@@ -115,7 +110,7 @@ router.patch("/update", canView, async (req: Request, res: Response, next: NextF
 
     try {
         //const userId = Number(req.params.content_id);
-        const restaurant: Restaurant = await restaurantAdminController.updateRestaurant(pageOptions, searchOptions, data);
+        const restaurant: Restaurant = await restaurantAdminController.updateRestaurant(searchOptions, data);
 
         return res.status(STATUS_CODE.OK).json(restaurant);
     } catch (error) {

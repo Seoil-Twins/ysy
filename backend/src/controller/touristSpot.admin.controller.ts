@@ -109,8 +109,8 @@ class TouristSpotAdminController {
         }
     }
 
-    async updateTouristSpot(pageOption: PageOptions, searchOptions: SearchOptions, data: IUpdateWithAdmin): Promise<TouristSpot> {
-        const touristSpot: TouristSpot | null = await this.touristSpotAdminService.selectOne(searchOptions);
+    async updateTouristSpot(contentIdOptions: SearchOptions, data: IUpdateWithAdmin): Promise<TouristSpot> {
+        const touristSpot: TouristSpot | null = await this.touristSpotAdminService.selectOne(contentIdOptions);
 
         if (!touristSpot) throw new BadRequestError(`parameter content_id is bad`);
         let transaction: Transaction | undefined = undefined;
@@ -139,7 +139,7 @@ class TouristSpotAdminController {
             let updatedTouristSpot = await this.touristSpotAdminService.update(transaction, touristSpot, data);
             await transaction.commit();
 
-            logger.debug(`Update TouristSpot => content_id :  ${searchOptions.contentId}`);
+            logger.debug(`Update TouristSpot => content_id :  ${contentIdOptions.contentId}`);
             return updatedTouristSpot;
         } catch (error) {
             if (transaction) await transaction.rollback();
