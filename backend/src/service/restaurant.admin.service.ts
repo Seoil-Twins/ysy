@@ -62,15 +62,15 @@ class RestaurantAdminService extends Service {
         return `${API_ROOT}/admin/restaurant/search/all?page=1&numOfRows=1&sort=r&contentTypeId=39`;
     }
 
-    async select(pageOptions: PageOptions, searchOptions: SearchOptions, transaction: Transaction | null = null): Promise<Restaurant[]> {
+    async select(sort: string, searchOptions: SearchOptions, transaction: Transaction | null = null): Promise<Restaurant[]> {
             let viewUpdate = {
                 view : 0
             }
-            const sort: OrderItem = this.createSort(pageOptions.sort);
+            const resSort: OrderItem = this.createSort(sort);
             const where: WhereOptions = this.createWhere(searchOptions);
 
             const result: Restaurant[] | Restaurant = await Restaurant.findAll({
-                order: [sort],
+                order: [resSort],
                 where
             });
             for(const restaurant of result){
@@ -109,7 +109,7 @@ class RestaurantAdminService extends Service {
      
     }
 
-    async create(transaction: Transaction | null = null, pageOptions: PageOptions, searchOptions: SearchOptions): Promise<Restaurant[]> {
+    async create(transaction: Transaction | null = null, pageOptions: PageOptions, contentTypeId: String | undefined): Promise<Restaurant[]> {
         const params = {
             numOfRows: pageOptions.numOfRows.toString(),
             pageNo: pageOptions.page.toString(),
@@ -118,7 +118,7 @@ class RestaurantAdminService extends Service {
             ServiceKey: String(SERVICEKEY),
             listYN: TOURAPI_CODE.YES,
             arrange: TOURAPI_CODE.sort,
-            contentTypeId: searchOptions.contentTypeId!,
+            contentTypeId: String(contentTypeId),
             areaCode: TOURAPI_CODE.EMPTY,
             sigunguCode: TOURAPI_CODE.EMPTY,
             cat1: TOURAPI_CODE.EMPTY,
@@ -172,6 +172,7 @@ class RestaurantAdminService extends Service {
                 const detail_common_requrl = `${detail_common_url}?${detail_common_queryString}`;
                 let detail_common_res = await fetch(detail_common_requrl);
                 const detail_common_result: any = await Promise.resolve(detail_common_res.json());
+                let nowDate = new Date(+new Date() + 3240 * 10000).toISOString().replace("T", " ").replace(/\..*/, '');
 
                 const createdRestaraunt: Restaurant = await Restaurant.create(
                     {
@@ -195,7 +196,8 @@ class RestaurantAdminService extends Service {
                         smoking: detail_result.response.body.items.item[0].smoking,
                         reservation: detail_result.response.body.items.item[0].reservationfood,
                         homepage: detail_common_result.response.body.items.item[0].homepage,
-                        createdTime: result.response.body.items.item[k].createdtime
+                        createdTime: result.response.body.items.item[k].createdtime,
+                        modifiedTime: nowDate,
                     },
                     { transaction }
                 );

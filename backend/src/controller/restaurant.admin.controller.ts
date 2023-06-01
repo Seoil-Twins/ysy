@@ -32,7 +32,7 @@ class RestaurantAdminController {
      * @param searchOptions A {@link SearchOptions}
      * @returns A {@link IUserResponseWithCount}
      */
-    async getRestaurantFromAPI(pageOptions: PageOptions, searchOptions: SearchOptions): Promise<any> {
+    async getRestaurantFromAPI(pageOptions: PageOptions, contentTypeId: String | undefined): Promise<any> {
  
         const params = {
             numOfRows: pageOptions.numOfRows.toString(),
@@ -42,7 +42,7 @@ class RestaurantAdminController {
             ServiceKey: String(SERVICEKEY),
             listYN: TOURAPI_CODE.YES,
             arrange: TOURAPI_CODE.sort,
-            contentTypeId: searchOptions.contentTypeId!,
+            contentTypeId: String(contentTypeId),
             areaCode: TOURAPI_CODE.EMPTY,
             sigunguCode: TOURAPI_CODE.EMPTY,
             cat1: TOURAPI_CODE.EMPTY,
@@ -73,12 +73,12 @@ class RestaurantAdminController {
      * @param searchOptions A {@link SearchOptions}
      * @returns A {@link IUserResponseWithCount}
      */
-    async createRestaurantDB(pageOptions: PageOptions, searchOptions: SearchOptions): Promise<Restaurant[]> {
+    async createRestaurantDB(pageOptions: PageOptions, contentTypeId: String | undefined): Promise<Restaurant[]> {
         let transaction: Transaction | undefined = undefined;
         try {
             transaction = await sequelize.transaction();
 
-            const result: Restaurant[] = await this.restaurantAdminService.create(transaction, pageOptions, searchOptions);
+            const result: Restaurant[] = await this.restaurantAdminService.create(transaction, pageOptions, contentTypeId);
 
             await transaction.commit();
             logger.debug(`Created Restaurant => ${JSON.stringify(result)}`);
@@ -93,13 +93,13 @@ class RestaurantAdminController {
         }
     }
 
-    async getAllRestaurant(pageOption: PageOptions, searchOptions: SearchOptions): Promise<any> {
+    async getAllRestaurant(sort: string, searchOptions: SearchOptions): Promise<any> {
         
         let transaction: Transaction | undefined = undefined;
 
         try {
             transaction = await sequelize.transaction();
-            const result: Restaurant | Restaurant[] = await this.restaurantAdminService.select(pageOption, searchOptions, transaction);
+            const result: Restaurant | Restaurant[] = await this.restaurantAdminService.select(sort, searchOptions, transaction);
             await transaction.commit();
 
             return result;
@@ -113,6 +113,7 @@ class RestaurantAdminController {
     async updateRestaurant(searchOptions: SearchOptions, data: IUpdateWithAdmin): Promise<Restaurant> {
         let updatedRestaurant: Restaurant | null = null;
         const restaurant: Restaurant | null = await this.restaurantAdminService.selectOne(searchOptions);
+        let nowDate = new Date(+new Date() + 3240 * 10000).toISOString().replace("T", " ").replace(/\..*/, '');
 
         if (!restaurant) throw new BadRequestError(`parameter content_id is bad`);
         let transaction: Transaction | undefined = undefined;
@@ -134,6 +135,7 @@ class RestaurantAdminController {
         if (!data.smoking) data.smoking = restaurant.smoking;
         if (!data.reservation) data.reservation = restaurant.reservation;
         if (!data.homepage) data.homepage = restaurant.homepage;
+        data.modifiedTime = nowDate;
         // if (!data.createdTime) data.createdTime = restaurant.createdTime;
 
         try {

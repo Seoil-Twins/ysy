@@ -40,6 +40,7 @@ export class Restaurant extends Model<InferAttributes<Restaurant>, InferCreation
     declare reservation: string; // 50
     declare homepage: string; // 50
     declare createdTime: string;
+    declare modifiedTime: string;
 }
 
 export interface PageOptions {
@@ -82,6 +83,7 @@ export interface IUpdateWithAdmin {
     reservation?: string;
     homepage?: string;
     createdTime?: string;
+    modifiedTime?: string;
 }
 
 Restaurant.init(
@@ -182,6 +184,10 @@ Restaurant.init(
         },
         createdTime: {
             field: "created_time",
+            type: DataTypes.STRING
+        },
+        modifiedTime: {
+            field: "modified_time",
             type: DataTypes.STRING
         }
     },

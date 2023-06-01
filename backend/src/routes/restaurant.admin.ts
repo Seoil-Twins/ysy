@@ -27,11 +27,10 @@ router.get("/", canView, async (req: Request, res: Response, next: NextFunction)
         page: Number(req.query.page) || 1,
         sort: ""
     };
-    const searchOptions: ResSearchOptions = {
-        contentTypeId: String(req.query.contentTypeId) || undefined
-    };
+    const contentTypeId: String | undefined = req.query.contentTypeId ? String(req.query.contentTypeId) : undefined;
+
     try {
-        const result: IRestaurantResponseWithCount = await restaurantAdminController.getRestaurantFromAPI(pageOptions, searchOptions);
+        const result: IRestaurantResponseWithCount = await restaurantAdminController.getRestaurantFromAPI(pageOptions, contentTypeId);
 
         logger.debug(`Response Data => ${JSON.stringify(result)}`);
         return res.status(STATUS_CODE.OK).json(result);
@@ -46,11 +45,10 @@ router.post("/create", canView, async (req: Request, res: Response, next: NextFu
         page: Number(req.query.page) || 1,
         sort: ""
     };
-    const searchOptions: ResSearchOptions = {
-        contentTypeId: String(req.query.contentTypeId) || undefined
-    };
+    const contentTypeId: String | undefined = req.query.contentTypeId ? String(req.query.contentTypeId) : undefined;
+
     try {
-        const result: Restaurant[] = await restaurantAdminController.createRestaurantDB(pageOptions, searchOptions);
+        const result: Restaurant[] = await restaurantAdminController.createRestaurantDB(pageOptions, contentTypeId);
 
         logger.debug(`Response Data => ${JSON.stringify(result)}`);
         return res.status(STATUS_CODE.OK).json(result);
@@ -60,18 +58,16 @@ router.post("/create", canView, async (req: Request, res: Response, next: NextFu
 });
 
 router.get("/search/all", canView, async (req: Request, res: Response, next: NextFunction) => {
-    const pageOptions: ResPageOptions = {
-        numOfRows: Number(req.query.numOfRows) || 10,
-        page: Number(req.query.page) || 1,
-        sort: String(req.query.sort)
-    };
+ 
+    const sort:string = String(req.query.sort);
+    
     const searchOptions: ResSearchOptions = {
         contentTypeId: String(req.query.contentTypeId) || undefined,
         contentId: String(req.query.contentId) || undefined,
         title: String(req.query.title) || undefined
     };
     try {
-        const result: IRestaurantResponseWithCount = await restaurantAdminController.getAllRestaurant(pageOptions, searchOptions);
+        const result: IRestaurantResponseWithCount = await restaurantAdminController.getAllRestaurant(sort, searchOptions);
 
         logger.debug(`Response Data => ${JSON.stringify(result)}`);
         return res.status(STATUS_CODE.OK).json(result);

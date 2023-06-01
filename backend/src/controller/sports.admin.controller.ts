@@ -27,12 +27,7 @@ class SportsAdminController {
         this.sportsAdminService = sportsAdminService;
     }
 
-    /**
-     * @param pageOptions A {@link PageOptions}
-     * @param searchOptions A {@link SearchOptions}
-     * @returns A {@link IUserResponseWithCount}
-     */
-    async getSportsFromAPI(pageOptions: PageOptions, searchOptions: SearchOptions): Promise<any> {
+    async getSportsFromAPI(pageOptions: PageOptions, contentTypeId: String | undefined): Promise<any> {
 
         const params = {
             numOfRows: pageOptions.numOfRows.toString(),
@@ -42,7 +37,7 @@ class SportsAdminController {
             ServiceKey: String(SERVICEKEY),
             listYN: TOURAPI_CODE.YES,
             arrange: TOURAPI_CODE.sort,
-            contentTypeId: searchOptions.contentTypeId!,
+            contentTypeId: String(contentTypeId),
             areaCode: TOURAPI_CODE.EMPTY,
             sigunguCode: TOURAPI_CODE.EMPTY,
             cat1: TOURAPI_CODE.EMPTY,
@@ -67,17 +62,12 @@ class SportsAdminController {
         }
     }
 
-    /**
-     * @param pageOptions A {@link PageOptions}
-     * @param searchOptions A {@link SearchOptions}
-     * @returns A {@link IUserResponseWithCount}
-     */
-    async createSportsDB (pageOptions: PageOptions, searchOptions: SearchOptions): Promise<Sports[]> {
+    async createSportsDB (pageOptions: PageOptions, contentTypeId: String | undefined): Promise<Sports[]> {
         let transaction: Transaction | undefined = undefined;
         try {
             transaction = await sequelize.transaction();
 
-            const result: Sports[] = await this.sportsAdminService.create(transaction, pageOptions, searchOptions);
+            const result: Sports[] = await this.sportsAdminService.create(transaction, pageOptions, contentTypeId);
 
             await transaction.commit();
             logger.debug(`Created Sports => ${JSON.stringify(result)}`);
@@ -92,12 +82,12 @@ class SportsAdminController {
         }
     }
 
-    async getAllSports(pageOption: PageOptions, searchOptions: SearchOptions): Promise<any> {
+    async getAllSports(sort: string, searchOptions: SearchOptions): Promise<any> {
         let transaction: Transaction | undefined = undefined;
 
         try {
             transaction = await sequelize.transaction();
-            const result: Sports | Sports[] = await this.sportsAdminService.select(pageOption, searchOptions,transaction);
+            const result: Sports | Sports[] = await this.sportsAdminService.select(sort, searchOptions,transaction);
             await transaction.commit();
 
             return result;
@@ -111,6 +101,7 @@ class SportsAdminController {
     async updateSports(searchOptions: SearchOptions, data: IUpdateWithAdmin): Promise<Sports> {
         let updatedSports: Sports | null = null;
         const sports: Sports | null = await this.sportsAdminService.selectOne(searchOptions);
+        let nowDate = new Date(+new Date() + 3240 * 10000).toISOString().replace("T", " ").replace(/\..*/, '');
 
         if (!sports) throw new BadRequestError(`parameter content_id is bad`);
         let transaction: Transaction | undefined = undefined;
@@ -132,7 +123,7 @@ class SportsAdminController {
         if (!data.restDate) data.restDate = sports.restDate;
         if (!data.openPeriod) data.openPeriod = sports.openPeriod;
         if (!data.homepage) data.homepage = sports.homepage;
-        data.modifiedTime = "지금22"
+        data.modifiedTime = nowDate;
 
         try {
             transaction = await sequelize.transaction();

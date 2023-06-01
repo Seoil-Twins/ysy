@@ -31,11 +31,9 @@ router.get("/", canView, async (req: Request, res: Response, next: NextFunction)
         sort: String(req.query.sort) || "r"
 
     };
-    const searchOptions: ShopSearchOptions = {
-        contentTypeId: String(req.query.contentTypeId) || undefined
-    };
+    const contentTypeId: String | undefined = req.query.contentTypeId ? String(req.query.contentTypeId) : undefined;
     try {
-        const result: IShoppingResponseWithCount = await shoppingAdminController.getShoppingFromAPI(pageOptions, searchOptions);
+        const result: IShoppingResponseWithCount = await shoppingAdminController.getShoppingFromAPI(pageOptions, contentTypeId);
 
         logger.debug(`Response Data => ${JSON.stringify(result)}`);
         return res.status(STATUS_CODE.OK).json(result);
@@ -50,11 +48,9 @@ router.post("/create", canView, async (req: Request, res: Response, next: NextFu
         page: Number(req.query.page) || 1,
         sort: String(req.query.sort) || "r"
     };
-    const searchOptions: ShopSearchOptions = {
-        contentTypeId: String(req.query.contentTypeId) || undefined
-    };
+    const contentTypeId: String | undefined = req.query.contentTypeId ? String(req.query.contentTypeId) : undefined;
     try {
-        const result: Shopping[] = await shoppingAdminController.createShoppingDB(pageOptions, searchOptions);
+        const result: Shopping[] = await shoppingAdminController.createShoppingDB(pageOptions, contentTypeId);
 
         logger.debug(`Response Data => ${JSON.stringify(result)}`);
         return res.status(STATUS_CODE.OK).json(result);
@@ -64,18 +60,15 @@ router.post("/create", canView, async (req: Request, res: Response, next: NextFu
 });
 
 router.get("/search/all", canView, async (req: Request, res: Response, next: NextFunction) => {
-    const pageOptions: ShopPageOptions = {
-        numOfRows: Number(req.query.numOfRows) || 10,
-        page: Number(req.query.page) || 1,
-        sort: String(req.query.sort)
-    };
+    const sort:string = String(req.query.sort);
+    
     const searchOptions: ShopSearchOptions = {
         contentTypeId: String(req.query.contentTypeId) || undefined,
         contentId: String(req.query.contentId) || undefined,
         title: String(req.query.title) || undefined
     };
     try {
-        const result: IShoppingResponseWithCount = await shoppingAdminController.getAllShopping(pageOptions, searchOptions);
+        const result: IShoppingResponseWithCount = await shoppingAdminController.getAllShopping(sort, searchOptions);
 
         logger.debug(`Response Data => ${JSON.stringify(result)}`);
         return res.status(STATUS_CODE.OK).json(result);

@@ -7,6 +7,7 @@ import { TOURAPI_CODE } from "../constant/statusCode.constant";
 
 import sequelize from "../model";
 import { TouristSpot, PageOptions, SearchOptions, IUpdateWithAdmin } from "../model/touristSpot.model";
+import { Wanted } from "../model/wanted.model";
 
 import TouristSpotAdminService from "../service/touristSpot.admin.service";
 
@@ -14,10 +15,9 @@ import BadRequestError from "../error/badRequest.error";
 import NotFoundError from "../error/notFound.error";
 
 import logger from "../logger/logger";
-import { Wanted } from "../model/wanted.model";
 
 
-const url = "https://apis.data.go.kr/B551011/KorService1/areaBasedList1";
+const url = process.env.TOURAPI_URL;
 const SERVICEKEY = new String(process.env.TOURAPI_API_KEY);
 class TouristSpotAdminController {
 
@@ -59,9 +59,10 @@ class TouristSpotAdminController {
         try {
             let res = await fetch(requrl);
             const result: any = await Promise.resolve(res.json());
-            for (let key in result.response.body.items.item[0]) {
-                console.log(key + " : " + result.response.body.items.item[0][key]);
-            }
+            /* 가져온 내용 찍어주기. */
+            // for (let key in result.response.body.items.item[0]) {
+            //     console.log(key + " : " + result.response.body.items.item[0][key]);
+            // }
 
             return result;
         } catch (err) {
@@ -73,16 +74,15 @@ class TouristSpotAdminController {
     /**
      * @param pageOptions A {@link PageOptions}
      * @param searchOptions A {@link SearchOptions}
-     * @returns A {@link IUserResponseWithCount}
      */
-    async createTouristSpotDB (pageOptions: PageOptions, searchOptions: SearchOptions): Promise<TouristSpot[]> {
+    async createTouristSpotDB (pageOptions: PageOptions, contentTypeId: String | undefined): Promise<TouristSpot[]> {
         let transaction: Transaction | undefined = undefined;
         try {
             transaction = await sequelize.transaction();
 
-            const result: TouristSpot[]= await this.touristSpotAdminService.create(transaction, pageOptions, searchOptions);
+            const result: TouristSpot[]= await this.touristSpotAdminService.create(transaction, pageOptions, contentTypeId);
 
-            await transaction.commit();
+            await transaction.commit()
             
             return Promise.resolve(result);
         } catch (err) {
@@ -93,12 +93,12 @@ class TouristSpotAdminController {
         }
     }
 
-    async getAllTouristSpot(pageOption: PageOptions, searchOptions: SearchOptions): Promise<TouristSpot[]> {
+    async getAllTouristSpot(sort: string, searchOptions: SearchOptions): Promise<TouristSpot[]> {
         let transaction: Transaction | undefined = undefined;
 
         try {
             transaction = await sequelize.transaction();
-            const result: TouristSpot | TouristSpot[] = await this.touristSpotAdminService.select(pageOption, searchOptions,transaction);
+            const result: TouristSpot | TouristSpot[] = await this.touristSpotAdminService.select(sort, searchOptions,transaction);
             await transaction.commit();
 
             return result;
@@ -109,10 +109,11 @@ class TouristSpotAdminController {
         }
     }
 
-    async updateTouristSpot(contentIdOptions: SearchOptions, data: IUpdateWithAdmin): Promise<TouristSpot> {
-        const touristSpot: TouristSpot | null = await this.touristSpotAdminService.selectOne(contentIdOptions);
+    async updateTouristSpot(contentId: string, data: IUpdateWithAdmin): Promise<TouristSpot> {
+        const touristSpot: TouristSpot | null = await this.touristSpotAdminService.selectOne(contentId);
 
         if (!touristSpot) throw new BadRequestError(`parameter content_id is bad`);
+        let nowDate = new Date(+new Date() + 3240 * 10000).toISOString().replace("T", " ").replace(/\..*/, '');
         let transaction: Transaction | undefined = undefined;
         if (!data.areaCode) { data.areaCode = touristSpot.areaCode; }
         if (!data.sigunguCode) data.sigunguCode = touristSpot.sigunguCode;
@@ -131,7 +132,7 @@ class TouristSpotAdminController {
         if (!data.restDate) data.restDate = touristSpot.restDate;
         if (!data.expguide) data.expguide = touristSpot.expguide;
         if (!data.homepage) data.homepage = touristSpot.homepage;
-        data.modifiedTime = "지금22";
+        data.modifiedTime = nowDate;
 
         try {
             transaction = await sequelize.transaction();
@@ -139,7 +140,7 @@ class TouristSpotAdminController {
             let updatedTouristSpot = await this.touristSpotAdminService.update(transaction, touristSpot, data);
             await transaction.commit();
 
-            logger.debug(`Update TouristSpot => content_id :  ${contentIdOptions.contentId}`);
+            logger.debug(`Update TouristSpot => content_id :  ${contentId}`);
             return updatedTouristSpot;
         } catch (error) {
             if (transaction) await transaction.rollback();

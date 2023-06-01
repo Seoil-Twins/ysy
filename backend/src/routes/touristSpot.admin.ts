@@ -1,3 +1,5 @@
+import { STATUS_CODE } from "../constant/statusCode.constant";
+
 import dayjs from "dayjs";
 import express, { Router, Request, Response, NextFunction } from "express";
 import { Transaction } from "sequelize";
@@ -6,7 +8,6 @@ import { ITouristSpotResponseWithCount, IUpdateWithAdmin, PageOptions as TSPageO
 import { Wanted } from "../model/wanted.model";
 
 import logger from "../logger/logger";
-import { STATUS_CODE } from "../constant/statusCode.constant";
 import { canView } from "../util/checkRole.util";
 
 import TouristSpotAdminService from "../service/touristSpot.admin.service";
@@ -48,11 +49,10 @@ router.post("/create", canView, async (req: Request, res: Response, next: NextFu
         page: Number(req.query.page) || 1,
         sort: String(req.query.sort) || "r"
     };
-    const searchOptions: TSSearchOptions = {
-        contentTypeId: String(req.query.contentTypeId) || undefined
-    };
+     const contentTypeId: String | undefined = req.query.contentTypeId ? String(req.query.contentTypeId) : undefined;
+
     try {
-        const result: TouristSpot[] = await touristSpotAdminController.createTouristSpotDB(pageOptions, searchOptions);
+        const result: TouristSpot[] = await touristSpotAdminController.createTouristSpotDB(pageOptions, contentTypeId);
 
         logger.debug(`Response Data => ${JSON.stringify(result)}`);
         return res.status(STATUS_CODE.OK).json(result);
@@ -62,18 +62,14 @@ router.post("/create", canView, async (req: Request, res: Response, next: NextFu
 });
 
 router.get("/search/all", canView, async (req: Request, res: Response, next: NextFunction) => {
-    const pageOptions: TSPageOptions = {
-        numOfRows: Number(req.query.numOfRows) || 10,
-        page: Number(req.query.page) || 1,
-        sort: String(req.query.sort)
-    };
+    const sort = String(req.query.sort);
     const searchOptions: TSSearchOptions = {
         contentTypeId: String(req.query.contentTypeId) || undefined,
         contentId: String(req.query.contentId) || undefined,
         title: String(req.query.title) || undefined
     };
     try {
-        const result: TouristSpot[] = await touristSpotAdminController.getAllTouristSpot(pageOptions, searchOptions);
+        const result: TouristSpot[] = await touristSpotAdminController.getAllTouristSpot(sort, searchOptions);
 
         logger.debug(`Response Data => ${JSON.stringify(result)}`);
         return res.status(STATUS_CODE.OK).json(result);
@@ -85,10 +81,6 @@ router.get("/search/all", canView, async (req: Request, res: Response, next: Nex
 router.patch("/update/:content_id", canView, async (req: Request, res: Response, next: NextFunction) => {
     const contentId: string = req.params.content_id
    
-    const contentIdOptions: TSSearchOptions = {
-        contentId: contentId
-    };
-
     const data: IUpdateWithAdmin = {
         areaCode: req.query.areaCode ? String(req.query.areaCode) : undefined,
         sigunguCode: req.query.sigunguCode ? String(req.query.sigunguCode) : undefined,
@@ -113,8 +105,8 @@ router.patch("/update/:content_id", canView, async (req: Request, res: Response,
 
     try {
         if (!contentId || contentId.length <= 0) throw new BadRequestError("content ID error");
-        //const userId = Number(req.params.content_id);
-        const touristSpot: TouristSpot = await touristSpotAdminController.updateTouristSpot(contentIdOptions, data);
+        
+        const touristSpot: TouristSpot = await touristSpotAdminController.updateTouristSpot(contentId, data);
 
         return res.status(STATUS_CODE.OK).json(touristSpot);
     } catch (error) {
@@ -124,9 +116,6 @@ router.patch("/update/:content_id", canView, async (req: Request, res: Response,
 
 router.delete("/:content_ids", canView, async (req: Request, res: Response, next: NextFunction) => {
     const contentIds: string[] = req.params.content_ids.split(",").map(String);
-    // const stringContentIds: String[] = contentIds.filter((val) => {
-    //     return !isUndefined(val);
-    // });
 
     try {
         if (!contentIds || contentIds.length <= 0) throw new BadRequestError("content ID must be a string type");
@@ -141,8 +130,6 @@ router.delete("/:content_ids", canView, async (req: Request, res: Response, next
 router.post("/wanted", canView, async (req: Request, res: Response, next: NextFunction) => {
     const userId: number = Number(req.body.userId);
     const contentId: string = String(req.query.content_id);
-
-    let transaction: Transaction | undefined = undefined;
 
     try {
         const result: Wanted = await touristSpotAdminController.createWantedTouristSpot(contentId, userId);

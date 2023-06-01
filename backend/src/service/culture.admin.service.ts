@@ -62,16 +62,16 @@ class CultureAdminService extends Service {
         return `${API_ROOT}/admin/culture/search/all?page=1&numOfRows=1&sort=r&contentTypeId=39`;
     }
 
-    async select(pageOptions: PageOptions, searchOptions: SearchOptions, transaction: Transaction | null = null): Promise<Culture[]> {
+    async select(sort: string, searchOptions: SearchOptions, transaction: Transaction | null = null): Promise<Culture[]> {
         let viewUpdate = {
             view : 0
         }
 
-        const sort: OrderItem = this.createSort(pageOptions.sort);
+        const resSort: OrderItem = this.createSort(sort);
         const where: WhereOptions = this.createWhere(searchOptions);
 
         const result: Culture[] | Culture = await Culture.findAll({
-            order: [sort],
+            order: [resSort],
             where
         });
 
@@ -81,7 +81,6 @@ class CultureAdminService extends Service {
         }
 
         return result;
-   
     }
 
     async selectOne(searchOptions: SearchOptions): Promise<Culture> {
@@ -112,7 +111,7 @@ class CultureAdminService extends Service {
      
     }
 
-    async create(transaction: Transaction | null = null, pageOptions: PageOptions, searchOptions: SearchOptions): Promise<Culture[]> {
+    async create(transaction: Transaction | null = null, pageOptions: PageOptions, contentTypeId: String | undefined): Promise<Culture[]> {
         const params = {
             numOfRows: pageOptions.numOfRows.toString(),
             pageNo: pageOptions.page.toString(),
@@ -121,7 +120,7 @@ class CultureAdminService extends Service {
             ServiceKey: String(SERVICEKEY),
             listYN: TOURAPI_CODE.YES,
             arrange: TOURAPI_CODE.sort,
-            contentTypeId: searchOptions.contentTypeId!,
+            contentTypeId: String(contentTypeId),
             areaCode: TOURAPI_CODE.EMPTY,
             sigunguCode: TOURAPI_CODE.EMPTY,
             cat1: TOURAPI_CODE.EMPTY,
@@ -175,6 +174,7 @@ class CultureAdminService extends Service {
                 const detail_common_requrl = `${detail_common_url}?${detail_common_queryString}`;
                 let detail_common_res = await fetch(detail_common_requrl);
                 const detail_common_result: any = await Promise.resolve(detail_common_res.json());
+                let nowDate = new Date(+new Date() + 3240 * 10000).toISOString().replace("T", " ").replace(/\..*/, '');
 
                 const createdCulture: Culture = await Culture.create(
                     {
@@ -199,7 +199,7 @@ class CultureAdminService extends Service {
                         scale: detail_result.response.body.items.item[0].scale,
                         spendTime: detail_result.response.body.items.item[0].spendtime,
                         homepage: detail_common_result.response.body.items.item[0].homepage,
-                        modifiedTime: "지금.",
+                        modifiedTime: nowDate,
                         createdTime: result.response.body.items.item[k].createdtime
                     },
                     { transaction }

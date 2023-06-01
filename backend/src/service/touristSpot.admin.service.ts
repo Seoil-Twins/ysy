@@ -21,6 +21,7 @@ const detail_url = process.env.TOURAPI_DETAIL_URL;
 const detail_common_url = process.env.TOURAPI_DETAIL_COMMON_URL;
 const SERVICEKEY = process.env.TOURAPI_API_KEY;
 
+
 class TouristSpotAdminService extends Service {
 
     private createSort(sort: string): OrderItem {
@@ -61,13 +62,13 @@ class TouristSpotAdminService extends Service {
         return `${API_ROOT}/admin/tourist_spot/search/all?page=1&numOfRows=1&sort=r&contentTypeId=39`;
     }
 
-    async select(pageOptions: PageOptions, searchOptions: SearchOptions, transaction: Transaction | null = null): Promise<TouristSpot[]> {
+    async select(sort: string, searchOptions: SearchOptions, transaction: Transaction | null = null): Promise<TouristSpot[]> {
       
-            const sort: OrderItem = this.createSort(pageOptions.sort);
+            const resSort: OrderItem = this.createSort(sort);
             const where: WhereOptions = this.createWhere(searchOptions);
 
             const result: TouristSpot[] | TouristSpot = await TouristSpot.findAll({
-                order: [sort],
+                order: [resSort],
                 where
             });
 
@@ -82,9 +83,11 @@ class TouristSpotAdminService extends Service {
    
     }
 
-    async selectOne(searchOptions: SearchOptions): Promise<TouristSpot> {
-        
-            const where: WhereOptions = this.createWhere(searchOptions);
+    async selectOne(contentId: string): Promise<TouristSpot> {
+            const searchOp: SearchOptions = {
+                contentId : contentId
+            }
+            const where: WhereOptions = this.createWhere(searchOp);
 
             const result: TouristSpot | null = await TouristSpot.findOne({
                 where
@@ -110,7 +113,7 @@ class TouristSpotAdminService extends Service {
      
     }
 
-    async create(transaction: Transaction | null = null, pageOptions: PageOptions, searchOptions: SearchOptions): Promise<TouristSpot[]> {
+    async create(transaction: Transaction | null = null, pageOptions: PageOptions, contentTypeId: String | undefined): Promise<TouristSpot[]> {
         const params = {
             numOfRows: pageOptions.numOfRows.toString(),
             pageNo: pageOptions.page.toString(),
@@ -119,7 +122,7 @@ class TouristSpotAdminService extends Service {
             ServiceKey: String(SERVICEKEY),
             listYN: TOURAPI_CODE.YES,
             arrange: TOURAPI_CODE.sort,
-            contentTypeId: searchOptions.contentTypeId!,
+            contentTypeId: String(contentTypeId),
             areaCode: TOURAPI_CODE.EMPTY,
             sigunguCode: TOURAPI_CODE.EMPTY,
             cat1: TOURAPI_CODE.EMPTY,
@@ -172,6 +175,7 @@ class TouristSpotAdminService extends Service {
                 const detail_common_requrl = `${detail_common_url}?${detail_common_queryString}`;
                 let detail_common_res = await fetch(detail_common_requrl);
                 const detail_common_result: any = await Promise.resolve(detail_common_res.json());
+                let nowDate = new Date(+new Date() + 3240 * 10000).toISOString().replace("T", " ").replace(/\..*/, '');
                 const createdTouristSpot: TouristSpot = await TouristSpot.create(
                     {
                         contentTypeId: result.response.body.items.item[k].contenttypeid,
@@ -193,7 +197,7 @@ class TouristSpotAdminService extends Service {
                         restDate: detail_result.response.body.items.item[0].restdate,
                         homepage: detail_common_result.response.body.items.item[0].homepage,
                         expguide:detail_result.response.body.items.item[0].expguide,
-                        modifiedTime: "지금.",
+                        modifiedTime: nowDate,
                         createdTime: result.response.body.items.item[k].createdtime
                     },
                     { transaction }

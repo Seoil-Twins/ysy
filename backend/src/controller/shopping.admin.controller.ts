@@ -26,12 +26,8 @@ class ShoppingAdminController {
         this.shoppingAdminService = shoppingAdminService;
     }
 
-    /**
-     * @param pageOptions A {@link PageOptions}
-     * @param searchOptions A {@link SearchOptions}
-     * @returns A {@link IUserResponseWithCount}
-     */
-    async getShoppingFromAPI (pageOptions: PageOptions, searchOptions: SearchOptions): Promise<any> {
+ 
+    async getShoppingFromAPI (pageOptions: PageOptions, contentTypeId: String | undefined): Promise<any> {
         const params = {
             numOfRows: pageOptions.numOfRows.toString(),
             pageNo: pageOptions.page.toString(),
@@ -40,7 +36,7 @@ class ShoppingAdminController {
             ServiceKey: String(SERVICEKEY),
             listYN: TOURAPI_CODE.YES,
             arrange: TOURAPI_CODE.sort,
-            contentTypeId: searchOptions.contentTypeId!,
+            contentTypeId: String(contentTypeId),
             areaCode: TOURAPI_CODE.EMPTY,
             sigunguCode: TOURAPI_CODE.EMPTY,
             cat1: TOURAPI_CODE.EMPTY,
@@ -66,17 +62,12 @@ class ShoppingAdminController {
         }
     }
 
-    /**
-     * @param pageOptions A {@link PageOptions}
-     * @param searchOptions A {@link SearchOptions}
-     * @returns A {@link IUserResponseWithCount}
-     */
-    async createShoppingDB (pageOptions: PageOptions, searchOptions: SearchOptions): Promise<Shopping[]> {
+    async createShoppingDB (pageOptions: PageOptions, contentTypeId: String | undefined): Promise<Shopping[]> {
         let transaction: Transaction | undefined = undefined;
         try {
             transaction = await sequelize.transaction();
 
-            const result: Shopping[] = await this.shoppingAdminService.create(transaction, pageOptions, searchOptions);
+            const result: Shopping[] = await this.shoppingAdminService.create(transaction, pageOptions, contentTypeId);
 
             await transaction.commit();
             logger.debug(`Created Shopping => ${JSON.stringify(result)}`);
@@ -91,12 +82,12 @@ class ShoppingAdminController {
         }
     }
 
-    async getAllShopping(pageOption: PageOptions, searchOptions: SearchOptions): Promise<any> {
+    async getAllShopping(sort:string, searchOptions: SearchOptions): Promise<any> {
         let transaction: Transaction | undefined = undefined;
 
         try {
             transaction = await sequelize.transaction();
-            const result: Shopping | Shopping[] = await this.shoppingAdminService.select(pageOption, searchOptions, transaction);
+            const result: Shopping | Shopping[] = await this.shoppingAdminService.select(sort, searchOptions, transaction);
             await transaction.commit();
 
             return result;
@@ -110,6 +101,7 @@ class ShoppingAdminController {
     async updateShopping(searchOptions: SearchOptions, data: IUpdateWithAdmin): Promise<Shopping> {
         let updatedShopping: Shopping | null = null;
         const shopping: Shopping | null = await this.shoppingAdminService.selectOne(searchOptions);
+        let nowDate = new Date(+new Date() + 3240 * 10000).toISOString().replace("T", " ").replace(/\..*/, '');
 
         if (!shopping) throw new BadRequestError(`parameter content_id is bad`);
         let transaction: Transaction | undefined = undefined;
@@ -133,7 +125,7 @@ class ShoppingAdminController {
         if (!data.openDateShopping) data.openDateShopping = shopping.openDateShopping;
         if (!data.shopGuide) data.shopGuide = shopping.shopGuide;
         if (!data.homepage) data.homepage = shopping.homepage;
-        data.modifiedTime = "지금22";
+        data.modifiedTime = nowDate;
 
         try {
             transaction = await sequelize.transaction();

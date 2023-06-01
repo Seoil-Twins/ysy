@@ -28,11 +28,10 @@ router.get("/", canView, async (req: Request, res: Response, next: NextFunction)
         page: Number(req.query.page) || 1,
         sort: String(req.query.sort) || "r"
     };
-    const searchOptions: CulSearchOptions = {
-        contentTypeId: String(req.query.contentTypeId) || undefined
-    };
+    const contentTypeId: String | undefined = req.query.contentTypeId ? String(req.query.contentTypeId) : undefined;
+
     try {
-        const result: ICultureResponseWithCount = await cultureAdminController.getCultureFromAPI(pageOptions, searchOptions);
+        const result: ICultureResponseWithCount = await cultureAdminController.getCultureFromAPI(pageOptions, contentTypeId);
 
         logger.debug(`Response Data => ${JSON.stringify(result)}`);
         return res.status(STATUS_CODE.OK).json(result);
@@ -47,11 +46,10 @@ router.post("/create", canView, async (req: Request, res: Response, next: NextFu
         page: Number(req.query.page) || 1,
         sort: String(req.query.sort) || "r"
     };
-    const searchOptions: CulSearchOptions = {
-        contentTypeId: String(req.query.contentTypeId) || undefined
-    };
+    const contentTypeId: String | undefined = req.query.contentTypeId ? String(req.query.contentTypeId) : undefined;
+
     try {
-        const result: Culture[] = await cultureAdminController.createCultureDB(pageOptions, searchOptions);
+        const result: Culture[] = await cultureAdminController.createCultureDB(pageOptions, contentTypeId);
 
         logger.debug(`Response Data => ${JSON.stringify(result)}`);
         return res.status(STATUS_CODE.OK).json(result);
@@ -61,18 +59,16 @@ router.post("/create", canView, async (req: Request, res: Response, next: NextFu
 });
 
 router.get("/search/all", canView, async (req: Request, res: Response, next: NextFunction) => {
-    const pageOptions: CulPageOptions = {
-        numOfRows: Number(req.query.numOfRows) || 10,
-        page: Number(req.query.page) || 1,
-        sort: String(req.query.sort)
-    };
+    
+    const sort:string = String(req.query.sort);
+    
     const searchOptions: CulSearchOptions = {
         contentTypeId: String(req.query.contentTypeId) || undefined,
         contentId: String(req.query.contentId) || undefined,
         title: String(req.query.title) || undefined
     };
     try {
-        const result: ICultureResponseWithCount = await cultureAdminController.getAllCulture(pageOptions, searchOptions);
+        const result: ICultureResponseWithCount = await cultureAdminController.getAllCulture(sort, searchOptions);
 
         logger.debug(`Response Data => ${JSON.stringify(result)}`);
         return res.status(STATUS_CODE.OK).json(result);
@@ -108,8 +104,7 @@ router.patch("/update/:content_id", canView, async (req: Request, res: Response,
         restDate: req.query.restDate ? String(req.query.restDate) : undefined,
         scale: req.query.smoking ? String(req.query.smoking) : undefined,
         spendTime: req.query.reservation ? String(req.query.reservation) : undefined,
-        homepage: req.query.homepage ? String(req.query.homepage) : undefined,
-        modifiedTime: String("20230417")
+        homepage: req.query.homepage ? String(req.query.homepage) : undefined
     };
 
     try {

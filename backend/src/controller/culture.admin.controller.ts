@@ -27,13 +27,8 @@ class CultureAdminController {
         this.cultureAdminService = cultureAdminService;
     }
 
-    /**
-     * ```
-     * @param pageOptions A {@link PageOptions}
-     * @param searchOptions A {@link SearchOptions}
-     * @returns A {@link IUserResponseWithCount}
-     */
-    async getCultureFromAPI (pageOptions: PageOptions, searchOptions: SearchOptions): Promise<any> {
+   
+    async getCultureFromAPI (pageOptions: PageOptions, contentTypeId: String | undefined): Promise<any> {
 
         const params = {
             numOfRows: pageOptions.numOfRows.toString(),
@@ -43,7 +38,7 @@ class CultureAdminController {
             ServiceKey: String(SERVICEKEY),
             listYN: TOURAPI_CODE.YES,
             arrange: TOURAPI_CODE.sort,
-            contentTypeId: searchOptions.contentTypeId!,
+            contentTypeId: String(contentTypeId),
             areaCode: TOURAPI_CODE.EMPTY,
             sigunguCode: TOURAPI_CODE.EMPTY,
             cat1: TOURAPI_CODE.EMPTY,
@@ -69,17 +64,13 @@ class CultureAdminController {
         }
     }
 
-    /**
-     * @param pageOptions A {@link PageOptions}
-     * @param searchOptions A {@link SearchOptions}
-     * @returns A {@link IUserResponseWithCount}
-     */
-    async createCultureDB (pageOptions: PageOptions, searchOptions: SearchOptions): Promise<Culture[]> {
+  
+    async createCultureDB (pageOptions: PageOptions, contentTypeId: String | undefined): Promise<Culture[]> {
         let transaction: Transaction | undefined = undefined;
         try {
             transaction = await sequelize.transaction();
 
-            const result: Culture[] = await this.cultureAdminService.create(transaction, pageOptions, searchOptions);
+            const result: Culture[] = await this.cultureAdminService.create(transaction, pageOptions, contentTypeId);
 
             await transaction.commit();
             logger.debug(`Created Culture ${JSON.stringify(result)}`);
@@ -94,12 +85,12 @@ class CultureAdminController {
         }
     }
 
-    async getAllCulture(pageOption: PageOptions, searchOptions: SearchOptions): Promise<any> {
+    async getAllCulture(sort: string, searchOptions: SearchOptions): Promise<any> {
         let transaction: Transaction | undefined = undefined;
 
         try {
             transaction = await sequelize.transaction();
-            const result: Culture | Culture[] = await this.cultureAdminService.select(pageOption, searchOptions, transaction);
+            const result: Culture | Culture[] = await this.cultureAdminService.select(sort, searchOptions, transaction);
             await transaction.commit();
 
             return result;
@@ -113,6 +104,7 @@ class CultureAdminController {
     async updateCulture(searchOptions: SearchOptions, data: IUpdateWithAdmin): Promise<Culture> {
         let updatedCulture: Culture | null = null;
         const culture: Culture | null = await this.cultureAdminService.selectOne(searchOptions);
+        let nowDate = new Date(+new Date() + 3240 * 10000).toISOString().replace("T", " ").replace(/\..*/, '');
 
         if (!culture) throw new BadRequestError(`parameter content_id is bad`);
         let transaction: Transaction | undefined = undefined;
@@ -135,7 +127,7 @@ class CultureAdminController {
         if (!data.scale) data.scale = culture.scale;
         if (!data.spendTime) data.spendTime = culture.spendTime;
         if (!data.homepage) data.homepage = culture.homepage;
-        data.modifiedTime = "지금22"
+        data.modifiedTime = nowDate;
 
         try {
             transaction = await sequelize.transaction();
