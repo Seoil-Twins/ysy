@@ -28,8 +28,6 @@ import { canModifyWithEditor, canView } from "../util/checkRole.util";
 import BadRequestError from "../error/badRequest.error";
 import InternalServerError from "../error/internalServer.error";
 
-dayjs.locale("ko");
-
 const router: Router = express.Router();
 const userService: UserService = new UserService();
 const coupleService: CoupleService = new CoupleService();

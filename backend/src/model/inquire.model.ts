@@ -21,6 +21,28 @@ export interface IUpdateWithController {
 }
 
 export type IUpdateWithService = Omit<IUpdateWithController, "inquireId">;
+// ------------------------------------------ Admin ---------------------------------------- //
+export interface IInquireResponseWithCount {
+    inquires: Inquire[];
+    count: number;
+}
+
+export interface PageOptions {
+    count: number;
+    page: number;
+    sort: string | "r" | "o" | "sr" | "so";
+}
+
+export interface SearchOptions {
+    userId?: number;
+}
+
+export interface FilterOptions {
+    fromDate?: Date;
+    toDate?: Date;
+    isSolution?: boolean;
+    hasImage?: boolean;
+}
 // ------------------------------------------ Interface End ---------------------------------------- //
 
 export class Inquire extends Model<InferAttributes<Inquire>, InferCreationAttributes<Inquire>> {

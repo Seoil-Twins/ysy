@@ -44,8 +44,8 @@ router.get("/", canView, async (req: Request, res: Response, next: NextFunction)
         cupId: req.query.cup_id ? String(req.query.cup_id) : undefined
     };
     const filterOptions: FilterOptions = {
-        fromDate: req.query.from_date ? new Date(dayjs(String(req.query.from_date)).valueOf()) : undefined,
-        toDate: req.query.to_date ? new Date(dayjs(String(req.query.to_date)).add(1, "day").valueOf()) : undefined
+        fromDate: req.query.from_date ? dayjs(String(req.query.from_date)).startOf("day").utc(true).toDate() : undefined,
+        toDate: req.query.to_date ? dayjs(String(req.query.to_date)).startOf("day").utc(true).toDate() : undefined
     };
 
     try {

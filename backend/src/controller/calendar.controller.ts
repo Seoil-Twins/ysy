@@ -10,8 +10,6 @@ import logger from "../logger/logger";
 import CalendarService from "../service/calendar.service";
 import CoupleService from "../service/couple.service";
 
-dayjs().locale("ko");
-
 class CalendarController {
     private calendarService: CalendarService;
     private coupleService: CoupleService;
@@ -22,8 +20,8 @@ class CalendarController {
     }
 
     async getCalendars(cupId: string, year: number): Promise<IResponse> {
-        const startDate = dayjs(`${year}-01-01`).format("YYYY-MM-DD HH:mm:ss");
-        const endDate = dayjs(`${year}-12-31`).format("YYYY-MM-DD HH:mm:ss");
+        const startDate = dayjs(`${year}-01-01`).startOf("day").formattedHour();
+        const endDate = dayjs(`${year}-12-31`).endOf("day").formattedHour();
 
         const calendars: Calendar[] = await this.calendarService.selectAll(cupId, startDate, endDate);
         if (calendars.length <= 0) throw new NotFoundError(`Not found calendar using query parameter cupId => ${cupId}, year => ${year}`);
@@ -40,10 +38,10 @@ class CalendarController {
         const couple: Couple | null = await this.coupleService.selectByPk(data.cupId);
         if (!couple) throw new NotFoundError(`Not found calendar using query parameter cupId => ${data.cupId}`);
 
-        await this.calendarService.create(null, data);
+        const createdCalendar: Calendar = await this.calendarService.create(null, data);
         logger.debug(`Add Calendar => ${JSON.stringify(data)}`);
 
-        const url: string = this.calendarService.getURL(data.cupId, data.fromDate.getFullYear());
+        const url: string = this.calendarService.getURL(createdCalendar.cupId, createdCalendar.fromDate.getFullYear());
         return url;
     }
 

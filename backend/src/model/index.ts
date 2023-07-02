@@ -3,7 +3,6 @@ import dotenv from "dotenv";
 import { Sequelize } from "sequelize";
 
 dotenv.config();
-dayjs.locale("ko");
 
 const host = String(process.env.MYSQL_HOST),
     port = Number(process.env.MYSQL_PORT),
@@ -30,7 +29,7 @@ const formatDate = (results: any[]) => {
                 formatDate(value);
             } else if (value instanceof Date) {
                 const date = dayjs(value);
-                const formatDate = date.format("YYYY-MM-DD HH:mm:ss");
+                const formatDate = date.formattedHour();
                 result.dataValues[key] = date.isValid() ? formatDate : null;
             } else if (value instanceof Object) {
                 // Date도 Object를 상속받기 때문에 맨 밑에 내려줘야 함.

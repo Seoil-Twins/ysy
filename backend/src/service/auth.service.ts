@@ -1,6 +1,5 @@
 import dayjs from "dayjs";
 import { JwtPayload } from "jsonwebtoken";
-import isSameOrBefore from "dayjs/plugin/isSameOrBefore";
 
 import UnauthorizedError from "../error/unauthorized.error";
 
@@ -12,8 +11,6 @@ import { checkPassword } from "../util/password.util";
 
 import { UserRole } from "../model/userRole.model";
 import { User } from "../model/user.model";
-
-dayjs.extend(isSameOrBefore);
 
 class AuthService {
     /**

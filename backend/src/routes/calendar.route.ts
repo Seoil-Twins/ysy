@@ -12,27 +12,30 @@ import { STATUS_CODE } from "../constant/statusCode.constant";
 import BadRequestError from "../error/badRequest.error";
 import ForbiddenError from "../error/forbidden.error";
 
-import { Calendar, IResponse } from "../model/calendar.model";
+import { Calendar, ICreate, IResponse, IUpdate } from "../model/calendar.model";
 
 const router: Router = express.Router();
 const calendarService: CalendarService = new CalendarService();
 const coupleService: CoupleService = new CoupleService();
 const calendarController: CalendarController = new CalendarController(calendarService, coupleService);
 
-const postSchema: joi.Schema = joi.object({
-    title: joi.string().required(),
-    description: joi.string().required(),
-    fromDate: joi.date().required(),
-    toDate: joi.date().required(),
-    color: joi.string().required().default("#000000")
-});
+const postSchema: joi.Schema = joi
+    .object({
+        title: joi.string().required(),
+        description: joi.string().required(),
+        fromDate: joi.date().required(),
+        toDate: joi.date().greater(joi.ref("fromDate")).required(),
+        color: joi.string().required().default("#000000")
+    })
+    .with("fromDate", "toDate")
+    .with("toDate", "fromDate");
 
 const updateSchema: joi.Schema = joi
     .object({
         title: joi.string(),
         description: joi.string(),
         fromDate: joi.date(),
-        toDate: joi.date(),
+        toDate: joi.date().greater(joi.ref("fromDate")),
         color: joi.string()
     })
     .with("fromDate", "toDate")
@@ -62,7 +65,16 @@ router.post("/:cup_id", async (req: Request, res: Response, next: NextFunction) 
         if (error) throw new BadRequestError(error.message);
         else if (req.body.cupId !== req.params.cup_id) throw new ForbiddenError("You don't same token couple ID and path parameter couple ID");
 
-        const url: string = await calendarController.addCalendar(value);
+        const data: ICreate = {
+            cupId: value.cupId,
+            title: value.title,
+            description: value.description,
+            fromDate: value.fromDate,
+            toDate: value.toDate,
+            color: value.color
+        };
+
+        const url: string = await calendarController.addCalendar(data);
         res.header({ Location: url }).status(STATUS_CODE.CREATED).json({});
     } catch (error) {
         next(error);
@@ -78,7 +90,14 @@ router.patch("/:cup_id/:calendar_id", async (req: Request, res: Response, next: 
         else if (req.body.cupId !== req.params.cup_id) throw new ForbiddenError("You don't same token couple ID and path parameter couple ID");
         else if (isNaN(calendarId)) throw new BadRequestError("Calendar ID must be a number type");
 
-        const updatedCalendar: Calendar = await calendarController.updateCalendar(calendarId, value);
+        const data: IUpdate = {
+            title: value.title ? value.title : undefined,
+            description: value.description ? value.description : undefined,
+            fromDate: value.fromDate ? value.fromDate : undefined,
+            toDate: value.toDate ? value.toDate : undefined,
+            color: value.color ? value.color : undefined
+        };
+        const updatedCalendar: Calendar = await calendarController.updateCalendar(calendarId, data);
         res.status(STATUS_CODE.OK).json(updatedCalendar);
     } catch (error) {
         next(error);

@@ -87,6 +87,13 @@ class InquireService extends Service {
     async delete(transaction: Transaction | null = null, inquire: Inquire): Promise<void> {
         await inquire.destroy({ transaction });
     }
+
+    async deletes(transaction: Transaction | null = null, inquireIds: number[]): Promise<void> {
+        await Inquire.destroy({
+            where: { inquireId: inquireIds },
+            transaction
+        });
+    }
 }
 
 export default InquireService;

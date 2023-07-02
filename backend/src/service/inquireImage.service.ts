@@ -23,13 +23,12 @@ class InquireImageService extends Service {
         throw new Error("Method not implemented.");
     }
 
-    select(...args: any[]): Promise<any> {
-        throw new Error("Method not implemented.");
+    async select(inquireId: number): Promise<InquireImage[]> {
+        const inquireImages: InquireImage[] = await InquireImage.findAll({ where: { inquireId } });
+        return inquireImages;
     }
 
     async create(transaction: Transaction | null = null, inquireId: number, userId: number, images: File): Promise<InquireImage> {
-        if (inquireId) throw new Error("hi");
-
         const path = `${this.FOLDER_NAME}/${userId}/inquires/${inquireId}/${dayjs().valueOf()}.${images.originalFilename}`;
         const createdInquireImage: InquireImage = await InquireImage.create(
             {

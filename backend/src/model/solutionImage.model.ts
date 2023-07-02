@@ -9,6 +9,26 @@ import { Solution } from "./solution.model";
 export interface IRequestCreate {
     image: File | File[];
 }
+
+export interface SolutionImageResponseWithCount {
+    images: SolutionImage[];
+    count: number;
+}
+
+export interface PageOptions {
+    count: number;
+    page: number;
+    sort: string | "r" | "o";
+}
+
+export interface SearchOptions {
+    solutionId?: number;
+}
+
+export interface FilterOptions {
+    fromDate?: Date;
+    toDate?: Date;
+}
 // ------------------------------------------ Interface End ---------------------------------------- //
 
 export class SolutionImage extends Model<InferAttributes<SolutionImage>, InferCreationAttributes<SolutionImage>> {

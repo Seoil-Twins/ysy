@@ -53,7 +53,7 @@ export const isDefaultFile = (fileName: string): boolean => {
  */
 const getAllFiles = async (path: string): Promise<ListResult> => {
     const listRef = ref(storage, path);
-    let result: ListResult = await listAll(listRef);
+    const result: ListResult = await listAll(listRef);
 
     return result;
 };
