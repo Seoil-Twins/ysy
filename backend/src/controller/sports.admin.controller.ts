@@ -1,178 +1,184 @@
-import { Transaction } from "sequelize";
-
-import sequelize from "../model";
-import { Sports, PageOptions, SearchOptions } from "../model/sports.model";
-
 import fetch from "node-fetch";
 import { URLSearchParams } from "url";
 
-const FOLDER_NAME = "sports";
+import { Transaction } from "sequelize";
+
+import { TOURAPI_CODE } from "../constant/statusCode.constant";
+
+import sequelize from "../model";
+import { Sports, PageOptions, SearchOptions, IUpdateWithAdmin } from "../model/sports.model";
+
+import SportsAdminService from "../service/sports.admin.service";
+
+import BadRequestError from "../error/badRequest.error";
+import NotFoundError from "../error/notFound.error";
+
+import logger from "../logger/logger";
+import { Wanted } from "../model/wanted.model";
+
 const url = "https://apis.data.go.kr/B551011/KorService1/areaBasedList1";
-const detail_url = "http://apis.data.go.kr/B551011/KorService1/detailIntro1";
-const detail_common_url = "http://apis.data.go.kr/B551011/KorService1/detailCommon1";
 const SERVICEKEY = new String(process.env.TOURAPI_API_KEY);
-const controller = {
-    /**
-     * const pageOptions: PageOptions = {
-     *      numOfRows: 1,
-     *      count 5,\
-     * };
-     * const searchOptions: SearchOptions = {
-     *      contentTypeId: 39
-     * };
-     *
-     * const result = await getRestaurantWithSearch(pageOptions, SearchOptions);
-     * ```
-     * @param pageOptions A {@link PageOptions}
-     * @param searchOptions A {@link SearchOptions}
-     * @returns A {@link IUserResponseWithCount}
-     */
-    getSportsFromAPI: async (pageOptions: PageOptions, searchOptions: SearchOptions): Promise<any> => {
-        const offset = (pageOptions.page - 1) * pageOptions.numOfRows;
+class SportsAdminController {
+    
+    private sportsAdminService: SportsAdminService;
+    private CONTENT_TYPE_ID: string = "28";
+
+    constructor(sportsAdminService: SportsAdminService) {
+        this.sportsAdminService = sportsAdminService;
+    }
+
+    async getSportsFromAPI(pageOptions: PageOptions, contentTypeId: String | undefined): Promise<any> {
 
         const params = {
             numOfRows: pageOptions.numOfRows.toString(),
             pageNo: pageOptions.page.toString(),
-            MobileOS: "ETC",
-            MobileApp: "AppTest",
-            ServiceKey: "+/HZpVR9TlY0YX1X6CbhFyyqCZDcTeqgCkaI87QvifdyB9PPg7LyFH46lWA5kG1u46bLFamCuKz3UyAONBiEOQ==",
-            listYN: "Y",
-            arrange: "A",
-            contentTypeId: searchOptions.contentTypeId!,
-            areaCode: "",
-            sigunguCode: "",
-            cat1: "",
-            cat2: "",
-            cat3: "",
-            _type: "json"
+            MobileOS: TOURAPI_CODE.MobileOS,
+            MobileApp: TOURAPI_CODE.MobileAPP,
+            ServiceKey: String(SERVICEKEY),
+            listYN: TOURAPI_CODE.YES,
+            arrange: TOURAPI_CODE.sort,
+            contentTypeId: String(contentTypeId),
+            areaCode: TOURAPI_CODE.EMPTY,
+            sigunguCode: TOURAPI_CODE.EMPTY,
+            cat1: TOURAPI_CODE.EMPTY,
+            cat2: TOURAPI_CODE.EMPTY,
+            cat3: TOURAPI_CODE.EMPTY,
+            _type: TOURAPI_CODE.type
         };
 
         const queryString = new URLSearchParams(params).toString();
         const requrl = `${url}?${queryString}`;
-        console.log(requrl);
-
         try {
             let res = await fetch(requrl);
             const result: any = await Promise.resolve(res.json());
-            console.log(result.response.body.items.item[0].contentid);
             for (let key in result.response.body.items.item[0]) {
                 console.log(key + " : " + result.response.body.items.item[0][key]);
             }
 
             return result;
         } catch (err) {
-            console.log("error: ", err);
+            logger.debug(`Error Sports  :  ${err}`);
+            throw err;
         }
-    },
+    }
 
-    /**
-     * @param pageOptions A {@link PageOptions}
-     * @param searchOptions A {@link SearchOptions}
-     * @returns A {@link IUserResponseWithCount}
-     */
-    createSportsDB: async (pageOptions: PageOptions, searchOptions: SearchOptions): Promise<any> => {
-        const offset = (pageOptions.page - 1) * pageOptions.numOfRows;
-
-        const params = {
-            numOfRows: pageOptions.numOfRows.toString(),
-            pageNo: pageOptions.page.toString(),
-            MobileOS: "ETC",
-            MobileApp: "AppTest",
-            ServiceKey: "+/HZpVR9TlY0YX1X6CbhFyyqCZDcTeqgCkaI87QvifdyB9PPg7LyFH46lWA5kG1u46bLFamCuKz3UyAONBiEOQ==",
-            listYN: "Y",
-            arrange: "A",
-            contentTypeId: searchOptions.contentTypeId!,
-            areaCode: "",
-            sigunguCode: "",
-            cat1: "",
-            cat2: "",
-            cat3: "",
-            _type: "json"
-        };
-
-        const queryString = new URLSearchParams(params).toString();
-        const requrl = `${url}?${queryString}`;
-        console.log(requrl);
-
+    async createSportsDB (pageOptions: PageOptions, contentTypeId: String | undefined): Promise<Sports[]> {
         let transaction: Transaction | undefined = undefined;
-
         try {
-            let res = await fetch(requrl);
-            const result: any = await Promise.resolve(res.json());
-
             transaction = await sequelize.transaction();
 
-            let i = 1;
-            for (let k = 0; k < result.response.body.items.item.length; ++k) {
-                // ?ServiceKey=인증키&contentTypeId=39&contentId=2869760&MobileOS=ETC&MobileApp=AppTest
-                const detail_params = {
-                    ServiceKey: "+/HZpVR9TlY0YX1X6CbhFyyqCZDcTeqgCkaI87QvifdyB9PPg7LyFH46lWA5kG1u46bLFamCuKz3UyAONBiEOQ==",
-                    _type: "json",
-                    MobileOS: "ETC",
-                    MobileApp: "AppTest",
-                    contentTypeId: result.response.body.items.item[k].contenttypeid,
-                    contentId: result.response.body.items.item[k].contentid
-                };
-                const detail_queryString = new URLSearchParams(detail_params).toString();
-                const detail_requrl = `${detail_url}?${detail_queryString}`;
-                let detail_res = await fetch(detail_requrl);
-                const detail_result: any = await Promise.resolve(detail_res.json());
+            const result: Sports[] = await this.sportsAdminService.create(transaction, pageOptions, contentTypeId);
 
-                // ?ServiceKey=인증키&contentTypeId=39&contentId=2869760&MobileOS=ETC&MobileApp=AppTest&defaultYN=Y&firstImageYN=Y&areacodeYN=Y&catcodeYN=Y&addrinfoYN=Y&mapinfoYN=Y&overviewYN=Y
-                const detail_common_params = {
-                    ServiceKey: "+/HZpVR9TlY0YX1X6CbhFyyqCZDcTeqgCkaI87QvifdyB9PPg7LyFH46lWA5kG1u46bLFamCuKz3UyAONBiEOQ==",
-                    _type: "json",
-                    MobileOS: "ETC",
-                    MobileApp: "AppTest",
-                    contentTypeId: result.response.body.items.item[k].contenttypeid,
-                    contentId: result.response.body.items.item[k].contentid,
-                    defaultYN: "Y",
-                    firstImageYN: "Y",
-                    areacodeYN: "Y",
-                    catcodeYN: "Y",
-                    addrinfoYN: "Y",
-                    mapinfoYN: "Y",
-                    overviewYN: "Y"
-                };
-                const detail_common_queryString = new URLSearchParams(detail_common_params).toString();
-                const detail_common_requrl = `${detail_common_url}?${detail_common_queryString}`;
-                let detail_common_res = await fetch(detail_common_requrl);
-                const detail_common_result: any = await Promise.resolve(detail_common_res.json());
-                //console.log(detail_result.response.body.items.item[0].firstmenu);
-                const createdSports: Sports = await Sports.create(
-                    {
-                        contentTypeId: result.response.body.items.item[k].contenttypeid,
-                        areaCode: result.response.body.items.item[k].areacode,
-                        sigunguCode: result.response.body.items.item[k].sigungucode,
-                        view: 0,
-                        title: result.response.body.items.item[k].title,
-                        address: result.response.body.items.item[k].addr1,
-                        mapX: result.response.body.items.item[k].mapx,
-                        mapY: result.response.body.items.item[k].mapy,
-                        contentId: result.response.body.items.item[k].contentid,
-                        description: detail_common_result.response.body.items.item[0].overview,
-                        thumbnail: result.response.body.items.item[k].firstimage,
-                        babyCarriage: detail_result.response.body.items.item[0].chkbabycarriageleports,
-                        phoneNumber: result.response.body.items.item[k].tel,
-                        pet: detail_result.response.body.items.item[0].chkpetleports,
-                        useTime: detail_result.response.body.items.item[0].usetimeleports,
-                        useFee: detail_result.response.body.items.item[0].usefeeleports,
-                        parking: detail_result.response.body.items.item[0].parkingleports,
-                        restDate: detail_result.response.body.items.item[0].restdateleports,
-                        homepage: detail_common_result.response.body.items.item[0].homepage
-                    },
-                    { transaction }
-                );
-                i++;
-            }
-            transaction.commit();
+            await transaction.commit();
+            logger.debug(`Created Sports => ${JSON.stringify(result)}`);
+
+            // const url: string = this.sportsAdminService.getURL();
+            return result
         } catch (err) {
-            console.log("error: ", err);
+            logger.debug(`Error Sports  :  ${err}`);
 
             if (transaction) await transaction.rollback();
             throw err;
         }
     }
-};
 
-export default controller;
+    async getAllSports(sort: string, searchOptions: SearchOptions): Promise<any> {
+        let transaction: Transaction | undefined = undefined;
+
+        try {
+            transaction = await sequelize.transaction();
+            const result: Sports | Sports[] = await this.sportsAdminService.select(sort, searchOptions,transaction);
+            await transaction.commit();
+
+            return result;
+        } catch (err) {
+            if (transaction) await transaction.rollback();
+            logger.debug(`Error Sports  :  ${err}`);
+            throw err;
+        }
+    }
+
+    async updateSports(searchOptions: SearchOptions, data: IUpdateWithAdmin): Promise<Sports> {
+        let updatedSports: Sports | null = null;
+        const sports: Sports | null = await this.sportsAdminService.selectOne(searchOptions);
+        let nowDate = new Date(+new Date() + 3240 * 10000).toISOString().replace("T", " ").replace(/\..*/, '');
+
+        if (!sports) throw new BadRequestError(`parameter content_id is bad`);
+        let transaction: Transaction | undefined = undefined;
+        if (!data.areaCode) { data.areaCode = sports.areaCode; }
+        if (!data.sigunguCode) data.sigunguCode = sports.sigunguCode;
+        if (!data.view) data.view = sports.view;
+        if (!data.title) data.title = sports.title;
+        if (!data.address) data.address = sports.address;
+        if (!data.mapX) data.mapX = sports.mapX;
+        if (!data.mapY) data.mapY = sports.mapY;
+        if (!data.description) data.description = sports.description;
+        if (!data.thumbnail) data.thumbnail = sports.thumbnail;
+        if (!data.pet) data.pet = sports.pet;
+        if (!data.phoneNumber) data.phoneNumber = sports.phoneNumber;
+        if (!data.babyCarriage) data.babyCarriage = sports.babyCarriage;
+        if (!data.useTime) data.useTime = sports.useTime;
+        if (!data.useFee) data.useFee = sports.useFee;
+        if (!data.parking) data.parking = sports.parking;
+        if (!data.restDate) data.restDate = sports.restDate;
+        if (!data.openPeriod) data.openPeriod = sports.openPeriod;
+        if (!data.homepage) data.homepage = sports.homepage;
+        data.modifiedTime = nowDate;
+
+        try {
+            transaction = await sequelize.transaction();
+
+            updatedSports = await this.sportsAdminService.update(transaction, sports, data);
+            await transaction.commit();
+
+            logger.debug(`Update Sports => content_id :  ${searchOptions.contentId}`);
+            return updatedSports;
+        } catch (error) {
+            if (transaction) await transaction.rollback();
+            throw error;
+        }
+    }
+
+    async deleteSports(contentIds: string[]): Promise<void> {
+        const sportss: Sports[] = await this.sportsAdminService.selectMul(contentIds);
+        if (sportss.length <= 0) throw new NotFoundError("Not found sports.");
+
+        let transaction: Transaction | undefined = undefined;
+
+        try {
+            transaction = await sequelize.transaction();
+
+            for (const sports of sportss) {
+                await this.sportsAdminService.delete(transaction, sports);
+            }
+
+            await transaction.commit();
+        } catch (error) {
+            if (transaction) await transaction.rollback();
+            throw error;
+        }
+    }
+
+    async createWantedSports(contentId: string, userId: number): Promise<Wanted> {
+        let transaction: Transaction | undefined = undefined;
+        try {
+            transaction = await sequelize.transaction();
+
+            const result: Wanted = await this.sportsAdminService.createWanted(transaction, userId, contentId, this.CONTENT_TYPE_ID);
+
+            await transaction.commit();
+            logger.debug(`Created Sports => ${JSON.stringify(result)}`);
+
+            return result;
+
+        } catch (err) {
+            logger.debug(`Error Sports  :  ${err}`);
+
+            if (transaction) await transaction.rollback();
+            throw err;
+        }
+    }
+
+ }
+
+export default SportsAdminController;

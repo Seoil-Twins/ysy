@@ -25,16 +25,49 @@ export class TouristSpot extends Model<InferAttributes<TouristSpot>, InferCreati
     declare parking: string; // 40
     declare restDate: string; //20
     declare homepage: string; // 50
+    declare expguide: string; // 50
+    declare modifiedTime: string; // 50
+    declare createdTime: string; // 50
+}
+
+export interface IUpdateWithAdmin {
+    spotId?: number;
+    contentTypeId?: string;
+    areaCode?: string;
+    sigunguCode?: string;
+    view?: number;
+    title?: string;
+    address?: string;
+    mapX?: string;
+    mapY?: string;
+
+    contentId?: string; // 10 , default null
+    description?: string; // 300
+    thumbnail?: string; // 50
+    phoneNumber?: string; // 13
+    babyCarriage?: string; // 10
+    pet?: string; // 50
+    useTime?: string; // 50
+    parking?: string; // 40
+    restDate?: string; //20
+    homepage?: string; // 50
+    expguide?: string; // 50
+    modifiedTime?: string; // 50
+    createdTime?: string; // 50
 }
 
 export interface PageOptions {
     numOfRows: number;
     page: number;
+    sort: string | "na" | "nd" | "r" | "o";
 }
 
 export interface SearchOptions {
     contentTypeId?: string;
+    title?: string;
+    contentId?: string;
 }
+
 
 export interface ITouristSpotResponseWithCount {
     touristspots: TouristSpot[];
@@ -128,7 +161,19 @@ TouristSpot.init(
         homepage: {
             field: "homepage",
             type: DataTypes.STRING
-        }
+        },
+        expguide: {
+            field: "expguide",
+            type: DataTypes.STRING
+        },
+        modifiedTime: {
+            field: "modified_time",
+            type: DataTypes.STRING
+        },
+        createdTime: {
+            field: "created_time",
+            type: DataTypes.STRING
+        },
     },
     {
         sequelize: sequelize,

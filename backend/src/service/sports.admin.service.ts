@@ -8,7 +8,7 @@ import { API_ROOT } from "..";
 import { Service } from "./service";
 
 import sequelize from "../model";
-import { PageOptions, SearchOptions, Restaurant, IUpdateWithAdmin } from "../model/restaurant.model";
+import { PageOptions, SearchOptions, Sports, IUpdateWithAdmin } from "../model/sports.model";
 import { Wanted } from "../model/wanted.model";
 
 import logger from "../logger/logger";
@@ -21,8 +21,7 @@ const detail_url = process.env.TOURAPI_DETAIL_URL;
 const detail_common_url = process.env.TOURAPI_DETAIL_COMMON_URL;
 const SERVICEKEY = process.env.TOURAPI_API_KEY;
 
-class RestaurantAdminService extends Service {
-    private FOLDER_NAME = "restaurant";
+class SportsAdminService extends Service {
 
     private createSort(sort: string): OrderItem {
         let result: OrderItem = ["title", "ASC"];
@@ -59,57 +58,60 @@ class RestaurantAdminService extends Service {
     }
 
     getURL(): string {
-        return `${API_ROOT}/admin/restaurant/search/all?page=1&numOfRows=1&sort=r&contentTypeId=39`;
+        return `${API_ROOT}/admin/sports/search/all?page=1&numOfRows=1&sort=r&contentTypeId=39`;
     }
 
-    async select(sort: string, searchOptions: SearchOptions, transaction: Transaction | null = null): Promise<Restaurant[]> {
-            let viewUpdate = {
-                view : 0
-            }
+    async select(sort: string, searchOptions: SearchOptions, transaction: Transaction | null = null): Promise<Sports[]> {
+      
             const resSort: OrderItem = this.createSort(sort);
             const where: WhereOptions = this.createWhere(searchOptions);
 
-            const result: Restaurant[] | Restaurant = await Restaurant.findAll({
+            const result: Sports[] | Sports = await Sports.findAll({
                 order: [resSort],
                 where
             });
-            for(const restaurant of result){
-                viewUpdate.view = restaurant.view + 1;
-                let updateRestaurant: Restaurant = await restaurant.update(viewUpdate, { transaction });
+
+            let viewUpdate = {
+                view : 0
             }
+            for(const sports of result){
+                viewUpdate.view = sports.view + 1;
+                let update: Sports = await sports.update(viewUpdate, { transaction });
+            }
+
             return result;
    
     }
 
-    async selectOne(searchOptions: SearchOptions): Promise<Restaurant> {
+    async selectOne(searchOptions: SearchOptions): Promise<Sports> {
         
             const where: WhereOptions = this.createWhere(searchOptions);
 
-            const result: Restaurant | null = await Restaurant.findOne({
+            const result: Sports | null = await Sports.findOne({
                 where
             });
 
-            if (!result) throw new NotFoundError(`Not Exist Restaurant`);
+            if (!result) throw new NotFoundError(`Not Exist Sports`);
 
             return result;
   
     }
-    async selectMul(contentIds: string[]): Promise<Restaurant[]> {
+    async selectMul(contentIds: string[]): Promise<Sports[]> {
      
             // const where: WhereOptions = { contentId: contentIds };
             if (!contentIds) throw new BadRequestError("BadRequest contentIds");
 
-            const restaurants: Restaurant[] = await Restaurant.findAll({
+            const sportss: Sports[] = await Sports.findAll({
                 where: { contentId: contentIds }
             });
 
-            if (!restaurants) throw new NotFoundError(`Not Exist Restaurant`);
+            if (!sportss) throw new NotFoundError(`Not Exist Sports`);
 
-            return restaurants;
+            return sportss;
      
     }
 
-    async create(transaction: Transaction | null = null, pageOptions: PageOptions, contentTypeId: String | undefined): Promise<Restaurant[]> {
+    async create(transaction: Transaction | null = null, pageOptions: PageOptions, contentTypeId: String | undefined): Promise<Sports[]> {
         const params = {
             numOfRows: pageOptions.numOfRows.toString(),
             pageNo: pageOptions.page.toString(),
@@ -138,7 +140,7 @@ class RestaurantAdminService extends Service {
             transaction = await sequelize.transaction();
 
             let i = 1;
-            let resRestaurant : Restaurant[] = [];
+            let resSports : Sports[] = [];
             for (let k = 0; k < result.response.body.items.item.length; ++k) {
                 const detail_params = {
                     ServiceKey: String(SERVICEKEY),
@@ -174,7 +176,7 @@ class RestaurantAdminService extends Service {
                 const detail_common_result: any = await Promise.resolve(detail_common_res.json());
                 let nowDate = new Date(+new Date() + 3240 * 10000).toISOString().replace("T", " ").replace(/\..*/, '');
 
-                const createdRestaraunt: Restaurant = await Restaurant.create(
+                const createdSports: Sports = await Sports.create(
                     {
                         contentTypeId: result.response.body.items.item[k].contenttypeid,
                         areaCode: result.response.body.items.item[k].areacode,
@@ -187,39 +189,39 @@ class RestaurantAdminService extends Service {
                         contentId: result.response.body.items.item[k].contentid,
                         description: detail_common_result.response.body.items.item[0].overview,
                         thumbnail: result.response.body.items.item[k].firstimage,
-                        signatureDish: detail_result.response.body.items.item[0].firstmenu,
+                        babyCarriage: detail_result.response.body.items.item[0].chkbabycarriageleports,
                         phoneNumber: result.response.body.items.item[k].tel,
-                        kidsFacility: detail_result.response.body.items.item[0].kidsfacility,
-                        useTime: detail_result.response.body.items.item[0].opentimefood,
-                        parking: detail_result.response.body.items.item[0].parkingfood,
-                        restDate: detail_result.response.body.items.item[0].restdatefood,
-                        smoking: detail_result.response.body.items.item[0].smoking,
-                        reservation: detail_result.response.body.items.item[0].reservationfood,
+                        pet: detail_result.response.body.items.item[0].chkpetleports,
+                        useTime: detail_result.response.body.items.item[0].usetimeleports,
+                        useFee: detail_result.response.body.items.item[0].usefeeleports,
+                        parking: detail_result.response.body.items.item[0].parkingleports,
+                        restDate: detail_result.response.body.items.item[0].restdateleports,
                         homepage: detail_common_result.response.body.items.item[0].homepage,
-                        createdTime: result.response.body.items.item[k].createdtime,
+                        openPeriod:detail_result.response.body.items.item[0].openperiod,
                         modifiedTime: nowDate,
+                        createdTime: result.response.body.items.item[k].createdtime
                     },
                     { transaction }
                 );
                 i++;
-                resRestaurant.push(createdRestaraunt);
+                resSports.push(createdSports);
             }
             transaction.commit();
-            return resRestaurant;
+            return resSports;
         } catch (err) {
             if (transaction) await transaction.rollback();
             throw err;
         }
     }
 
-    async update(transaction: Transaction | null = null, restaurant: Restaurant, data: IUpdateWithAdmin): Promise<Restaurant> {
-        const updateRestaurant: Restaurant = await restaurant.update(data, { transaction });
+    async update(transaction: Transaction | null = null, sports: Sports, data: IUpdateWithAdmin): Promise<Sports> {
+        const updateSports: Sports = await sports.update(data, { transaction });
 
-        return updateRestaurant;
+        return updateSports;
     }
 
-    async delete(transaction: Transaction | null = null, restaurant: Restaurant): Promise<void> {
-        await restaurant.destroy({ transaction });
+    async delete(transaction: Transaction | null = null, sports: Sports): Promise<void> {
+        await sports.destroy({ transaction });
     }
 
     async createWanted(transaction: Transaction | null = null, userId: number, contentId: string, contentTypeId: string) : Promise<Wanted>
@@ -243,4 +245,4 @@ class RestaurantAdminService extends Service {
     }
 }
 
-export default RestaurantAdminService;
+export default SportsAdminService;

@@ -1,182 +1,186 @@
-import { Transaction } from "sequelize";
-
-import sequelize from "../model";
-import { Culture, PageOptions, SearchOptions } from "../model/culture.model";
-
 import fetch from "node-fetch";
 import { URLSearchParams } from "url";
 
-const FOLDER_NAME = "culture";
+import { Transaction } from "sequelize";
+
+import { TOURAPI_CODE } from "../constant/statusCode.constant";
+
+import sequelize from "../model";
+import { Culture, PageOptions, SearchOptions, IUpdateWithAdmin } from "../model/culture.model";
+
+import CultureAdminService from "../service/culture.admin.service";
+
+import logger from "../logger/logger";
+
+import BadRequestError from "../error/badRequest.error";
+import NotFoundError from "../error/notFound.error";
+import { Wanted } from "../model/wanted.model";
+
 const url = "https://apis.data.go.kr/B551011/KorService1/areaBasedList1";
-const detail_url = "http://apis.data.go.kr/B551011/KorService1/detailIntro1";
-const detail_common_url = "http://apis.data.go.kr/B551011/KorService1/detailCommon1";
 const SERVICEKEY = new String(process.env.TOURAPI_API_KEY);
-const controller = {
-    /**
-     * const pageOptions: PageOptions = {
-     *      numOfRows: 1,
-     *      count 5,\
-     * };
-     * const searchOptions: SearchOptions = {
-     *      contentTypeId: 39
-     * };
-     *
-     * const result = await getRestaurantWithSearch(pageOptions, SearchOptions);
-     * ```
-     * @param pageOptions A {@link PageOptions}
-     * @param searchOptions A {@link SearchOptions}
-     * @returns A {@link IUserResponseWithCount}
-     */
-    getCultureFromAPI: async (pageOptions: PageOptions, searchOptions: SearchOptions): Promise<any> => {
-        const offset = (pageOptions.page - 1) * pageOptions.numOfRows;
+
+class CultureAdminController {
+    private cultureAdminService: CultureAdminService;
+    private CONTENT_TYPE_ID: string = "14";
+
+    constructor(cultureAdminService: CultureAdminService) {
+        this.cultureAdminService = cultureAdminService;
+    }
+
+   
+    async getCultureFromAPI (pageOptions: PageOptions, contentTypeId: String | undefined): Promise<any> {
 
         const params = {
             numOfRows: pageOptions.numOfRows.toString(),
             pageNo: pageOptions.page.toString(),
-            MobileOS: "ETC",
-            MobileApp: "AppTest",
-            ServiceKey: "+/HZpVR9TlY0YX1X6CbhFyyqCZDcTeqgCkaI87QvifdyB9PPg7LyFH46lWA5kG1u46bLFamCuKz3UyAONBiEOQ==",
-            listYN: "Y",
-            arrange: "A",
-            contentTypeId: searchOptions.contentTypeId!,
-            areaCode: "",
-            sigunguCode: "",
-            cat1: "",
-            cat2: "",
-            cat3: "",
-            _type: "json"
+            MobileOS: TOURAPI_CODE.MobileOS,
+            MobileApp: TOURAPI_CODE.MobileAPP,
+            ServiceKey: String(SERVICEKEY),
+            listYN: TOURAPI_CODE.YES,
+            arrange: TOURAPI_CODE.sort,
+            contentTypeId: String(contentTypeId),
+            areaCode: TOURAPI_CODE.EMPTY,
+            sigunguCode: TOURAPI_CODE.EMPTY,
+            cat1: TOURAPI_CODE.EMPTY,
+            cat2: TOURAPI_CODE.EMPTY,
+            cat3: TOURAPI_CODE.EMPTY,
+            _type: TOURAPI_CODE.type
         };
 
         const queryString = new URLSearchParams(params).toString();
         const requrl = `${url}?${queryString}`;
-        console.log(requrl);
 
         try {
             let res = await fetch(requrl);
             const result: any = await Promise.resolve(res.json());
-            console.log(result.response.body.items.item[0].contentid);
             for (let key in result.response.body.items.item[0]) {
                 console.log(key + " : " + result.response.body.items.item[0][key]);
             }
 
             return result;
         } catch (err) {
-            console.log("error: ", err);
+            logger.debug(`Error Culture Controller  :  ${err}`);
+            throw err;
         }
-    },
+    }
 
-    /**
-     * @param pageOptions A {@link PageOptions}
-     * @param searchOptions A {@link SearchOptions}
-     * @returns A {@link IUserResponseWithCount}
-     */
-    createCultureDB: async (pageOptions: PageOptions, searchOptions: SearchOptions): Promise<any> => {
-        const offset = (pageOptions.page - 1) * pageOptions.numOfRows;
-
-        const params = {
-            numOfRows: pageOptions.numOfRows.toString(),
-            pageNo: pageOptions.page.toString(),
-            MobileOS: "ETC",
-            MobileApp: "AppTest",
-            ServiceKey: "+/HZpVR9TlY0YX1X6CbhFyyqCZDcTeqgCkaI87QvifdyB9PPg7LyFH46lWA5kG1u46bLFamCuKz3UyAONBiEOQ==",
-            listYN: "Y",
-            arrange: "A",
-            contentTypeId: searchOptions.contentTypeId!,
-            areaCode: "",
-            sigunguCode: "",
-            cat1: "",
-            cat2: "",
-            cat3: "",
-            _type: "json"
-        };
-
-        const queryString = new URLSearchParams(params).toString();
-        const requrl = `${url}?${queryString}`;
-        console.log(requrl);
-
+  
+    async createCultureDB (pageOptions: PageOptions, contentTypeId: String | undefined): Promise<Culture[]> {
         let transaction: Transaction | undefined = undefined;
-
         try {
-            let res = await fetch(requrl);
-            const result: any = await Promise.resolve(res.json());
-
             transaction = await sequelize.transaction();
 
-            let i = 1;
-            for (let k = 0; k < result.response.body.items.item.length; ++k) {
-                // ?ServiceKey=인증키&contentTypeId=39&contentId=2869760&MobileOS=ETC&MobileApp=AppTest
-                const detail_params = {
-                    ServiceKey: "+/HZpVR9TlY0YX1X6CbhFyyqCZDcTeqgCkaI87QvifdyB9PPg7LyFH46lWA5kG1u46bLFamCuKz3UyAONBiEOQ==",
-                    _type: "json",
-                    MobileOS: "ETC",
-                    MobileApp: "AppTest",
-                    contentTypeId: result.response.body.items.item[k].contenttypeid,
-                    contentId: result.response.body.items.item[k].contentid
-                };
-                const detail_queryString = new URLSearchParams(detail_params).toString();
-                const detail_requrl = `${detail_url}?${detail_queryString}`;
-                let detail_res = await fetch(detail_requrl);
-                const detail_result: any = await Promise.resolve(detail_res.json());
+            const result: Culture[] = await this.cultureAdminService.create(transaction, pageOptions, contentTypeId);
 
-                // ?ServiceKey=인증키&contentTypeId=39&contentId=2869760&MobileOS=ETC&MobileApp=AppTest&defaultYN=Y&firstImageYN=Y&areacodeYN=Y&catcodeYN=Y&addrinfoYN=Y&mapinfoYN=Y&overviewYN=Y
-                const detail_common_params = {
-                    ServiceKey: "+/HZpVR9TlY0YX1X6CbhFyyqCZDcTeqgCkaI87QvifdyB9PPg7LyFH46lWA5kG1u46bLFamCuKz3UyAONBiEOQ==",
-                    _type: "json",
-                    MobileOS: "ETC",
-                    MobileApp: "AppTest",
-                    contentTypeId: result.response.body.items.item[k].contenttypeid,
-                    contentId: result.response.body.items.item[k].contentid,
-                    defaultYN: "Y",
-                    firstImageYN: "Y",
-                    areacodeYN: "Y",
-                    catcodeYN: "Y",
-                    addrinfoYN: "Y",
-                    mapinfoYN: "Y",
-                    overviewYN: "Y"
-                };
-                const detail_common_queryString = new URLSearchParams(detail_common_params).toString();
-                const detail_common_requrl = `${detail_common_url}?${detail_common_queryString}`;
-                let detail_common_res = await fetch(detail_common_requrl);
-                const detail_common_result: any = await Promise.resolve(detail_common_res.json());
-                //console.log(detail_result.response.body.items.item[0].firstmenu);
-                const createdCulture: Culture = await Culture.create(
-                    {
-                        //restaurantId: result.response.body.items.item[0]
-                        //restaurantId: result.response.body.items.item.length
-                        //restaurantId: result.response.body.items.item[0]
-                        // restaurantId: i,
-                        contentTypeId: result.response.body.items.item[k].contenttypeid,
-                        areaCode: result.response.body.items.item[k].areacode,
-                        sigunguCode: result.response.body.items.item[k].sigungucode,
-                        view: 0,
-                        title: result.response.body.items.item[k].title,
-                        address: result.response.body.items.item[k].addr1,
-                        mapX: result.response.body.items.item[k].mapx,
-                        mapY: result.response.body.items.item[k].mapy,
-                        contentId: result.response.body.items.item[k].contentid,
-                        description: detail_common_result.response.body.items.item[0].overview,
-                        thumbnail: result.response.body.items.item[k].firstimage,
-                        babyCarriage: detail_result.response.body.items.item[0].chkbabycarriageculture,
-                        phoneNumber: result.response.body.items.item[k].tel,
-                        pet: detail_result.response.body.items.item[0].chkpetculture,
-                        useTime: detail_result.response.body.items.item[0].usetimeculture,
-                        useFee: detail_result.response.body.items.item[0].usefee,
-                        parking: detail_result.response.body.items.item[0].parkingculture,
-                        restDate: detail_result.response.body.items.item[0].restdateculture,
-                        homepage: detail_common_result.response.body.items.item[0].homepage
-                    },
-                    { transaction }
-                );
-                i++;
-            }
-            transaction.commit();
+            await transaction.commit();
+            logger.debug(`Created Culture ${JSON.stringify(result)}`);
+
+            // const url: string = this.cultureAdminService.getURL();
+            return result;
         } catch (err) {
-            console.log("error: ", err);
+            logger.debug(`Error Culture  :  ${err}`);
 
             if (transaction) await transaction.rollback();
             throw err;
         }
     }
-};
 
-export default controller;
+    async getAllCulture(sort: string, searchOptions: SearchOptions): Promise<any> {
+        let transaction: Transaction | undefined = undefined;
+
+        try {
+            transaction = await sequelize.transaction();
+            const result: Culture | Culture[] = await this.cultureAdminService.select(sort, searchOptions, transaction);
+            await transaction.commit();
+
+            return result;
+        } catch (err) {
+            if (transaction) await transaction.rollback();
+            logger.debug(`Error Culture  :  ${err}`);
+            throw err;
+        }
+    }
+
+    async updateCulture(searchOptions: SearchOptions, data: IUpdateWithAdmin): Promise<Culture> {
+        let updatedCulture: Culture | null = null;
+        const culture: Culture | null = await this.cultureAdminService.selectOne(searchOptions);
+        let nowDate = new Date(+new Date() + 3240 * 10000).toISOString().replace("T", " ").replace(/\..*/, '');
+
+        if (!culture) throw new BadRequestError(`parameter content_id is bad`);
+        let transaction: Transaction | undefined = undefined;
+        if (!data.areaCode) { data.areaCode = culture.areaCode; }
+        if (!data.sigunguCode) data.sigunguCode = culture.sigunguCode;
+        if (!data.view) data.view = culture.view;
+        if (!data.title) data.title = culture.title;
+        if (!data.address) data.address = culture.address;
+        if (!data.mapX) data.mapX = culture.mapX;
+        if (!data.mapY) data.mapY = culture.mapY;
+        if (!data.description) data.description = culture.description;
+        if (!data.thumbnail) data.thumbnail = culture.thumbnail;
+        if (!data.pet) data.pet = culture.pet;
+        if (!data.phoneNumber) data.phoneNumber = culture.phoneNumber;
+        if (!data.babyCarriage) data.babyCarriage = culture.babyCarriage;
+        if (!data.useTime) data.useTime = culture.useTime;
+        if (!data.useFee) data.useFee = culture.useFee;
+        if (!data.parking) data.parking = culture.parking;
+        if (!data.restDate) data.restDate = culture.restDate;
+        if (!data.scale) data.scale = culture.scale;
+        if (!data.spendTime) data.spendTime = culture.spendTime;
+        if (!data.homepage) data.homepage = culture.homepage;
+        data.modifiedTime = nowDate;
+
+        try {
+            transaction = await sequelize.transaction();
+
+            updatedCulture = await this.cultureAdminService.update(transaction, culture, data);
+            await transaction.commit();
+
+            logger.debug(`Update Culture => content_id :  ${searchOptions.contentId}`);
+            return updatedCulture;
+        } catch (error) {
+            if (transaction) await transaction.rollback();
+            throw error;
+        }
+    }
+
+    async deleteCulture(contentIds: string[]): Promise<void> {
+        const cultures: Culture[] = await this.cultureAdminService.selectMul(contentIds);
+        if (cultures.length <= 0) throw new NotFoundError("Not found cultures.");
+
+        let transaction: Transaction | undefined = undefined;
+
+        try {
+            transaction = await sequelize.transaction();
+
+            for (const culture of cultures) {
+                await this.cultureAdminService.delete(transaction, culture);
+            }
+
+            await transaction.commit();
+        } catch (error) {
+            if (transaction) await transaction.rollback();
+            throw error;
+        }
+    }
+
+    async createWantedCulture(contentId: string, userId: number): Promise<Wanted> {
+        let transaction: Transaction | undefined = undefined;
+        try {
+            transaction = await sequelize.transaction();
+
+            const result: Wanted = await this.cultureAdminService.createWanted(transaction, userId, contentId, this.CONTENT_TYPE_ID);
+
+            await transaction.commit();
+            logger.debug(`Created Culture ${JSON.stringify(result)}`);
+            return result;
+
+        } catch (err) {
+            logger.debug(`Error Culture  :  ${err}`);
+
+            if (transaction) await transaction.rollback();
+            throw err;
+        }
+    }
+}
+
+export default CultureAdminController;

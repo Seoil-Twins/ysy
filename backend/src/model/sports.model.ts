@@ -23,18 +23,48 @@ export class Sports extends Model<InferAttributes<Sports>, InferCreationAttribut
     declare pet: string; // 50
     declare useTime: string; // 50
     declare useFee: string; // 50
-    declare parking: string; // 40
-    declare restDate: string; //20
-    declare homepage: string; // 50
+    declare parking: string;
+    declare restDate: string;
+    declare homepage: string;
+    declare modifiedTime: string; // 15
+    declare openPeriod: string; // 30
+    declare createdTime: string; // 15
+}
+
+export interface IUpdateWithAdmin{
+    areaCode?: string;
+    sigunguCode?: string;
+    view?: number;
+    title?: string;
+    address?: string;
+    mapX?: string;
+    mapY?: string;
+
+    description?: string; // 300
+    thumbnail?: string; // 50
+    phoneNumber?: string; // 13
+    babyCarriage?: string; // 10
+    pet?: string; // 50
+    useTime?: string; // 50
+    useFee?: string; // 50
+    parking?: string;
+    restDate?: string;
+    homepage?: string;
+    modifiedTime?: string; // 15
+    openPeriod?: string; // 30
+    createdTime?: string; // 15
 }
 
 export interface PageOptions {
     numOfRows: number;
     page: number;
+    sort: string | "na" | "nd" | "r" | "o";
 }
 
 export interface SearchOptions {
     contentTypeId?: string;
+    title?: string;
+    contentId?: string;
 }
 
 export interface ISportsResponseWithCount {
@@ -133,7 +163,19 @@ Sports.init(
         homepage: {
             field: "homepage",
             type: DataTypes.STRING
-        }
+        },
+        modifiedTime:  {
+            field: "modified_time",
+            type: DataTypes.STRING
+        },
+        openPeriod:  {
+            field: "open_period",
+            type: DataTypes.STRING
+        },
+        createdTime: {
+            field: "created_time",
+            type: DataTypes.STRING
+        },
     },
     {
         sequelize: sequelize,
