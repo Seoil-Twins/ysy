@@ -102,3 +102,28 @@ dist
 
 # TernJS port file
 .tern-port
+gradlew
+local.properties
+gradlew.bat
+gradle/wrapper/gradle-wrapper.properties
+gradle/wrapper/gradle-wrapper.jar
+build.gradle
+.idea/vcs.xml
+.idea/modules/ysy.iml
+.idea/modules.xml
+.idea/misc.xml
+.idea/gradle.xml
+.idea/compiler.xml
+.idea/caches/build_file_checksums.ser
+.gradle/vcs-1/gc.properties
+.gradle/checksums/checksums.lock
+.gradle/buildOutputCleanup/outputFiles.bin
+.gradle/buildOutputCleanup/cache.properties
+.gradle/buildOutputCleanup/buildOutputCleanup.lock
+.gradle/6.1.1/gc.properties
+.gradle/6.1.1/fileHashes/fileHashes.lock
+.gradle/6.1.1/fileHashes/fileHashes.bin
+.gradle/6.1.1/fileChanges/last-build.bin
+.gradle/6.1.1/executionHistory/executionHistory.lock
+.gradle/6.1.1/executionHistory/executionHistory.bin
+.idea/workspace.xml
