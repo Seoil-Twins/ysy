@@ -1,12 +1,14 @@
-import React from "react";
-import { View, StyleSheet, TouchableOpacity } from "react-native";
+import React, { useState } from "react";
+import { View, StyleSheet, TouchableOpacity, Dimensions, Image, Pressable } from "react-native";
 import AppIntroSlider from "react-native-app-intro-slider";
+import Modal from "react-native-modal";
 
 import FirstTutorialSVG from "../assets/icons/tutorial_love.svg";
 import SecondTutorialSVG from "../assets/icons/tutorial_album.svg";
 import ThirdTutorialSVG from "../assets/icons/tutorial_place.svg";
 import CustomText from "../components/CustomText";
 
+const { width, height } = Dimensions.get("window");
 const slides = [
   {
     key: "first",
@@ -32,9 +34,13 @@ type Item = (typeof slides)[0];
 
 const Tutorial = () => {
   let slider: AppIntroSlider | undefined;
+  const [isVisible, setIsVisible] = useState(false);
 
-  const onPressStartBtn = () => {
-    console.log("Open Modal!");
+  const showModal = () => {
+    setIsVisible(true);
+  };
+  const hideModal = () => {
+    setIsVisible(false);
   };
 
   const renderItem = ({ item }: { item: Item }) => {
@@ -61,7 +67,7 @@ const Tutorial = () => {
     return (
       <View>
         {activeIndex === 2 ? (
-          <TouchableOpacity style={styles.startBtn} onPress={onPressStartBtn}>
+          <TouchableOpacity style={styles.startBtn} onPress={showModal}>
             <CustomText size={24} weight="medium" color="#FFFFFF" style={{ textAlign: "center" }}>
               시작하기
             </CustomText>
@@ -72,7 +78,7 @@ const Tutorial = () => {
               slides.map((_, i) => (
                 <TouchableOpacity
                   key={i}
-                  style={[styles.dot, i === activeIndex ? styles.active : styles.noone, styles.mr15]}
+                  style={[styles.dot, i === activeIndex ? styles.active : styles.none, styles.mr15]}
                   onPress={() => slider?.goToSlide(i, true)}
                 />
               ))}
@@ -82,7 +88,54 @@ const Tutorial = () => {
     );
   };
 
-  return <AppIntroSlider renderItem={renderItem} renderPagination={renderPagination} data={slides} ref={(ref) => (slider = ref!)}></AppIntroSlider>;
+  const kakaoLogin = async () => {};
+
+  const naverLogin = () => {
+    console.log("naver Login");
+  };
+
+  const googleLogin = () => {
+    console.log("google Login");
+  };
+
+  return (
+    <>
+      <Modal
+        isVisible={isVisible}
+        onBackdropPress={hideModal}
+        onBackButtonPress={hideModal}
+        deviceWidth={width}
+        deviceHeight={height}
+        style={styles.bottomModal}
+      >
+        <View style={styles.modalBox}>
+          <View style={styles.textBox}>
+            <CustomText size={26} weight="medium" style={[styles.textCenter, styles.mb5]}>
+              간편 회원가입
+            </CustomText>
+            <CustomText size={16} weight="regular" color="#999999" style={styles.textCenter}>
+              자주 사용하는 SNS를 통해 간편하게
+            </CustomText>
+            <CustomText size={16} weight="regular" color="#999999" style={styles.textCenter}>
+              YSY 앱 서비스를 가입하실 수 있습니다.
+            </CustomText>
+          </View>
+          <View style={styles.loginBox}>
+            <Pressable onPress={kakaoLogin}>
+              <Image source={require("../assets/icons/kakao_login_btn.png")} style={styles.mb15} />
+            </Pressable>
+            <Pressable onPress={naverLogin}>
+              <Image source={require("../assets/icons/naver_login_btn.png")} style={styles.mb15} />
+            </Pressable>
+            <Pressable onPress={googleLogin}>
+              <Image source={require("../assets/icons/google_login_btn.png")} />
+            </Pressable>
+          </View>
+        </View>
+      </Modal>
+      <AppIntroSlider renderItem={renderItem} renderPagination={renderPagination} data={slides} ref={(ref) => (slider = ref!)}></AppIntroSlider>
+    </>
+  );
 };
 
 const styles = StyleSheet.create({
@@ -123,10 +176,11 @@ const styles = StyleSheet.create({
   active: {
     backgroundColor: "#5A8FFF"
   },
-  noone: {
+  none: {
     backgroundColor: "#DDDDDD"
   },
   startBtn: {
+    position: "absolute",
     width: 320,
     height: 52,
     bottom: 48,
@@ -135,7 +189,31 @@ const styles = StyleSheet.create({
     alignSelf: "center",
     backgroundColor: "#3675FB",
     borderRadius: 10
-  }
+  },
+  bottomModal: {
+    justifyContent: "flex-end",
+    margin: 0
+  },
+  modalBox: {
+    width: width,
+    paddingLeft: 20,
+    paddingRight: 20,
+    paddingTop: 48,
+    paddingBottom: 48,
+    borderTopLeftRadius: 10,
+    borderTopRightRadius: 10,
+    backgroundColor: "#FFFFFF"
+  },
+  textBox: {
+    marginBottom: 35
+  },
+  mb5: {
+    marginBottom: 5
+  },
+  mb15: {
+    marginBottom: 15
+  },
+  loginBox: {}
 });
 
 export default Tutorial;
