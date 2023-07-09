@@ -17,7 +17,9 @@ const CustomText: React.FC<CustomTextProps> = (props: CustomTextProps) => {
       style={[
         {
           fontFamily:
-            props.weight === 'medium' ? 'notosans-medium' : 'notosans-regular',
+            props.weight === 'medium'
+              ? 'NotoSansKR-Medium'
+              : 'NotoSansKR-Regular',
           fontSize: props.size,
           color: props.color ? props.color : '#222222',
           includeFontPadding: false,

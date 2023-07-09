@@ -2,7 +2,7 @@ import React, {useEffect} from 'react';
 import {SafeAreaView, StatusBar, StyleSheet, View} from 'react-native';
 import {Provider} from 'react-redux';
 
-import store from './redux/store';
+import store, {RootState} from './redux/store';
 import {useAppSelector, useAppDispatch} from './redux/hooks';
 import {login, logout} from './features/loginStatusSlice';
 
@@ -18,7 +18,9 @@ const AppWrapper = () => {
 };
 
 const App = () => {
-  const isLogin = useAppSelector((state: any) => state.loginStatus.isLogin);
+  const isLogin = useAppSelector(
+    (state: RootState) => state.loginStatus.isLogin,
+  );
   const dispatch = useAppDispatch();
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
