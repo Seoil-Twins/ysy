@@ -1,5 +1,5 @@
-import React, {ReactNode} from 'react';
-import {Text, StyleProp, TextStyle} from 'react-native';
+import React, { ReactNode } from 'react';
+import { Text, StyleProp, TextStyle } from 'react-native';
 
 type CustomTextProps = {
   weight: 'regular' | 'medium';
@@ -10,7 +10,7 @@ type CustomTextProps = {
 };
 
 const CustomText: React.FC<CustomTextProps> = (props: CustomTextProps) => {
-  const {style, children} = props;
+  const { style, children } = props;
 
   return (
     <Text

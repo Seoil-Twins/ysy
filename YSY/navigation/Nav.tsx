@@ -1,8 +1,8 @@
 import React from 'react';
-import {StyleSheet} from 'react-native';
-import {SvgProps} from 'react-native-svg';
-import {NavigationContainer} from '@react-navigation/native';
-import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
+import { StyleSheet } from 'react-native';
+import { SvgProps } from 'react-native-svg';
+import { NavigationContainer } from '@react-navigation/native';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 
 import Home from '../screens/Home';
 import Album from '../screens/Album';
@@ -28,11 +28,11 @@ const Nav = () => {
     <NavigationContainer>
       <Tab.Navigator
         initialRouteName="Home"
-        screenOptions={({route}) => ({
+        screenOptions={({ route }) => ({
           headerShown: false,
           tabBarShowLabel: false,
-          tabBarStyle: {height: 48, alignItems: 'center'},
-          tabBarIcon: ({focused}) => {
+          tabBarStyle: { height: 48, alignItems: 'center' },
+          tabBarIcon: ({ focused }) => {
             let IconComponent: React.FC<SvgProps>;
 
             if (route.name === 'Home') {

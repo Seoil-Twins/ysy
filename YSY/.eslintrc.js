@@ -6,6 +6,7 @@ module.exports = {
       'error',
       {
         endOfLine: 'auto',
+        bracketSpacing: true,
       },
     ],
     'react/no-unstable-nested-components': 'off',

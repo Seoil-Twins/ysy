@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -13,7 +13,7 @@ import {
 import SortSvg from '../assets/icons/sort.svg';
 import SettingSvg from '../assets/icons/settings.svg';
 
-import {widthPercentageToDP as wp} from 'react-native-responsive-screen';
+import { widthPercentageToDP as wp } from 'react-native-responsive-screen';
 
 const screenWidth = wp('100%');
 
@@ -41,10 +41,13 @@ const Album = () => {
     closeSortModal();
   };
 
-  const renderItem = ({item}: {item: string}) => (
-    <View style={{flex: 1, paddingTop: 5, alignItems: 'center'}}>
-      <Image source={{uri: item}} style={{width: screenWidth, height: 200}} />
-      <View style={{position: 'absolute', bottom: 0, left: 0}}>
+  const renderItem = ({ item }: { item: string }) => (
+    <View style={{ flex: 1, paddingTop: 5, alignItems: 'center' }}>
+      <Image
+        source={{ uri: item }}
+        style={{ width: screenWidth, height: 200 }}
+      />
+      <View style={{ position: 'absolute', bottom: 0, left: 0 }}>
         <Text
           style={{
             color: 'white',
@@ -57,7 +60,7 @@ const Album = () => {
         <Text style={styles.albumTextLeft}>(개수)</Text>
       </View>
 
-      <View style={{position: 'absolute', bottom: 0, right: 0}}>
+      <View style={{ position: 'absolute', bottom: 0, right: 0 }}>
         <Text style={styles.albumTextRight}>2023-07-06</Text>
       </View>
     </View>
@@ -77,7 +80,7 @@ const Album = () => {
 
   return (
     <React.Fragment>
-      <View style={{flex: 1}}>
+      <View style={{ flex: 1 }}>
         <View
           style={{
             flexDirection: 'row',
@@ -86,7 +89,7 @@ const Album = () => {
             alignItems: 'center',
             justifyContent: 'flex-end',
           }}>
-          <View style={{flexDirection: 'row'}}>
+          <View style={{ flexDirection: 'row' }}>
             <TouchableOpacity
               onPress={() => {
                 openSortModal();

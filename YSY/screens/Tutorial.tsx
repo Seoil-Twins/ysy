@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, { useState } from 'react';
 import {
   View,
   StyleSheet,
@@ -15,7 +15,7 @@ import SecondTutorialSVG from '../assets/icons/tutorial_album.svg';
 import ThirdTutorialSVG from '../assets/icons/tutorial_place.svg';
 import CustomText from '../components/CustomText';
 
-const {width, height} = Dimensions.get('window');
+const { width, height } = Dimensions.get('window');
 const slides = [
   {
     key: 'first',
@@ -61,7 +61,7 @@ const Tutorial = () => {
     setIsVisible(false);
   };
 
-  const renderItem = ({item}: {item: Item}) => {
+  const renderItem = ({ item }: { item: Item }) => {
     return (
       <View style={styles.container}>
         <item.image style={styles.img} />
@@ -98,7 +98,7 @@ const Tutorial = () => {
               size={24}
               weight="medium"
               color="#FFFFFF"
-              style={{textAlign: 'center'}}>
+              style={{ textAlign: 'center' }}>
               시작하기
             </CustomText>
           </TouchableOpacity>

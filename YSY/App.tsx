@@ -1,10 +1,10 @@
-import React, {useEffect} from 'react';
-import {SafeAreaView, StatusBar, StyleSheet, View} from 'react-native';
-import {Provider} from 'react-redux';
+import React, { useEffect } from 'react';
+import { SafeAreaView, StatusBar, StyleSheet, View } from 'react-native';
+import { Provider } from 'react-redux';
 
-import store, {RootState} from './redux/store';
-import {useAppSelector, useAppDispatch} from './redux/hooks';
-import {login, logout} from './features/loginStatusSlice';
+import store, { RootState } from './redux/store';
+import { useAppSelector, useAppDispatch } from './redux/hooks';
+import { login, logout } from './features/loginStatusSlice';
 
 import Nav from './navigation/Nav';
 import Tutorial from './screens/Tutorial';
