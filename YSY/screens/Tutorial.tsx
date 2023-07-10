@@ -9,11 +9,20 @@ import {
 } from 'react-native';
 import AppIntroSlider from 'react-native-app-intro-slider';
 import Modal from 'react-native-modal';
+import * as KakaoOAuth from '@react-native-seoul/kakao-login';
 
 import FirstTutorialSVG from '../assets/icons/tutorial_love.svg';
 import SecondTutorialSVG from '../assets/icons/tutorial_album.svg';
 import ThirdTutorialSVG from '../assets/icons/tutorial_place.svg';
+
 import CustomText from '../components/CustomText';
+
+import {
+  AppToken,
+  LoginOptions,
+  appLogin,
+  verifyLoginData,
+} from '../util/login';
 
 const { width, height } = Dimensions.get('window');
 const slides = [
@@ -122,7 +131,69 @@ const Tutorial = () => {
     );
   };
 
-  const kakaoLogin = async () => {};
+  const kakaoLogin = async () => {
+    /**
+     * {
+     *    "accessToken": "OV1sjBZqeffdSBl3gkls8jRKa9n-3zzx3ClMBEJdCj11GwAAAYlAeZoh",
+     *    "accessTokenExpiresAt": "2023-07-11 12:44:16",
+     *    "idToken": null,
+     *    "refreshToken": "jgZ5hvIJT0-GIy2HyBnibr4LIa9VbhNC1HGfJY-dCj11GwAAAYlAeZog",
+     *    "refreshTokenExpiresAt": "2023-09-09 00:44:16",
+     *    "scopes": ["birthday", "account_email", "profile_image", "gender", "profile_nickname"]
+     * }
+     */
+    await KakaoOAuth.login();
+
+    /**
+     * {
+     *    "ageRange": "null",
+     *    "ageRangeNeedsAgreement": false,
+     *    "birthday": "1126",
+     *    "birthdayNeedsAgreement": false,
+     *    "birthdayType": "SOLAR",
+     *    "birthyear": "null",
+     *    "birthyearNeedsAgreement": false,
+     *    "email": "seungyong00@kakao.com",
+     *    "emailNeedsAgreement": false,
+     *    "gender": "MALE",
+     *    "genderNeedsAgreement": false,
+     *    "id": "2904977053",
+     *    "isEmailValid": true,
+     *    "isEmailVerified": true,
+     *    "isKorean": false,
+     *    "isKoreanNeedsAgreement": false,
+     *    "name": "null",
+     *    "nickname": "승용",
+     *    "phoneNumber": "null",
+     *    "phoneNumberNeedsAgreement": false,
+     *    "profileImageUrl": "https://k.kakaocdn.net/dn/Y4YRS/btsiPPlUQdf/5jbfMmQk55nTOnvaTzpiR0/img_640x640.jpg",
+     *    "profileNeedsAgreement": false,
+     *    "thumbnailImageUrl": "https://k.kakaocdn.net/dn/Y4YRS/btsiPPlUQdf/5jbfMmQk55nTOnvaTzpiR0/img_110x110.jpg"
+     * }
+     */
+    const profile: KakaoOAuth.KakaoProfile = await KakaoOAuth.getProfile();
+    const data: LoginOptions = {
+      snsId: '0001',
+      email: profile.email !== 'null' ? profile.email : null,
+      name: profile.nickname !== 'null' ? profile.nickname : null,
+      birthday:
+        profile.birthday !== 'null' && profile.birthyear !== 'null'
+          ? ` ${profile.birthyear}-${profile.birthday.substring(
+              0,
+              2,
+            )}-${profile.birthday.substring(2, 4)}`
+          : null,
+      phone: profile.phoneNumber !== 'null' ? profile.phoneNumber : null,
+      eventNofi: false,
+    };
+
+    // false면 추가 정보 페이지로 이동
+    console.log(verifyLoginData(data));
+
+    const token: AppToken = await appLogin(data);
+    // SecureStore에 저장
+    console.log(token);
+  };
 
   const naverLogin = () => {
     console.log('naver Login');
