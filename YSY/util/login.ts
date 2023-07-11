@@ -4,6 +4,7 @@ export interface LoginOptions {
   email: string | null;
   phone: string | null;
   birthday: string | null;
+  profile: string | null;
   eventNofi: boolean;
 }
 
@@ -19,13 +20,16 @@ export interface AppToken {
  * @returns boolean
  */
 export const verifyLoginData = (data: LoginOptions): boolean => {
+  const birthdays = data.birthday?.split('-');
+
   if (
     !data.snsId ||
     !data.email ||
     !data.name ||
     !data.phone ||
     !data.birthday ||
-    data.birthday.length !== 8
+    !data.profile ||
+    birthdays?.length !== 3
   ) {
     return false;
   } else if (!data.eventNofi) {

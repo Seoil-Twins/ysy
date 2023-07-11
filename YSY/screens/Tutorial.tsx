@@ -1,3 +1,9 @@
+import {
+  NAVER_CONSUMERKEY,
+  NAVER_CONSUMER_SECRET,
+  NAVER_APP_NAME,
+  SERVICE_URL_SCHEME,
+} from '@env';
 import React, { useState } from 'react';
 import {
   View,
@@ -10,6 +16,7 @@ import {
 import AppIntroSlider from 'react-native-app-intro-slider';
 import Modal from 'react-native-modal';
 import * as KakaoOAuth from '@react-native-seoul/kakao-login';
+import NaverOAuth from '@react-native-seoul/naver-login';
 
 import FirstTutorialSVG from '../assets/icons/tutorial_love.svg';
 import SecondTutorialSVG from '../assets/icons/tutorial_album.svg';
@@ -184,6 +191,8 @@ const Tutorial = () => {
             )}-${profile.birthday.substring(2, 4)}`
           : null,
       phone: profile.phoneNumber !== 'null' ? profile.phoneNumber : null,
+      profile:
+        profile.profileImageUrl !== 'null' ? profile.profileImageUrl : null,
       eventNofi: false,
     };
 
@@ -195,8 +204,48 @@ const Tutorial = () => {
     console.log(token);
   };
 
-  const naverLogin = () => {
-    console.log('naver Login');
+  const naverLogin = async () => {
+    const { failureResponse, successResponse } = await NaverOAuth.login({
+      appName: NAVER_APP_NAME,
+      consumerKey: NAVER_CONSUMERKEY,
+      consumerSecret: NAVER_CONSUMER_SECRET,
+      // naver devloper에서 ios 등록할 때 URL_SCHEME과 맞춰줘야함
+      serviceUrlScheme: SERVICE_URL_SCHEME,
+    });
+
+    if (successResponse?.accessToken) {
+      const profileResult = await NaverOAuth.getProfile(
+        successResponse!.accessToken,
+      );
+
+      if (profileResult.message === 'success') {
+        // Naver는 모든 정보를 필수로 가져오게 할 수 있음.
+        const { name, birthyear, birthday, email, mobile, profile_image } =
+          profileResult.response;
+
+        const data: LoginOptions = {
+          snsId: '0002',
+          name,
+          email,
+          phone: mobile,
+          profile: profile_image,
+          birthday: `${birthyear}-${birthday}`,
+          eventNofi: false,
+        };
+
+        // false면 추가 정보 페이지로 이동
+        console.log('Good : ', verifyLoginData(data));
+
+        const token: AppToken = await appLogin(data);
+        // SecureStore에 저장
+        console.log(token);
+      } else {
+        console.log('Failed get profile');
+        console.log(profileResult);
+      }
+    } else {
+      console.log('Failed! : ', failureResponse);
+    }
   };
 
   const googleLogin = () => {
