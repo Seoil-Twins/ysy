@@ -3,8 +3,9 @@ import {
   NAVER_CONSUMER_SECRET,
   NAVER_APP_NAME,
   SERVICE_URL_SCHEME,
+  GOOGLE_WEB_CLIENT_ID,
 } from '@env';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   StyleSheet,
@@ -17,6 +18,8 @@ import AppIntroSlider from 'react-native-app-intro-slider';
 import Modal from 'react-native-modal';
 import * as KakaoOAuth from '@react-native-seoul/kakao-login';
 import NaverOAuth from '@react-native-seoul/naver-login';
+import { GoogleSignin } from '@react-native-google-signin/google-signin';
+import GoogleOAuth from '@react-native-firebase/auth';
 
 import FirstTutorialSVG from '../assets/icons/tutorial_love.svg';
 import SecondTutorialSVG from '../assets/icons/tutorial_album.svg';
@@ -69,6 +72,16 @@ type Item = (typeof slides)[0];
 const Tutorial = () => {
   let slider: AppIntroSlider | undefined;
   const [isVisible, setIsVisible] = useState(false);
+
+  useEffect(() => {
+    googleSigninConfigure();
+  }, []);
+
+  const googleSigninConfigure = () => {
+    GoogleSignin.configure({
+      webClientId: GOOGLE_WEB_CLIENT_ID,
+    });
+  };
 
   const showModal = () => {
     setIsVisible(true);
@@ -248,8 +261,34 @@ const Tutorial = () => {
     }
   };
 
-  const googleLogin = () => {
-    console.log('google Login');
+  const googleLogin = async () => {
+    const { idToken } = await GoogleSignin.signIn();
+    // GoogleOAuth를 통해 사용자 인증을 하면 더 많은 정보를 가져올 수 있음(phoneNumber).
+    const googleCredential = GoogleOAuth.GoogleAuthProvider.credential(idToken);
+    const response = await GoogleOAuth().signInWithCredential(googleCredential);
+
+    if (response.user) {
+      const data: LoginOptions = {
+        snsId: '0003',
+        name: response.user.displayName,
+        // 나중에 이메일 인증이 생긴다면 response.user.emailVerified로 인증 여부 확인
+        email: response.user.email,
+        phone: response.user.phoneNumber ? response.user.phoneNumber : null,
+        profile: response.user.photoURL,
+        // 생년월일을 제공하지 않음
+        birthday: null,
+        eventNofi: false,
+      };
+
+      // false면 추가 정보 페이지로 이동
+      console.log('Good : ', verifyLoginData(data));
+
+      const token: AppToken = await appLogin(data);
+      // SecureStore에 저장
+      console.log(token);
+    } else {
+      console.log('Failed! : ', response);
+    }
   };
 
   return (
