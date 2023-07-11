@@ -152,69 +152,75 @@ const Tutorial = () => {
   };
 
   const kakaoLogin = async () => {
-    /**
-     * {
-     *    "accessToken": "OV1sjBZqeffdSBl3gkls8jRKa9n-3zzx3ClMBEJdCj11GwAAAYlAeZoh",
-     *    "accessTokenExpiresAt": "2023-07-11 12:44:16",
-     *    "idToken": null,
-     *    "refreshToken": "jgZ5hvIJT0-GIy2HyBnibr4LIa9VbhNC1HGfJY-dCj11GwAAAYlAeZog",
-     *    "refreshTokenExpiresAt": "2023-09-09 00:44:16",
-     *    "scopes": ["birthday", "account_email", "profile_image", "gender", "profile_nickname"]
-     * }
-     */
-    await KakaoOAuth.login();
+    try {
+      /**
+       * {
+       *    "accessToken": "OV1sjBZqeffdSBl3gkls8jRKa9n-3zzx3ClMBEJdCj11GwAAAYlAeZoh",
+       *    "accessTokenExpiresAt": "2023-07-11 12:44:16",
+       *    "idToken": null,
+       *    "refreshToken": "jgZ5hvIJT0-GIy2HyBnibr4LIa9VbhNC1HGfJY-dCj11GwAAAYlAeZog",
+       *    "refreshTokenExpiresAt": "2023-09-09 00:44:16",
+       *    "scopes": ["birthday", "account_email", "profile_image", "gender", "profile_nickname"]
+       * }
+       */
+      await KakaoOAuth.login();
 
-    /**
-     * {
-     *    "ageRange": "null",
-     *    "ageRangeNeedsAgreement": false,
-     *    "birthday": "1126",
-     *    "birthdayNeedsAgreement": false,
-     *    "birthdayType": "SOLAR",
-     *    "birthyear": "null",
-     *    "birthyearNeedsAgreement": false,
-     *    "email": "seungyong00@kakao.com",
-     *    "emailNeedsAgreement": false,
-     *    "gender": "MALE",
-     *    "genderNeedsAgreement": false,
-     *    "id": "2904977053",
-     *    "isEmailValid": true,
-     *    "isEmailVerified": true,
-     *    "isKorean": false,
-     *    "isKoreanNeedsAgreement": false,
-     *    "name": "null",
-     *    "nickname": "승용",
-     *    "phoneNumber": "null",
-     *    "phoneNumberNeedsAgreement": false,
-     *    "profileImageUrl": "https://k.kakaocdn.net/dn/Y4YRS/btsiPPlUQdf/5jbfMmQk55nTOnvaTzpiR0/img_640x640.jpg",
-     *    "profileNeedsAgreement": false,
-     *    "thumbnailImageUrl": "https://k.kakaocdn.net/dn/Y4YRS/btsiPPlUQdf/5jbfMmQk55nTOnvaTzpiR0/img_110x110.jpg"
-     * }
-     */
-    const profile: KakaoOAuth.KakaoProfile = await KakaoOAuth.getProfile();
-    const data: LoginOptions = {
-      snsId: '0001',
-      email: profile.email !== 'null' ? profile.email : null,
-      name: profile.nickname !== 'null' ? profile.nickname : null,
-      birthday:
-        profile.birthday !== 'null' && profile.birthyear !== 'null'
-          ? ` ${profile.birthyear}-${profile.birthday.substring(
-              0,
-              2,
-            )}-${profile.birthday.substring(2, 4)}`
-          : null,
-      phone: profile.phoneNumber !== 'null' ? profile.phoneNumber : null,
-      profile:
-        profile.profileImageUrl !== 'null' ? profile.profileImageUrl : null,
-      eventNofi: false,
-    };
+      /**
+       * {
+       *    "ageRange": "null",
+       *    "ageRangeNeedsAgreement": false,
+       *    "birthday": "1126",
+       *    "birthdayNeedsAgreement": false,
+       *    "birthdayType": "SOLAR",
+       *    "birthyear": "null",
+       *    "birthyearNeedsAgreement": false,
+       *    "email": "seungyong00@kakao.com",
+       *    "emailNeedsAgreement": false,
+       *    "gender": "MALE",
+       *    "genderNeedsAgreement": false,
+       *    "id": "2904977053",
+       *    "isEmailValid": true,
+       *    "isEmailVerified": true,
+       *    "isKorean": false,
+       *    "isKoreanNeedsAgreement": false,
+       *    "name": "null",
+       *    "nickname": "승용",
+       *    "phoneNumber": "null",
+       *    "phoneNumberNeedsAgreement": false,
+       *    "profileImageUrl": "https://k.kakaocdn.net/dn/Y4YRS/btsiPPlUQdf/5jbfMmQk55nTOnvaTzpiR0/img_640x640.jpg",
+       *    "profileNeedsAgreement": false,
+       *    "thumbnailImageUrl": "https://k.kakaocdn.net/dn/Y4YRS/btsiPPlUQdf/5jbfMmQk55nTOnvaTzpiR0/img_110x110.jpg"
+       * }
+       */
+      const profile: KakaoOAuth.KakaoProfile = await KakaoOAuth.getProfile();
+      const data: LoginOptions = {
+        snsId: '0001',
+        email: profile.email !== 'null' ? profile.email : null,
+        name: profile.nickname !== 'null' ? profile.nickname : null,
+        birthday:
+          profile.birthday !== 'null' && profile.birthyear !== 'null'
+            ? ` ${profile.birthyear}-${profile.birthday.substring(
+                0,
+                2,
+              )}-${profile.birthday.substring(2, 4)}`
+            : null,
+        phone: profile.phoneNumber !== 'null' ? profile.phoneNumber : null,
+        profile:
+          profile.profileImageUrl !== 'null' ? profile.profileImageUrl : null,
+        eventNofi: false,
+      };
 
-    // false면 추가 정보 페이지로 이동
-    console.log(verifyLoginData(data));
+      // false면 추가 정보 페이지로 이동
+      console.log(verifyLoginData(data));
 
-    const token: AppToken = await appLogin(data);
-    // SecureStore에 저장
-    console.log(token);
+      const token: AppToken = await appLogin(data);
+      // SecureStore에 저장
+      console.log(token);
+    } catch (error) {
+      if (!String(error).includes('user cancelled')) {
+        console.log('알 수 없는 에러');
+      }
+    }
   };
 
   const naverLogin = async () => {
@@ -256,38 +262,45 @@ const Tutorial = () => {
         console.log('Failed get profile');
         console.log(profileResult);
       }
-    } else {
+    } else if (!failureResponse?.isCancel) {
       console.log('Failed! : ', failureResponse);
     }
   };
 
   const googleLogin = async () => {
-    const { idToken } = await GoogleSignin.signIn();
-    // GoogleOAuth를 통해 사용자 인증을 하면 더 많은 정보를 가져올 수 있음(phoneNumber).
-    const googleCredential = GoogleOAuth.GoogleAuthProvider.credential(idToken);
-    const response = await GoogleOAuth().signInWithCredential(googleCredential);
+    try {
+      const { idToken } = await GoogleSignin.signIn();
+      // GoogleOAuth를 통해 사용자 인증을 하면 더 많은 정보를 가져올 수 있음(phoneNumber).
+      const googleCredential =
+        GoogleOAuth.GoogleAuthProvider.credential(idToken);
+      const response = await GoogleOAuth().signInWithCredential(
+        googleCredential,
+      );
 
-    if (response.user) {
-      const data: LoginOptions = {
-        snsId: '0003',
-        name: response.user.displayName,
-        // 나중에 이메일 인증이 생긴다면 response.user.emailVerified로 인증 여부 확인
-        email: response.user.email,
-        phone: response.user.phoneNumber ? response.user.phoneNumber : null,
-        profile: response.user.photoURL,
-        // 생년월일을 제공하지 않음
-        birthday: null,
-        eventNofi: false,
-      };
+      if (response.user) {
+        const data: LoginOptions = {
+          snsId: '0003',
+          name: response.user.displayName,
+          // 나중에 이메일 인증이 생긴다면 response.user.emailVerified로 인증 여부 확인
+          email: response.user.email,
+          phone: response.user.phoneNumber ? response.user.phoneNumber : null,
+          profile: response.user.photoURL,
+          // 생년월일을 제공하지 않음
+          birthday: null,
+          eventNofi: false,
+        };
 
-      // false면 추가 정보 페이지로 이동
-      console.log('Good : ', verifyLoginData(data));
+        // false면 추가 정보 페이지로 이동
+        console.log('Good : ', verifyLoginData(data));
 
-      const token: AppToken = await appLogin(data);
-      // SecureStore에 저장
-      console.log(token);
-    } else {
-      console.log('Failed! : ', response);
+        const token: AppToken = await appLogin(data);
+        // SecureStore에 저장
+        console.log(token);
+      }
+    } catch (error) {
+      if (!String(error).includes('Sign in action cancelled')) {
+        console.log('알 수 없는 에러');
+      }
     }
   };
 
