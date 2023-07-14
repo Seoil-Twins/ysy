@@ -33,6 +33,7 @@ import {
   appLogin,
   verifyLoginData,
 } from '../util/login';
+import { setSecureValue } from '../util/jwt';
 
 const { width, height } = Dimensions.get('window');
 const slides = [
@@ -214,8 +215,9 @@ const Tutorial = () => {
       console.log(verifyLoginData(data));
 
       const token: AppToken = await appLogin(data);
-      // SecureStore에 저장
-      console.log(token);
+
+      await setSecureValue('accessToken', token.accessToken);
+      await setSecureValue('refreshToken', token.refreshToken);
     } catch (error) {
       if (!String(error).includes('user cancelled')) {
         console.log('알 수 없는 에러');
@@ -256,8 +258,9 @@ const Tutorial = () => {
         console.log('Good : ', verifyLoginData(data));
 
         const token: AppToken = await appLogin(data);
-        // SecureStore에 저장
-        console.log(token);
+
+        await setSecureValue('accessToken', token.accessToken);
+        await setSecureValue('refreshToken', token.refreshToken);
       } else {
         console.log('Failed get profile');
         console.log(profileResult);
@@ -294,8 +297,9 @@ const Tutorial = () => {
         console.log('Good : ', verifyLoginData(data));
 
         const token: AppToken = await appLogin(data);
-        // SecureStore에 저장
-        console.log(token);
+
+        await setSecureValue('accessToken', token.accessToken);
+        await setSecureValue('refreshToken', token.refreshToken);
       }
     } catch (error) {
       if (!String(error).includes('Sign in action cancelled')) {

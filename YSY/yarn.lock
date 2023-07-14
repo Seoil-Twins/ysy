@@ -6132,6 +6132,11 @@
   dependencies:
     "dotenv" "^16.3.1"
 
+"react-native-keychain@^8.1.1":
+  "integrity" "sha512-8fxgeHKwGcL657eAYpdBTkDIxNhbIHI+kyyO0Yac2dgVAN184JoIwQcW2z6snahwDaCObQOu0biLFHnsH+4KSg=="
+  "resolved" "https://registry.npmjs.org/react-native-keychain/-/react-native-keychain-8.1.1.tgz"
+  "version" "8.1.1"
+
 "react-native-modal@^13.0.1":
   "integrity" "sha512-UB+mjmUtf+miaG/sDhOikRfBOv0gJdBU2ZE1HtFWp6UixW9jCk/bhGdHUgmZljbPpp0RaO/6YiMmQSSK3kkMaw=="
   "resolved" "https://registry.npmjs.org/react-native-modal/-/react-native-modal-13.0.1.tgz"
