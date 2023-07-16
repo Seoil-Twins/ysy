@@ -12,21 +12,50 @@ import {
 
 import SortSvg from '../assets/icons/sort.svg';
 import SettingSvg from '../assets/icons/settings.svg';
+import AddSvg from '../assets/icons/add.svg'
 
 import { widthPercentageToDP as wp } from 'react-native-responsive-screen';
 
 const screenWidth = wp('100%');
 
-// type FolderListProps = {
-//   folderList: string[];
-//   selectFolder: (folderName: string) => void;
-//   handleDelete: (folderName: string) => void;
-// };
-
 const Album = () => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [isSortModalVisible, setIsSortModalVisible] = useState(false);
   const [selectedSortMethod, setSelectedSortMethod] = useState('최신순');
+
+ const [isSelectionMode, setIsSelectionMode] = useState(false);
+  const [selectedAlbums, setSelectedAlbums] = useState<string[]>([]);
+
+  const handleAlbumPress = (albumName: string) => {
+    if (isSelectionMode) {
+      setSelectedAlbums((prevSelectedAlbums) => {
+        if (prevSelectedAlbums.includes(albumName)) {
+          // 이미 선택된 앨범인 경우 선택 해제
+          return prevSelectedAlbums.filter((item) => item !== albumName);
+        } else {
+          // 선택되지 않은 앨범인 경우 선택 추가
+          return [...prevSelectedAlbums, albumName];
+        }
+      });
+    } else {
+      // 다중 선택 모드가 아닐 때는 단일 앨범을 선택하는 로직
+      // 여기에 앨범을 클릭했을 때의 동작을 작성하세요
+    }
+  };
+
+const handleLongPress = (albumName: string) => {
+  if(isSelectionMode === true)
+    handleSelectionCancel();
+  else{
+    setIsSelectionMode(true);
+    setSelectedAlbums([albumName]);
+  }
+};
+
+const handleSelectionCancel = () => {
+  setIsSelectionMode(false);
+  setSelectedAlbums([]);
+};
 
   const openSortModal = () => {
     setIsSortModalVisible(true);
@@ -41,41 +70,49 @@ const Album = () => {
     closeSortModal();
   };
 
-  const renderItem = ({ item }: { item: string }) => (
+
+const renderItem = ({ item }: { item: string }) => {
+  const isSelected = selectedAlbums.includes(item);
+
+  return (
     <View style={{ flex: 1, paddingTop: 5, alignItems: 'center' }}>
-      <Image
-        source={{ uri: item }}
-        style={{ width: screenWidth, height: 200 }}
-      />
-      <View style={{ position: 'absolute', bottom: 0, left: 0 }}>
-        <Text
-          style={{
-            color: 'white',
-            fontSize: 20,
-            fontWeight: 'bold',
-            paddingLeft: 15,
-          }}>
-          앨범 이름
-        </Text>
-        <Text style={styles.albumTextLeft}>(개수)</Text>
-      </View>
-
-      <View style={{ position: 'absolute', bottom: 0, right: 0 }}>
-        <Text style={styles.albumTextRight}>2023-07-06</Text>
-      </View>
+      <TouchableOpacity
+        style={{ flex: 1, paddingTop: 5, alignItems: 'center' }}
+        onPress={() => handleAlbumPress(item)}
+        onLongPress={() => handleLongPress(item)}
+      >
+        <Image source={{ uri: item }} style={{ width: screenWidth, height: 200 }} />
+        <View style={{ position: 'absolute', bottom: 0, left: 0 }}>
+          <Text
+            style={{
+              color: isSelected ? 'blue' : 'white',
+              fontSize: 20,
+              fontWeight: 'bold',
+              paddingLeft: 15,
+            }}
+          >
+            앨범 이름
+          </Text>
+          <Text style={styles.albumTextLeft}>(개수)</Text>
+        </View>
+        {isSelectionMode && (
+          <View style={ isSelected ? styles.checkedCircle : styles.unCheckedCircle }>
+              <Text style={{ color: 'white', fontSize: 12 }}>{ isSelected ? "✓" : ""}</Text>
+          </View>
+        )}
+      </TouchableOpacity>
     </View>
-
-    // <View style={{ flex: 1, paddingTop: 5, alignItems: "center" }}>
-    //   <Image source={{ uri: item }} style={{ width: 360, height: 200 }} />
-    //   {/* You can render additional image information here. */}
-    // </View>
   );
+};
   const dummyFolder = [
     'https://fastly.picsum.photos/id/179/200/200.jpg?hmac=I0g6Uht7h-y3NHqWA4e2Nzrnex7m-RceP1y732tc4Lw',
-    'https://fastly.picsum.photos/id/179/200/200.jpg?hmac=I0g6Uht7h-y3NHqWA4e2Nzrnex7m-RceP1y732tc4Lw',
-    'https://fastly.picsum.photos/id/179/200/200.jpg?hmac=I0g6Uht7h-y3NHqWA4e2Nzrnex7m-RceP1y732tc4Lw',
-    'https://fastly.picsum.photos/id/179/200/200.jpg?hmac=I0g6Uht7h-y3NHqWA4e2Nzrnex7m-RceP1y732tc4Lw',
-    'https://fastly.picsum.photos/id/179/200/200.jpg?hmac=I0g6Uht7h-y3NHqWA4e2Nzrnex7m-RceP1y732tc4Lw',
+    'https://fastly.picsum.photos/id/803/200/300.jpg?hmac=v-3AsAcUOG4kCDsLMlWF9_3Xa2DTODGyKLggZNvReno',
+    'https://fastly.picsum.photos/id/999/200/300.jpg?hmac=XqjgMZW5yK4MjHpQJFs_TiRodRNf9UVKjJiGnDJV8GI',
+    'https://fastly.picsum.photos/id/600/200/300.jpg?hmac=Ub3Deb_eQNe0Un7OyE33D79dnextn3M179L0nRkv1eg',
+    'https://fastly.picsum.photos/id/193/200/300.jpg?hmac=b5ZG1TfdndbrnQ8UJbIu-ykB2PRWv0QpHwehH0pqMgE',
+    'https://fastly.picsum.photos/id/341/200/300.jpg?hmac=tZpxFpS1LmFfC4e_ChqA5I8JfUfJuwH3oZvmQ58SzHc',
+    'https://fastly.picsum.photos/id/387/200/300.jpg?hmac=JlKyfJE4yZ_jxmWXH5sNYl7JdDfP04DOk-hye4p_wtk',
+    'https://fastly.picsum.photos/id/863/200/300.jpg?hmac=4kin1N4a7dzocUZXCwLWHewLobhw1Q6_e_9E3Iy3n0I',
   ];
 
   return (
@@ -112,7 +149,7 @@ const Album = () => {
           <TouchableOpacity
             style={styles.button}
             onPress={() => setIsModalVisible(true)}>
-            <SortSvg />
+            <AddSvg style = {styles.addBtn }/>
           </TouchableOpacity>
         </View>
       </View>
@@ -148,9 +185,6 @@ const Album = () => {
         animationType="slide"
         transparent={true}>
         <View style={styles.modalContainer}>
-          <TouchableOpacity
-            activeOpacity={1}
-            onPress={() => setIsSortModalVisible(false)}>
             <View style={styles.modalContent}>
               <Text style={styles.modalTitle}>정렬</Text>
               <TouchableOpacity
@@ -214,7 +248,6 @@ const Album = () => {
                 </Text>
               </TouchableOpacity>
             </View>
-          </TouchableOpacity>
         </View>
       </Modal>
     </React.Fragment>
@@ -255,6 +288,10 @@ const styles = StyleSheet.create({
     borderRadius: 25,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  addBtn: {
+    width: 48,
+    height: 48
   },
   modalContainer: {
     flex: 1,
@@ -312,6 +349,28 @@ const styles = StyleSheet.create({
   selectedSortMethodText: {
     color: '#5A8FFF',
   },
+  checkedCircle: {
+    position: 'absolute',
+    top: 5,
+    right: 5,
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: 'blue',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  unCheckedCircle: {
+    position: 'absolute',
+    top: 5,
+    right: 5,
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: 'gray',
+    justifyContent: 'center',
+    alignItems: 'center',
+  }
 });
 
 export default Album;
