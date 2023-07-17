@@ -16,6 +16,9 @@ import {
 } from 'react-native';
 import AppIntroSlider from 'react-native-app-intro-slider';
 import Modal from 'react-native-modal';
+import { StackNavigationProp } from '@react-navigation/stack';
+import { useNavigation } from '@react-navigation/native';
+
 import * as KakaoOAuth from '@react-native-seoul/kakao-login';
 import NaverOAuth from '@react-native-seoul/naver-login';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
@@ -34,6 +37,7 @@ import {
   verifyLoginData,
 } from '../util/login';
 import { setSecureValue } from '../util/jwt';
+import { TutorialTypes } from '../navigation/TutorialTypes';
 
 const { width, height } = Dimensions.get('window');
 const slides = [
@@ -72,7 +76,9 @@ type Item = (typeof slides)[0];
 
 const Tutorial = () => {
   let slider: AppIntroSlider | undefined;
+  const navigation = useNavigation<StackNavigationProp<TutorialTypes>>();
   const [isVisible, setIsVisible] = useState(false);
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
 
   useEffect(() => {
     googleSigninConfigure();
@@ -87,6 +93,7 @@ const Tutorial = () => {
   const showModal = () => {
     setIsVisible(true);
   };
+
   const hideModal = () => {
     setIsVisible(false);
   };
@@ -153,17 +160,12 @@ const Tutorial = () => {
   };
 
   const kakaoLogin = async () => {
+    if (isLoggingIn) {
+      return;
+    }
+    setIsLoggingIn(true);
+
     try {
-      /**
-       * {
-       *    "accessToken": "OV1sjBZqeffdSBl3gkls8jRKa9n-3zzx3ClMBEJdCj11GwAAAYlAeZoh",
-       *    "accessTokenExpiresAt": "2023-07-11 12:44:16",
-       *    "idToken": null,
-       *    "refreshToken": "jgZ5hvIJT0-GIy2HyBnibr4LIa9VbhNC1HGfJY-dCj11GwAAAYlAeZog",
-       *    "refreshTokenExpiresAt": "2023-09-09 00:44:16",
-       *    "scopes": ["birthday", "account_email", "profile_image", "gender", "profile_nickname"]
-       * }
-       */
       await KakaoOAuth.login();
 
       /**
@@ -218,14 +220,24 @@ const Tutorial = () => {
 
       await setSecureValue('accessToken', token.accessToken);
       await setSecureValue('refreshToken', token.refreshToken);
+
+      hideModal();
+      navigation.navigate('ConnectCouple', { info: data });
     } catch (error) {
       if (!String(error).includes('user cancelled')) {
         console.log('알 수 없는 에러');
       }
+    } finally {
+      setIsLoggingIn(false);
     }
   };
 
   const naverLogin = async () => {
+    if (isLoggingIn) {
+      return;
+    }
+    setIsLoggingIn(true);
+
     const { failureResponse, successResponse } = await NaverOAuth.login({
       appName: NAVER_APP_NAME,
       consumerKey: NAVER_CONSUMERKEY,
@@ -261,6 +273,8 @@ const Tutorial = () => {
 
         await setSecureValue('accessToken', token.accessToken);
         await setSecureValue('refreshToken', token.refreshToken);
+
+        navigation.navigate('ConnectCouple', { info: data });
       } else {
         console.log('Failed get profile');
         console.log(profileResult);
@@ -268,9 +282,17 @@ const Tutorial = () => {
     } else if (!failureResponse?.isCancel) {
       console.log('Failed! : ', failureResponse);
     }
+
+    hideModal();
+    setIsLoggingIn(false);
   };
 
   const googleLogin = async () => {
+    if (isLoggingIn) {
+      return;
+    }
+    setIsLoggingIn(true);
+
     try {
       const { idToken } = await GoogleSignin.signIn();
       // GoogleOAuth를 통해 사용자 인증을 하면 더 많은 정보를 가져올 수 있음(phoneNumber).
@@ -300,11 +322,16 @@ const Tutorial = () => {
 
         await setSecureValue('accessToken', token.accessToken);
         await setSecureValue('refreshToken', token.refreshToken);
+
+        // 추가 정보 입력
+        hideModal();
       }
     } catch (error) {
       if (!String(error).includes('Sign in action cancelled')) {
         console.log('알 수 없는 에러');
       }
+    } finally {
+      setIsLoggingIn(false);
     }
   };
 

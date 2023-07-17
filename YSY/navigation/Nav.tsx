@@ -1,7 +1,6 @@
 import React from 'react';
 import { StyleSheet } from 'react-native';
 import { SvgProps } from 'react-native-svg';
-import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 
 import Home from '../screens/Home';
@@ -25,40 +24,38 @@ const Tab = createBottomTabNavigator();
 
 const Nav = () => {
   return (
-    <NavigationContainer>
-      <Tab.Navigator
-        initialRouteName="Home"
-        screenOptions={({ route }) => ({
-          headerShown: false,
-          tabBarShowLabel: false,
-          tabBarStyle: { height: 48, alignItems: 'center' },
-          tabBarIcon: ({ focused }) => {
-            let IconComponent: React.FC<SvgProps>;
+    <Tab.Navigator
+      initialRouteName="Home"
+      screenOptions={({ route }) => ({
+        headerShown: false,
+        tabBarShowLabel: false,
+        tabBarStyle: { height: 48, alignItems: 'center' },
+        tabBarIcon: ({ focused }) => {
+          let IconComponent: React.FC<SvgProps>;
 
-            if (route.name === 'Home') {
-              IconComponent = focused ? HomeActiveSVG : HomeNoneSVG;
-            } else if (route.name === 'Album') {
-              IconComponent = focused ? AlbumActiveSVG : AlbumNoneSVG;
-            } else if (route.name === 'Calendar') {
-              IconComponent = focused ? CalendarActiveSVG : CalendarNoneSVG;
-            } else if (route.name === 'Date') {
-              IconComponent = focused ? DateActiveSVG : DateNoneSVG;
-            } else if (route.name === 'More') {
-              IconComponent = focused ? MoreActiveSVG : MoreNoneSVG;
-            } else {
-              IconComponent = HomeActiveSVG;
-            }
+          if (route.name === 'Home') {
+            IconComponent = focused ? HomeActiveSVG : HomeNoneSVG;
+          } else if (route.name === 'Album') {
+            IconComponent = focused ? AlbumActiveSVG : AlbumNoneSVG;
+          } else if (route.name === 'Calendar') {
+            IconComponent = focused ? CalendarActiveSVG : CalendarNoneSVG;
+          } else if (route.name === 'Date') {
+            IconComponent = focused ? DateActiveSVG : DateNoneSVG;
+          } else if (route.name === 'More') {
+            IconComponent = focused ? MoreActiveSVG : MoreNoneSVG;
+          } else {
+            IconComponent = HomeActiveSVG;
+          }
 
-            return <IconComponent style={styles.imgBox} />;
-          },
-        })}>
-        <Tab.Screen name="Home" component={Home} />
-        <Tab.Screen name="Album" component={Album} />
-        <Tab.Screen name="Calendar" component={Calendar} />
-        <Tab.Screen name="Date" component={Date} />
-        <Tab.Screen name="More" component={More} />
-      </Tab.Navigator>
-    </NavigationContainer>
+          return <IconComponent style={styles.imgBox} />;
+        },
+      })}>
+      <Tab.Screen name="Home" component={Home} />
+      <Tab.Screen name="Album" component={Album} />
+      <Tab.Screen name="Calendar" component={Calendar} />
+      <Tab.Screen name="Date" component={Date} />
+      <Tab.Screen name="More" component={More} />
+    </Tab.Navigator>
   );
 };
 

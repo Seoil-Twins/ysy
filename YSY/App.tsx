@@ -1,6 +1,11 @@
 import React, { useEffect } from 'react';
 import { SafeAreaView, StatusBar, StyleSheet, View } from 'react-native';
 import { Provider } from 'react-redux';
+import {
+  createStackNavigator,
+  CardStyleInterpolators,
+} from '@react-navigation/stack';
+import { NavigationContainer } from '@react-navigation/native';
 
 import store, { RootState } from './redux/store';
 import { useAppSelector, useAppDispatch } from './redux/hooks';
@@ -8,6 +13,8 @@ import { login, logout } from './features/loginStatusSlice';
 
 import Nav from './navigation/Nav';
 import Tutorial from './screens/Tutorial';
+import ConnectCouple from './screens/ConnectCouple';
+import Loading from './components/Loading';
 
 const AppWrapper = () => {
   return (
@@ -17,9 +24,14 @@ const AppWrapper = () => {
   );
 };
 
+const Stack = createStackNavigator();
+
 const App = () => {
   const isLogin = useAppSelector(
     (state: RootState) => state.loginStatus.isLogin,
+  );
+  const isLoadding = useAppSelector(
+    (state: RootState) => state.loadingStatus.isLoading,
   );
   const dispatch = useAppDispatch();
 
@@ -46,7 +58,22 @@ const App = () => {
     <View style={styles.container}>
       <StatusBar backgroundColor="#dddddd" />
       <SafeAreaView style={styles.safeContainer}>
-        {isLogin ? <Nav /> : <Tutorial />}
+        <NavigationContainer>
+          {isLogin ? (
+            <Nav />
+          ) : (
+            <Stack.Navigator
+              initialRouteName="Tutorial"
+              screenOptions={{
+                headerShown: false,
+                cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS,
+              }}>
+              <Stack.Screen name="Tutorial" component={Tutorial} />
+              <Stack.Screen name="ConnectCouple" component={ConnectCouple} />
+            </Stack.Navigator>
+          )}
+          {isLoadding ? <Loading /> : null}
+        </NavigationContainer>
       </SafeAreaView>
     </View>
   );
