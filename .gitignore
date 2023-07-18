@@ -102,12 +102,8 @@ dist
 
 # TernJS port file
 .tern-port
-gradlew
-local.properties
-gradlew.bat
 gradle/wrapper/gradle-wrapper.properties
 gradle/wrapper/gradle-wrapper.jar
-build.gradle
 .idea/vcs.xml
 .idea/modules/ysy.iml
 .idea/modules.xml
