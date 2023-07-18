@@ -12,7 +12,10 @@ import {
 
 import SortSvg from '../assets/icons/sort.svg';
 import SettingSvg from '../assets/icons/settings.svg';
-import AddSvg from '../assets/icons/add.svg'
+import AddSvg from '../assets/icons/add.svg';
+import WCheckSvg from '../assets/icons/white_check.svg';
+import BCheckSvg from '../assets/icons/check.svg';
+import UCheckSvg from '../assets/icons/un-check.svg';
 
 import { widthPercentageToDP as wp } from 'react-native-responsive-screen';
 
@@ -23,15 +26,52 @@ const Album = () => {
   const [isSortModalVisible, setIsSortModalVisible] = useState(false);
   const [selectedSortMethod, setSelectedSortMethod] = useState('최신순');
 
- const [isSelectionMode, setIsSelectionMode] = useState(false);
+  const [isSelectionMode, setIsSelectionMode] = useState(false);
   const [selectedAlbums, setSelectedAlbums] = useState<string[]>([]);
+  const handleSelectAll = () => {
+    if (selectedAlbums.length > 0) {
+      // 이미 선택된 앨범이 있는 경우 전체 해제 동작 수행
+      setSelectedAlbums([]);
+    } else {
+      // 선택된 앨범이 없는 경우 전체 선택 동작 수행
+      setSelectedAlbums(dummyFolder);
+    }
+  };
+
+  const renderHeaderRight = () => {
+    if (isSelectionMode) {
+      const numSelected = selectedAlbums.length;
+      return (
+        <View>
+          <TouchableOpacity onPress={handleSelectAll}>
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              {numSelected > 0 ? (
+                <BCheckSvg style={{ marginRight: 5 }} />
+              ) : (
+                <UCheckSvg style={{ marginRight: 5 }} />
+              )}
+              <Text
+                style={{
+                  color: numSelected > 0 ? '#3675FB' : '#999999',
+                  marginRight: 15,
+                }}>
+                {numSelected > 0 ? '선택 해제' : '모두 선택'}
+              </Text>
+            </View>
+          </TouchableOpacity>
+        </View>
+      );
+    }
+
+    return null;
+  };
 
   const handleAlbumPress = (albumName: string) => {
     if (isSelectionMode) {
-      setSelectedAlbums((prevSelectedAlbums) => {
+      setSelectedAlbums(prevSelectedAlbums => {
         if (prevSelectedAlbums.includes(albumName)) {
           // 이미 선택된 앨범인 경우 선택 해제
-          return prevSelectedAlbums.filter((item) => item !== albumName);
+          return prevSelectedAlbums.filter(item => item !== albumName);
         } else {
           // 선택되지 않은 앨범인 경우 선택 추가
           return [...prevSelectedAlbums, albumName];
@@ -43,19 +83,19 @@ const Album = () => {
     }
   };
 
-const handleLongPress = (albumName: string) => {
-  if(isSelectionMode === true)
-    handleSelectionCancel();
-  else{
-    setIsSelectionMode(true);
-    setSelectedAlbums([albumName]);
-  }
-};
+  const handleLongPress = (albumName: string) => {
+    if (isSelectionMode === true) {
+      handleSelectionCancel();
+    } else {
+      setIsSelectionMode(true);
+      setSelectedAlbums([albumName]);
+    }
+  };
 
-const handleSelectionCancel = () => {
-  setIsSelectionMode(false);
-  setSelectedAlbums([]);
-};
+  const handleSelectionCancel = () => {
+    setIsSelectionMode(false);
+    setSelectedAlbums([]);
+  };
 
   const openSortModal = () => {
     setIsSortModalVisible(true);
@@ -70,40 +110,40 @@ const handleSelectionCancel = () => {
     closeSortModal();
   };
 
+  const renderItem = ({ item }: { item: string }) => {
+    const isSelected = selectedAlbums.includes(item);
 
-const renderItem = ({ item }: { item: string }) => {
-  const isSelected = selectedAlbums.includes(item);
-
-  return (
-    <View style={{ flex: 1, paddingTop: 5, alignItems: 'center' }}>
-      <TouchableOpacity
-        style={{ flex: 1, paddingTop: 5, alignItems: 'center' }}
-        onPress={() => handleAlbumPress(item)}
-        onLongPress={() => handleLongPress(item)}
-      >
-        <Image source={{ uri: item }} style={{ width: screenWidth, height: 200 }} />
-        <View style={{ position: 'absolute', bottom: 0, left: 0 }}>
-          <Text
-            style={{
-              color: isSelected ? 'blue' : 'white',
-              fontSize: 20,
-              fontWeight: 'bold',
-              paddingLeft: 15,
-            }}
-          >
-            앨범 이름
-          </Text>
-          <Text style={styles.albumTextLeft}>(개수)</Text>
-        </View>
-        {isSelectionMode && (
-          <View style={ isSelected ? styles.checkedCircle : styles.unCheckedCircle }>
-              <Text style={{ color: 'white', fontSize: 12 }}>{ isSelected ? "✓" : ""}</Text>
+    return (
+      <View style={{ flex: 1, paddingTop: 5, alignItems: 'center' }}>
+        <TouchableOpacity
+          style={{ flex: 1, paddingTop: 5, alignItems: 'center' }}
+          onPress={() => handleAlbumPress(item)}
+          onLongPress={() => handleLongPress(item)}>
+          <Image
+            source={{ uri: item }}
+            style={{ width: screenWidth, height: 200 }}
+          />
+          <View style={{ position: 'absolute', bottom: 0, left: 0 }}>
+            <Text style={styles.albumTextLeftTitle}>앨범 이름</Text>
+            <Text style={styles.albumTextLeft}>(개수)</Text>
           </View>
-        )}
-      </TouchableOpacity>
-    </View>
-  );
-};
+          <View style={{ position: 'absolute', bottom: 0, right: 0 }}>
+            <Text style={styles.albumTextRight}>2023-07-18</Text>
+          </View>
+          {isSelectionMode && (
+            <View
+              style={
+                isSelected ? styles.checkedCircle : styles.unCheckedCircle
+              }>
+              <Text>
+                {isSelected ? <WCheckSvg style={styles.checked} /> : ''}
+              </Text>
+            </View>
+          )}
+        </TouchableOpacity>
+      </View>
+    );
+  };
   const dummyFolder = [
     'https://fastly.picsum.photos/id/179/200/200.jpg?hmac=I0g6Uht7h-y3NHqWA4e2Nzrnex7m-RceP1y732tc4Lw',
     'https://fastly.picsum.photos/id/803/200/300.jpg?hmac=v-3AsAcUOG4kCDsLMlWF9_3Xa2DTODGyKLggZNvReno',
@@ -126,17 +166,21 @@ const renderItem = ({ item }: { item: string }) => {
             alignItems: 'center',
             justifyContent: 'flex-end',
           }}>
-          <View style={{ flexDirection: 'row' }}>
-            <TouchableOpacity
-              onPress={() => {
-                openSortModal();
-              }}>
-              <SortSvg style={styles.imgBox} />
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => {}}>
-              <SettingSvg style={styles.imgBox} />
-            </TouchableOpacity>
-          </View>
+          {isSelectionMode ? (
+            renderHeaderRight()
+          ) : (
+            <View style={{ flexDirection: 'row' }}>
+              <TouchableOpacity
+                onPress={() => {
+                  openSortModal();
+                }}>
+                <SortSvg style={styles.imgBox} />
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => {}}>
+                <SettingSvg style={styles.imgBox} />
+              </TouchableOpacity>
+            </View>
+          )}
         </View>
 
         <FlatList
@@ -149,7 +193,7 @@ const renderItem = ({ item }: { item: string }) => {
           <TouchableOpacity
             style={styles.button}
             onPress={() => setIsModalVisible(true)}>
-            <AddSvg style = {styles.addBtn }/>
+            <AddSvg style={styles.addBtn} />
           </TouchableOpacity>
         </View>
       </View>
@@ -185,69 +229,69 @@ const renderItem = ({ item }: { item: string }) => {
         animationType="slide"
         transparent={true}>
         <View style={styles.modalContainer}>
-            <View style={styles.modalContent}>
-              <Text style={styles.modalTitle}>정렬</Text>
-              <TouchableOpacity
-                style={[styles.sortMethodButton]}
-                onPress={() => handleSortMethodSelect('최신순')}>
-                <Text
-                  style={[
-                    styles.sortMethodText,
-                    selectedSortMethod === '최신순' &&
-                      styles.selectedSortMethodText,
-                  ]}>
-                  최신순
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.sortMethodButton]}
-                onPress={() => handleSortMethodSelect('오래된순')}>
-                <Text
-                  style={[
-                    styles.sortMethodText,
-                    selectedSortMethod === '오래된순' &&
-                      styles.selectedSortMethodText,
-                  ]}>
-                  오래된순
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.sortMethodButton]}
-                onPress={() => handleSortMethodSelect('제목순')}>
-                <Text
-                  style={[
-                    styles.sortMethodText,
-                    selectedSortMethod === '제목순' &&
-                      styles.selectedSortMethodText,
-                  ]}>
-                  제목순
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.sortMethodButton]}
-                onPress={() => handleSortMethodSelect('사진많은순')}>
-                <Text
-                  style={[
-                    styles.sortMethodText,
-                    selectedSortMethod === '사진많은순' &&
-                      styles.selectedSortMethodText,
-                  ]}>
-                  사진많은순
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.sortMethodButton]}
-                onPress={() => handleSortMethodSelect('사진적은순')}>
-                <Text
-                  style={[
-                    styles.sortMethodText,
-                    selectedSortMethod === '사진적은순' &&
-                      styles.selectedSortMethodText,
-                  ]}>
-                  사진적은순
-                </Text>
-              </TouchableOpacity>
-            </View>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>정렬</Text>
+            <TouchableOpacity
+              style={[styles.sortMethodButton]}
+              onPress={() => handleSortMethodSelect('최신순')}>
+              <Text
+                style={[
+                  styles.sortMethodText,
+                  selectedSortMethod === '최신순' &&
+                    styles.selectedSortMethodText,
+                ]}>
+                최신순
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.sortMethodButton]}
+              onPress={() => handleSortMethodSelect('오래된순')}>
+              <Text
+                style={[
+                  styles.sortMethodText,
+                  selectedSortMethod === '오래된순' &&
+                    styles.selectedSortMethodText,
+                ]}>
+                오래된순
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.sortMethodButton]}
+              onPress={() => handleSortMethodSelect('제목순')}>
+              <Text
+                style={[
+                  styles.sortMethodText,
+                  selectedSortMethod === '제목순' &&
+                    styles.selectedSortMethodText,
+                ]}>
+                제목순
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.sortMethodButton]}
+              onPress={() => handleSortMethodSelect('사진많은순')}>
+              <Text
+                style={[
+                  styles.sortMethodText,
+                  selectedSortMethod === '사진많은순' &&
+                    styles.selectedSortMethodText,
+                ]}>
+                사진많은순
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.sortMethodButton]}
+              onPress={() => handleSortMethodSelect('사진적은순')}>
+              <Text
+                style={[
+                  styles.sortMethodText,
+                  selectedSortMethod === '사진적은순' &&
+                    styles.selectedSortMethodText,
+                ]}>
+                사진적은순
+              </Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </Modal>
     </React.Fragment>
@@ -259,6 +303,13 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     marginTop: 25,
+  },
+
+  albumTextLeftTitle: {
+    color: 'white',
+    fontSize: 18,
+    paddingLeft: 15,
+    fontWeight: 'bold',
   },
 
   albumTextLeft: {
@@ -291,7 +342,7 @@ const styles = StyleSheet.create({
   },
   addBtn: {
     width: 48,
-    height: 48
+    height: 48,
   },
   modalContainer: {
     flex: 1,
@@ -353,24 +404,32 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 5,
     right: 5,
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    backgroundColor: 'blue',
+    width: 30,
+    height: 30,
+    borderRadius: 20,
+    backgroundColor: '#3675FB',
     justifyContent: 'center',
     alignItems: 'center',
+    marginTop: 15,
+    marginRight: 20,
   },
   unCheckedCircle: {
     position: 'absolute',
     top: 5,
     right: 5,
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    backgroundColor: 'gray',
+    width: 30,
+    height: 30,
+    borderRadius: 20,
+    backgroundColor: '#FFFFFF99',
     justifyContent: 'center',
     alignItems: 'center',
-  }
+    marginTop: 15,
+    marginRight: 20,
+  },
+  checked: {
+    width: 48,
+    height: 48,
+  },
 });
 
 export default Album;
