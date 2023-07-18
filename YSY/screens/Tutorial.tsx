@@ -38,6 +38,7 @@ import {
 } from '../util/login';
 import { setSecureValue } from '../util/jwt';
 import { TutorialTypes } from '../navigation/TutorialTypes';
+import { User } from '../types/user';
 
 const { width, height } = Dimensions.get('window');
 const slides = [
@@ -159,6 +160,26 @@ const Tutorial = () => {
     );
   };
 
+  // Get User Info API
+  const getMyInfo = async (data: LoginOptions) => {
+    const user: User = {
+      snsId: '0002',
+      name: String(data.name),
+      email: String(data.email),
+      phone: String(data.phone),
+      birthday: String(data.birthday),
+      cupId: null,
+      dateNofi: false,
+      primaryNofi: false,
+      eventNofi: false,
+      userId: 1,
+      code: 'ASD123',
+      profile: data.profile,
+    };
+
+    return user;
+  };
+
   const kakaoLogin = async () => {
     if (isLoggingIn) {
       return;
@@ -221,8 +242,10 @@ const Tutorial = () => {
       await setSecureValue('accessToken', token.accessToken);
       await setSecureValue('refreshToken', token.refreshToken);
 
+      const user: User = await getMyInfo(data);
+
       hideModal();
-      navigation.navigate('ConnectCouple', { info: data });
+      navigation.navigate('ConnectCouple', { info: user });
     } catch (error) {
       if (!String(error).includes('user cancelled')) {
         console.log('알 수 없는 에러');
@@ -274,7 +297,10 @@ const Tutorial = () => {
         await setSecureValue('accessToken', token.accessToken);
         await setSecureValue('refreshToken', token.refreshToken);
 
-        navigation.navigate('ConnectCouple', { info: data });
+        // Get User API
+        const user: User = await getMyInfo(data);
+
+        navigation.navigate('ConnectCouple', { info: user });
       } else {
         console.log('Failed get profile');
         console.log(profileResult);

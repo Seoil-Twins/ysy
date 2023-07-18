@@ -6176,6 +6176,11 @@
   "resolved" "https://registry.npmjs.org/react-native-image-crop-picker/-/react-native-image-crop-picker-0.40.0.tgz"
   "version" "0.40.0"
 
+"react-native-kakao-share-link@^1.0.10":
+  "integrity" "sha512-EtlPhe5PK85Yr/fQt29bWuGits6LwTyL/RHwffflP/ZderwjUvxk3ASuqy41CZg/2Pax/3N/wZdMFiZNExjnuA=="
+  "resolved" "https://registry.npmjs.org/react-native-kakao-share-link/-/react-native-kakao-share-link-1.0.10.tgz"
+  "version" "1.0.10"
+
 "react-native-keychain@^8.1.1":
   "integrity" "sha512-8fxgeHKwGcL657eAYpdBTkDIxNhbIHI+kyyO0Yac2dgVAN184JoIwQcW2z6snahwDaCObQOu0biLFHnsH+4KSg=="
   "resolved" "https://registry.npmjs.org/react-native-keychain/-/react-native-keychain-8.1.1.tgz"

@@ -26,6 +26,7 @@
     "react-native-dotenv": "^3.4.9",
     "react-native-gesture-handler": "^2.12.0",
     "react-native-image-crop-picker": "^0.40.0",
+    "react-native-kakao-share-link": "^1.0.10",
     "react-native-keychain": "^8.1.1",
     "react-native-modal": "^13.0.1",
     "react-native-modal-datetime-picker": "^17.0.0",

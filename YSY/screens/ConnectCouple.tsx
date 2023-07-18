@@ -1,6 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { ImageOrVideo } from 'react-native-image-crop-picker';
+import { RouteProp, useRoute } from '@react-navigation/native';
+import KakaoShareLink from 'react-native-kakao-share-link';
 
 import { globalStyles } from '../style/global';
 
@@ -10,17 +12,39 @@ import Input from '../components/Input';
 import DatePicker from '../components/DatePicker';
 import ImagePicker from '../components/ImagePicker';
 import CustomText from '../components/CustomText';
+import { TutorialTypes } from '../navigation/TutorialTypes';
+import { getSecureValue } from '../util/jwt';
 
 const ConnectCouple = () => {
+  const { params } = useRoute<RouteProp<TutorialTypes, 'ConnectCouple'>>();
   const title = '연인 맺기';
   const descriptions = [
     'YSY 서비스를 원할하게 사용하기 위해서는',
     '연인을 등록 해야합니다!',
   ];
 
+  const [accessToken, setAccessToken] = useState('');
+  const [refreshToken, setRefreshToken] = useState('');
   const [code, setCode] = useState('');
   const [date, setDate] = useState('');
   const [image, setImage] = useState('');
+
+  const getToken = async () => {
+    const accessToken: string | false = await getSecureValue('accessToken');
+    const refreshToken: string | false = await getSecureValue('refreshToken');
+
+    if (!accessToken || !refreshToken) {
+      console.log('error');
+      return;
+    }
+
+    await setAccessToken(accessToken);
+    await setRefreshToken(refreshToken);
+  };
+
+  useEffect(() => {
+    getToken();
+  }, []);
 
   const changeCode = (code: string) => {
     setCode(code);
@@ -34,8 +58,30 @@ const ConnectCouple = () => {
     setImage(image.path);
   };
 
-  const clickShareBtn = () => {
-    console.log('share');
+  const clickShareBtn = async () => {
+    // Kakao Share 사용
+    const response = await KakaoShareLink.sendFeed({
+      content: {
+        title: `나의 코드 : ${params.info.code}`,
+        imageUrl:
+          'http://t1.daumcdn.net/friends/prod/editor/dc8b3d02-a15a-4afa-a88b-989cf2a50476.jpg',
+        link: {
+          webUrl: 'https://developers.kakao.com/',
+          mobileWebUrl: 'https://developers.kakao.com/',
+        },
+        description: 'YSY를 원할하게 이용하기 위해서는 연인과 연결 해야합니다!',
+      },
+      buttons: [
+        {
+          title: '앱에서 등록하기',
+          link: {
+            androidExecutionParams: [{ key: 'code', value: params.info.code }],
+          },
+        },
+      ],
+    });
+
+    console.log(response);
   };
 
   const clickConnectBtn = () => {
@@ -49,9 +95,14 @@ const ConnectCouple = () => {
       return;
     }
 
+    // Couple POST API
     console.log('Code : ', code);
     console.log('Date : ', date);
     console.log('Image : ', image);
+    console.log('accessToken : ', accessToken);
+    console.log('refreshToken : ', refreshToken);
+
+    // routing MAIN
   };
 
   return (

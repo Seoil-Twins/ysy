@@ -1,8 +1,8 @@
-import { LoginOptions } from '../util/login';
+import { User } from '../types/user';
 
 export type TutorialTypes = {
   Tutorial: undefined;
   ConnectCouple: {
-    info: LoginOptions;
+    info: User;
   };
 };
