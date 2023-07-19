@@ -93,7 +93,10 @@ const ConnectCouple = () => {
         {
           title: '연결하기',
           link: {
-            androidExecutionParams: [{ key: 'otherCode', value: myCode }],
+            androidExecutionParams: [
+              { key: 'screen', value: 'ConnectCouple' },
+              { key: 'otherCode', value: myCode },
+            ],
           },
         },
       ],

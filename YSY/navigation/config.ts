@@ -6,6 +6,6 @@ export const config = {
     Date: 'date',
     More: 'more',
     Tutorial: 'tutorial',
-    ConnectCouple: 'kakaolink',
+    ConnectCouple: 'connectcouple',
   },
 };

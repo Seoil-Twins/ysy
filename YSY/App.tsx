@@ -12,6 +12,7 @@ import {
   CardStyleInterpolators,
 } from '@react-navigation/stack';
 import { NavigationContainer } from '@react-navigation/native';
+import { URL, URLSearchParams } from 'react-native-url-polyfill';
 
 import store, { RootState } from './redux/store';
 import { useAppSelector, useAppDispatch } from './redux/hooks';
@@ -57,17 +58,28 @@ const App = () => {
   const linking = {
     prefixes: ['kakaodc4864759db19d9e214c2d732fa2c699://'],
 
-    // Custom function to get the URL which was used to open the app
     async getInitialURL() {
       const url = await Linking.getInitialURL();
       return url;
     },
 
-    // Custom function to subscribe to incoming links
     subscribe(listener: any) {
       const onReceiveURL = (event: { url: string }) => {
-        const { url } = event;
-        return listener(url);
+        const convertURL = new URL(event.url);
+        const params = new URLSearchParams(convertURL.search);
+        let result = '';
+
+        // screen을 기준으로 host를 바꿈
+        switch (params.get('screen')) {
+          case 'ConnectCouple':
+            result = event.url.replace('kakaolink', 'connectcouple');
+            break;
+          default:
+            result = event.url.replace('kakaolink', 'tutorial');
+            break;
+        }
+
+        return listener(result);
       };
 
       Linking.getInitialURL().then((value: string | null) => {
@@ -84,8 +96,6 @@ const App = () => {
 
     config: config,
   };
-
-  useEffect(() => {}, []);
 
   // 로그인 상태가 변할 때 마다
   useEffect(() => {
