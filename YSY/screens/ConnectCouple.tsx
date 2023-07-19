@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { ImageOrVideo } from 'react-native-image-crop-picker';
-import { RouteProp, useRoute } from '@react-navigation/native';
+import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
 import KakaoShareLink from 'react-native-kakao-share-link';
+import { StackNavigationProp } from '@react-navigation/stack';
 
 import { globalStyles } from '../style/global';
 
@@ -12,10 +13,13 @@ import Input from '../components/Input';
 import DatePicker from '../components/DatePicker';
 import ImagePicker from '../components/ImagePicker';
 import CustomText from '../components/CustomText';
+
 import { TutorialTypes } from '../navigation/TutorialTypes';
+
 import { getSecureValue } from '../util/jwt';
 
 const ConnectCouple = () => {
+  const navigation = useNavigation<StackNavigationProp<TutorialTypes>>();
   const { params } = useRoute<RouteProp<TutorialTypes, 'ConnectCouple'>>();
   const title = '연인 맺기';
   const descriptions = [
@@ -26,25 +30,38 @@ const ConnectCouple = () => {
   const [accessToken, setAccessToken] = useState('');
   const [refreshToken, setRefreshToken] = useState('');
   const [code, setCode] = useState('');
+  const [myCode, setMyCode] = useState(params.myCode);
   const [date, setDate] = useState('');
   const [image, setImage] = useState('');
 
-  const getToken = async () => {
+  const getToken = useCallback(async () => {
     const accessToken: string | false = await getSecureValue('accessToken');
     const refreshToken: string | false = await getSecureValue('refreshToken');
 
     if (!accessToken || !refreshToken) {
-      console.log('error');
+      navigation.navigate('Tutorial');
       return;
     }
 
-    await setAccessToken(accessToken);
-    await setRefreshToken(refreshToken);
+    setAccessToken(accessToken);
+    setRefreshToken(refreshToken);
+  }, [navigation]);
+
+  const initalMyCode = async () => {
+    setMyCode('ASD123');
   };
 
   useEffect(() => {
     getToken();
-  }, []);
+  }, [getToken]);
+
+  useEffect(() => {
+    if (myCode) {
+      return;
+    }
+
+    initalMyCode();
+  }, [myCode]);
 
   const changeCode = (code: string) => {
     setCode(code);
@@ -59,10 +76,11 @@ const ConnectCouple = () => {
   };
 
   const clickShareBtn = async () => {
-    // Kakao Share 사용
-    const response = await KakaoShareLink.sendFeed({
+    // 기본 Share 사용
+    // Kakao Share는 kakaolink가 host 고정이기 때문에 사용하기 불편함.
+    await KakaoShareLink.sendFeed({
       content: {
-        title: `나의 코드 : ${params.info.code}`,
+        title: `나의 코드 : ${myCode}`,
         imageUrl:
           'http://t1.daumcdn.net/friends/prod/editor/dc8b3d02-a15a-4afa-a88b-989cf2a50476.jpg',
         link: {
@@ -73,15 +91,13 @@ const ConnectCouple = () => {
       },
       buttons: [
         {
-          title: '앱에서 등록하기',
+          title: '연결하기',
           link: {
-            androidExecutionParams: [{ key: 'code', value: params.info.code }],
+            androidExecutionParams: [{ key: 'otherCode', value: myCode }],
           },
         },
       ],
     });
-
-    console.log(response);
   };
 
   const clickConnectBtn = () => {
@@ -114,6 +130,7 @@ const ConnectCouple = () => {
           placeholder="연인 맺을 상대방의 코드 입력"
           onInputChange={changeCode}
           maxLength={6}
+          defaultValue={params.otherCode}
         />
         <DatePicker
           placeholder="사귄 날짜"

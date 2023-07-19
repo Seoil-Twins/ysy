@@ -173,7 +173,7 @@ const Tutorial = () => {
       primaryNofi: false,
       eventNofi: false,
       userId: 1,
-      code: 'ASD123',
+      code: 'DAS111',
       profile: data.profile,
     };
 
@@ -245,7 +245,7 @@ const Tutorial = () => {
       const user: User = await getMyInfo(data);
 
       hideModal();
-      navigation.navigate('ConnectCouple', { info: user });
+      navigation.navigate('ConnectCouple', { myCode: user.code });
     } catch (error) {
       if (!String(error).includes('user cancelled')) {
         console.log('알 수 없는 에러');
@@ -300,7 +300,8 @@ const Tutorial = () => {
         // Get User API
         const user: User = await getMyInfo(data);
 
-        navigation.navigate('ConnectCouple', { info: user });
+        hideModal();
+        navigation.navigate('ConnectCouple', { myCode: user.code });
       } else {
         console.log('Failed get profile');
         console.log(profileResult);

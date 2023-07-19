@@ -1,5 +1,11 @@
 import React, { useEffect } from 'react';
-import { SafeAreaView, StatusBar, StyleSheet, View } from 'react-native';
+import {
+  Linking,
+  SafeAreaView,
+  StatusBar,
+  StyleSheet,
+  View,
+} from 'react-native';
 import { Provider } from 'react-redux';
 import {
   createStackNavigator,
@@ -12,9 +18,12 @@ import { useAppSelector, useAppDispatch } from './redux/hooks';
 import { login, logout } from './features/loginStatusSlice';
 
 import Nav from './navigation/Nav';
+
 import Tutorial from './screens/Tutorial';
 import ConnectCouple from './screens/ConnectCouple';
+
 import Loading from './components/Loading';
+import { config } from './navigation/config';
 
 const AppWrapper = () => {
   return (
@@ -45,7 +54,37 @@ const App = () => {
     dispatch(logout());
   };
 
-  // 컴포넌트 렌더링마다 로그인 상태 확인
+  const linking = {
+    prefixes: ['kakaodc4864759db19d9e214c2d732fa2c699://'],
+
+    // Custom function to get the URL which was used to open the app
+    async getInitialURL() {
+      const url = await Linking.getInitialURL();
+      return url;
+    },
+
+    // Custom function to subscribe to incoming links
+    subscribe(listener: any) {
+      const onReceiveURL = (event: { url: string }) => {
+        const { url } = event;
+        return listener(url);
+      };
+
+      Linking.getInitialURL().then((value: string | null) => {
+        if (value) {
+          onReceiveURL({ url: value });
+        }
+      });
+      Linking.addEventListener('url', onReceiveURL);
+
+      return () => {
+        Linking.removeAllListeners('url');
+      };
+    },
+
+    config: config,
+  };
+
   useEffect(() => {}, []);
 
   // 로그인 상태가 변할 때 마다
@@ -58,7 +97,7 @@ const App = () => {
     <View style={styles.container}>
       <StatusBar backgroundColor="#dddddd" />
       <SafeAreaView style={styles.safeContainer}>
-        <NavigationContainer>
+        <NavigationContainer linking={linking}>
           {isLogin ? (
             <Nav />
           ) : (

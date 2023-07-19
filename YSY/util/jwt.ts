@@ -13,14 +13,18 @@ export const setSecureValue: SetSecureValue = async (key, value) => {
 };
 
 export const getSecureValue: GetSecureValue = async key => {
-  const result = await Keychain.getGenericPassword({
-    service: `${key}_${SECURE_KEY}`,
-  });
+  try {
+    const result = await Keychain.getGenericPassword({
+      service: `${key}_${SECURE_KEY}`,
+    });
 
-  if (result) {
-    return result.password;
+    if (result) {
+      return result.password;
+    }
+    return false;
+  } catch (error) {
+    return false;
   }
-  return false;
 };
 
 export const removeSecureValue: RemoveSecureValue = async key => {
