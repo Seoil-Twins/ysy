@@ -79,7 +79,9 @@ const App = () => {
             break;
         }
 
-        return listener(result);
+        setTimeout(() => {
+          return listener(result);
+        }, 1);
       };
 
       Linking.getInitialURL().then((value: string | null) => {
@@ -100,8 +102,7 @@ const App = () => {
   // 로그인 상태가 변할 때 마다
   useEffect(() => {
     // onLogin();
-    console.log(isLogin);
-  }, [isLogin]);
+  }, []);
 
   return (
     <View style={styles.container}>
