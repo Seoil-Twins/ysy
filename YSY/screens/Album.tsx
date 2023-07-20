@@ -6,8 +6,9 @@ import {
   Image,
   TouchableOpacity,
   StyleSheet,
-  Modal,
   TextInput,
+  Modal,
+  TouchableWithoutFeedback,
 } from 'react-native';
 
 import SortSvg from '../assets/icons/sort.svg';
@@ -16,18 +17,24 @@ import AddSvg from '../assets/icons/add.svg';
 import WCheckSvg from '../assets/icons/white_check.svg';
 import BCheckSvg from '../assets/icons/check.svg';
 import UCheckSvg from '../assets/icons/un-check.svg';
+import MergeSvg from '../assets/icons/merge.svg';
+import DeleteSvg from '../assets/icons/delete.svg';
+import DownloadSvg from '../assets/icons/download.svg';
 
 import { widthPercentageToDP as wp } from 'react-native-responsive-screen';
 
 const screenWidth = wp('100%');
 
 const Album = () => {
-  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [isAddModalVisible, setIsAddModalVisible] = useState(false);
   const [isSortModalVisible, setIsSortModalVisible] = useState(false);
+  const [isAlbumModalVisible, setIsAlbumModalVisible] = useState(false);
   const [selectedSortMethod, setSelectedSortMethod] = useState('최신순');
 
   const [isSelectionMode, setIsSelectionMode] = useState(false);
   const [selectedAlbums, setSelectedAlbums] = useState<string[]>([]);
+  const [contextMenuVisible, setContextMenuVisible] = useState(false);
+
   const handleSelectAll = () => {
     if (selectedAlbums.length > 0) {
       // 이미 선택된 앨범이 있는 경우 전체 해제 동작 수행
@@ -61,6 +68,8 @@ const Album = () => {
           </TouchableOpacity>
         </View>
       );
+    } else {
+      setIsAlbumModalVisible(false);
     }
 
     return null;
@@ -86,9 +95,12 @@ const Album = () => {
   const handleLongPress = (albumName: string) => {
     if (isSelectionMode === true) {
       handleSelectionCancel();
+      setContextMenuVisible(false);
     } else {
       setIsSelectionMode(true);
+      setIsAlbumModalVisible(false);
       setSelectedAlbums([albumName]);
+      setContextMenuVisible(true);
     }
   };
 
@@ -108,6 +120,69 @@ const Album = () => {
   const handleSortMethodSelect = (sortMethod: string) => {
     setSelectedSortMethod(sortMethod);
     closeSortModal();
+  };
+
+  const handleMergeAlbums = () => {
+    // 선택된 앨범들을 합치는 기능 구현
+    // ...
+  };
+
+  const handleDownloadAlbums = () => {
+    // 선택된 앨범들을 로컬로 다운로드하는 기능 구현
+    // ...
+  };
+
+  const handleDeleteAlbums = () => {
+    // 선택된 앨범들을 삭제하는 기능 구현
+    // ...
+  };
+
+  const handleContextMenuClose = () => {
+    setIsSelectionMode(false);
+    setSelectedAlbums([]);
+    setContextMenuVisible(false);
+  };
+
+  const handleBackdropPress = () => {
+    // Do nothing on backdrop press
+  };
+
+  const renderContextMenu = () => {
+    return (
+      <Modal
+        visible={contextMenuVisible}
+        animationType="slide"
+        transparent={true}>
+        <TouchableOpacity
+          style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}
+          activeOpacity={1} // This prevents the backdrop from being pressed
+        >
+          <View
+            style={{
+              flex: 1,
+              justifyContent: 'center',
+              alignItems: 'center',
+            }}>
+            <View
+              style={{
+                backgroundColor: 'white',
+                padding: 20,
+                borderRadius: 10,
+              }}>
+              <TouchableOpacity onPress={handleMergeAlbums}>
+                <Text>Merge Albums</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={handleDownloadAlbums}>
+                <Text>Download Albums</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={handleContextMenuClose}>
+                <Text>Delete Albums</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </TouchableOpacity>
+      </Modal>
+    );
   };
 
   const renderItem = ({ item }: { item: string }) => {
@@ -155,6 +230,57 @@ const Album = () => {
     'https://fastly.picsum.photos/id/863/200/300.jpg?hmac=4kin1N4a7dzocUZXCwLWHewLobhw1Q6_e_9E3Iy3n0I',
   ];
 
+  const CustomModal = ({
+    isVisible,
+    onClose,
+    onMerge,
+    onDownload,
+    onDelete,
+  }) => {
+    if (!isVisible) {
+      return null;
+    }
+
+    return (
+      <View
+        style={{
+          flex: 1,
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          justifyContent: 'center',
+          alignItems: 'center',
+        }}>
+        <View
+          style={{
+            backgroundColor: 'white',
+            padding: 20,
+            borderRadius: 10,
+          }}>
+          {/* 합치기 기능 */}
+          <TouchableOpacity onPress={onMerge}>
+            <Text>Merge Albums</Text>
+          </TouchableOpacity>
+          {/* 다운로드 기능 */}
+          <TouchableOpacity onPress={onDownload}>
+            <Text>Download Albums</Text>
+          </TouchableOpacity>
+          {/* 삭제 기능 */}
+          <TouchableOpacity onPress={onDelete}>
+            <Text>Delete Albums</Text>
+          </TouchableOpacity>
+        </View>
+        {/* 닫기 버튼 */}
+        <TouchableOpacity onPress={onClose} style={{ marginTop: 10 }}>
+          <Text>Close</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  };
+
   return (
     <React.Fragment>
       <View style={{ flex: 1 }}>
@@ -192,13 +318,16 @@ const Album = () => {
         <View style={styles.container}>
           <TouchableOpacity
             style={styles.button}
-            onPress={() => setIsModalVisible(true)}>
+            onPress={() => setIsAddModalVisible(true)}>
             <AddSvg style={styles.addBtn} />
           </TouchableOpacity>
         </View>
       </View>
 
-      <Modal visible={isModalVisible} animationType="slide" transparent={true}>
+      <Modal // 앨범 추가 Modal
+        visible={isAddModalVisible}
+        animationType="slide"
+        transparent={true}>
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
             <Text>앨범 추가</Text>
@@ -210,13 +339,13 @@ const Album = () => {
             <View style={styles.buttonContainer}>
               <Text
                 style={styles.modalButtonCancel}
-                onPress={() => setIsModalVisible(false)}>
+                onPress={() => setIsAddModalVisible(false)}>
                 취소
               </Text>
               <Text>|</Text>
               <Text
                 style={styles.modalButtonOk}
-                onPress={() => setIsModalVisible(false)}>
+                onPress={() => setIsAddModalVisible(false)}>
                 추가
               </Text>
             </View>
@@ -224,7 +353,7 @@ const Album = () => {
         </View>
       </Modal>
 
-      <Modal
+      <Modal // 정렬 Modal
         visible={isSortModalVisible}
         animationType="slide"
         transparent={true}>
@@ -294,6 +423,38 @@ const Album = () => {
           </View>
         </View>
       </Modal>
+
+      <Modal // 앨범 다중선택 처리 Modal
+        visible={isAlbumModalVisible}
+        animationType="none"
+        transparent={true}>
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <View style={styles.buttonContainer}>
+              <TouchableOpacity
+                style={[styles.sortMethodButton]}
+                onPress={() => setIsAlbumModalVisible(false)}>
+                <MergeSvg />
+              </TouchableOpacity>
+              <DownloadSvg />
+              <DeleteSvg />
+            </View>
+          </View>
+        </View>
+      </Modal>
+      <CustomModal
+        isVisible={contextMenuVisible}
+        onClose={handleContextMenuClose}
+        onMerge={() => {
+          // 합치기 기능 처리
+        }}
+        onDownload={() => {
+          // 다운로드 기능 처리
+        }}
+        onDelete={() => {
+          // 삭제 기능 처리
+        }}
+      />
     </React.Fragment>
   );
 };
