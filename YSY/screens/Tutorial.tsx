@@ -172,7 +172,6 @@ const Tutorial = () => {
       dateNofi: false,
       primaryNofi: false,
       eventNofi: false,
-      userId: 1,
       code: 'DAS111',
       profile: data.profile,
     };
@@ -234,8 +233,13 @@ const Tutorial = () => {
         eventNofi: false,
       };
 
-      // false면 추가 정보 페이지로 이동
-      console.log(verifyLoginData(data));
+      console.log('kakao data', data);
+
+      if (!verifyLoginData(data)) {
+        hideModal();
+        navigation.navigate('AdditionalInformation', { info: data });
+        return;
+      }
 
       const token: AppToken = await appLogin(data);
 
@@ -289,8 +293,14 @@ const Tutorial = () => {
           eventNofi: false,
         };
 
+        console.log('naver data', data);
+
         // false면 추가 정보 페이지로 이동
-        console.log('Good : ', verifyLoginData(data));
+        if (!verifyLoginData(data)) {
+          hideModal();
+          navigation.navigate('AdditionalInformation', { info: data });
+          return;
+        }
 
         const token: AppToken = await appLogin(data);
 
@@ -342,16 +352,12 @@ const Tutorial = () => {
           eventNofi: false,
         };
 
-        // false면 추가 정보 페이지로 이동
-        console.log('Good : ', verifyLoginData(data));
+        console.log('google data', data);
 
-        const token: AppToken = await appLogin(data);
-
-        await setSecureValue('accessToken', token.accessToken);
-        await setSecureValue('refreshToken', token.refreshToken);
-
-        // 추가 정보 입력
         hideModal();
+        navigation.navigate('AdditionalInformation', { info: data });
+      } else {
+        console.log('no user to goole');
       }
     } catch (error) {
       if (!String(error).includes('Sign in action cancelled')) {

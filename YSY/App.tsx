@@ -22,6 +22,7 @@ import Nav from './navigation/Nav';
 
 import Tutorial from './screens/Tutorial';
 import ConnectCouple from './screens/ConnectCouple';
+import AdditionalInformation from './screens/AdditionalInformation';
 
 import Loading from './components/Loading';
 import { config } from './navigation/config';
@@ -120,6 +121,10 @@ const App = () => {
               }}>
               <Stack.Screen name="Tutorial" component={Tutorial} />
               <Stack.Screen name="ConnectCouple" component={ConnectCouple} />
+              <Stack.Screen
+                name="AdditionalInformation"
+                component={AdditionalInformation}
+              />
             </Stack.Navigator>
           )}
           {isLoadding ? <Loading /> : null}
