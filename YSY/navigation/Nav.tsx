@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { StyleSheet, TouchableOpacity, View } from 'react-native';
 import { SvgProps } from 'react-native-svg';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 
 import Home from '../screens/Home';
-import Album from '../screens/Album';
+import Album, {handleDownloadAlbums, handleDeleteAlbums, handleMergeAlbums} from '../screens/Album';
 import Calendar from '../screens/Calendar';
 import Date from '../screens/Date';
 import More from '../screens/More';
@@ -32,22 +32,9 @@ const screenWidth = wp('100%');
 const Nav = () => {
   const [activeTab, setActiveTab] = useState('Default');
 
-  const handleDownloadAlbums = () => {
-    console.log('download');
-    console.log(activeTab);
-  };
-
-  const handleMergeAlbums = () => {
-    console.log('merge');
-  };
-
-  const handleDeleteAlbums = () => {
-    console.log('delete');
-  };
-
   return (
     <NavigationContainer>
-      {activeTab === 'AlbumModal' ? (
+      {activeTab.includes('AlbumModal') ? (
         <Tab.Navigator
           initialRouteName="Home"
           screenOptions={({}) => ({
@@ -66,12 +53,12 @@ const Nav = () => {
                       width: screenWidth * 0.2,
                       marginLeft: screenWidth * 0.1,
                     }}
-                    onPress={() => handleMergeAlbums()}>
+                    onPress={() => {setActiveTab('AlbumModalMerge');}}>
                     <MergeSvg width={30} height={25} />
                   </TouchableOpacity>
                   <TouchableOpacity
                     style={{ width: screenWidth * 0.3, alignItems: 'center' }}
-                    onPress={() => handleDownloadAlbums()}>
+                    onPress={() => {setActiveTab('AlbumModalDownload');}}>
                     <DownloadSvg width={26} height={26} />
                   </TouchableOpacity>
                   <TouchableOpacity
@@ -80,7 +67,7 @@ const Nav = () => {
                       marginRight: screenWidth * 0.1,
                       alignItems: 'flex-end',
                     }}
-                    onPress={() => handleDeleteAlbums()}>
+                    onPress={() => {setActiveTab('AlbumModalDelete');}}>
                     <DeleteSvg width={25} height={27} />
                   </TouchableOpacity>
                 </View>
@@ -88,7 +75,7 @@ const Nav = () => {
             },
           })}>
           <Tab.Screen name="Album">
-            {() => <Album setActiveTab={setActiveTab} />}
+            {() => <Album setActiveTab={setActiveTab} activeTab={activeTab} />}
           </Tab.Screen>
         </Tab.Navigator>
       ) : (
@@ -119,7 +106,7 @@ const Nav = () => {
           })}>
           <Tab.Screen name="Home" component={Home} />
           <Tab.Screen name="Album">
-            {() => <Album setActiveTab={setActiveTab} />}
+            {() => <Album setActiveTab={setActiveTab} activeTab={activeTab} />}
           </Tab.Screen>
           <Tab.Screen name="Calendar" component={Calendar} />
           <Tab.Screen name="Date" component={Date} />
