@@ -127,8 +127,8 @@ const App = () => {
               />
             </Stack.Navigator>
           )}
-          {isLoadding ? <Loading /> : null}
         </NavigationContainer>
+        {isLoadding ? <Loading /> : null}
       </SafeAreaView>
     </View>
   );
