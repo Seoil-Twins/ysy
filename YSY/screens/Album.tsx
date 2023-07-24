@@ -30,13 +30,7 @@ import { widthPercentageToDP as wp } from 'react-native-responsive-screen';
 
 const screenWidth = wp('100%');
 
-export const Album = ({
-  setActiveTab,
-  activeTab,
-}: {
-  setActiveTab: (tab: string) => void;
-  activeTab: string;
-}) => {
+export const Album = () => {
   const [isAddModalVisible, setIsAddModalVisible] = useState(false);
   const [isSortModalVisible, setIsSortModalVisible] = useState(false);
   const [selectedSortMethod, setSelectedSortMethod] = useState('최신순');
@@ -153,30 +147,30 @@ export const Album = ({
     //... (앨범에 해당하는 이미지 URL 추가)
   ];
 
-  const flatListKey = activeTab === 'AlbumModal' ? 'AlbumModal' : 'Default';
+  // const flatListKey = activeTab === 'AlbumModal' ? 'AlbumModal' : 'Default';
 
   // 앨범 모달 열기
   const openAlbumModal = () => {
     setContextMenuVisible(true);
-    setActiveTab('AlbumModal'); // 모달이 열릴 때 activeTab을 'AlbumModal'로 설정
+    // setActiveTab('AlbumModal'); // 모달이 열릴 때 activeTab을 'AlbumModal'로 설정
   };
 
   // 앨범 모달 닫기
   const closeAlbumModal = () => {
     setContextMenuVisible(false);
-    setActiveTab('Default'); // 모달이 닫힐 때 activeTab을 다시 'Album'으로 설정
+    // setActiveTab('Default'); // 모달이 닫힐 때 activeTab을 다시 'Album'으로 설정
   };
 
   // 앨범 모달 열기
   const openImageModal = () => {
     setContextMenuVisible(true);
-    setActiveTab('ImageModal'); // 모달이 열릴 때 activeTab을 'AlbumModal'로 설정
+    // setActiveTab('ImageModal'); // 모달이 열릴 때 activeTab을 'AlbumModal'로 설정
   };
 
   // 앨범 모달 닫기
   const closeImageModal = () => {
     setContextMenuVisible(false);
-    setActiveTab('Default'); // 모달이 닫힐 때 activeTab을 다시 'Album'으로 설정
+    // setActiveTab('Default'); // 모달이 닫힐 때 activeTab을 다시 'Album'으로 설정
   };
 
   const closeMoreModal = () => {
@@ -188,45 +182,45 @@ export const Album = ({
     });
   };
 
-  useEffect(() => {
-    if (activeTab.includes('Album')) {
-      if (activeTab.includes('Download')) {
-        setIsDownloadVisible(true);
-      } else {
-        setIsDownloadVisible(false);
-      }
+  // useEffect(() => {
+  //   if (activeTab.includes('Album')) {
+  //     if (activeTab.includes('Download')) {
+  //       setIsDownloadVisible(true);
+  //     } else {
+  //       setIsDownloadVisible(false);
+  //     }
 
-      if (activeTab.includes('Merge')) {
-        setIsMergeVisible(true);
-      } else {
-        setIsMergeVisible(false);
-      }
+  //     if (activeTab.includes('Merge')) {
+  //       setIsMergeVisible(true);
+  //     } else {
+  //       setIsMergeVisible(false);
+  //     }
 
-      if (activeTab.includes('Delete')) {
-        setIsDeleteVisible(true);
-      } else {
-        setIsDeleteVisible(false);
-      }
-    } else if (activeTab.includes('Image')) {
-      if (activeTab.includes('Download')) {
-        setIsImageDownloadVisible(true);
-      } else {
-        setIsImageDownloadVisible(false);
-      }
+  //     if (activeTab.includes('Delete')) {
+  //       setIsDeleteVisible(true);
+  //     } else {
+  //       setIsDeleteVisible(false);
+  //     }
+  //   } else if (activeTab.includes('Image')) {
+  //     if (activeTab.includes('Download')) {
+  //       setIsImageDownloadVisible(true);
+  //     } else {
+  //       setIsImageDownloadVisible(false);
+  //     }
 
-      if (activeTab.includes('Share')) {
-        setIsImageShareVisible(true);
-      } else {
-        setIsImageShareVisible(false);
-      }
+  //     if (activeTab.includes('Share')) {
+  //       setIsImageShareVisible(true);
+  //     } else {
+  //       setIsImageShareVisible(false);
+  //     }
 
-      if (activeTab.includes('Delete')) {
-        setIsImageDeleteVisible(true);
-      } else {
-        setIsImageDeleteVisible(false);
-      }
-    }
-  }, [activeTab]);
+  //     if (activeTab.includes('Delete')) {
+  //       setIsImageDeleteVisible(true);
+  //     } else {
+  //       setIsImageDeleteVisible(false);
+  //     }
+  //   }
+  // }, [activeTab]);
 
   // useEffect(() => {
   //   if(albumImages > 0)
@@ -278,7 +272,6 @@ export const Album = ({
   const renderHeaderRight = () => {
     if (isSelectionMode) {
       const numSelected = selectedAlbums.length;
-      console.log(activeTab);
       return (
         <View>
           <TouchableOpacity onPress={handleSelectAll}>
@@ -478,32 +471,32 @@ export const Album = ({
 
   const closeDownloadModal = () => {
     setIsDownloadVisible(false);
-    setActiveTab('AlbumModal');
+    // setActiveTab('AlbumModal');
   };
 
   const closeMergeModal = () => {
     setIsMergeVisible(false);
-    setActiveTab('AlbumModal');
+    // setActiveTab('AlbumModal');
   };
 
   const closeImageDeleteModal = () => {
     setIsImageDeleteVisible(false);
-    setActiveTab('ImageModal');
+    // setActiveTab('ImageModal');
   };
 
   const closeImageDownloadModal = () => {
     setIsImageDownloadVisible(false);
-    setActiveTab('ImageModal');
+    // setActiveTab('ImageModal');
   };
 
   const closeImageShareModal = () => {
     setIsImageShareVisible(false);
-    setActiveTab('ImageModal');
+    // setActiveTab('ImageModal');
   };
 
   const closeDeleteModal = () => {
     setIsDeleteVisible(false);
-    setActiveTab('AlbumModal');
+    // setActiveTab('AlbumModal');
   };
 
   const handleSortMethodSelect = (sortMethod: string) => {
@@ -695,7 +688,7 @@ export const Album = ({
             renderItem={renderImage}
             keyExtractor={(item, index) => String(index)}
             numColumns={numColumns}
-            key={flatListKey}
+            // key={flatListKey}
             onEndReached={loadMoreData}
             onEndReachedThreshold={0.1}
           />
@@ -719,10 +712,7 @@ export const Album = ({
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
             <Text>앨범 추가</Text>
-            <TextInput
-              style={styles.input}
-              onChangeText={() => {}}
-            />
+            <TextInput style={styles.input} onChangeText={() => {}} />
             <View style={styles.buttonContainer}>
               <Text
                 style={styles.modalButtonCancel}
