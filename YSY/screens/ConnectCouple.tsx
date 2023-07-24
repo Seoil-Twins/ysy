@@ -17,10 +17,14 @@ import CustomText from '../components/CustomText';
 import { TutorialTypes } from '../navigation/TutorialTypes';
 
 import { getSecureValue } from '../util/jwt';
+import { useAppDispatch } from '../redux/hooks';
+import { login } from '../features/loginStatusSlice';
 
 const ConnectCouple = () => {
   const navigation = useNavigation<StackNavigationProp<TutorialTypes>>();
   const { params } = useRoute<RouteProp<TutorialTypes, 'ConnectCouple'>>();
+  const dispatch = useAppDispatch();
+
   const title = '연인 맺기';
   const descriptions = [
     'YSY 서비스를 원할하게 사용하기 위해서는',
@@ -47,6 +51,7 @@ const ConnectCouple = () => {
     setRefreshToken(refreshToken);
   }, [navigation]);
 
+  // token 사용해서 내 정보 가져오기
   const initalMyCode = async () => {
     setMyCode('ASD123');
   };
@@ -73,6 +78,15 @@ const ConnectCouple = () => {
 
   const changeImagePicker = (image: ImageOrVideo) => {
     setImage(image.path);
+  };
+
+  const connectCouple = async () => {
+    // Couple POST API
+    console.log('Code : ', code);
+    console.log('Date : ', date);
+    console.log('Image : ', image);
+    console.log('accessToken : ', accessToken);
+    console.log('refreshToken : ', refreshToken);
   };
 
   const clickShareBtn = async () => {
@@ -114,14 +128,10 @@ const ConnectCouple = () => {
       return;
     }
 
-    // Couple POST API
-    console.log('Code : ', code);
-    console.log('Date : ', date);
-    console.log('Image : ', image);
-    console.log('accessToken : ', accessToken);
-    console.log('refreshToken : ', refreshToken);
+    connectCouple();
 
     // routing MAIN
+    dispatch(login());
   };
 
   return (

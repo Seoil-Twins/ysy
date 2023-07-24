@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
-import { RouteProp, useRoute } from '@react-navigation/native';
+import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
 
 import { globalStyles } from '../style/global';
 
@@ -10,10 +10,15 @@ import CustomText from '../components/CustomText';
 import Input from '../components/Input';
 
 import { TutorialTypes } from '../navigation/TutorialTypes';
+import { AppToken, LoginOptions, appLogin } from '../util/login';
+import { setSecureValue } from '../util/jwt';
+import { User } from '../types/user';
+import { StackNavigationProp } from '@react-navigation/stack';
 
 const AdditionalInformation = () => {
   const { info } =
     useRoute<RouteProp<TutorialTypes, 'AdditionalInformation'>>().params;
+  const navigation = useNavigation<StackNavigationProp<TutorialTypes>>();
   const title = '추가 정보 입력';
   const descriptions = [
     'YSY의 원할한 회원가입을 위해',
@@ -63,7 +68,7 @@ const AdditionalInformation = () => {
     return pattern.test(phone);
   };
 
-  const vaildation = () => {
+  const vaildation = async () => {
     let isVaild: boolean = true;
 
     if (!name || name.length <= 1) {
@@ -110,7 +115,52 @@ const AdditionalInformation = () => {
       return;
     }
 
-    console.log('good');
+    await login();
+  };
+
+  // Get User Info API
+  const getMyInfo = async (data: LoginOptions) => {
+    const user: User = {
+      snsId: '0002',
+      name: String(data.name),
+      email: String(data.email),
+      phone: String(data.phone),
+      birthday: String(data.birthday),
+      cupId: null,
+      dateNofi: false,
+      primaryNofi: false,
+      eventNofi: false,
+      code: 'DAS111',
+      profile: data.profile,
+    };
+
+    return user;
+  };
+
+  const login = async () => {
+    const convertBirth = `${birthday?.substring(0, 4)}-${birthday?.substring(
+      4,
+      6,
+    )}-${birthday?.substring(6, 8)}`;
+
+    const data: LoginOptions = {
+      snsId: info.snsId,
+      name,
+      email,
+      phone,
+      profile: info.profile,
+      birthday: convertBirth,
+      eventNofi: false,
+    };
+
+    const token: AppToken = await appLogin(data);
+
+    await setSecureValue('accessToken', token.accessToken);
+    await setSecureValue('refreshToken', token.refreshToken);
+
+    // Get User API
+    const user: User = await getMyInfo(data);
+    navigation.navigate('ConnectCouple', { myCode: user.code });
   };
 
   return (
