@@ -1,11 +1,11 @@
-import React, { useState, useRef } from 'react';
+import React, { useState } from 'react';
 import { StyleSheet, TouchableOpacity, View } from 'react-native';
 import { SvgProps } from 'react-native-svg';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 
 import Home from '../screens/Home';
-import Album, {handleDownloadAlbums, handleDeleteAlbums, handleMergeAlbums} from '../screens/Album';
+import Album from '../screens/Album';
 import Calendar from '../screens/Calendar';
 import Date from '../screens/Date';
 import More from '../screens/More';
@@ -23,6 +23,7 @@ import MoreActiveSVG from '../assets/icons/more_active.svg';
 import DownloadSvg from '../assets/icons/download.svg';
 import MergeSvg from '../assets/icons/merge.svg';
 import DeleteSvg from '../assets/icons/delete.svg';
+import ShareSvg from '../assets/icons/share.svg';
 
 import { widthPercentageToDP as wp } from 'react-native-responsive-screen';
 
@@ -34,50 +35,112 @@ const Nav = () => {
 
   return (
     <NavigationContainer>
-      {activeTab.includes('AlbumModal') ? (
-        <Tab.Navigator
-          initialRouteName="Home"
-          screenOptions={({}) => ({
-            headerShown: false,
-            tabBarShowLabel: false,
-            tabBarStyle: { height: 48, alignItems: 'center' },
-            tabBarIcon: ({}) => {
-              return (
-                <View
-                  style={{
-                    flexDirection: 'row',
-                    justifyContent: 'space-between',
-                  }}>
-                  <TouchableOpacity
+      {activeTab.includes('Modal') ? (
+        activeTab.includes('Album') ? (
+          <Tab.Navigator
+            initialRouteName="Home"
+            screenOptions={({}) => ({
+              headerShown: false,
+              tabBarShowLabel: false,
+              tabBarStyle: { height: 48, alignItems: 'center' },
+              tabBarIcon: ({}) => {
+                return (
+                  <View
                     style={{
-                      width: screenWidth * 0.2,
-                      marginLeft: screenWidth * 0.1,
-                    }}
-                    onPress={() => {setActiveTab('AlbumModalMerge');}}>
-                    <MergeSvg width={30} height={25} />
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={{ width: screenWidth * 0.3, alignItems: 'center' }}
-                    onPress={() => {setActiveTab('AlbumModalDownload');}}>
-                    <DownloadSvg width={26} height={26} />
-                  </TouchableOpacity>
-                  <TouchableOpacity
+                      flexDirection: 'row',
+                      justifyContent: 'space-between',
+                    }}>
+                    <TouchableOpacity
+                      style={{
+                        width: screenWidth * 0.2,
+                        marginLeft: screenWidth * 0.1,
+                      }}
+                      onPress={() => {
+                        setActiveTab('AlbumModalMerge');
+                      }}>
+                      <MergeSvg width={30} height={25} />
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={{ width: screenWidth * 0.3, alignItems: 'center' }}
+                      onPress={() => {
+                        setActiveTab('AlbumModalDownload');
+                      }}>
+                      <DownloadSvg width={26} height={26} />
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={{
+                        width: screenWidth * 0.2,
+                        marginRight: screenWidth * 0.1,
+                        alignItems: 'flex-end',
+                      }}
+                      onPress={() => {
+                        setActiveTab('AlbumModalDelete');
+                      }}>
+                      <DeleteSvg width={25} height={27} />
+                    </TouchableOpacity>
+                  </View>
+                );
+              },
+            })}>
+            <Tab.Screen name="Album">
+              {() => (
+                <Album setActiveTab={setActiveTab} activeTab={activeTab} />
+              )}
+            </Tab.Screen>
+          </Tab.Navigator>
+        ) : (
+          <Tab.Navigator
+            initialRouteName="Home"
+            screenOptions={({}) => ({
+              headerShown: false,
+              tabBarShowLabel: false,
+              tabBarStyle: { height: 48, alignItems: 'center' },
+              tabBarIcon: ({}) => {
+                return (
+                  <View
                     style={{
-                      width: screenWidth * 0.2,
-                      marginRight: screenWidth * 0.1,
-                      alignItems: 'flex-end',
-                    }}
-                    onPress={() => {setActiveTab('AlbumModalDelete');}}>
-                    <DeleteSvg width={25} height={27} />
-                  </TouchableOpacity>
-                </View>
-              );
-            },
-          })}>
-          <Tab.Screen name="Album">
-            {() => <Album setActiveTab={setActiveTab} activeTab={activeTab} />}
-          </Tab.Screen>
-        </Tab.Navigator>
+                      flexDirection: 'row',
+                      justifyContent: 'space-between',
+                    }}>
+                    <TouchableOpacity
+                      style={{
+                        width: screenWidth * 0.2,
+                        marginLeft: screenWidth * 0.1,
+                      }}
+                      onPress={() => {
+                        setActiveTab('ImageModalShare');
+                      }}>
+                      <ShareSvg width={30} height={25} />
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={{ width: screenWidth * 0.3, alignItems: 'center' }}
+                      onPress={() => {
+                        setActiveTab('ImageModalDownload');
+                      }}>
+                      <DownloadSvg width={26} height={26} />
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={{
+                        width: screenWidth * 0.2,
+                        marginRight: screenWidth * 0.1,
+                        alignItems: 'flex-end',
+                      }}
+                      onPress={() => {
+                        setActiveTab('ImageModalDelete');
+                      }}>
+                      <DeleteSvg width={25} height={27} />
+                    </TouchableOpacity>
+                  </View>
+                );
+              },
+            })}>
+            <Tab.Screen name="Album">
+              {() => (
+                <Album setActiveTab={setActiveTab} activeTab={activeTab} />
+              )}
+            </Tab.Screen>
+          </Tab.Navigator>
+        )
       ) : (
         <Tab.Navigator
           initialRouteName="Home"
