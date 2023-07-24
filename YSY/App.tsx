@@ -7,7 +7,6 @@ import { useAppSelector, useAppDispatch } from './redux/hooks';
 import { login, logout } from './features/loginStatusSlice';
 
 import Nav from './navigation/Nav';
-import Tutorial from './screens/Tutorial';
 
 const AppWrapper = () => {
   return (
@@ -46,7 +45,7 @@ const App = () => {
     <View style={styles.container}>
       <StatusBar backgroundColor="#dddddd" />
       <SafeAreaView style={styles.safeContainer}>
-        {isLogin ? <Nav /> : <Tutorial />}
+        <Nav />
       </SafeAreaView>
     </View>
   );
