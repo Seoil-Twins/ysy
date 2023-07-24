@@ -1,5 +1,5 @@
-import React from 'react';
-import { StyleSheet } from 'react-native';
+import React, { useState } from 'react';
+import { StyleSheet, TouchableOpacity, View } from 'react-native';
 import { SvgProps } from 'react-native-svg';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 
@@ -19,10 +19,19 @@ import DateNoneSVG from '../assets/icons/date_none.svg';
 import DateActiveSVG from '../assets/icons/date_active.svg';
 import MoreNoneSVG from '../assets/icons/more_none.svg';
 import MoreActiveSVG from '../assets/icons/more_active.svg';
+import DownloadSvg from '../assets/icons/download.svg';
+import MergeSvg from '../assets/icons/merge.svg';
+import DeleteSvg from '../assets/icons/delete.svg';
+import ShareSvg from '../assets/icons/share.svg';
+
+import { widthPercentageToDP as wp } from 'react-native-responsive-screen';
 
 const Tab = createBottomTabNavigator();
+const screenWidth = wp('100%');
 
 const Nav = () => {
+  const [activeTab, setActiveTab] = useState('Default');
+
   return (
     <Tab.Navigator
       initialRouteName="Home"
@@ -56,13 +65,16 @@ const Nav = () => {
       <Tab.Screen name="Date" component={Date} />
       <Tab.Screen name="More" component={More} />
     </Tab.Navigator>
-  );
 };
 
 const styles = StyleSheet.create({
   imgBox: {
     width: 34,
     height: 34,
+  },
+  iconBox: {
+    width: 111,
+    height: 68,
   },
 });
 

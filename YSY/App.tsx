@@ -19,7 +19,6 @@ import { useAppSelector, useAppDispatch } from './redux/hooks';
 import { login, logout } from './features/loginStatusSlice';
 
 import Nav from './navigation/Nav';
-
 import Tutorial from './screens/Tutorial';
 import ConnectCouple from './screens/ConnectCouple';
 import AdditionalInformation from './screens/AdditionalInformation';
