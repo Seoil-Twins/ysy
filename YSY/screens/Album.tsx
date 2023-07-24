@@ -722,7 +722,6 @@ export const Album = ({
             <TextInput
               style={styles.input}
               onChangeText={() => {}}
-              value={''}
             />
             <View style={styles.buttonContainer}>
               <Text
