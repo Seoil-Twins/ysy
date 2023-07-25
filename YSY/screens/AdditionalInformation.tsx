@@ -121,6 +121,7 @@ const AdditionalInformation = () => {
   // Get User Info API
   const getMyInfo = async (data: LoginOptions) => {
     const user: User = {
+      userId: 1,
       snsId: '0002',
       name: String(data.name),
       email: String(data.email),
