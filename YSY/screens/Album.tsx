@@ -26,7 +26,11 @@ import BackSvg from '../assets/icons/back.svg';
 import MoreSvg from '../assets/icons/more_vert.svg';
 import BAddSvg from '../assets/icons/add_black.svg';
 
+import { albumSelectionOn, albumSelectionOff } from '../features/albumSlice';
+
 import { widthPercentageToDP as wp } from 'react-native-responsive-screen';
+import { useAppDispatch, useAppSelector } from '../redux/hooks';
+import { RootState } from '../redux/store';
 
 const screenWidth = wp('100%');
 
@@ -40,7 +44,7 @@ export const Album = () => {
   const [isImageDownloadVisible, setIsImageDownloadVisible] = useState(false);
   const [isImageShareVisible, setIsImageShareVisible] = useState(false);
   const [isImageDeleteVisible, setIsImageDeleteVisible] = useState(false);
-  const [isSelectionModeImage, setIsSelectionModeImage] = useState(false);
+  const [isAlbumImage, setIsSelectionModeImage] = useState(false);
   const [isMoreModalVisible, setIsMoreModalVisible] = useState(false);
   const [isRepImageSelMode, setIsRepImageSelMode] = useState(false);
   const [RepImage, setRepImage] = useState('');
@@ -62,6 +66,10 @@ export const Album = () => {
     option2: false,
     option3: false,
   });
+
+  const isAlbum = useAppSelector(
+    (state: RootState) => state.albumStatus.isAlbum,
+  );
 
   const dummyImages = [
     'https://fastly.picsum.photos/id/179/200/200.jpg?hmac=I0g6Uht7h-y3NHqWA4e2Nzrnex7m-RceP1y732tc4Lw',
@@ -249,7 +257,7 @@ export const Album = () => {
   };
 
   const handleSelectAll = () => {
-    if (isSelectionMode) {
+    if (isAlbum) {
       if (selectedAlbums.length > 0) {
         // 이미 선택된 앨범이 있는 경우 전체 해제 동작 수행
         setSelectedAlbums([]);
@@ -258,7 +266,7 @@ export const Album = () => {
         setSelectedAlbums(dummyFolder);
       }
     }
-    if (isSelectionModeImage) {
+    if (isAlbumImage) {
       if (selectedImages.length > 0) {
         // 이미 선택된 앨범이 있는 경우 전체 해제 동작 수행
         setSelectedImages([]);
@@ -270,7 +278,7 @@ export const Album = () => {
   };
 
   const renderHeaderRight = () => {
-    if (isSelectionMode) {
+    if (isAlbum) {
       const numSelected = selectedAlbums.length;
       return (
         <View>
@@ -294,7 +302,7 @@ export const Album = () => {
       );
     } else {
       if (albumImages.length > 0) {
-        if (isSelectionModeImage) {
+        if (isAlbumImage) {
           const numSelected = selectedImages.length;
           return (
             <View>
@@ -391,7 +399,7 @@ export const Album = () => {
   };
 
   const handleAlbumPress = (albumName: string) => {
-    if (isSelectionMode) {
+    if (isAlbum) {
       setSelectedAlbums(prevSelectedAlbums => {
         if (prevSelectedAlbums.includes(albumName)) {
           // 이미 선택된 앨범인 경우 선택 해제
@@ -413,19 +421,24 @@ export const Album = () => {
     }
   };
 
-  const handleLongPress = (albumName: string) => {
-    if (isSelectionMode === true) {
-      handleSelectionCancel();
-      closeAlbumModal();
+  const dispatch = useAppDispatch();
+  const handleLongPress = () => {
+    setIsSelectionMode(!isAlbum);
+    if (isAlbum === true) {
+      dispatch(albumSelectionOff());
+      // handleSelectionCancel();
+      // dispatch(albumSelectionOff());
+      // closeAlbumModal();
     } else {
-      setIsSelectionMode(true);
-      setSelectedAlbums([albumName]);
-      openAlbumModal();
+      dispatch(albumSelectionOn());
+      // handleSelectionOn();
+      // setSelectedAlbums([albumName]);
+      // openAlbumModal();
     }
   };
 
   const handleImagePress = (imageName: string) => {
-    if (isSelectionModeImage) {
+    if (isAlbumImage) {
       setSelectedImages(prevSelectedImages => {
         if (prevSelectedImages.includes(imageName)) {
           // 이미 선택된 앨범인 경우 선택 해제
@@ -444,7 +457,7 @@ export const Album = () => {
   };
 
   const handleImageLongPress = () => {
-    if (isSelectionModeImage === true) {
+    if (isAlbumImage === true) {
       setIsSelectionModeImage(false);
       setSelectedImages([]);
       closeImageModal();
@@ -459,6 +472,12 @@ export const Album = () => {
   const handleSelectionCancel = () => {
     setIsSelectionMode(false);
     setSelectedAlbums([]);
+  };
+
+  const handleSelectionOn = () => {
+    console.log('in handle before : ' + isAlbum);
+    setIsSelectionMode(true);
+    console.log('in handle after : ' + isAlbum);
   };
 
   const openSortModal = () => {
@@ -569,7 +588,7 @@ export const Album = () => {
         <TouchableOpacity
           style={{ flex: 1, paddingTop: 5, alignItems: 'center' }}
           onPress={() => handleAlbumPress(item)}
-          onLongPress={() => handleLongPress(item)}>
+          onLongPress={() => handleLongPress()}>
           <Image
             source={{ uri: item }}
             style={{ width: screenWidth, height: 200 }}
@@ -581,7 +600,7 @@ export const Album = () => {
           <View style={{ position: 'absolute', bottom: 0, right: 0 }}>
             <Text style={styles.albumTextRight}>2023-07-18</Text>
           </View>
-          {isSelectionMode && (
+          {isAlbum && (
             <View
               style={
                 isSelected ? styles.checkedCircle : styles.unCheckedCircle
@@ -617,7 +636,7 @@ export const Album = () => {
               source={{ uri: item }}
               style={{ width: screenWidth / 4 - 2, height: 100 }}
             />
-            {isSelectionModeImage && (
+            {isAlbumImage && (
               <View
                 style={
                   isSelected ? styles.checkedCircle : styles.unCheckedCircle
@@ -688,7 +707,7 @@ export const Album = () => {
             renderItem={renderImage}
             keyExtractor={(item, index) => String(index)}
             numColumns={numColumns}
-            // key={flatListKey}
+            key={'ImageModal'}
             onEndReached={loadMoreData}
             onEndReachedThreshold={0.1}
           />
