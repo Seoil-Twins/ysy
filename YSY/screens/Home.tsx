@@ -5,15 +5,18 @@ import {
   ImageBackground,
   Image,
   Pressable,
+  Platform,
 } from 'react-native';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
 import ImageCropPicker, { ImageOrVideo } from 'react-native-image-crop-picker';
+import { PERMISSIONS } from 'react-native-permissions';
 
 import CustomText from '../components/CustomText';
 
 import { Couple } from '../types/couple';
 
 import { globalStyles } from '../style/global';
+import { checkPermission } from '../util/permission';
 
 import DefaultPersonSVG from '../assets/icons/person.svg';
 import LoveSVG from '../assets/icons/small_love.svg';
@@ -161,11 +164,11 @@ const Home = () => {
     setThumbnail(image.path);
   };
 
-  const onError = (error: any) => {
-    if (String(error).includes('User cancelled image selection')) {
-      console.log('user cancel');
-    } else if (String(error).includes('permission')) {
-      console.log('Not Allow permission');
+  const onError = async (error: any) => {
+    if (String(error).includes('permission') && Platform.OS === 'android') {
+      await checkPermission(PERMISSIONS.ANDROID.READ_MEDIA_IMAGES);
+    } else if (String(error).includes('permission') && Platform.OS === 'ios') {
+      await checkPermission(PERMISSIONS.IOS.PHOTO_LIBRARY);
     }
   };
 

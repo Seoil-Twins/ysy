@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
-import { StyleSheet, Pressable } from 'react-native';
+import { Platform, StyleSheet, Pressable } from 'react-native';
 import ImageCropPicker, { ImageOrVideo } from 'react-native-image-crop-picker';
+import { PERMISSIONS } from 'react-native-permissions';
+
+import { checkPermission } from '../util/permission';
 
 import ImagePickerSVG from '../assets/icons/image_picker.svg';
 
@@ -40,11 +43,11 @@ const ImagePicker: React.FC<ImagePickerProps> = ({
     onInputChange?.(image);
   };
 
-  const onError = (error: any) => {
-    if (String(error).includes('User cancelled image selection')) {
-      console.log('user cancel');
-    } else if (String(error).includes('permission')) {
-      console.log('Not Allow permission');
+  const onError = async (error: any) => {
+    if (String(error).includes('permission') && Platform.OS === 'android') {
+      await checkPermission(PERMISSIONS.ANDROID.READ_MEDIA_IMAGES);
+    } else if (String(error).includes('permission') && Platform.OS === 'ios') {
+      await checkPermission(PERMISSIONS.IOS.PHOTO_LIBRARY);
     }
   };
 
