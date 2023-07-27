@@ -31,10 +31,22 @@ import { albumSelectionOn, albumSelectionOff } from '../features/albumSlice';
 import { widthPercentageToDP as wp } from 'react-native-responsive-screen';
 import { useAppDispatch, useAppSelector } from '../redux/hooks';
 import { RootState } from '../redux/store';
+import { imageSelectionOff, imageSelectionOn } from '../features/ImageSlice';
+
+import AlbumDetail from './AlbumDetail';
+import { useNavigation } from '@react-navigation/native';
+import { StackNavigationProp } from '@react-navigation/stack';
+import { AlbumTypes } from '../navigation/AlbumTypes';
 
 const screenWidth = wp('100%');
 
-export const Album = () => {
+export const Album = ({
+  setActiveTab,
+  activeTab,
+}: {
+  setActiveTab: (tab: string) => void;
+  activeTab: string;
+}) => {
   const [isAddModalVisible, setIsAddModalVisible] = useState(false);
   const [isSortModalVisible, setIsSortModalVisible] = useState(false);
   const [selectedSortMethod, setSelectedSortMethod] = useState('최신순');
@@ -44,7 +56,6 @@ export const Album = () => {
   const [isImageDownloadVisible, setIsImageDownloadVisible] = useState(false);
   const [isImageShareVisible, setIsImageShareVisible] = useState(false);
   const [isImageDeleteVisible, setIsImageDeleteVisible] = useState(false);
-  const [isAlbumImage, setIsSelectionModeImage] = useState(false);
   const [isMoreModalVisible, setIsMoreModalVisible] = useState(false);
   const [isRepImageSelMode, setIsRepImageSelMode] = useState(false);
   const [RepImage, setRepImage] = useState('');
@@ -54,7 +65,6 @@ export const Album = () => {
     undefined,
   );
 
-  const [isSelectionMode, setIsSelectionMode] = useState(false);
   const [contextMenuVisible, setContextMenuVisible] = useState(false);
   const [selectedAlbums, setSelectedAlbums] = useState<string[]>([]);
   const [selectedImages, setSelectedImages] = useState<string[]>([]);
@@ -67,8 +77,14 @@ export const Album = () => {
     option3: false,
   });
 
+  const navigation = useNavigation<StackNavigationProp<AlbumTypes>>();
+
   const isAlbum = useAppSelector(
     (state: RootState) => state.albumStatus.isAlbum,
+  );
+  const isFunc = useAppSelector((state: RootState) => state.albumStatus.isFunc);
+  const isImage = useAppSelector(
+    (state: RootState) => state.imageStatus.isImage,
   );
 
   const dummyImages = [
@@ -157,28 +173,14 @@ export const Album = () => {
 
   // const flatListKey = activeTab === 'AlbumModal' ? 'AlbumModal' : 'Default';
 
-  // 앨범 모달 열기
-  const openAlbumModal = () => {
-    setContextMenuVisible(true);
-    // setActiveTab('AlbumModal'); // 모달이 열릴 때 activeTab을 'AlbumModal'로 설정
-  };
-
-  // 앨범 모달 닫기
-  const closeAlbumModal = () => {
-    setContextMenuVisible(false);
-    // setActiveTab('Default'); // 모달이 닫힐 때 activeTab을 다시 'Album'으로 설정
-  };
-
-  // 앨범 모달 열기
   const openImageModal = () => {
     setContextMenuVisible(true);
-    // setActiveTab('ImageModal'); // 모달이 열릴 때 activeTab을 'AlbumModal'로 설정
+    dispatch(imageSelectionOn());
   };
 
-  // 앨범 모달 닫기
   const closeImageModal = () => {
     setContextMenuVisible(false);
-    // setActiveTab('Default'); // 모달이 닫힐 때 activeTab을 다시 'Album'으로 설정
+    dispatch(imageSelectionOff());
   };
 
   const closeMoreModal = () => {
@@ -190,50 +192,51 @@ export const Album = () => {
     });
   };
 
-  // useEffect(() => {
-  //   if (activeTab.includes('Album')) {
-  //     if (activeTab.includes('Download')) {
-  //       setIsDownloadVisible(true);
-  //     } else {
-  //       setIsDownloadVisible(false);
-  //     }
+  useEffect(() => {
+    if (isFunc.includes('Album')) {
+      if (isFunc.includes('Download')) {
+        setIsDownloadVisible(true);
+      } else {
+        setIsDownloadVisible(false);
+      }
 
-  //     if (activeTab.includes('Merge')) {
-  //       setIsMergeVisible(true);
-  //     } else {
-  //       setIsMergeVisible(false);
-  //     }
+      if (isFunc.includes('Merge')) {
+        setIsMergeVisible(true);
+      } else {
+        setIsMergeVisible(false);
+      }
 
-  //     if (activeTab.includes('Delete')) {
-  //       setIsDeleteVisible(true);
-  //     } else {
-  //       setIsDeleteVisible(false);
-  //     }
-  //   } else if (activeTab.includes('Image')) {
-  //     if (activeTab.includes('Download')) {
-  //       setIsImageDownloadVisible(true);
-  //     } else {
-  //       setIsImageDownloadVisible(false);
-  //     }
+      if (isFunc.includes('Delete')) {
+        setIsDeleteVisible(true);
+      } else {
+        setIsDeleteVisible(false);
+      }
+    } else if (isFunc.includes('Image')) {
+      if (isFunc.includes('Download')) {
+        setIsImageDownloadVisible(true);
+      } else {
+        setIsImageDownloadVisible(false);
+      }
 
-  //     if (activeTab.includes('Share')) {
-  //       setIsImageShareVisible(true);
-  //     } else {
-  //       setIsImageShareVisible(false);
-  //     }
+      if (isFunc.includes('Share')) {
+        setIsImageShareVisible(true);
+      } else {
+        setIsImageShareVisible(false);
+      }
 
-  //     if (activeTab.includes('Delete')) {
-  //       setIsImageDeleteVisible(true);
-  //     } else {
-  //       setIsImageDeleteVisible(false);
-  //     }
-  //   }
-  // }, [activeTab]);
+      if (isFunc.includes('Delete')) {
+        setIsImageDeleteVisible(true);
+      } else {
+        setIsImageDeleteVisible(false);
+      }
+    }
+  }, [isFunc]);
 
-  // useEffect(() => {
-  //   if(albumImages > 0)
-  //     loadMoreData();
-  // }, [albumImages]);
+  useEffect(() => {
+    if (albumImages.length > 0) {
+      loadMoreData();
+    }
+  }, [albumImages]);
 
   const loadMoreData = () => {
     // 이미 로딩 중이거나 데이터가 모두 로딩되었을 경우 함수 실행 종료
@@ -266,7 +269,7 @@ export const Album = () => {
         setSelectedAlbums(dummyFolder);
       }
     }
-    if (isAlbumImage) {
+    if (isImage) {
       if (selectedImages.length > 0) {
         // 이미 선택된 앨범이 있는 경우 전체 해제 동작 수행
         setSelectedImages([]);
@@ -302,7 +305,7 @@ export const Album = () => {
       );
     } else {
       if (albumImages.length > 0) {
-        if (isAlbumImage) {
+        if (isImage) {
           const numSelected = selectedImages.length;
           return (
             <View>
@@ -397,9 +400,9 @@ export const Album = () => {
       }
     }
   };
-
   const handleAlbumPress = (albumName: string) => {
     if (isAlbum) {
+      console.log(activeTab);
       setSelectedAlbums(prevSelectedAlbums => {
         if (prevSelectedAlbums.includes(albumName)) {
           // 이미 선택된 앨범인 경우 선택 해제
@@ -412,6 +415,9 @@ export const Album = () => {
     } else {
       // 다중 선택 모드가 아닐 때는 단일 앨범을 선택하는 로직
       if (albumImages.length <= 0) {
+        console.log('be');
+        console.log('af');
+        navigation.navigate('AlbumDetail', { albumName: 'asdasd' });
         setAlbumImages(dummyImages.slice(0, 32));
         setSelectedAlbums([albumName]);
         loadMoreData();
@@ -423,22 +429,15 @@ export const Album = () => {
 
   const dispatch = useAppDispatch();
   const handleLongPress = () => {
-    setIsSelectionMode(!isAlbum);
     if (isAlbum === true) {
       dispatch(albumSelectionOff());
-      // handleSelectionCancel();
-      // dispatch(albumSelectionOff());
-      // closeAlbumModal();
     } else {
       dispatch(albumSelectionOn());
-      // handleSelectionOn();
-      // setSelectedAlbums([albumName]);
-      // openAlbumModal();
     }
   };
 
   const handleImagePress = (imageName: string) => {
-    if (isAlbumImage) {
+    if (isImage) {
       setSelectedImages(prevSelectedImages => {
         if (prevSelectedImages.includes(imageName)) {
           // 이미 선택된 앨범인 경우 선택 해제
@@ -457,27 +456,14 @@ export const Album = () => {
   };
 
   const handleImageLongPress = () => {
-    if (isAlbumImage === true) {
-      setIsSelectionModeImage(false);
+    if (isImage === true) {
       setSelectedImages([]);
       closeImageModal();
     } else {
-      setIsSelectionModeImage(true);
       setIsRepImageSelMode(false);
       setTmpRepImage(RepImage);
       openImageModal();
     }
-  };
-
-  const handleSelectionCancel = () => {
-    setIsSelectionMode(false);
-    setSelectedAlbums([]);
-  };
-
-  const handleSelectionOn = () => {
-    console.log('in handle before : ' + isAlbum);
-    setIsSelectionMode(true);
-    console.log('in handle after : ' + isAlbum);
   };
 
   const openSortModal = () => {
@@ -636,7 +622,7 @@ export const Album = () => {
               source={{ uri: item }}
               style={{ width: screenWidth / 4 - 2, height: 100 }}
             />
-            {isAlbumImage && (
+            {isImage && (
               <View
                 style={
                   isSelected ? styles.checkedCircle : styles.unCheckedCircle

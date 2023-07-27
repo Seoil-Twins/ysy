@@ -8,6 +8,7 @@ import Album from '../screens/Album';
 import Calendar from '../screens/Calendar';
 import Date from '../screens/Date';
 import More from '../screens/More';
+import AlbumDetail from '../screens/AlbumDetail';
 
 import HomeNoneSVG from '../assets/icons/home_none.svg';
 import HomeActiveSVG from '../assets/icons/home_active.svg';
@@ -31,7 +32,7 @@ const Nav = () => {
         tabBarShowLabel: false,
         tabBarStyle: { height: 48, alignItems: 'center' },
         tabBarIcon: ({ focused }) => {
-          let IconComponent: React.FC<SvgProps>;
+          let IconComponent: React.FC<SvgProps> | null;
 
           if (route.name === 'Home') {
             IconComponent = focused ? HomeActiveSVG : HomeNoneSVG;
@@ -43,18 +44,23 @@ const Nav = () => {
             IconComponent = focused ? DateActiveSVG : DateNoneSVG;
           } else if (route.name === 'More') {
             IconComponent = focused ? MoreActiveSVG : MoreNoneSVG;
+          } else if (route.name === 'AlbumDetail') {
+            IconComponent = null;
           } else {
             IconComponent = HomeActiveSVG;
           }
 
-          return <IconComponent style={styles.imgBox} />;
+          return IconComponent ? <IconComponent style={styles.imgBox} /> : null;
         },
       })}>
       <Tab.Screen name="Home" component={Home} />
-      <Tab.Screen name="Album" component={Album} />
+      <Tab.Screen name="Album">
+        {() => <Album setActiveTab={() => {}} activeTab={'Default'} />}
+      </Tab.Screen>
       <Tab.Screen name="Calendar" component={Calendar} />
       <Tab.Screen name="Date" component={Date} />
       <Tab.Screen name="More" component={More} />
+      <Tab.Screen name="AlbumDetail" component={AlbumDetail} />
     </Tab.Navigator>
   );
 };

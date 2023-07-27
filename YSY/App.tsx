@@ -20,13 +20,14 @@ import { login, logout } from './features/loginStatusSlice';
 import { albumSelectionOn, albumSelectionOff } from './features/albumSlice';
 
 import Nav from './navigation/Nav';
+import AlbumNav from './navigation/AlbumNav';
+import ImageNav from './navigation/AlbumImageNav';
 import Tutorial from './screens/Tutorial';
 import ConnectCouple from './screens/ConnectCouple';
 import AdditionalInformation from './screens/AdditionalInformation';
 
 import Loading from './components/Loading';
 import { config } from './navigation/config';
-import AlbumNav from './navigation/AlbumNav';
 
 const AppWrapper = () => {
   return (
@@ -47,6 +48,10 @@ const App = () => {
   );
   const isAlbum = useAppSelector(
     (state: RootState) => state.albumStatus.isAlbum,
+  );
+
+  const isImage = useAppSelector(
+    (state: RootState) => state.imageStatus.isImage,
   );
   const dispatch = useAppDispatch();
 
@@ -124,7 +129,10 @@ const App = () => {
       <StatusBar backgroundColor="#dddddd" />
       <SafeAreaView style={styles.safeContainer}>
         <NavigationContainer linking={linking}>
-          {isAlbum ? <AlbumNav /> : <Nav />}
+          <Nav />
+          {isAlbum ? <AlbumNav /> : null}
+          {isImage ? <ImageNav /> : null}
+          {/* {isAlbum ? <AlbumNav /> : isImage ? <ImageNav /> : <Nav />} */}
 
           {/* {isLogin ? (
             <Nav />
