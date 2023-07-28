@@ -20,8 +20,10 @@ import DateNoneSVG from '../assets/icons/date_none.svg';
 import DateActiveSVG from '../assets/icons/date_active.svg';
 import MoreNoneSVG from '../assets/icons/more_none.svg';
 import MoreActiveSVG from '../assets/icons/more_active.svg';
+import { createStackNavigator } from '@react-navigation/stack';
 
 const Tab = createBottomTabNavigator();
+const Stack = createStackNavigator();
 
 const Nav = () => {
   return (
@@ -44,8 +46,6 @@ const Nav = () => {
             IconComponent = focused ? DateActiveSVG : DateNoneSVG;
           } else if (route.name === 'More') {
             IconComponent = focused ? MoreActiveSVG : MoreNoneSVG;
-          } else if (route.name === 'AlbumDetail') {
-            IconComponent = null;
           } else {
             IconComponent = HomeActiveSVG;
           }
@@ -54,14 +54,23 @@ const Nav = () => {
         },
       })}>
       <Tab.Screen name="Home" component={Home} />
-      <Tab.Screen name="Album">
-        {() => <Album setActiveTab={() => {}} activeTab={'Default'} />}
-      </Tab.Screen>
+      <Tab.Screen name="Album" component={AlbumStack} />
       <Tab.Screen name="Calendar" component={Calendar} />
       <Tab.Screen name="Date" component={Date} />
       <Tab.Screen name="More" component={More} />
-      <Tab.Screen name="AlbumDetail" component={AlbumDetail} />
     </Tab.Navigator>
+  );
+};
+
+const AlbumStack = () => {
+  return (
+    <Stack.Navigator
+      screenOptions={{
+        headerShown: false,
+      }}>
+      <Stack.Screen name="Album" component={Album} />
+      <Stack.Screen name="AlbumDetail" component={AlbumDetail} />
+    </Stack.Navigator>
   );
 };
 

@@ -9,73 +9,43 @@ import {
   TextInput,
   Modal,
 } from 'react-native';
-import {
-  ImageLibraryOptions,
-  ImagePickerResponse,
-  launchImageLibrary,
-} from 'react-native-image-picker';
-
 import SortSvg from '../assets/icons/sort.svg';
 import SettingSvg from '../assets/icons/settings.svg';
 import AddSvg from '../assets/icons/add.svg';
 import WCheckSvg from '../assets/icons/white_check.svg';
-import WCheckBigSvg from '../assets/icons/white_check_big.svg';
 import BCheckSvg from '../assets/icons/check.svg';
 import UCheckSvg from '../assets/icons/un-check.svg';
-import BackSvg from '../assets/icons/back.svg';
-import MoreSvg from '../assets/icons/more_vert.svg';
-import BAddSvg from '../assets/icons/add_black.svg';
 
-import { albumSelectionOn, albumSelectionOff } from '../features/albumSlice';
+import {
+  albumSelectionOn,
+  albumSelectionOff,
+  albumFunc,
+} from '../features/albumSlice';
 
 import { widthPercentageToDP as wp } from 'react-native-responsive-screen';
 import { useAppDispatch, useAppSelector } from '../redux/hooks';
 import { RootState } from '../redux/store';
-import { imageSelectionOff, imageSelectionOn } from '../features/ImageSlice';
 
-import AlbumDetail from './AlbumDetail';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { AlbumTypes } from '../navigation/AlbumTypes';
 
 const screenWidth = wp('100%');
 
-export const Album = ({
-  setActiveTab,
-  activeTab,
-}: {
-  setActiveTab: (tab: string) => void;
-  activeTab: string;
-}) => {
+export const Album = () => {
   const [isAddModalVisible, setIsAddModalVisible] = useState(false);
   const [isSortModalVisible, setIsSortModalVisible] = useState(false);
   const [selectedSortMethod, setSelectedSortMethod] = useState('최신순');
   const [isDownloadVisible, setIsDownloadVisible] = useState(false);
   const [isMergeVisible, setIsMergeVisible] = useState(false);
   const [isDeleteVisible, setIsDeleteVisible] = useState(false);
-  const [isImageDownloadVisible, setIsImageDownloadVisible] = useState(false);
-  const [isImageShareVisible, setIsImageShareVisible] = useState(false);
-  const [isImageDeleteVisible, setIsImageDeleteVisible] = useState(false);
-  const [isMoreModalVisible, setIsMoreModalVisible] = useState(false);
-  const [isRepImageSelMode, setIsRepImageSelMode] = useState(false);
-  const [RepImage, setRepImage] = useState('');
-  const [tmpRepImage, setTmpRepImage] = useState('');
-  const [isModNameVisible, setIsModNameVisible] = useState(false);
-  const [selectedAddImage, setSelectedAddImage] = useState<string | undefined>(
-    undefined,
-  );
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [contextMenuVisible, setContextMenuVisible] = useState(false);
   const [selectedAlbums, setSelectedAlbums] = useState<string[]>([]);
   const [selectedImages, setSelectedImages] = useState<string[]>([]);
   const [albumImages, setAlbumImages] = useState<string[]>([]);
-  const [numColumns] = useState(4);
   const [isLoading, setIsLoading] = useState(false);
-  const [isPressed, setIsPressed] = useState({
-    option1: false,
-    option2: false,
-    option3: false,
-  });
 
   const navigation = useNavigation<StackNavigationProp<AlbumTypes>>();
 
@@ -173,25 +143,6 @@ export const Album = ({
 
   // const flatListKey = activeTab === 'AlbumModal' ? 'AlbumModal' : 'Default';
 
-  const openImageModal = () => {
-    setContextMenuVisible(true);
-    dispatch(imageSelectionOn());
-  };
-
-  const closeImageModal = () => {
-    setContextMenuVisible(false);
-    dispatch(imageSelectionOff());
-  };
-
-  const closeMoreModal = () => {
-    setIsMoreModalVisible(false);
-    setIsPressed({
-      option1: false,
-      option2: false,
-      option3: false,
-    });
-  };
-
   useEffect(() => {
     if (isFunc.includes('Album')) {
       if (isFunc.includes('Download')) {
@@ -211,24 +162,6 @@ export const Album = ({
       } else {
         setIsDeleteVisible(false);
       }
-    } else if (isFunc.includes('Image')) {
-      if (isFunc.includes('Download')) {
-        setIsImageDownloadVisible(true);
-      } else {
-        setIsImageDownloadVisible(false);
-      }
-
-      if (isFunc.includes('Share')) {
-        setIsImageShareVisible(true);
-      } else {
-        setIsImageShareVisible(false);
-      }
-
-      if (isFunc.includes('Delete')) {
-        setIsImageDeleteVisible(true);
-      } else {
-        setIsImageDeleteVisible(false);
-      }
     }
   }, [isFunc]);
 
@@ -236,6 +169,7 @@ export const Album = ({
     if (albumImages.length > 0) {
       loadMoreData();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [albumImages]);
 
   const loadMoreData = () => {
@@ -304,105 +238,23 @@ export const Album = ({
         </View>
       );
     } else {
-      if (albumImages.length > 0) {
-        if (isImage) {
-          const numSelected = selectedImages.length;
-          return (
-            <View>
-              <TouchableOpacity onPress={handleSelectAll}>
-                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                  {numSelected > 0 ? (
-                    <BCheckSvg style={{ marginRight: 5 }} />
-                  ) : (
-                    <UCheckSvg style={{ marginRight: 5 }} />
-                  )}
-                  <Text
-                    style={{
-                      color: numSelected > 0 ? '#3675FB' : '#999999',
-                      marginRight: 15,
-                    }}>
-                    {numSelected > 0 ? '선택 해제' : '모두 선택'}
-                  </Text>
-                </View>
-              </TouchableOpacity>
-            </View>
-          );
-        } else if (isRepImageSelMode) {
-          return (
-            <View
-              style={{ flexDirection: 'row', flex: 1, alignItems: 'center' }}>
-              <View style={{ flex: 1, flexDirection: 'row' }}>
-                <TouchableOpacity
-                  onPress={() => {
-                    handleBackBtn();
-                  }}>
-                  <BackSvg style={{ width: 70, height: 70, margin: 18 }} />
-                </TouchableOpacity>
-              </View>
-              <View style={{ flexDirection: 'row' }}>
-                <TouchableOpacity
-                  onPress={() => {
-                    handleRepTrans();
-                  }}>
-                  <Text
-                    style={{
-                      color: '#3675FB',
-                      marginRight: 15,
-                    }}>
-                    변경
-                  </Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          );
-        } else {
-          return (
-            <View style={{ flexDirection: 'row', flex: 1 }}>
-              <View style={{ flex: 1, flexDirection: 'row' }}>
-                <TouchableOpacity
-                  onPress={() => {
-                    handleBackBtn();
-                  }}>
-                  <BackSvg style={{ width: 70, height: 70, margin: 18 }} />
-                </TouchableOpacity>
-              </View>
-              <View style={{ flexDirection: 'row' }}>
-                <TouchableOpacity
-                  onPress={() => {
-                    handleAddImage();
-                  }}>
-                  <BAddSvg style={{ width: 70, height: 70, margin: 18 }} />
-                </TouchableOpacity>
-                <TouchableOpacity
-                  onPress={() => {
-                    handleMoreBtn();
-                  }}>
-                  <MoreSvg style={{ width: 70, height: 70, margin: 18 }} />
-                </TouchableOpacity>
-              </View>
-            </View>
-          );
-        }
-      } else {
-        return (
-          <View style={{ flexDirection: 'row' }}>
-            <TouchableOpacity
-              onPress={() => {
-                openSortModal();
-              }}>
-              <SortSvg style={styles.imgBox} />
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => {}}>
-              <SettingSvg style={styles.imgBox} />
-            </TouchableOpacity>
-          </View>
-        );
-      }
+      return (
+        <View style={{ flexDirection: 'row' }}>
+          <TouchableOpacity
+            onPress={() => {
+              openSortModal();
+            }}>
+            <SortSvg style={styles.imgBox} />
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => {}}>
+            <SettingSvg style={styles.imgBox} />
+          </TouchableOpacity>
+        </View>
+      );
     }
   };
   const handleAlbumPress = (albumName: string) => {
     if (isAlbum) {
-      console.log(activeTab);
       setSelectedAlbums(prevSelectedAlbums => {
         if (prevSelectedAlbums.includes(albumName)) {
           // 이미 선택된 앨범인 경우 선택 해제
@@ -415,10 +267,9 @@ export const Album = ({
     } else {
       // 다중 선택 모드가 아닐 때는 단일 앨범을 선택하는 로직
       if (albumImages.length <= 0) {
-        console.log('be');
-        console.log('af');
         navigation.navigate('AlbumDetail', { albumName: 'asdasd' });
         setAlbumImages(dummyImages.slice(0, 32));
+        dispatch(albumFunc('Image'));
         setSelectedAlbums([albumName]);
         loadMoreData();
       } else {
@@ -433,36 +284,6 @@ export const Album = ({
       dispatch(albumSelectionOff());
     } else {
       dispatch(albumSelectionOn());
-    }
-  };
-
-  const handleImagePress = (imageName: string) => {
-    if (isImage) {
-      setSelectedImages(prevSelectedImages => {
-        if (prevSelectedImages.includes(imageName)) {
-          // 이미 선택된 앨범인 경우 선택 해제
-          return prevSelectedImages.filter(item => item !== imageName);
-        } else {
-          // 선택되지 않은 앨범인 경우 선택 추가
-          return [...prevSelectedImages, imageName];
-        }
-      });
-    } else {
-      // 다중 선택 모드가 아닐 때는 단일 앨범을 선택하는 로직
-      if (isRepImageSelMode) {
-        setTmpRepImage(imageName);
-      }
-    }
-  };
-
-  const handleImageLongPress = () => {
-    if (isImage === true) {
-      setSelectedImages([]);
-      closeImageModal();
-    } else {
-      setIsRepImageSelMode(false);
-      setTmpRepImage(RepImage);
-      openImageModal();
     }
   };
 
@@ -484,21 +305,6 @@ export const Album = ({
     // setActiveTab('AlbumModal');
   };
 
-  const closeImageDeleteModal = () => {
-    setIsImageDeleteVisible(false);
-    // setActiveTab('ImageModal');
-  };
-
-  const closeImageDownloadModal = () => {
-    setIsImageDownloadVisible(false);
-    // setActiveTab('ImageModal');
-  };
-
-  const closeImageShareModal = () => {
-    setIsImageShareVisible(false);
-    // setActiveTab('ImageModal');
-  };
-
   const closeDeleteModal = () => {
     setIsDeleteVisible(false);
     // setActiveTab('AlbumModal');
@@ -507,63 +313,6 @@ export const Album = ({
   const handleSortMethodSelect = (sortMethod: string) => {
     setSelectedSortMethod(sortMethod);
     closeSortModal();
-  };
-
-  const handleBackBtn = () => {
-    if (isRepImageSelMode) {
-      setIsRepImageSelMode(false);
-      setTmpRepImage(RepImage);
-    } else {
-      setAlbumImages([]);
-    }
-  };
-
-  const handleAddImage = () => {
-    selectImageFromGallery();
-  };
-
-  const handleMoreBtn = () => {
-    setIsMoreModalVisible(true);
-  };
-
-  const handleOptionPressIn = (option: any) => {
-    setIsPressed(prevState => ({ ...prevState, [option]: true }));
-  };
-
-  const handleOptionPressOut = (option: any) => {
-    setIsPressed(prevState => ({ ...prevState, [option]: false }));
-  };
-
-  const handleRepImage = () => {
-    setIsRepImageSelMode(true);
-    setIsMoreModalVisible(false);
-  };
-
-  const handleRepTrans = () => {
-    setRepImage(tmpRepImage);
-    setIsRepImageSelMode(false);
-  };
-
-  const handleModName = () => {
-    setIsModNameVisible(true);
-    setIsMoreModalVisible(false);
-  };
-
-  const selectImageFromGallery = () => {
-    const options: ImageLibraryOptions = {
-      mediaType: 'photo', // 이미지 타입 설정 (사진만 가져오려면 'photo'로 설정)
-    };
-
-    launchImageLibrary(options, (response: ImagePickerResponse) => {
-      if (response.didCancel) {
-        console.log('User cancelled image picker');
-      } else {
-        // 이미지가 선택된 경우 이미지 URI를 저장
-        if (response.assets) {
-          setSelectedAddImage(response.assets[0].uri);
-        }
-      }
-    });
   };
 
   const renderItem = ({ item }: { item: string }) => {
@@ -601,60 +350,6 @@ export const Album = ({
     );
   };
 
-  const renderImage = ({ item }: { item: string }) => {
-    const isSelected = selectedImages.includes(item);
-    const isTmpRepImage = tmpRepImage.includes(item);
-
-    return (
-      <View style={{ flex: 1, paddingTop: 1, alignItems: 'center' }}>
-        <TouchableOpacity
-          style={{
-            flex: 1,
-            paddingTop: 1,
-            paddingRight: 1,
-            alignItems: 'center',
-            position: 'relative',
-          }}
-          onPress={() => handleImagePress(item)}
-          onLongPress={() => handleImageLongPress()}>
-          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-            <Image
-              source={{ uri: item }}
-              style={{ width: screenWidth / 4 - 2, height: 100 }}
-            />
-            {isImage && (
-              <View
-                style={
-                  isSelected ? styles.checkedCircle : styles.unCheckedCircle
-                }>
-                <Text>
-                  {isSelected ? <WCheckSvg style={styles.checked} /> : ''}
-                </Text>
-              </View>
-            )}
-
-            {isRepImageSelMode && isTmpRepImage && (
-              <View
-                style={{
-                  position: 'absolute',
-                  top: 0,
-                  right: 0,
-                  width: 60,
-                  height: 60,
-                  borderRadius: 20,
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  marginTop: 15,
-                  marginRight: 20,
-                }}>
-                <WCheckBigSvg />
-              </View>
-            )}
-          </View>
-        </TouchableOpacity>
-      </View>
-    );
-  };
   const dummyFolder = [
     'https://fastly.picsum.photos/id/179/200/200.jpg?hmac=I0g6Uht7h-y3NHqWA4e2Nzrnex7m-RceP1y732tc4Lw',
     'https://fastly.picsum.photos/id/803/200/300.jpg?hmac=v-3AsAcUOG4kCDsLMlWF9_3Xa2DTODGyKLggZNvReno',
@@ -680,34 +375,18 @@ export const Album = ({
           {renderHeaderRight()}
         </View>
 
-        {albumImages.length <= 0 ? (
-          <FlatList
-            data={dummyFolder}
-            keyExtractor={(item, index) => String(index)}
-            renderItem={renderItem}
-            pointerEvents={contextMenuVisible ? 'none' : 'auto'}
-          />
-        ) : (
-          <FlatList
-            data={albumImages} // 앨범에 해당하는 이미지 데이터를 사용합니다.
-            renderItem={renderImage}
-            keyExtractor={(item, index) => String(index)}
-            numColumns={numColumns}
-            key={'ImageModal'}
-            onEndReached={loadMoreData}
-            onEndReachedThreshold={0.1}
-          />
-        )}
-
-        {albumImages.length <= 0 && (
-          <View style={styles.container}>
-            <TouchableOpacity
-              style={styles.button}
-              onPress={() => setIsAddModalVisible(true)}>
-              <AddSvg style={styles.addBtn} />
-            </TouchableOpacity>
-          </View>
-        )}
+        <FlatList
+          data={dummyFolder}
+          keyExtractor={(item, index) => String(index)}
+          renderItem={renderItem}
+        />
+        <View style={styles.container}>
+          <TouchableOpacity
+            style={styles.button}
+            onPress={() => setIsAddModalVisible(true)}>
+            <AddSvg style={styles.addBtn} />
+          </TouchableOpacity>
+        </View>
       </View>
 
       <Modal // 앨범 추가 Modal
@@ -887,177 +566,6 @@ export const Album = ({
                 style={styles.modalButtonOk_red}
                 onPress={() => closeDeleteModal()}>
                 삭제
-              </Text>
-            </View>
-          </View>
-        </View>
-      </Modal>
-
-      <Modal // 이미지 다운로드
-        visible={isImageDownloadVisible}
-        animationType="slide"
-        transparent={true}>
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>이미지 다운로드</Text>
-            <Text style={styles.modalContentTitle}>
-              이미지 {selectedImages.length}개를 다운로드 하시겠습니까?
-            </Text>
-            <Text>다운로드된 이미지는 기기의 내부 저장소에 저장됩니다.</Text>
-            <View style={styles.buttonContainer}>
-              <Text
-                style={styles.modalButtonCancel}
-                onPress={() => closeImageDownloadModal()}>
-                취소
-              </Text>
-              <Text>|</Text>
-              <Text
-                style={styles.modalButtonOk}
-                onPress={() => closeImageDownloadModal()}>
-                다운로드
-              </Text>
-            </View>
-          </View>
-        </View>
-      </Modal>
-
-      <Modal // 이미지 공유하기
-        visible={isImageShareVisible}
-        animationType="slide"
-        transparent={true}>
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>이미지 공유하기</Text>
-            <Text style={styles.modalContentTitle}>
-              이미지 {selectedImages.length}개를 공유하시겠습니까?
-            </Text>
-            <Text>이미지는 공유하면 더 이상 되돌릴 수 없습니다.</Text>
-            <View style={styles.buttonContainer}>
-              <Text
-                style={styles.modalButtonCancel}
-                onPress={() => closeImageShareModal()}>
-                취소
-              </Text>
-              <Text>|</Text>
-              <Text
-                style={styles.modalButtonOk}
-                onPress={() => closeImageShareModal()}>
-                공유하기
-              </Text>
-            </View>
-          </View>
-        </View>
-      </Modal>
-
-      <Modal // 이미지 삭제
-        visible={isImageDeleteVisible}
-        animationType="slide"
-        transparent={true}>
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>이미지 삭제</Text>
-            <Text style={styles.modalContentTitle}>
-              이미지 {selectedImages.length}개를 삭제 하시겠습니까?
-            </Text>
-            <Text>이미지를 삭제하시면 더 이상 되돌릴 수 없습니다.</Text>
-            <View style={styles.buttonContainer}>
-              <Text
-                style={styles.modalButtonCancel}
-                onPress={() => closeImageDeleteModal()}>
-                취소
-              </Text>
-              <Text>|</Text>
-              <Text
-                style={styles.modalButtonOk_red}
-                onPress={() => closeImageDeleteModal()}>
-                삭제
-              </Text>
-            </View>
-          </View>
-        </View>
-      </Modal>
-
-      <Modal // 상세 페이지 설정메뉴
-        visible={isMoreModalVisible}
-        animationType="none"
-        transparent={true}>
-        <View style={(styles.modalContainer, { flexDirection: 'row' })}>
-          <View
-            style={{
-              flex: 1,
-              width: screenWidth * 0.6,
-            }}
-          />
-          <View
-            style={{
-              backgroundColor: 'white',
-              borderRadius: 10,
-              elevation: 5,
-              marginTop: screenWidth * 0.01,
-              marginRight: screenWidth * 0.01,
-              width: screenWidth * 0.4,
-            }}>
-            <TouchableOpacity
-              onPress={() => handleRepImage()}
-              onPressIn={() => handleOptionPressIn('option1')}
-              onPressOut={() => handleOptionPressOut('option1')}
-              activeOpacity={1}
-              style={[
-                isPressed.option1 ? styles.touchableOpacityPressed : null,
-              ]}>
-              <View>
-                <Text style={styles.moreText}>대표 사진 변경</Text>
-              </View>
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() => handleModName()}
-              onPressIn={() => handleOptionPressIn('option2')}
-              onPressOut={() => handleOptionPressOut('option2')}
-              activeOpacity={1}
-              style={[
-                isPressed.option2 ? styles.touchableOpacityPressed : null,
-              ]}>
-              <Text style={styles.moreText}>앨범 이름 변경</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() => closeMoreModal()}
-              onPressIn={() => handleOptionPressIn('option3')}
-              onPressOut={() => handleOptionPressOut('option3')}
-              activeOpacity={1}
-              style={[
-                isPressed.option3 ? styles.touchableOpacityPressed : null,
-              ]}>
-              <Text style={styles.moreTextRed}>앨범 삭제</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
-
-      <Modal // 앨범 이름 변경
-        visible={isModNameVisible}
-        animationType="slide"
-        transparent={true}>
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <Text>앨범명 변경</Text>
-            <TextInput
-              style={styles.input}
-              onChangeText={() => {}}
-              defaultValue={selectedAlbums[0]}
-            />
-            <View style={styles.buttonContainer}>
-              <Text
-                style={styles.modalButtonCancel}
-                onPress={() => {
-                  setIsModNameVisible(false);
-                }}>
-                취소
-              </Text>
-              <Text>|</Text>
-              <Text
-                style={styles.modalButtonOk}
-                onPress={() => setIsModNameVisible(false)}>
-                변경
               </Text>
             </View>
           </View>
