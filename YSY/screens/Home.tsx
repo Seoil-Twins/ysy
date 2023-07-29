@@ -6,10 +6,12 @@ import {
   Image,
   Pressable,
   Platform,
+  Dimensions,
 } from 'react-native';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
 import ImageCropPicker, { ImageOrVideo } from 'react-native-image-crop-picker';
 import { PERMISSIONS } from 'react-native-permissions';
+import Modal from 'react-native-modal';
 
 import CustomText from '../components/CustomText';
 
@@ -23,12 +25,15 @@ import LoveSVG from '../assets/icons/small_love.svg';
 import CalendarSVG from '../assets/icons/calendar_lightgray.svg';
 import PickImageSVG from '../assets/icons/pick_image.svg';
 
+const { width, height } = Dimensions.get('window');
+
 const Home = () => {
   const [cupInfo, setCupInfo] = useState<Couple | undefined>(undefined);
   const [day, setDay] = useState<number>(0);
   const [cupDay, setCupDay] = useState<Date | undefined>(undefined);
   const [thumbnail, setThumbnail] = useState<string | null>(null);
   const [datePickerVisible, setDatePickerVisible] = useState<boolean>(false);
+  const [modalVisible, setModalVisible] = useState<boolean>(false);
 
   const getCoupleInfo = async () => {
     const response: Couple = await {
@@ -137,9 +142,17 @@ const Home = () => {
     hideDatePicker();
   };
 
-  const updateThumbnail = async (_image: ImageOrVideo) => {
+  const updateThumbnail = async (_image: ImageOrVideo | null) => {
     const response = 201;
     return response;
+  };
+
+  const showModal = async () => {
+    setModalVisible(true);
+  };
+
+  const hideModal = async () => {
+    setModalVisible(false);
   };
 
   const onSuccess = async (image: ImageOrVideo) => {
@@ -173,6 +186,8 @@ const Home = () => {
   };
 
   const showImagePicker = () => {
+    hideModal();
+
     ImageCropPicker.openPicker({
       width: 360,
       height: 640,
@@ -180,6 +195,18 @@ const Home = () => {
     })
       .then(onSuccess)
       .catch(onError);
+  };
+
+  const showAlbumPicker = () => {
+    hideModal();
+    console.log('album picker');
+  };
+
+  const setDefaultThumbnail = async () => {
+    hideModal();
+
+    await updateThumbnail(null);
+    setThumbnail(null);
   };
 
   return (
@@ -243,7 +270,7 @@ const Home = () => {
           onPress={showDatePicker}>
           <CalendarSVG />
         </Pressable>
-        <Pressable style={styles.funcItem} onPress={showImagePicker}>
+        <Pressable style={styles.funcItem} onPress={showModal}>
           <PickImageSVG />
         </Pressable>
       </View>
@@ -256,6 +283,33 @@ const Home = () => {
         date={cupDay ? cupDay : new Date()}
         maximumDate={new Date()}
       />
+      <Modal
+        isVisible={modalVisible}
+        onBackdropPress={hideModal}
+        onBackButtonPress={hideModal}
+        deviceWidth={width}
+        deviceHeight={height}>
+        <View style={styles.modal}>
+          <CustomText size={20} weight="medium" style={styles.modalTitle}>
+            배경사진
+          </CustomText>
+          <Pressable style={styles.modalItem} onPress={showImagePicker}>
+            <CustomText size={14} weight="regular">
+              갤러리에서 선택
+            </CustomText>
+          </Pressable>
+          <Pressable style={styles.modalItem} onPress={showAlbumPicker}>
+            <CustomText size={14} weight="regular">
+              앨범에서 선택
+            </CustomText>
+          </Pressable>
+          <Pressable style={styles.modalItem} onPress={setDefaultThumbnail}>
+            <CustomText size={14} weight="regular">
+              기본 이미지로 변경
+            </CustomText>
+          </Pressable>
+        </View>
+      </Modal>
     </ImageBackground>
   );
 };
@@ -318,6 +372,18 @@ const styles = StyleSheet.create({
   },
   mr20: {
     marginRight: 20,
+  },
+  modal: {
+    padding: 20,
+    borderRadius: 10,
+    backgroundColor: '#FFFFFF',
+  },
+  modalTitle: {
+    marginBottom: 10,
+  },
+  modalItem: {
+    height: 40,
+    justifyContent: 'center',
   },
 });
 
