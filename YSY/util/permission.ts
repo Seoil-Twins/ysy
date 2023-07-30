@@ -13,6 +13,10 @@ export interface PermissionsBlocked {
   isBlocked: boolean;
 }
 
+export const openAppSettings = () => {
+  openSettings();
+};
+
 export const checkPermission = async (type: Permission) => {
   try {
     const result = await check(type);
@@ -23,12 +27,12 @@ export const checkPermission = async (type: Permission) => {
         const requestResult = await requestPermission(type);
 
         if (requestResult === 'blocked') {
-          openSettings();
+          openAppSettings();
         }
 
         break;
       case RESULTS.BLOCKED:
-        openSettings();
+        openAppSettings();
         break;
     }
   } catch (error) {
@@ -47,7 +51,7 @@ export const checkPermissions = async (types: Permission[]) => {
           requests.push(type);
           break;
         case RESULTS.BLOCKED:
-          openSettings();
+          openAppSettings();
           return;
       }
     });
@@ -57,7 +61,7 @@ export const checkPermissions = async (types: Permission[]) => {
     if (results) {
       types.forEach((type: Permission) => {
         if (results[type] === 'blocked') {
-          openSettings();
+          openAppSettings();
           return;
         }
       });
