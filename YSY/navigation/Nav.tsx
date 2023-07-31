@@ -2,6 +2,7 @@ import React from 'react';
 import { StyleSheet } from 'react-native';
 import { SvgProps } from 'react-native-svg';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { createStackNavigator } from '@react-navigation/stack';
 
 import Home from '../screens/Home';
 import Album from '../screens/Album';
@@ -20,7 +21,6 @@ import DateNoneSVG from '../assets/icons/date_none.svg';
 import DateActiveSVG from '../assets/icons/date_active.svg';
 import MoreNoneSVG from '../assets/icons/more_none.svg';
 import MoreActiveSVG from '../assets/icons/more_active.svg';
-import { createStackNavigator } from '@react-navigation/stack';
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();

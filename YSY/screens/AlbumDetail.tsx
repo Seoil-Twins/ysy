@@ -154,7 +154,7 @@ export const AlbumDetail = () => {
   useEffect(() => {
     loadMoreData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, );
 
   useEffect(() => {
     console.log(isFunc);
