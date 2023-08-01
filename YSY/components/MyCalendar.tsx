@@ -7,8 +7,8 @@ interface CalendarProps {
 }
 
 const Calendar: React.FC<CalendarProps> = ({ onDateSelect }) => {
-  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
-  const [currentMonth, setCurrentMonth] = useState<number>(
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date()); // 현재 
+  const [currentMonth, setCurrentMonth] = useState<number>( 
     new Date().getMonth(),
   );
   const [currentYear, setCurrentYear] = useState<number>(

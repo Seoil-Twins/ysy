@@ -204,7 +204,7 @@ export const AlbumDetail = () => {
     setTimeout(() => {
       const newData = loadImageFromDB(albumName, 8);
       console.log(newData);
-      setAlbumImages(prevData => [...prevData, ...newData]);
+      setAlbumImages((prevData) => [...prevData, ...newData]);
       setIsLoading(false);
     }, 1000);
   };
@@ -476,6 +476,7 @@ export const AlbumDetail = () => {
       </View>
     );
   };
+
   return (
     <View style={{ flex: 1 }}>
       <View
