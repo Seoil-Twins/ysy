@@ -15,7 +15,7 @@ const Calendar = () => {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>My Calendar</Text>
-      <MyCalendar onDayPress={handleDayPress} markedDates={markedDates} />
+      <MyCalendar onDateSelect={handleDayPress} />
     </View>
   );
 };
@@ -23,7 +23,6 @@ const Calendar = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
     alignItems: 'center',
     justifyContent: 'center',
   },

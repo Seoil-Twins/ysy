@@ -8,7 +8,6 @@ import {
   Text,
   Modal,
   TextInput,
-  BackHandler,
 } from 'react-native';
 import { AlbumTypes } from '../navigation/AlbumTypes';
 import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
@@ -48,6 +47,7 @@ export const AlbumDetail = () => {
   const [selectedAddImage, setSelectedAddImage] = useState<string | undefined>(
     undefined,
   );
+  //ss
   const [isModNameVisible, setIsModNameVisible] = useState(false);
   const [isMoreModalVisible, setIsMoreModalVisible] = useState(false);
   const [isPressed, setIsPressed] = useState({
@@ -58,7 +58,6 @@ export const AlbumDetail = () => {
   const [isImageDownloadVisible, setIsImageDownloadVisible] = useState(false);
   const [isImageShareVisible, setIsImageShareVisible] = useState(false);
   const [isImageDeleteVisible, setIsImageDeleteVisible] = useState(false);
-  const [isSelMode, setIsSelMode] = useState(false);
 
   const isImage = useAppSelector(
     (state: RootState) => state.imageStatus.isImage,
@@ -154,7 +153,7 @@ export const AlbumDetail = () => {
   useEffect(() => {
     loadMoreData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, );
+  }, []);
 
   useEffect(() => {
     console.log(isFunc);
@@ -357,12 +356,10 @@ export const AlbumDetail = () => {
 
   const openImageModal = () => {
     dispatch(imageSelectionOn());
-    setIsSelMode(true);
   };
 
   const closeImageModal = () => {
     dispatch(imageSelectionOff());
-    setIsSelMode(false);
   };
 
   const handleImagePress = (imageName: string) => {
