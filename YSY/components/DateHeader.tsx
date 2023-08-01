@@ -1,37 +1,48 @@
 import React from 'react';
+import { StyleSheet, View, ScrollView } from 'react-native';
 
 import DateHeaderItem from './DateHeaderItem';
-import { StyleSheet, View, ScrollView } from 'react-native';
+import DateHeaderActiveItem from './DateHeaderActiveItem';
+import { globalStyles } from '../style/global';
 
 type DateItem = {
   title: string;
   pressEvent: () => void;
 };
 
-type DateHeaderProps = {
-  items: Array<DateItem>;
-  onPressGPS: () => void;
+type DateActiveItem = {
+  title: string;
+  isActive: boolean;
+  pressEvent: () => void;
 };
 
-const DateHeader: React.FC<DateHeaderProps> = ({ items, onPressGPS }) => {
+type DateHeaderProps = {
+  items: Array<DateItem>;
+  activeItems: Array<DateActiveItem>;
+};
+
+const DateHeader: React.FC<DateHeaderProps> = ({ items, activeItems }) => {
   return (
-    <View style={styles.container}>
+    <View style={[globalStyles.plpr20, styles.container]}>
       <ScrollView
         horizontal={true}
         showsHorizontalScrollIndicator={false}
         showsVerticalScrollIndicator={false}>
         {items.map((item, idx) => (
           <DateHeaderItem
-            key={idx}
+            key={`item${idx}`}
             title={item.title}
             onPress={item.pressEvent}
           />
         ))}
-        <DateHeaderItem
-          title="내 위치 기반"
-          onPress={onPressGPS}
-          isArrow={false}
-        />
+        {activeItems.map((item, idx) => (
+          <DateHeaderActiveItem
+            key={`activeItem${idx}`}
+            title={item.title}
+            onPress={item.pressEvent}
+            isActive={item.isActive}
+          />
+        ))}
       </ScrollView>
     </View>
   );
@@ -40,8 +51,9 @@ const DateHeader: React.FC<DateHeaderProps> = ({ items, onPressGPS }) => {
 const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
-    height: 45,
     alignItems: 'center',
+    height: 45,
+    backgroundColor: '#FFFFFF',
   },
 });
 

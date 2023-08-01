@@ -3,6 +3,7 @@ import { StyleSheet, View, Pressable } from 'react-native';
 
 import SearchSVG from '../assets/icons/search.svg';
 import SettingSVG from '../assets/icons/settings.svg';
+import { globalStyles } from '../style/global';
 
 type SearchHeaderProps = {
   onPress: () => void;
@@ -18,7 +19,7 @@ const SearchHeader: React.FC<SearchHeaderProps> = ({ onPress }) => {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, globalStyles.plpr20]}>
       <Pressable style={[styles.item, styles.mr15]} onPress={clickSearch}>
         <SearchSVG width={22} height={22} />
       </Pressable>
@@ -32,9 +33,10 @@ const SearchHeader: React.FC<SearchHeaderProps> = ({ onPress }) => {
 const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
-    height: 48,
     alignItems: 'center',
     justifyContent: 'flex-end',
+    height: 48,
+    backgroundColor: '#FFFFFF',
   },
   item: {
     alignItems: 'center',

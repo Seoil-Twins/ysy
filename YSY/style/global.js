@@ -7,4 +7,8 @@ export const globalStyles = StyleSheet.create({
     paddingRight: 20,
     backgroundColor: '#FFFFFF',
   },
+  plpr20: {
+    paddingLeft: 20,
+    paddingRight: 20,
+  },
 });

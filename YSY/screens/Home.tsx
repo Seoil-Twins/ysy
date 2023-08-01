@@ -214,7 +214,7 @@ const Home = () => {
       source={
         thumbnail
           ? { uri: thumbnail }
-          : require('../assets/icons/main_background.png')
+          : require('../assets/images/main_background.png')
       }
       resizeMode="cover"
       style={[styles.container, globalStyles.mlmr20]}>

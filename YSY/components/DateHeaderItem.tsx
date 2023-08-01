@@ -7,26 +7,16 @@ import CustomText from './CustomText';
 
 type DateHeaderItemProps = {
   title: string;
-  isArrow?: boolean;
   onPress: () => void;
 };
 
-const DateHeaderItem: React.FC<DateHeaderItemProps> = ({
-  title,
-  isArrow,
-  onPress,
-}) => {
-  isArrow = isArrow === undefined ? true : false;
-
+const DateHeaderItem: React.FC<DateHeaderItemProps> = ({ title, onPress }) => {
   return (
     <Pressable style={styles.container} onPress={onPress}>
-      <CustomText
-        size={12}
-        weight="regular"
-        style={isArrow ? { marginRight: 5 } : null}>
+      <CustomText size={12} weight="regular" style={{ marginRight: 5 }}>
         {title}
       </CustomText>
-      {isArrow ? <ArrowDownSVG /> : null}
+      <ArrowDownSVG />
     </Pressable>
   );
 };
