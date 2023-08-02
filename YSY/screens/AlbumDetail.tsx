@@ -30,6 +30,9 @@ import {
   ImagePickerResponse,
   launchImageLibrary,
 } from 'react-native-image-picker';
+
+import { ImagePicker } from '../components/ImagePicker';
+import { ImageOrVideo } from 'react-native-image-crop-picker';
 const screenWidth = wp('100%');
 
 export const AlbumDetail = () => {
@@ -151,7 +154,8 @@ export const AlbumDetail = () => {
   ];
 
   useEffect(() => {
-    loadMoreData();
+    const newData = loadImageFromDB(albumName, 32);
+    setAlbumImages(prevData => [...prevData, ...newData]);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -184,13 +188,10 @@ export const AlbumDetail = () => {
       albumImages.length,
       albumImages.length + slice,
     );
-    console.log(albumName + '이라는 앨범에서 ' + slice + '개씩 가져오기');
     return ImageArray;
   };
 
   const loadMoreData = () => {
-    console.log(albumImages.length);
-    console.log(dummyImages.length);
     // 이미 로딩 중이거나 데이터가 모두 로딩되었을 경우 함수 실행 종료
     if (isLoading || albumImages.length >= dummyImages.length) {
       return;
@@ -203,8 +204,7 @@ export const AlbumDetail = () => {
     // 이 예시에서는 setTimeout을 사용하여 1초 후에 새로운 데이터를 추가로 로딩합니다.
     setTimeout(() => {
       const newData = loadImageFromDB(albumName, 8);
-      console.log(newData);
-      setAlbumImages((prevData) => [...prevData, ...newData]);
+      setAlbumImages(prevData => [...prevData, ...newData]);
       setIsLoading(false);
     }, 1000);
   };
@@ -250,6 +250,11 @@ export const AlbumDetail = () => {
 
   const handleAddImage = () => {
     selectImageFromGallery();
+    <ImagePicker placeholder="대표 사진" onInputChange={changeImagePicker} />;
+  };
+
+  const changeImagePicker = (image: ImageOrVideo) => {
+    console.log(image.path);
   };
 
   const handleMoreBtn = () => {
@@ -408,12 +413,10 @@ export const AlbumDetail = () => {
 
   const closeImageDeleteModal = () => {
     setIsImageDeleteVisible(false);
-    // setActiveTab('ImageModal');
   };
 
   const closeImageDownloadModal = () => {
     setIsImageDownloadVisible(false);
-    // setActiveTab('ImageModal');
   };
 
   const closeImageShareModal = () => {

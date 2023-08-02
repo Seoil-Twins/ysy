@@ -45,7 +45,6 @@ export const Album = () => {
   const [selectedAlbums, setSelectedAlbums] = useState<string[]>([]);
   const [selectedImages, setSelectedImages] = useState<string[]>([]);
   const [albumImages, setAlbumImages] = useState<string[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
 
   const navigation = useNavigation<StackNavigationProp<AlbumTypes>>();
 
@@ -165,34 +164,6 @@ export const Album = () => {
     }
   }, [isFunc]);
 
-  useEffect(() => {
-    if (albumImages.length > 0) {
-      loadMoreData();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [albumImages]);
-
-  const loadMoreData = () => {
-    // 이미 로딩 중이거나 데이터가 모두 로딩되었을 경우 함수 실행 종료
-    if (isLoading || albumImages.length === dummyImages.length) {
-      return;
-    }
-
-    // 데이터 로딩 시작
-    setIsLoading(true);
-
-    // 모의 API 호출 또는 기타 데이터 로딩 로직 구현
-    // 이 예시에서는 setTimeout을 사용하여 1초 후에 새로운 데이터를 추가로 로딩합니다.
-    setTimeout(() => {
-      const newData = dummyImages.slice(
-        albumImages.length,
-        albumImages.length + 8,
-      ); // 8개씩 추가로 로딩
-      setAlbumImages(prevData => [...prevData, ...newData]);
-      setIsLoading(false);
-    }, 1000);
-  };
-
   const handleSelectAll = () => {
     if (isAlbum) {
       if (selectedAlbums.length > 0) {
@@ -271,7 +242,7 @@ export const Album = () => {
         setAlbumImages(dummyImages.slice(0, 32));
         dispatch(albumFunc('Image'));
         setSelectedAlbums([albumName]);
-        loadMoreData();
+        // loadMoreData();
       } else {
         setAlbumImages([]);
       }

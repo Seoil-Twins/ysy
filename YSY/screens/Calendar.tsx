@@ -7,10 +7,10 @@ const Calendar = () => {
     console.log('Selected day:', day);
   };
 
-  const markedDates = {
-    '2023-07-01': { selected: true, selectedColor: 'blue' },
-    '2023-07-05': { selected: true, selectedColor: 'green' },
-  };
+  // const markedDates = {
+  //   '2023-07-01': { selected: true, selectedColor: 'blue' },
+  //   '2023-07-05': { selected: true, selectedColor: 'green' },
+  // };
 
   return (
     <View style={styles.container}>

@@ -7,8 +7,8 @@ interface CalendarProps {
 }
 
 const Calendar: React.FC<CalendarProps> = ({ onDateSelect }) => {
-  const [selectedDate, setSelectedDate] = useState<Date>(new Date()); // 현재 
-  const [currentMonth, setCurrentMonth] = useState<number>( 
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date()); // 현재
+  const [currentMonth, setCurrentMonth] = useState<number>(
     new Date().getMonth(),
   );
   const [currentYear, setCurrentYear] = useState<number>(
@@ -18,18 +18,21 @@ const Calendar: React.FC<CalendarProps> = ({ onDateSelect }) => {
   const today = new Date();
 
   const handlePrevMonth = () => {
-    if (currentMonth <= 1) {
+    if (currentMonth <= 0) {
       setCurrentYear(currentYear - 1);
     }
     setCurrentMonth(prevMonth => (prevMonth === 0 ? 11 : prevMonth - 1));
+    console.log('currentYear' + currentYear + '|| currentMonth' + currentMonth);
     getMonthDates(currentYear, currentMonth);
   };
 
   const handleNextMonth = () => {
-    if (currentMonth >= 12) {
+    if (currentMonth >= 11) {
       setCurrentYear(currentYear + 1);
     }
     setCurrentMonth(prevMonth => (prevMonth === 11 ? 0 : prevMonth + 1));
+    console.log('currentYear' + currentYear + '|| currentMonth' + currentMonth);
+    getMonthDates(currentYear, currentMonth);
   };
 
   const handleDateSelect = (date: Date) => {
@@ -40,10 +43,9 @@ const Calendar: React.FC<CalendarProps> = ({ onDateSelect }) => {
   };
 
   const isSameMonth = (date1: Date, date2: Date) => {
-    return (
-      date1.getFullYear() === date2.getFullYear() &&
-      date1.getMonth() === date2.getMonth()
-    );
+    console.log('date1 ' + date1.getFullYear());
+    console.log('date2 ' + date2.getFullYear());
+    return date1.getMonth() === date2.getMonth();
   };
 
   const getMonthDates = (year: number, month: number): Date[] => {
@@ -148,7 +150,8 @@ const Calendar: React.FC<CalendarProps> = ({ onDateSelect }) => {
                     styles.dateCell,
                     isSameDay(date, selectedDate) && styles.selectedDateCell,
                     isSameDay(date, today) && styles.todayCell,
-                    !isSameMonth(date, today) && styles.prevNextMonthDateCell,
+                    !isSameMonth(date, new Date(currentYear, currentMonth)) &&
+                      styles.prevNextMonthDateCell,
                     isSameDay(date, selectedDate) &&
                       !isSameMonth(date, today) &&
                       styles.selectedPrevNextMonthDateCell,
