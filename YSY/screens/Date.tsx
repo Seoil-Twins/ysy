@@ -7,6 +7,11 @@ import Geolocation, {
 } from '@react-native-community/geolocation';
 import axios, { AxiosRequestConfig } from 'axios';
 import { KAKAO_REST_API_KEY } from '@env';
+import { useNavigation } from '@react-navigation/native';
+import {
+  createStackNavigator,
+  StackNavigationProp,
+} from '@react-navigation/stack';
 
 import DateHeader from '../components/DateHeader';
 import DateSortHeader from '../components/DateSortHeader';
@@ -14,6 +19,7 @@ import DateViewItem from '../components/DateViewItem';
 
 import { checkPermission, openAppSettings } from '../util/permission';
 import { Date as DateType } from '../types/date';
+import { DateNavTypes } from '../navigation/DateStack';
 import ScrollLoading from '../components/ScrollLoading';
 
 type DateSortHeaderItem = {
@@ -28,8 +34,9 @@ type DateSortHeaderActiveItem = {
 };
 
 const Date = () => {
+  const navigation = useNavigation<StackNavigationProp<DateNavTypes>>();
+
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [searchVisible, setSearchVisible] = useState<boolean>(false);
   const [latitude, setLatitude] = useState<number>(0);
   const [longitude, setLongitude] = useState<number>(0);
   const [dateItems, setDateItems] = useState<DateType[]>([]);
@@ -409,12 +416,9 @@ const Date = () => {
     setIsLoading(false);
   }, [dateItems]);
 
-  const showSearchModal = () => {
-    setSearchVisible(true);
-  };
-
-  const hideSearchModal = () => {
-    setSearchVisible(false);
+  const moveSearch = () => {
+    console.log('in');
+    navigation.navigate('Search');
   };
 
   const moreDateViews = () => {
@@ -647,7 +651,7 @@ const Date = () => {
 
   return (
     <View style={styles.container}>
-      <DateHeader onPress={showSearchModal} />
+      <DateHeader onPress={moveSearch} />
       <DateSortHeader items={items} activeItems={activeItems} />
       <FlatList
         data={dateItems}
