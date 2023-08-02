@@ -14,6 +14,7 @@ import DateViewItem from '../components/DateViewItem';
 
 import { checkPermission, openAppSettings } from '../util/permission';
 import { Date as DateType } from '../types/date';
+import ScrollLoading from '../components/ScrollLoading';
 
 type DateHeaderItem = {
   title: string;
@@ -27,6 +28,7 @@ type DateHeaderActiveItem = {
 };
 
 const Date = () => {
+  const [isLoading, setIsLoading] = useState<boolean>(false);
   const [searchVisible, setSearchVisible] = useState<boolean>(false);
   const [latitude, setLatitude] = useState<number>(0);
   const [longitude, setLongitude] = useState<number>(0);
@@ -403,6 +405,10 @@ const Date = () => {
     // console.log(items);
   }, [items]);
 
+  useEffect(() => {
+    setIsLoading(false);
+  }, [dateItems]);
+
   const showSearchModal = () => {
     setSearchVisible(true);
   };
@@ -412,6 +418,7 @@ const Date = () => {
   };
 
   const moreDateViews = () => {
+    setIsLoading(true);
     const newItems: DateType[] = [
       {
         id: 1,
@@ -621,6 +628,7 @@ const Date = () => {
         data={dateItems}
         keyExtractor={item => String(item.id)}
         onEndReached={moreDateViews}
+        onEndReachedThreshold={0.4}
         renderItem={({ item }) => (
           <DateViewItem
             title={item.title}
@@ -630,6 +638,7 @@ const Date = () => {
             isFavorite={item.isFavorite}
           />
         )}
+        ListFooterComponent={isLoading ? <ScrollLoading height={50} /> : null}
       />
     </View>
   );
