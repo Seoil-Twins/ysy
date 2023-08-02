@@ -5,12 +5,12 @@ import ArrowDownSVG from '../assets/icons/arrow_down.svg';
 
 import CustomText from './CustomText';
 
-type DateHeaderItemProps = {
+type DateSortItemProps = {
   title: string;
   onPress: () => void;
 };
 
-const DateHeaderItem: React.FC<DateHeaderItemProps> = ({ title, onPress }) => {
+const DateSortItem: React.FC<DateSortItemProps> = ({ title, onPress }) => {
   return (
     <Pressable style={styles.container} onPress={onPress}>
       <CustomText size={12} weight="regular" style={{ marginRight: 5 }}>
@@ -36,4 +36,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default DateHeaderItem;
+export default DateSortItem;

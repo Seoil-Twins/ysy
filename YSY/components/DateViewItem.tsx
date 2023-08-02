@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   StyleSheet,
   View,
   ImageBackground,
   ScrollView,
   Dimensions,
+  Pressable,
 } from 'react-native';
 
 import LoveNoneSVG from '../assets/icons/love_none.svg';
@@ -14,20 +15,40 @@ import CustomText from './CustomText';
 const { width } = Dimensions.get('window');
 
 type DateViewItemProps = {
+  id: number;
   title: string;
   tags: string[];
   thumbnail: string;
   favoriteCount: number;
-  isFavorite?: boolean;
+  isFavorite: boolean;
+  onPressFavorite: (id: number, isFavorite: boolean) => void;
 };
 
 const DateViewItem: React.FC<DateViewItemProps> = ({
+  id,
   title,
   tags,
   thumbnail,
   favoriteCount,
   isFavorite,
+  onPressFavorite,
 }) => {
+  const [loading, setLoading] = useState<boolean>(false);
+
+  const onPress = () => {
+    if (loading) {
+      return;
+    }
+
+    setLoading(true);
+    onPressFavorite(id, isFavorite);
+
+    // throttle 적용
+    setTimeout(() => {
+      setLoading(false);
+    }, 500);
+  };
+
   return (
     <ImageBackground
       source={
@@ -36,7 +57,7 @@ const DateViewItem: React.FC<DateViewItemProps> = ({
           : require('../assets/images/date_image.png')
       }
       style={styles.container}>
-      <View style={styles.favorite}>
+      <Pressable style={styles.favorite} onPress={onPress}>
         {isFavorite ? (
           <LoveActiveSVG style={styles.img} />
         ) : (
@@ -44,12 +65,12 @@ const DateViewItem: React.FC<DateViewItemProps> = ({
         )}
         <CustomText
           weight="medium"
-          size={16}
+          size={18}
           color="#FFFFFF"
           style={styles.textShadow}>
           {favoriteCount}
         </CustomText>
-      </View>
+      </Pressable>
       <View style={styles.bottom}>
         <CustomText
           weight="medium"

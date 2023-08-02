@@ -1,49 +1,31 @@
 import React from 'react';
-import { StyleSheet, View, ScrollView } from 'react-native';
+import { StyleSheet, View, Pressable } from 'react-native';
 
-import DateHeaderItem from './DateHeaderItem';
-import DateHeaderActiveItem from './DateHeaderActiveItem';
+import SearchSVG from '../assets/icons/search.svg';
+import SettingSVG from '../assets/icons/settings.svg';
 import { globalStyles } from '../style/global';
 
-type DateItem = {
-  title: string;
-  pressEvent: () => void;
+type SearchHeaderProps = {
+  onPress: () => void;
 };
 
-type DateActiveItem = {
-  title: string;
-  isActive: boolean;
-  pressEvent: () => void;
-};
+const SearchHeader: React.FC<SearchHeaderProps> = ({ onPress }) => {
+  const clickSearch = () => {
+    onPress();
+  };
 
-type DateHeaderProps = {
-  items: Array<DateItem>;
-  activeItems: Array<DateActiveItem>;
-};
+  const clickSettings = () => {
+    console.log('move settings');
+  };
 
-const DateHeader: React.FC<DateHeaderProps> = ({ items, activeItems }) => {
   return (
-    <View style={[globalStyles.plpr20, styles.container]}>
-      <ScrollView
-        horizontal={true}
-        showsHorizontalScrollIndicator={false}
-        showsVerticalScrollIndicator={false}>
-        {items.map((item, idx) => (
-          <DateHeaderItem
-            key={`item${idx}`}
-            title={item.title}
-            onPress={item.pressEvent}
-          />
-        ))}
-        {activeItems.map((item, idx) => (
-          <DateHeaderActiveItem
-            key={`activeItem${idx}`}
-            title={item.title}
-            onPress={item.pressEvent}
-            isActive={item.isActive}
-          />
-        ))}
-      </ScrollView>
+    <View style={[styles.container, globalStyles.plpr20]}>
+      <Pressable style={[styles.item, styles.mr15]} onPress={clickSearch}>
+        <SearchSVG width={22} height={22} />
+      </Pressable>
+      <Pressable style={styles.item} onPress={clickSettings}>
+        <SettingSVG width={25} height={25} />
+      </Pressable>
     </View>
   );
 };
@@ -52,9 +34,16 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     alignItems: 'center',
-    height: 45,
+    justifyContent: 'flex-end',
+    height: 48,
     backgroundColor: '#FFFFFF',
+  },
+  item: {
+    alignItems: 'center',
+  },
+  mr15: {
+    marginRight: 15,
   },
 });
 
-export default DateHeader;
+export default SearchHeader;

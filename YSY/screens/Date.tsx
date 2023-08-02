@@ -8,20 +8,20 @@ import Geolocation, {
 import axios, { AxiosRequestConfig } from 'axios';
 import { KAKAO_REST_API_KEY } from '@env';
 
-import SearchHeader from '../components/SearchHeader';
 import DateHeader from '../components/DateHeader';
+import DateSortHeader from '../components/DateSortHeader';
 import DateViewItem from '../components/DateViewItem';
 
 import { checkPermission, openAppSettings } from '../util/permission';
 import { Date as DateType } from '../types/date';
 import ScrollLoading from '../components/ScrollLoading';
 
-type DateHeaderItem = {
+type DateSortHeaderItem = {
   title: string;
   pressEvent: () => void;
 };
 
-type DateHeaderActiveItem = {
+type DateSortHeaderActiveItem = {
   title: string;
   isActive: boolean;
   pressEvent: () => void;
@@ -67,7 +67,7 @@ const Date = () => {
     handleActiveChange([{ index: 0, isActive: !activeItems[0].isActive }]);
   };
 
-  const [items, setItems] = useState<DateHeaderItem[]>([
+  const [items, setItems] = useState<DateSortHeaderItem[]>([
     {
       title: '인기',
       pressEvent: onPressSort,
@@ -86,7 +86,7 @@ const Date = () => {
     },
   ]);
 
-  const [activeItems, setActiveItems] = useState<DateHeaderActiveItem[]>([
+  const [activeItems, setActiveItems] = useState<DateSortHeaderActiveItem[]>([
     {
       title: '내 위치 기반',
       pressEvent: onPressGPS,
@@ -97,7 +97,7 @@ const Date = () => {
   const handleTitleChange = (
     updates: { index: number; newTitle: string }[],
   ) => {
-    setItems((prevItems: DateHeaderItem[]) => {
+    setItems((prevItems: DateSortHeaderItem[]) => {
       const updatedItems = [...prevItems];
 
       for (const update of updates) {
@@ -112,7 +112,7 @@ const Date = () => {
   const handleActiveChange = (
     updates: { index: number; isActive: boolean }[],
   ) => {
-    setActiveItems((prevItems: DateHeaderActiveItem[]) => {
+    setActiveItems((prevItems: DateSortHeaderActiveItem[]) => {
       const updatedItems = [...prevItems];
 
       for (const update of updates) {
@@ -418,10 +418,14 @@ const Date = () => {
   };
 
   const moreDateViews = () => {
+    if (isLoading) {
+      return;
+    }
+
     setIsLoading(true);
     const newItems: DateType[] = [
       {
-        id: 1,
+        id: 6,
         contentId: '123456',
         contentTypeId: 39,
         areaCode: 1,
@@ -460,7 +464,7 @@ const Date = () => {
         isFavorite: true,
       },
       {
-        id: 2,
+        id: 7,
         contentId: '123456',
         contentTypeId: 39,
         areaCode: 1,
@@ -498,7 +502,7 @@ const Date = () => {
         isFavorite: false,
       },
       {
-        id: 3,
+        id: 8,
         contentId: '123456',
         contentTypeId: 39,
         areaCode: 1,
@@ -538,7 +542,7 @@ const Date = () => {
         isFavorite: false,
       },
       {
-        id: 4,
+        id: 9,
         contentId: '123456',
         contentTypeId: 39,
         areaCode: 1,
@@ -577,7 +581,7 @@ const Date = () => {
         isFavorite: true,
       },
       {
-        id: 5,
+        id: 10,
         contentId: '123456',
         contentTypeId: 39,
         areaCode: 1,
@@ -620,10 +624,31 @@ const Date = () => {
     setDateItems(prevItems => [...prevItems, ...newItems]);
   };
 
+  const handleDateItemChange = (id: number, isFavorite: boolean) => {
+    setDateItems((prevItems: DateType[]) => {
+      const updatedItems = [...prevItems];
+      const find = updatedItems.find(item => item.id === id);
+
+      if (find) {
+        find.isFavorite = isFavorite;
+      }
+
+      return updatedItems;
+    });
+  };
+
+  const onPressFavorite = (id: number, isFavorite: boolean) => {
+    const response = 204;
+
+    if (response === 204) {
+      handleDateItemChange(id, !isFavorite);
+    }
+  };
+
   return (
     <View style={styles.container}>
-      <SearchHeader onPress={showSearchModal} />
-      <DateHeader items={items} activeItems={activeItems} />
+      <DateHeader onPress={showSearchModal} />
+      <DateSortHeader items={items} activeItems={activeItems} />
       <FlatList
         data={dateItems}
         keyExtractor={item => String(item.id)}
@@ -631,11 +656,13 @@ const Date = () => {
         onEndReachedThreshold={0.4}
         renderItem={({ item }) => (
           <DateViewItem
+            id={item.id}
             title={item.title}
             thumbnail={item.thumbnails[0]}
             tags={item.tags}
             favoriteCount={item.favoriteCount}
             isFavorite={item.isFavorite}
+            onPressFavorite={onPressFavorite}
           />
         )}
         ListFooterComponent={isLoading ? <ScrollLoading height={50} /> : null}

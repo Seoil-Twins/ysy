@@ -3,13 +3,13 @@ import { Pressable, StyleSheet } from 'react-native';
 
 import CustomText from './CustomText';
 
-type DateHeaderActiveItemProps = {
+type DateSortActiveItemProps = {
   title: string;
   isActive?: boolean;
   onPress: () => void;
 };
 
-const DateHeaderItem: React.FC<DateHeaderActiveItemProps> = ({
+const DateSortActiveItem: React.FC<DateSortActiveItemProps> = ({
   title,
   isActive,
   onPress,
@@ -56,4 +56,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default DateHeaderItem;
+export default DateSortActiveItem;
