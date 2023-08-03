@@ -32,6 +32,8 @@ import {
 } from 'react-native-image-picker';
 
 import { ImagePicker } from '../components/ImagePicker';
+import { RenderImage } from '../components/RenderImage';
+
 import { ImageOrVideo } from 'react-native-image-crop-picker';
 const screenWidth = wp('100%');
 
@@ -495,6 +497,16 @@ export const AlbumDetail = () => {
 
       <FlatList
         data={albumImages} // 앨범에 해당하는 이미지 데이터를 사용합니다.
+        // renderItem={({ item }) => (
+        //   <RenderImage
+        //     selectedImages={selectedImages}
+        //     tmpRepImage={tmpRepImage}
+        //     isRepImageSelMode={isRepImageSelMode}
+        //     handleImagePress={() => handleImagePress(item)}
+        //     handleImageLongPress={handleImageLongPress}
+        //     item={item}
+        //   />
+        // )}
         renderItem={renderImage}
         keyExtractor={(item, index) => String(index)}
         numColumns={numColumns}
