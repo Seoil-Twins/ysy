@@ -3,7 +3,6 @@ import {
   View,
   FlatList,
   TouchableOpacity,
-  Image,
   StyleSheet,
   Text,
   Modal,
@@ -14,14 +13,6 @@ import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
 
 import { widthPercentageToDP as wp } from 'react-native-responsive-screen';
 
-import BackSvg from '../assets/icons/back.svg';
-import BAddSvg from '../assets/icons/add_black.svg';
-import MoreSvg from '../assets/icons/more_vert.svg';
-import WCheckSvg from '../assets/icons/white_check.svg';
-import BCheckSvg from '../assets/icons/check.svg';
-import UCheckSvg from '../assets/icons/un-check.svg';
-import WCheckBigSvg from '../assets/icons/white_check_big.svg';
-
 import { useAppDispatch, useAppSelector } from '../redux/hooks';
 import { RootState } from '../redux/store';
 import { imageSelectionOff, imageSelectionOn } from '../features/ImageSlice';
@@ -31,10 +22,8 @@ import {
   launchImageLibrary,
 } from 'react-native-image-picker';
 
-import { ImagePicker } from '../components/ImagePicker';
-import { RenderImage } from '../components/RenderImage';
-
-import { ImageOrVideo } from 'react-native-image-crop-picker';
+import RenderImageHeader from '../components/RenderImageHeader';
+import RenderImage from '../components/RenderImage';
 const screenWidth = wp('100%');
 
 export const AlbumDetail = () => {
@@ -250,15 +239,6 @@ export const AlbumDetail = () => {
     }
   };
 
-  const handleAddImage = () => {
-    selectImageFromGallery();
-    <ImagePicker placeholder="대표 사진" onInputChange={changeImagePicker} />;
-  };
-
-  const changeImagePicker = (image: ImageOrVideo) => {
-    console.log(image.path);
-  };
-
   const handleMoreBtn = () => {
     setIsMoreModalVisible(true);
   };
@@ -279,86 +259,6 @@ export const AlbumDetail = () => {
   const handleRepImage = () => {
     setIsRepImageSelMode(true);
     setIsMoreModalVisible(false);
-  };
-
-  const renderHeader = () => {
-    if (isImage) {
-      const numSelected = selectedImages.length;
-      return (
-        <View>
-          <TouchableOpacity onPress={handleSelectAll}>
-            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-              {numSelected > 0 ? (
-                <BCheckSvg style={{ marginRight: 5 }} />
-              ) : (
-                <UCheckSvg style={{ marginRight: 5 }} />
-              )}
-              <Text
-                style={{
-                  color: numSelected > 0 ? '#3675FB' : '#999999',
-                  marginRight: 15,
-                }}>
-                {numSelected > 0 ? '선택 해제' : '모두 선택'}
-              </Text>
-            </View>
-          </TouchableOpacity>
-        </View>
-      );
-    } else if (isRepImageSelMode) {
-      return (
-        <View style={{ flexDirection: 'row', flex: 1, alignItems: 'center' }}>
-          <View style={{ flex: 1, flexDirection: 'row' }}>
-            <TouchableOpacity
-              onPress={() => {
-                handleBackBtn();
-              }}>
-              <BackSvg style={{ width: 70, height: 70, margin: 18 }} />
-            </TouchableOpacity>
-          </View>
-          <View style={{ flexDirection: 'row' }}>
-            <TouchableOpacity
-              onPress={() => {
-                handleRepTrans();
-              }}>
-              <Text
-                style={{
-                  color: '#3675FB',
-                  marginRight: 15,
-                }}>
-                변경
-              </Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      );
-    } else {
-      return (
-        <View style={{ flexDirection: 'row', flex: 1 }}>
-          <View style={{ flex: 1, flexDirection: 'row' }}>
-            <TouchableOpacity
-              onPress={() => {
-                handleBackBtn();
-              }}>
-              <BackSvg style={{ width: 70, height: 70, margin: 18 }} />
-            </TouchableOpacity>
-          </View>
-          <View style={{ flexDirection: 'row' }}>
-            <TouchableOpacity
-              onPress={() => {
-                handleAddImage();
-              }}>
-              <BAddSvg style={{ width: 70, height: 70, margin: 18 }} />
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() => {
-                handleMoreBtn();
-              }}>
-              <MoreSvg style={{ width: 70, height: 70, margin: 18 }} />
-            </TouchableOpacity>
-          </View>
-        </View>
-      );
-    }
   };
 
   const openImageModal = () => {
@@ -426,62 +326,6 @@ export const AlbumDetail = () => {
     // setActiveTab('ImageModal');
   };
 
-  const renderImage = ({ item }: { item: string }) => {
-    const isSelected = selectedImages.includes(item);
-    const isTmpRepImage = tmpRepImage.includes(item);
-
-    return (
-      <View style={{ flex: 1, paddingTop: 1, alignItems: 'center' }}>
-        <TouchableOpacity
-          style={{
-            flex: 1,
-            paddingTop: 1,
-            paddingRight: 1,
-            alignItems: 'center',
-            position: 'relative',
-          }}
-          onPress={() => handleImagePress(item)}
-          onLongPress={() => handleImageLongPress()}>
-          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-            <Image
-              source={{ uri: item }}
-              style={{ width: screenWidth / 4 - 2, height: 100 }}
-            />
-
-            {isImage && (
-              <View
-                style={
-                  isSelected ? styles.checkedCircle : styles.unCheckedCircle
-                }>
-                <Text>
-                  {isSelected ? <WCheckSvg style={styles.checked} /> : ''}
-                </Text>
-              </View>
-            )}
-
-            {isRepImageSelMode && isTmpRepImage && (
-              <View
-                style={{
-                  position: 'absolute',
-                  top: 0,
-                  right: 0,
-                  width: 60,
-                  height: 60,
-                  borderRadius: 20,
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  marginTop: 15,
-                  marginRight: 20,
-                }}>
-                <WCheckBigSvg />
-              </View>
-            )}
-          </View>
-        </TouchableOpacity>
-      </View>
-    );
-  };
-
   return (
     <View style={{ flex: 1 }}>
       <View
@@ -492,22 +336,31 @@ export const AlbumDetail = () => {
           alignItems: 'center',
           justifyContent: 'flex-end',
         }}>
-        {renderHeader()}
+        {
+          <RenderImageHeader
+            selectedImages={selectedImages}
+            isRepImageSelMode={isRepImageSelMode}
+            handleSelectAll={handleSelectAll}
+            handleBackBtn={handleBackBtn}
+            handleRepTrans={handleRepTrans}
+            selectImageFromGallery={selectImageFromGallery}
+            handleMoreBtn={handleMoreBtn}
+          />
+        }
       </View>
 
       <FlatList
         data={albumImages} // 앨범에 해당하는 이미지 데이터를 사용합니다.
-        // renderItem={({ item }) => (
-        //   <RenderImage
-        //     selectedImages={selectedImages}
-        //     tmpRepImage={tmpRepImage}
-        //     isRepImageSelMode={isRepImageSelMode}
-        //     handleImagePress={() => handleImagePress(item)}
-        //     handleImageLongPress={handleImageLongPress}
-        //     item={item}
-        //   />
-        // )}
-        renderItem={renderImage}
+        renderItem={({ item }) => (
+          <RenderImage
+            selectedImages={selectedImages}
+            tmpRepImage={tmpRepImage}
+            isRepImageSelMode={isRepImageSelMode}
+            handleImagePress={() => handleImagePress(item)}
+            handleImageLongPress={handleImageLongPress}
+            item={item}
+          />
+        )}
         keyExtractor={(item, index) => String(index)}
         numColumns={numColumns}
         key={'ImageModal'}
