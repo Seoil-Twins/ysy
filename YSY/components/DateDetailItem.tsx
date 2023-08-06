@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { StyleSheet, View } from 'react-native';
 
-import { Table, TableWrapper, Rows, Col } from 'react-native-table-component';
+import { Table, TableWrapper, Rows, Col } from 'react-native-reanimated-table';
 
 import { Date } from '../types/date';
 
@@ -74,8 +74,7 @@ export const DateDetailItem: React.FC<DateDetailItemProps> = ({ item }) => {
               data={data.tableData}
               flexArr={[2, 1]}
               style={styles.row}
-              // styles.text를 하면 경고메시지 발생 (라이브러리 버그)
-              textStyle={{ textAlign: 'center' }}
+              textStyle={styles.text}
             />
           </TableWrapper>
         )}

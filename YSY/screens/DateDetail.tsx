@@ -9,6 +9,7 @@ import {
   Linking,
 } from 'react-native';
 import Carousel from 'react-native-reanimated-carousel';
+import KakaoShareLink from 'react-native-kakao-share-link';
 
 import { Date } from '../types/date';
 
@@ -23,6 +24,7 @@ import EtcSVG from '../assets/icons/info.svg';
 import CustomText from '../components/CustomText';
 
 import { globalStyles } from '../style/global';
+
 import { DateDetailItem } from '../components/DateDetailItem';
 
 const width = Dimensions.get('window').width;
@@ -31,12 +33,14 @@ const InfoIconSize = 15;
 
 type DateDetailProps = {
   place: Date;
+  onPressFavorite: (id: number, isFavorite: boolean) => void;
 };
 
-const DateDetail: React.FC<DateDetailProps> = ({ place }) => {
+const DateDetail: React.FC<DateDetailProps> = ({ place, onPressFavorite }) => {
   const [isOpenDesc, setIsOpenDesc] = useState<boolean>(false);
   const [numberOfLine, setNumberOfLine] = useState<number>(3);
   const [rotation] = useState(new Animated.Value(0));
+  const [loading, setLoading] = useState<boolean>(false);
 
   const rotateAnimation = () => {
     Animated.timing(rotation, {
@@ -51,12 +55,46 @@ const DateDetail: React.FC<DateDetailProps> = ({ place }) => {
     outputRange: ['0deg', '180deg'],
   });
 
-  const onPressFavorite = () => {
-    console.log('favorite');
+  const emitFavorite = async () => {
+    if (loading) {
+      return;
+    }
+    setLoading(true);
+
+    onPressFavorite(place.id, place.isFavorite);
+
+    // throttle 적용
+    setTimeout(() => {
+      setLoading(false);
+    }, 500);
   };
 
-  const onPressShare = () => {
-    console.log('share');
+  const onPressShare = async () => {
+    await KakaoShareLink.sendFeed({
+      content: {
+        title: place.title,
+        imageUrl: place.thumbnails[0],
+        link: {
+          webUrl: 'https://developers.kakao.com/',
+          mobileWebUrl: 'https://developers.kakao.com/',
+        },
+        description: place.description,
+      },
+      buttons: [
+        {
+          title: '상세보기',
+          link: {
+            androidExecutionParams: [
+              { key: 'screen', value: 'Date' },
+              {
+                key: 'detailId',
+                value: String(place.id),
+              },
+            ],
+          },
+        },
+      ],
+    });
   };
 
   const onPressExpandMore = () => {
@@ -104,7 +142,7 @@ const DateDetail: React.FC<DateDetailProps> = ({ place }) => {
             {place.title}
           </CustomText>
           <View style={styles.funcBox}>
-            <Pressable onPress={onPressFavorite} style={styles.favorite}>
+            <Pressable onPress={emitFavorite} style={styles.favorite}>
               {place.isFavorite ? (
                 <LoveActiveSVG width={IconSize} height={IconSize} />
               ) : (
@@ -148,7 +186,7 @@ const DateDetail: React.FC<DateDetailProps> = ({ place }) => {
                 width={InfoIconSize}
                 height={InfoIconSize}
               />
-              <CustomText size={16} weight="regular">
+              <CustomText size={16} weight="medium">
                 예약하기 / 문의하기
               </CustomText>
             </View>
@@ -166,7 +204,7 @@ const DateDetail: React.FC<DateDetailProps> = ({ place }) => {
                   width={InfoIconSize}
                   height={InfoIconSize}
                 />
-                <CustomText size={16} weight="regular">
+                <CustomText size={16} weight="medium">
                   예약시간
                 </CustomText>
               </View>
@@ -183,7 +221,7 @@ const DateDetail: React.FC<DateDetailProps> = ({ place }) => {
                   width={InfoIconSize}
                   height={InfoIconSize}
                 />
-                <CustomText size={16} weight="regular">
+                <CustomText size={16} weight="medium">
                   홈페이지
                 </CustomText>
               </View>
@@ -201,7 +239,7 @@ const DateDetail: React.FC<DateDetailProps> = ({ place }) => {
                 width={InfoIconSize}
                 height={InfoIconSize}
               />
-              <CustomText size={16} weight="regular">
+              <CustomText size={16} weight="medium">
                 기타정보
               </CustomText>
             </View>
@@ -228,6 +266,7 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   titleBox: {
+    marginTop: 30,
     flexDirection: 'row',
     justifyContent: 'space-between',
   },

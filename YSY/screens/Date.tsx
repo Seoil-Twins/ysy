@@ -14,7 +14,7 @@ import Geolocation, {
 } from '@react-native-community/geolocation';
 import axios, { AxiosRequestConfig } from 'axios';
 import { KAKAO_REST_API_KEY } from '@env';
-import { useNavigation } from '@react-navigation/native';
+import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { Modalize } from 'react-native-modalize';
 import { getStatusBarHeight } from 'react-native-status-bar-height';
@@ -46,8 +46,14 @@ const height =
   Dimensions.get('window').height - (StatusBarHeight ? StatusBarHeight : 0);
 
 const Date = () => {
+  const { params } = useRoute<RouteProp<DateNavTypes, 'Date'>>();
   const navigation = useNavigation<StackNavigationProp<DateNavTypes>>();
 
+  const [detailId, setDetailId] = useState<number>(Number(params.detailId));
+  const [sort, setSort] = useState<string>('인기');
+  const [address1, setAddress1] = useState<string>('서울');
+  const [address2, setAddress2] = useState<string>('all');
+  const [kind, setKind] = useState<string>('all');
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [latitude, setLatitude] = useState<number>(0);
   const [longitude, setLongitude] = useState<number>(0);
@@ -58,151 +64,54 @@ const Date = () => {
   const prevLatitude = useRef(latitude);
   const prevLongitude = useRef(longitude);
 
-  const getDatePlaces = () => {
-    // sort, address1, address2, kind를 기반으로 API 가져오기
-  };
-
-  const onPressSort = () => {
-    console.log('sort');
-  };
-
-  const onPressAddress1 = () => {
-    console.log('onPressAddress1');
-  };
-
-  const onPressAddress2 = () => {
-    console.log('onPressAddress2');
-  };
-
-  const onPressKind = () => {
-    console.log('onPressKind');
-  };
-
-  const onPressGPS = async () => {
-    if (!activeItems[0].isActive) {
-      setMyLocation();
-    } else {
-      getDatePlaces();
-    }
-
-    handleActiveChange([{ index: 0, isActive: !activeItems[0].isActive }]);
-  };
-
-  const [items, setItems] = useState<DateSortHeaderItem[]>([
-    {
-      title: '인기',
-      pressEvent: onPressSort,
-    },
-    {
-      title: '서울',
-      pressEvent: onPressAddress1,
-    },
-    {
-      title: '전체',
-      pressEvent: onPressAddress2,
-    },
-    {
-      title: '전체',
-      pressEvent: onPressKind,
-    },
-  ]);
-
-  const [activeItems, setActiveItems] = useState<DateSortHeaderActiveItem[]>([
-    {
-      title: '내 위치 기반',
-      pressEvent: onPressGPS,
-      isActive: false,
-    },
-  ]);
-
-  const handleTitleChange = (
-    updates: { index: number; newTitle: string }[],
-  ) => {
-    setItems((prevItems: DateSortHeaderItem[]) => {
-      const updatedItems = [...prevItems];
-
-      for (const update of updates) {
-        const { index, newTitle } = update;
-        updatedItems[index].title = newTitle;
-      }
-
-      return updatedItems;
-    });
-  };
-
-  const handleActiveChange = (
-    updates: { index: number; isActive: boolean }[],
-  ) => {
-    setActiveItems((prevItems: DateSortHeaderActiveItem[]) => {
-      const updatedItems = [...prevItems];
-
-      for (const update of updates) {
-        const { index, isActive } = update;
-        updatedItems[index].isActive = isActive;
-      }
-
-      return updatedItems;
-    });
-  };
-
-  const successPosition = (position: GeolocationResponse) => {
-    setLatitude(position.coords.latitude);
-    setLongitude(position.coords.longitude);
-  };
-
-  const errorPosition = (error: GeolocationError) => {
-    if (error.PERMISSION_DENIED === -1) {
-      openAppSettings();
-    }
-  };
-
-  const setMyLocation = async () => {
-    if (Platform.OS === 'android') {
-      await checkPermission(PERMISSIONS.ANDROID.ACCESS_FINE_LOCATION);
-    } else if (Platform.OS === 'ios') {
-      await checkPermission(PERMISSIONS.IOS.LOCATION_WHEN_IN_USE);
-    }
-
-    Geolocation.getCurrentPosition(successPosition, errorPosition, {
-      enableHighAccuracy: true,
-    });
-  };
-
-  const gpsToAddress = useCallback(async () => {
-    const format = 'json';
-    const config: AxiosRequestConfig = {
-      params: {
-        x: Math.abs(longitude),
-        y: Math.abs(latitude),
-      },
-      headers: {
-        Authorization: `KakaoAK ${KAKAO_REST_API_KEY}`,
-      },
+  const getSpectificDatePlace = useCallback(async () => {
+    console.log(detailId);
+    const response: DateType = {
+      id: 1,
+      contentId: '123456',
+      contentTypeId: 39,
+      areaCode: 1,
+      sigunguCode: 1,
+      view: 123456,
+      title: '대상해',
+      description:
+        '코리아나호텔 3층에 위치한 대상해는 사천식에 북경식을 가미한 독특한 북경 사천요리를 즐길 수 있고, 산지에서 직수입한 샥스핀 요리가 일품인 중식당이다. 30년 이상 경력을 가진 주방장의 손맛을 그대로 느낄 수 있는 샥스핀 요리 이외에도 보양식인 불도장이 있으며 드시는 분들에게 복을 준다는 전가복요리가 대표적이다. 그리고 대상해에서만 있는 것으로 평소 등소평이 장수 음식으로 즐겨 먹었던 마파두부와 딴딴면이 있다. 고급스러운 인테리어와 태평로가 내려다보이는 훌륭한 전망과 크고 작은 룸들이 준비되어 있어 상견례나 비즈니스 미팅, 세미나 및 가족모임까지 다양한 모임의 장소로도 많이 쓰이고 있으며, 호텔에 투숙하는 고객들도 많이 찾는 곳이다. 코리나아호텔의 장애인용 화장실과 엘리베이터를 이용할 수 있어 편리하다.',
+      thumbnails: [
+        'http://tong.visitkorea.or.kr/cms/resource/46/1290346_image2_1.jpg',
+        'http://tong.visitkorea.or.kr/cms/resource/38/1290338_image2_1.jpg',
+        'http://tong.visitkorea.or.kr/cms/resource/40/1290340_image2_1.jpg',
+      ],
+      address: '서울특별시 중구 세종대로 135',
+      mapX: '57.456',
+      mapY: '57.456',
+      phoneNumber: '02-2171-7869',
+      babyCarriage: '없음',
+      pet: '불가',
+      useTime: '11:30~22:00 (브레이크타임 15:00~17:00)',
+      parking: '없음',
+      restDate: '연중무휴',
+      homepage: 'https://sushikaisinofsato.modoo.at',
+      tags: [
+        '서울',
+        '상봉동',
+        '정통 이타리안 요리',
+        '노래방',
+        '주차가능',
+        '펫 보관 가능',
+        '언제나',
+        '환영',
+        '라쿠니차',
+      ],
+      favoriteCount: 1234,
+      isFavorite: true,
     };
 
-    try {
-      const response = await axios.get(
-        `https://dapi.kakao.com/v2/local/geo/coord2address.${format}`,
-        config,
-      );
+    openDateDetail(response);
+  }, [detailId]);
 
-      if (response.status === 200 && response.data) {
-        console.log(response.data);
-        const address = response.data.documents[0].address;
-
-        // address 없으면 error Modal
-
-        handleTitleChange([
-          { index: 1, newTitle: address.region_1depth_name },
-          { index: 2, newTitle: address.region_2depth_name },
-        ]);
-      }
-    } catch (error: any) {
-      console.log(error.message);
-    }
-  }, [latitude, longitude]);
-
-  const getDate = async () => {
+  const getDatePlaces = useCallback(async () => {
+    // sort, address1, address2, kind를 기반으로 API 가져오기
+    console.log(sort, address1, address2, kind);
     const response: DateType[] = [
       {
         id: 1,
@@ -401,13 +310,169 @@ const Date = () => {
       },
     ];
 
+    return response;
+  }, [address1, address2, kind, sort]);
+
+  const getDate = useCallback(async () => {
+    const response = await getDatePlaces();
+
     setDateItems(response);
     setDetailItem(response[0]);
-  };
+  }, [getDatePlaces]);
 
   useEffect(() => {
     getDate();
-  }, []);
+  }, [getDate]);
+
+  useEffect(() => {
+    if (detailId !== -1) {
+      getSpectificDatePlace();
+    }
+  }, [detailId, getSpectificDatePlace]);
+
+  useEffect(() => {
+    setIsLoading(false);
+  }, [dateItems]);
+
+  const onPressSort = () => {
+    console.log('sort');
+  };
+
+  const onPressAddress1 = () => {
+    console.log('onPressAddress1');
+  };
+
+  const onPressAddress2 = () => {
+    console.log('onPressAddress2');
+  };
+
+  const onPressKind = () => {
+    console.log('onPressKind');
+  };
+
+  const onPressGPS = async () => {
+    if (!activeItems[0].isActive) {
+      setMyLocation();
+    } else {
+      getDatePlaces();
+    }
+
+    handleActiveChange([{ index: 0, isActive: !activeItems[0].isActive }]);
+  };
+
+  const [items, setItems] = useState<DateSortHeaderItem[]>([
+    {
+      title: '인기',
+      pressEvent: onPressSort,
+    },
+    {
+      title: '서울',
+      pressEvent: onPressAddress1,
+    },
+    {
+      title: '전체',
+      pressEvent: onPressAddress2,
+    },
+    {
+      title: '전체',
+      pressEvent: onPressKind,
+    },
+  ]);
+
+  const [activeItems, setActiveItems] = useState<DateSortHeaderActiveItem[]>([
+    {
+      title: '내 위치 기반',
+      pressEvent: onPressGPS,
+      isActive: false,
+    },
+  ]);
+
+  const handleTitleChange = (
+    updates: { index: number; newTitle: string }[],
+  ) => {
+    setItems((prevItems: DateSortHeaderItem[]) => {
+      const updatedItems = [...prevItems];
+
+      for (const update of updates) {
+        const { index, newTitle } = update;
+        updatedItems[index].title = newTitle;
+      }
+
+      return updatedItems;
+    });
+  };
+
+  const handleActiveChange = (
+    updates: { index: number; isActive: boolean }[],
+  ) => {
+    setActiveItems((prevItems: DateSortHeaderActiveItem[]) => {
+      const updatedItems = [...prevItems];
+
+      for (const update of updates) {
+        const { index, isActive } = update;
+        updatedItems[index].isActive = isActive;
+      }
+
+      return updatedItems;
+    });
+  };
+
+  const successPosition = (position: GeolocationResponse) => {
+    setLatitude(position.coords.latitude);
+    setLongitude(position.coords.longitude);
+  };
+
+  const errorPosition = (error: GeolocationError) => {
+    if (error.PERMISSION_DENIED === -1) {
+      openAppSettings();
+    }
+  };
+
+  const setMyLocation = async () => {
+    if (Platform.OS === 'android') {
+      await checkPermission(PERMISSIONS.ANDROID.ACCESS_FINE_LOCATION);
+    } else if (Platform.OS === 'ios') {
+      await checkPermission(PERMISSIONS.IOS.LOCATION_WHEN_IN_USE);
+    }
+
+    Geolocation.getCurrentPosition(successPosition, errorPosition, {
+      enableHighAccuracy: true,
+    });
+  };
+
+  const gpsToAddress = useCallback(async () => {
+    const format = 'json';
+    const config: AxiosRequestConfig = {
+      params: {
+        x: Math.abs(longitude),
+        y: Math.abs(latitude),
+      },
+      headers: {
+        Authorization: `KakaoAK ${KAKAO_REST_API_KEY}`,
+      },
+    };
+
+    try {
+      const response = await axios.get(
+        `https://dapi.kakao.com/v2/local/geo/coord2address.${format}`,
+        config,
+      );
+
+      if (response.status === 200 && response.data) {
+        console.log(response.data);
+        const address = response.data.documents[0].address;
+
+        // address 없으면 error Modal
+
+        handleTitleChange([
+          { index: 1, newTitle: address.region_1depth_name },
+          { index: 2, newTitle: address.region_2depth_name },
+        ]);
+      }
+    } catch (error: any) {
+      console.log(error.message);
+    }
+  }, [latitude, longitude]);
 
   useEffect(() => {
     if (
@@ -422,14 +487,6 @@ const Date = () => {
       prevLongitude.current = longitude;
     }
   }, [latitude, longitude, gpsToAddress]);
-
-  useEffect(() => {
-    // console.log(items);
-  }, [items]);
-
-  useEffect(() => {
-    setIsLoading(false);
-  }, [dateItems]);
 
   const moveSearch = () => {
     navigation.navigate('Search');
@@ -665,7 +722,10 @@ const Date = () => {
 
   const openDateDetail = (item: DateType) => {
     setDetailItem(item);
-    modalizeRef.current?.open();
+
+    setTimeout(() => {
+      modalizeRef.current?.open();
+    }, 1);
   };
 
   return (
@@ -693,7 +753,7 @@ const Date = () => {
           modalHeight={height + 3}
           avoidKeyboardLikeIOS={true}
           handlePosition="inside">
-          <DateDetail place={detailItem} />
+          <DateDetail place={detailItem} onPressFavorite={onPressFavorite} />
         </Modalize>
       ) : null}
     </View>

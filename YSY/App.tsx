@@ -74,6 +74,10 @@ const App = () => {
           case 'ConnectCouple':
             result = event.url.replace('kakaolink', 'connectcouple');
             break;
+          case 'Date':
+            result = event.url.replace('kakaolink', 'date');
+            console.log(result);
+            break;
           default:
             result = event.url.replace('kakaolink', 'tutorial');
             break;

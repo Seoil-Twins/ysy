@@ -90,7 +90,6 @@ const ConnectCouple = () => {
   };
 
   const clickShareBtn = async () => {
-    // 기본 Share 사용
     // Kakao Share는 kakaolink가 host 고정이기 때문에 사용하기 불편함.
     await KakaoShareLink.sendFeed({
       content: {
