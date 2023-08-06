@@ -9,12 +9,8 @@ import {
   TextInput,
   Modal,
 } from 'react-native';
-import SortSvg from '../assets/icons/sort.svg';
-import SettingSvg from '../assets/icons/settings.svg';
 import AddSvg from '../assets/icons/add.svg';
 import WCheckSvg from '../assets/icons/white_check.svg';
-import BCheckSvg from '../assets/icons/check.svg';
-import UCheckSvg from '../assets/icons/un-check.svg';
 
 import {
   albumSelectionOn,
@@ -30,6 +26,9 @@ import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { AlbumTypes } from '../navigation/AlbumTypes';
 
+import RenderAlbumHeader from '../components/RenderAlbumHeader';
+import RenderAlbum from '../components/RenderAlbum';
+
 const screenWidth = wp('100%');
 
 export const Album = () => {
@@ -40,8 +39,6 @@ export const Album = () => {
   const [isMergeVisible, setIsMergeVisible] = useState(false);
   const [isDeleteVisible, setIsDeleteVisible] = useState(false);
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [contextMenuVisible, setContextMenuVisible] = useState(false);
   const [selectedAlbums, setSelectedAlbums] = useState<string[]>([]);
   const [selectedImages, setSelectedImages] = useState<string[]>([]);
   const [albumImages, setAlbumImages] = useState<string[]>([]);
@@ -185,45 +182,6 @@ export const Album = () => {
     }
   };
 
-  const renderHeaderRight = () => {
-    if (isAlbum) {
-      const numSelected = selectedAlbums.length;
-      return (
-        <View>
-          <TouchableOpacity onPress={handleSelectAll}>
-            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-              {numSelected > 0 ? (
-                <BCheckSvg style={{ marginRight: 5 }} />
-              ) : (
-                <UCheckSvg style={{ marginRight: 5 }} />
-              )}
-              <Text
-                style={{
-                  color: numSelected > 0 ? '#3675FB' : '#999999',
-                  marginRight: 15,
-                }}>
-                {numSelected > 0 ? '선택 해제' : '모두 선택'}
-              </Text>
-            </View>
-          </TouchableOpacity>
-        </View>
-      );
-    } else {
-      return (
-        <View style={{ flexDirection: 'row' }}>
-          <TouchableOpacity
-            onPress={() => {
-              openSortModal();
-            }}>
-            <SortSvg style={styles.imgBox} />
-          </TouchableOpacity>
-          <TouchableOpacity onPress={() => {}}>
-            <SettingSvg style={styles.imgBox} />
-          </TouchableOpacity>
-        </View>
-      );
-    }
-  };
   const handleAlbumPress = (albumName: string) => {
     if (isAlbum) {
       setSelectedAlbums(prevSelectedAlbums => {
@@ -286,41 +244,6 @@ export const Album = () => {
     closeSortModal();
   };
 
-  const renderItem = ({ item }: { item: string }) => {
-    const isSelected = selectedAlbums.includes(item);
-
-    return (
-      <View style={{ flex: 1, paddingTop: 5, alignItems: 'center' }}>
-        <TouchableOpacity
-          style={{ flex: 1, paddingTop: 5, alignItems: 'center' }}
-          onPress={() => handleAlbumPress(item)}
-          onLongPress={() => handleLongPress()}>
-          <Image
-            source={{ uri: item }}
-            style={{ width: screenWidth, height: 200 }}
-          />
-          <View style={{ position: 'absolute', bottom: 0, left: 0 }}>
-            <Text style={styles.albumTextLeftTitle}>앨범 이름</Text>
-            <Text style={styles.albumTextLeft}>(개수)</Text>
-          </View>
-          <View style={{ position: 'absolute', bottom: 0, right: 0 }}>
-            <Text style={styles.albumTextRight}>2023-07-18</Text>
-          </View>
-          {isAlbum && (
-            <View
-              style={
-                isSelected ? styles.checkedCircle : styles.unCheckedCircle
-              }>
-              <Text>
-                {isSelected ? <WCheckSvg style={styles.checked} /> : ''}
-              </Text>
-            </View>
-          )}
-        </TouchableOpacity>
-      </View>
-    );
-  };
-
   const dummyFolder = [
     'https://fastly.picsum.photos/id/179/200/200.jpg?hmac=I0g6Uht7h-y3NHqWA4e2Nzrnex7m-RceP1y732tc4Lw',
     'https://fastly.picsum.photos/id/803/200/300.jpg?hmac=v-3AsAcUOG4kCDsLMlWF9_3Xa2DTODGyKLggZNvReno',
@@ -343,13 +266,23 @@ export const Album = () => {
             alignItems: 'center',
             justifyContent: 'flex-end',
           }}>
-          {renderHeaderRight()}
+          {
+          <RenderAlbumHeader
+            selectedAlbums={selectedAlbums}
+            handleSelectAll={handleSelectAll}
+            openSortModal={openSortModal}
+          />}
         </View>
 
         <FlatList
           data={dummyFolder}
           keyExtractor={(item, index) => String(index)}
-          renderItem={renderItem}
+          renderItem={({ item }) => (<RenderAlbum
+            item={item}
+            selectedAlbums={selectedAlbums}
+            handleAlbumPress={() => handleAlbumPress(item)}
+            handleLongPress={handleLongPress}
+          />)}
         />
         <View style={styles.container}>
           <TouchableOpacity
@@ -558,27 +491,6 @@ const styles = StyleSheet.create({
     marginTop: 25,
     marginRight: 25,
   },
-  albumTextLeftTitle: {
-    color: 'white',
-    fontSize: 18,
-    paddingLeft: 15,
-    fontWeight: 'bold',
-  },
-
-  albumTextLeft: {
-    color: 'white',
-    fontSize: 14,
-    paddingBottom: 15,
-    paddingLeft: 15,
-  },
-
-  albumTextRight: {
-    color: 'white',
-    fontSize: 14,
-    paddingBottom: 15,
-    paddingRight: 15,
-  },
-
   container: {
     position: 'absolute',
     bottom: 20,

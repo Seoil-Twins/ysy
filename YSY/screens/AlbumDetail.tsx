@@ -145,7 +145,7 @@ export const AlbumDetail = () => {
   ];
 
   useEffect(() => {
-    const newData = loadImageFromDB(albumName, 32);
+    const newData = loadImageFromDB(albumName, 40);
     setAlbumImages(prevData => [...prevData, ...newData]);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -190,7 +190,7 @@ export const AlbumDetail = () => {
 
     // 데이터 로딩 시작
     setIsLoading(true);
-
+    console.log('로딩시이이이작');
     // 모의 API 호출 또는 기타 데이터 로딩 로직 구현
     // 이 예시에서는 setTimeout을 사용하여 1초 후에 새로운 데이터를 추가로 로딩합니다.
     setTimeout(() => {
@@ -351,7 +351,7 @@ export const AlbumDetail = () => {
 
       <FlatList
         data={albumImages} // 앨범에 해당하는 이미지 데이터를 사용합니다.
-        renderItem={({ item }) => (
+        renderItem={({ item }) => ( 
           <RenderImage
             selectedImages={selectedImages}
             tmpRepImage={tmpRepImage}

@@ -1,6 +1,10 @@
 import React, { useState } from 'react';
 import { View, StyleSheet, Text, TouchableOpacity } from 'react-native';
 import { isSameDay } from 'date-fns';
+import { heightPercentageToDP as hp, widthPercentageToDP as wp } from 'react-native-responsive-screen';
+
+const screenWidth = wp('100%');
+const screenHeight = hp('100%');
 
 interface CalendarProps {
   onDateSelect: (date: Date) => void;
@@ -22,7 +26,6 @@ const Calendar: React.FC<CalendarProps> = ({ onDateSelect }) => {
       setCurrentYear(currentYear - 1);
     }
     setCurrentMonth(prevMonth => (prevMonth === 0 ? 11 : prevMonth - 1));
-    console.log('currentYear' + currentYear + '|| currentMonth' + currentMonth);
     getMonthDates(currentYear, currentMonth);
   };
 
@@ -31,7 +34,6 @@ const Calendar: React.FC<CalendarProps> = ({ onDateSelect }) => {
       setCurrentYear(currentYear + 1);
     }
     setCurrentMonth(prevMonth => (prevMonth === 11 ? 0 : prevMonth + 1));
-    console.log('currentYear' + currentYear + '|| currentMonth' + currentMonth);
     getMonthDates(currentYear, currentMonth);
   };
 
@@ -39,12 +41,18 @@ const Calendar: React.FC<CalendarProps> = ({ onDateSelect }) => {
     if (isSameMonth(date, today)) {
       setSelectedDate(date);
       onDateSelect(date);
+    } else {
+      if (currentMonth < 0) {
+        setCurrentYear(currentYear - 1);
+      }
+      if (currentMonth >= 11) {
+        setCurrentYear(currentYear + 1);
+      }
+      setCurrentMonth(date.getMonth());
     }
   };
 
   const isSameMonth = (date1: Date, date2: Date) => {
-    console.log('date1 ' + date1.getFullYear());
-    console.log('date2 ' + date2.getFullYear());
     return date1.getMonth() === date2.getMonth();
   };
 
@@ -71,10 +79,12 @@ const Calendar: React.FC<CalendarProps> = ({ onDateSelect }) => {
       days.push(new Date(date));
     }
 
-    // 다음 달의 첫 날들을 추가
-    for (let i = endDayOfWeek + 1; i < 7; i++) {
-      const date = new Date(year, month + 1, i - endDayOfWeek);
+    
+    let nextMonthDay = 1;
+    for (let i = endDayOfWeek + 1; days.length < 42; i++) {
+      const date = new Date(year, month + 1, nextMonthDay);
       days.push(date);
+      nextMonthDay++;
     }
 
     return days;
@@ -200,45 +210,46 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
   },
   dateCell: {
-    width: 40,
-    height: 100,
+    width: screenWidth * 0.12,
+    height: screenHeight * 0.12,
     alignItems: 'center',
     justifyContent: 'center',
     margin: 2,
   },
   selectedDateCell: {
-    backgroundColor: 'blue',
+    borderWidth: 1,
+    borderRadius: 10,
+    borderColor: 'gray',
+  },
+  selectedDateText: {
+    color: 'black',
+    fontWeight: 'bold',
   },
   todayCell: {
     backgroundColor: 'green',
-  },
-  selectedDateText: {
-    color: 'white',
-    fontWeight: 'bold',
+    borderRadius: 10,
   },
   weekLabelsContainer: {
     flexDirection: 'row',
     width: '100%',
     justifyContent: 'space-between',
     marginTop: 10,
-    paddingHorizontal: 10,
   },
   dayOfWeekLabel: {
     fontSize: 16,
-    justifyContent: 'flex-start',
+    width: screenWidth * 0.12,
+    margin:2,
     fontWeight: 'bold',
+    textAlign: 'center',
   },
   weekContainer: {
     flexDirection: 'row',
     width: '100%',
-    alignItems: 'flex-start',
     justifyContent: 'space-between',
   },
   prevNextMonthDateCell: {
-    width: 40,
-    height: 100,
-    alignItems: 'center',
-    justifyContent: 'center',
+    width: screenWidth * 0.12,
+    height: screenHeight * 0.12,
     margin: 2,
     opacity: 0.4, // 회색으로 처리하기 위한 투명도 설정
   },
