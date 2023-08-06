@@ -29,7 +29,7 @@ const CustomText: React.FC<CustomTextProps> = (props: CustomTextProps) => {
             },
             style,
           ]}
-          numberOfLines={1}
+          numberOfLines={props.numberOfLine}
           ellipsizeMode="tail">
           {children}
         </Text>

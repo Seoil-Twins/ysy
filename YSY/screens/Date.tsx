@@ -1,5 +1,12 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
-import { Platform, StyleSheet, View, FlatList } from 'react-native';
+import {
+  Platform,
+  StyleSheet,
+  View,
+  FlatList,
+  Dimensions,
+  StatusBar,
+} from 'react-native';
 import { PERMISSIONS } from 'react-native-permissions';
 import Geolocation, {
   GeolocationResponse,
@@ -8,14 +15,14 @@ import Geolocation, {
 import axios, { AxiosRequestConfig } from 'axios';
 import { KAKAO_REST_API_KEY } from '@env';
 import { useNavigation } from '@react-navigation/native';
-import {
-  createStackNavigator,
-  StackNavigationProp,
-} from '@react-navigation/stack';
+import { StackNavigationProp } from '@react-navigation/stack';
+import { Modalize } from 'react-native-modalize';
+import { getStatusBarHeight } from 'react-native-status-bar-height';
 
 import DateHeader from '../components/DateHeader';
 import DateSortHeader from '../components/DateSortHeader';
 import DateViewItem from '../components/DateViewItem';
+import DateDetail from './DateDetail';
 
 import { checkPermission, openAppSettings } from '../util/permission';
 import { Date as DateType } from '../types/date';
@@ -33,6 +40,11 @@ type DateSortHeaderActiveItem = {
   pressEvent: () => void;
 };
 
+const StatusBarHeight =
+  Platform.OS === 'ios' ? getStatusBarHeight(true) : StatusBar.currentHeight;
+const height =
+  Dimensions.get('window').height - (StatusBarHeight ? StatusBarHeight : 0);
+
 const Date = () => {
   const navigation = useNavigation<StackNavigationProp<DateNavTypes>>();
 
@@ -40,6 +52,8 @@ const Date = () => {
   const [latitude, setLatitude] = useState<number>(0);
   const [longitude, setLongitude] = useState<number>(0);
   const [dateItems, setDateItems] = useState<DateType[]>([]);
+  const [detailItem, setDetailItem] = useState<DateType | undefined>(undefined);
+  const modalizeRef = useRef<Modalize>(null);
 
   const prevLatitude = useRef(latitude);
   const prevLongitude = useRef(longitude);
@@ -388,6 +402,7 @@ const Date = () => {
     ];
 
     setDateItems(response);
+    setDetailItem(response[0]);
   };
 
   useEffect(() => {
@@ -417,7 +432,6 @@ const Date = () => {
   }, [dateItems]);
 
   const moveSearch = () => {
-    console.log('in');
     navigation.navigate('Search');
   };
 
@@ -649,6 +663,11 @@ const Date = () => {
     }
   };
 
+  const openDateDetail = (item: DateType) => {
+    setDetailItem(item);
+    modalizeRef.current?.open();
+  };
+
   return (
     <View style={styles.container}>
       <DateHeader onPress={moveSearch} />
@@ -660,17 +679,23 @@ const Date = () => {
         onEndReachedThreshold={0.4}
         renderItem={({ item }) => (
           <DateViewItem
-            id={item.id}
-            title={item.title}
-            thumbnail={item.thumbnails[0]}
-            tags={item.tags}
-            favoriteCount={item.favoriteCount}
-            isFavorite={item.isFavorite}
+            item={item}
+            onPressDetail={openDateDetail}
             onPressFavorite={onPressFavorite}
           />
         )}
         ListFooterComponent={isLoading ? <ScrollLoading height={50} /> : null}
       />
+      {detailItem ? (
+        <Modalize
+          ref={modalizeRef}
+          snapPoint={height / 2 + 30}
+          modalHeight={height + 3}
+          avoidKeyboardLikeIOS={true}
+          handlePosition="inside">
+          <DateDetail place={detailItem} />
+        </Modalize>
+      ) : null}
     </View>
   );
 };

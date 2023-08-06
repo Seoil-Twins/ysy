@@ -10,38 +10,33 @@ import {
 
 import LoveNoneSVG from '../assets/icons/love_none.svg';
 import LoveActiveSVG from '../assets/icons/love_active.svg';
+
+import { Date } from '../types/date';
+
 import CustomText from './CustomText';
 
 const { width } = Dimensions.get('window');
 
 type DateViewItemProps = {
-  id: number;
-  title: string;
-  tags: string[];
-  thumbnail: string;
-  favoriteCount: number;
-  isFavorite: boolean;
+  item: Date;
+  onPressDetail: (item: Date) => void;
   onPressFavorite: (id: number, isFavorite: boolean) => void;
 };
 
 const DateViewItem: React.FC<DateViewItemProps> = ({
-  id,
-  title,
-  tags,
-  thumbnail,
-  favoriteCount,
-  isFavorite,
+  item,
+  onPressDetail,
   onPressFavorite,
 }) => {
   const [loading, setLoading] = useState<boolean>(false);
 
-  const onPress = () => {
+  const emitFavorite = () => {
     if (loading) {
       return;
     }
 
     setLoading(true);
-    onPressFavorite(id, isFavorite);
+    onPressFavorite(item.id, item.isFavorite);
 
     // throttle 적용
     setTimeout(() => {
@@ -49,50 +44,56 @@ const DateViewItem: React.FC<DateViewItemProps> = ({
     }, 500);
   };
 
+  const emitDetail = () => {
+    onPressDetail(item);
+  };
+
   return (
-    <ImageBackground
-      source={
-        thumbnail
-          ? { uri: thumbnail }
-          : require('../assets/images/date_image.png')
-      }
-      style={styles.container}>
-      <Pressable style={styles.favorite} onPress={onPress}>
-        {isFavorite ? (
-          <LoveActiveSVG style={styles.img} />
-        ) : (
-          <LoveNoneSVG style={styles.img} />
-        )}
-        <CustomText
-          weight="medium"
-          size={18}
-          color="#FFFFFF"
-          style={styles.textShadow}>
-          {favoriteCount}
-        </CustomText>
-      </Pressable>
-      <View style={styles.bottom}>
-        <CustomText
-          weight="medium"
-          size={24}
-          color="#FFFFFF"
-          style={[styles.title, styles.textShadow]}>
-          {title}
-        </CustomText>
-        <ScrollView
-          horizontal={true}
-          showsHorizontalScrollIndicator={false}
-          showsVerticalScrollIndicator={false}>
-          {tags.map((tag, idx) => (
-            <View key={idx} style={styles.tag}>
-              <CustomText size={12} weight="regular">
-                {tag}
-              </CustomText>
-            </View>
-          ))}
-        </ScrollView>
-      </View>
-    </ImageBackground>
+    <Pressable style={styles.container} onPress={emitDetail}>
+      <ImageBackground
+        source={
+          item.thumbnails[0]
+            ? { uri: item.thumbnails[0] }
+            : require('../assets/images/date_image.png')
+        }
+        style={styles.background}>
+        <Pressable style={styles.favorite} onPress={emitFavorite}>
+          {item.isFavorite ? (
+            <LoveActiveSVG style={styles.img} />
+          ) : (
+            <LoveNoneSVG style={styles.img} />
+          )}
+          <CustomText
+            weight="medium"
+            size={18}
+            color="#FFFFFF"
+            style={styles.textShadow}>
+            {item.favoriteCount}
+          </CustomText>
+        </Pressable>
+        <View style={styles.bottom}>
+          <CustomText
+            weight="medium"
+            size={24}
+            color="#FFFFFF"
+            style={[styles.title, styles.textShadow]}>
+            {item.title}
+          </CustomText>
+          <ScrollView
+            horizontal={true}
+            showsHorizontalScrollIndicator={false}
+            showsVerticalScrollIndicator={false}>
+            {item.tags.map((tag, idx) => (
+              <View key={idx} style={styles.tag}>
+                <CustomText size={12} weight="regular">
+                  {tag}
+                </CustomText>
+              </View>
+            ))}
+          </ScrollView>
+        </View>
+      </ImageBackground>
+    </Pressable>
   );
 };
 
@@ -101,9 +102,12 @@ const styles = StyleSheet.create({
     position: 'relative',
     width: width,
     height: width - 120,
+    marginBottom: 5,
+  },
+  background: {
+    flex: 1,
     paddingHorizontal: 20,
     paddingVertical: 15,
-    marginBottom: 5,
   },
   favorite: {
     flexDirection: 'row',
