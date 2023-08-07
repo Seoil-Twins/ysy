@@ -12,6 +12,7 @@ const Stack = createStackNavigator();
 export type DateNavTypes = {
   Date: {
     detailId: string;
+    title?: string;
   };
   Search: undefined;
 };

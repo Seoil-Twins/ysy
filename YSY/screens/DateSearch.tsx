@@ -1,9 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { StyleSheet, View, Pressable } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import { StackNavigationProp } from '@react-navigation/stack';
 
 import { globalStyles } from '../style/global';
 import DateSearchHeader from '../components/DateSearchHeader';
 import CustomText from '../components/CustomText';
+import DateSearchItem from '../components/DateSearchItem';
+
+import { DateNavTypes } from '../navigation/DateStack';
 
 import {
   getObjectData,
@@ -12,9 +17,10 @@ import {
 } from '../util/asyncStorage';
 
 import SadSVG from '../assets/icons/sad.svg';
-import DateSearchItem from '../components/DateSearchItem';
 
 const DateSearch = () => {
+  const navigation = useNavigation<StackNavigationProp<DateNavTypes>>();
+
   const [value, setValue] = useState<string>('');
   const [history, setHistory] = useState<string[] | null>(null);
 
@@ -42,6 +48,7 @@ const DateSearch = () => {
     itemValue.unshift(value);
     setHistory(itemValue);
     storeObjectData('search', itemValue);
+    moveDateDeatil(value);
   };
 
   const deleteHistory = async () => {
@@ -55,7 +62,11 @@ const DateSearch = () => {
   };
 
   const moveDateDeatil = (text: string) => {
-    console.log(text);
+    // -1은 detailId로 찾지 않겠다는 뜻
+    navigation.replace('Date', {
+      detailId: '-1',
+      title: text,
+    });
   };
 
   const getMyHistory = async () => {
