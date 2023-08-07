@@ -90,15 +90,23 @@ const ConnectCouple = () => {
   };
 
   const clickShareBtn = async () => {
-    // Kakao Share는 kakaolink가 host 고정이기 때문에 사용하기 불편함.
+    const androidExecutionParams = [
+      { key: 'screen', value: 'ConnectCouple' },
+      { key: 'otherCode', value: myCode },
+    ];
+    const iosExecutionParams = [
+      { key: 'screen', value: 'ConnectCouple' },
+      { key: 'otherCode', value: myCode },
+    ];
+
     await KakaoShareLink.sendFeed({
       content: {
         title: `나의 코드 : ${myCode}`,
         imageUrl:
           'http://t1.daumcdn.net/friends/prod/editor/dc8b3d02-a15a-4afa-a88b-989cf2a50476.jpg',
         link: {
-          webUrl: 'https://developers.kakao.com/',
-          mobileWebUrl: 'https://developers.kakao.com/',
+          androidExecutionParams: androidExecutionParams,
+          iosExecutionParams: iosExecutionParams,
         },
         description: 'YSY를 원할하게 이용하기 위해서는 연인과 연결 해야합니다!',
       },
@@ -106,10 +114,8 @@ const ConnectCouple = () => {
         {
           title: '연결하기',
           link: {
-            androidExecutionParams: [
-              { key: 'screen', value: 'ConnectCouple' },
-              { key: 'otherCode', value: myCode },
-            ],
+            androidExecutionParams: androidExecutionParams,
+            iosExecutionParams: iosExecutionParams,
           },
         },
       ],

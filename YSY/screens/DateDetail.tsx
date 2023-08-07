@@ -96,13 +96,28 @@ const DateDetail = () => {
       return;
     }
 
+    const androidExecutionParams = [
+      { key: 'screen', value: 'DateDetail' },
+      {
+        key: 'dateId',
+        value: String(dateInfo.id),
+      },
+    ];
+    const iosExecutionParams = [
+      { key: 'screen', value: 'DateDetail' },
+      {
+        key: 'dateId',
+        value: String(dateInfo.id),
+      },
+    ];
+
     await KakaoShareLink.sendFeed({
       content: {
         title: dateInfo.title,
         imageUrl: dateInfo.thumbnails[0],
         link: {
-          webUrl: 'https://developers.kakao.com/',
-          mobileWebUrl: 'https://developers.kakao.com/',
+          androidExecutionParams: androidExecutionParams,
+          iosExecutionParams: iosExecutionParams,
         },
         description: dateInfo.description,
       },
@@ -110,13 +125,8 @@ const DateDetail = () => {
         {
           title: '상세보기',
           link: {
-            androidExecutionParams: [
-              { key: 'screen', value: 'DateDetail' },
-              {
-                key: 'dateId',
-                value: String(dateInfo.id),
-              },
-            ],
+            androidExecutionParams: androidExecutionParams,
+            iosExecutionParams: iosExecutionParams,
           },
         },
       ],
