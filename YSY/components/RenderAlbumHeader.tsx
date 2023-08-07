@@ -19,47 +19,47 @@ const RenderAlbumHeader: React.FC<RenderAlbumHeaderProps> = ({
   handleSelectAll,
   openSortModal,
 }) => {
-    const isAlbum = useAppSelector(
-        (state: RootState) => state.albumStatus.isAlbum,
-      );
+  const isAlbum = useAppSelector(
+    (state: RootState) => state.albumStatus.isAlbum,
+  );
 
-if (isAlbum) {
+  if (isAlbum) {
     const numSelected = selectedAlbums.length;
     return (
-        <View>
+      <View>
         <TouchableOpacity onPress={handleSelectAll}>
-            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
             {numSelected > 0 ? (
-                <BCheckSvg style={{ marginRight: 5 }} />
+              <BCheckSvg style={{ marginRight: 5 }} />
             ) : (
-                <UCheckSvg style={{ marginRight: 5 }} />
+              <UCheckSvg style={{ marginRight: 5 }} />
             )}
             <Text
-                style={{
+              style={{
                 color: numSelected > 0 ? '#3675FB' : '#999999',
                 marginRight: 15,
-                }}>
-                {numSelected > 0 ? '선택 해제' : '모두 선택'}
+              }}>
+              {numSelected > 0 ? '선택 해제' : '모두 선택'}
             </Text>
-            </View>
+          </View>
         </TouchableOpacity>
-        </View>
+      </View>
     );
-    } else {
+  } else {
     return (
-        <View style={{ flexDirection: 'row' }}>
+      <View style={{ flexDirection: 'row' }}>
         <TouchableOpacity
-            onPress={() => {
+          onPress={() => {
             openSortModal();
-            }}>
-            <SortSvg style={styles.imgBox} />
+          }}>
+          <SortSvg style={styles.imgBox} />
         </TouchableOpacity>
         <TouchableOpacity onPress={() => {}}>
-            <SettingSvg style={styles.imgBox} />
+          <SettingSvg style={styles.imgBox} />
         </TouchableOpacity>
-        </View>
+      </View>
     );
-}   
+  }
 };
 
 const styles = StyleSheet.create({

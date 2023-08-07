@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, StyleSheet, Text } from 'react-native';
 import MyCalendar from '../components/MyCalendar';
+import CalendarHeader from '../components/CalendarHeader';
 
 const Calendar = () => {
   const handleDayPress = (day: any) => {
@@ -14,7 +15,16 @@ const Calendar = () => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>My Calendar</Text>
+      <View
+        style={{
+          flexDirection: 'row',
+          height: 50,
+          backgroundColor: 'white',
+          justifyContent: 'flex-end',
+          alignItems: 'center',
+        }}>
+        <CalendarHeader />
+      </View>
       <MyCalendar onDateSelect={handleDayPress} />
     </View>
   );
@@ -23,8 +33,6 @@ const Calendar = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   title: {
     fontSize: 24,

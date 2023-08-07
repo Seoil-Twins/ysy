@@ -38,22 +38,24 @@ const Calendar: React.FC<CalendarProps> = ({ onDateSelect }) => {
   };
 
   const handleDateSelect = (date: Date) => {
-    if (isSameMonth(date, today)) {
+    if (isSameMonth(date, currentMonth) && isSameYear(date, currentYear)) {
+      console.log(date.getMonth() + ' :: ' + today.getMonth());
       setSelectedDate(date);
       onDateSelect(date);
     } else {
-      if (currentMonth < 0) {
-        setCurrentYear(currentYear - 1);
-      }
-      if (currentMonth >= 11) {
+      if (currentMonth == 11 && date.getMonth() == 0)
         setCurrentYear(currentYear + 1);
-      }
+      if (currentMonth == 0 && date.getMonth() == 11)
+        setCurrentYear(currentYear - 1);
       setCurrentMonth(date.getMonth());
     }
   };
 
-  const isSameMonth = (date1: Date, date2: Date) => {
-    return date1.getMonth() === date2.getMonth();
+  const isSameMonth = (date1: Date, date2: number) => {
+    return date1.getMonth() === date2;
+  };
+  const isSameYear = (date1: Date, date2: number) => {
+    return date1.getFullYear() === date2;
   };
 
   const getMonthDates = (year: number, month: number): Date[] => {
@@ -79,7 +81,6 @@ const Calendar: React.FC<CalendarProps> = ({ onDateSelect }) => {
       days.push(new Date(date));
     }
 
-    
     let nextMonthDay = 1;
     for (let i = endDayOfWeek + 1; days.length < 42; i++) {
       const date = new Date(year, month + 1, nextMonthDay);
@@ -111,12 +112,12 @@ const Calendar: React.FC<CalendarProps> = ({ onDateSelect }) => {
     return dividedArray;
   };
 
-  const currentMonthDates = getMonthDates(today.getFullYear(), currentMonth);
+  const currentMonthDates = getMonthDates(currentYear, currentMonth);
 
-  const adjustedDates = [
-    ...Array(getEmptyCellsCount()).fill(null),
-    ...currentMonthDates,
-  ];
+  // const adjustedDates = [
+  //   ...Array(getEmptyCellsCount()).fill(null),
+  //   ...currentMonthDates,
+  // ];
 
   const dividedDates = divideArray(currentMonthDates, 7);
 
@@ -144,7 +145,13 @@ const Calendar: React.FC<CalendarProps> = ({ onDateSelect }) => {
         {/* 요일 표시 */}
         <View style={styles.weekLabelsContainer}>
           {dayOfWeekLabels.map((label, index) => (
-            <Text key={index} style={styles.dayOfWeekLabel}>
+            <Text
+              key={index}
+              style={[
+                styles.dayOfWeekLabel,
+                index == 0 && { color: '#FB3838' },
+                index == 6 && { color: '#0066FF' },
+              ]}>
               {label}
             </Text>
           ))}
@@ -160,15 +167,14 @@ const Calendar: React.FC<CalendarProps> = ({ onDateSelect }) => {
                     styles.dateCell,
                     isSameDay(date, selectedDate) && styles.selectedDateCell,
                     isSameDay(date, today) && styles.todayCell,
-                    !isSameMonth(date, new Date(currentYear, currentMonth)) &&
+                    !isSameMonth(date, currentMonth) &&
                       styles.prevNextMonthDateCell,
-                    isSameDay(date, selectedDate) &&
-                      !isSameMonth(date, today) &&
-                      styles.selectedPrevNextMonthDateCell,
                   ]}>
                   <Text
                     style={[
                       isSameDay(date, selectedDate) && styles.selectedDateText,
+                      date.getDay() === 0 && styles.sundayCell, // 일요일의 스타일
+                      date.getDay() === 6 && styles.saturdayCell, // 토요일의 스타일
                     ]}>
                     {date.getDate()}
                   </Text>
@@ -189,6 +195,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 16,
+    backgroundColor: 'white',
   },
   title: {
     fontSize: 18,
@@ -211,9 +218,10 @@ const styles = StyleSheet.create({
   },
   dateCell: {
     width: screenWidth * 0.12,
-    height: screenHeight * 0.12,
+    height: screenHeight * 0.07,
+    marginBottom: screenHeight * 0.05,
     alignItems: 'center',
-    justifyContent: 'center',
+    justifyContent: 'flex-start',
     margin: 2,
   },
   selectedDateCell: {
@@ -222,8 +230,10 @@ const styles = StyleSheet.create({
     borderColor: 'gray',
   },
   selectedDateText: {
-    color: 'black',
+    color: 'white',
     fontWeight: 'bold',
+    backgroundColor: '#0066FF',
+    shadowOpacity: 0.5,
   },
   todayCell: {
     backgroundColor: 'green',
@@ -232,13 +242,16 @@ const styles = StyleSheet.create({
   weekLabelsContainer: {
     flexDirection: 'row',
     width: '100%',
+    borderBottomWidth: 1,
+    borderColor: '#3333334D',
+    height: screenHeight * 0.03,
     justifyContent: 'space-between',
     marginTop: 10,
   },
   dayOfWeekLabel: {
     fontSize: 16,
     width: screenWidth * 0.12,
-    margin:2,
+    margin: 2,
     fontWeight: 'bold',
     textAlign: 'center',
   },
@@ -249,13 +262,20 @@ const styles = StyleSheet.create({
   },
   prevNextMonthDateCell: {
     width: screenWidth * 0.12,
-    height: screenHeight * 0.12,
+    height: screenHeight * 0.07,
+    marginBottom: screenHeight * 0.05,
     margin: 2,
     opacity: 0.4, // 회색으로 처리하기 위한 투명도 설정
   },
   selectedPrevNextMonthDateCell: {
     backgroundColor: 'blue', // 선택된 날짜의 스타일
     opacity: 1, // 선택된 날짜는 투명도를 원래대로 설정
+  },
+  sundayCell: {
+    color: '#FB3838', // 일요일 색상
+  },
+  saturdayCell: {
+    color: '#0066FF', // 토요일 색상
   },
 });
 

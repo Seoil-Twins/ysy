@@ -351,7 +351,7 @@ export const AlbumDetail = () => {
 
       <FlatList
         data={albumImages} // 앨범에 해당하는 이미지 데이터를 사용합니다.
-        renderItem={({ item }) => ( 
+        renderItem={({ item }) => (
           <RenderImage
             selectedImages={selectedImages}
             tmpRepImage={tmpRepImage}
