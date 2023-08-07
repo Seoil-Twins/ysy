@@ -14,15 +14,15 @@ import DatePicker from '../components/DatePicker';
 import ImagePicker from '../components/ImagePicker';
 import CustomText from '../components/CustomText';
 
-import { TutorialTypes } from '../navigation/TutorialTypes';
+import { TutorialNavType } from '../navigation/NavTypes';
 
 import { getSecureValue } from '../util/jwt';
 import { useAppDispatch } from '../redux/hooks';
 import { login } from '../features/loginStatusSlice';
 
 const ConnectCouple = () => {
-  const navigation = useNavigation<StackNavigationProp<TutorialTypes>>();
-  const { params } = useRoute<RouteProp<TutorialTypes, 'ConnectCouple'>>();
+  const navigation = useNavigation<StackNavigationProp<TutorialNavType>>();
+  const { params } = useRoute<RouteProp<TutorialNavType, 'ConnectCouple'>>();
   const dispatch = useAppDispatch();
 
   const title = '연인 맺기';

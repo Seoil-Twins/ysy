@@ -3,7 +3,7 @@ import { StyleSheet, View, Pressable, TextInput } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 
 import BackSVG from '../assets/icons/back.svg';
-import { DateNavTypes } from '../navigation/DateStack';
+import { DateNavType } from '../navigation/NavTypes';
 import { StackNavigationProp } from '@react-navigation/stack';
 
 type DateSearchHeaderProps = {
@@ -15,7 +15,7 @@ const DateSearchHeader: React.FC<DateSearchHeaderProps> = ({
   onChangeText,
   onSubmit,
 }) => {
-  const navigation = useNavigation<StackNavigationProp<DateNavTypes>>();
+  const navigation = useNavigation<StackNavigationProp<DateNavType>>();
 
   const moveBack = () => {
     navigation.goBack();

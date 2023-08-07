@@ -37,7 +37,7 @@ import {
   verifyLoginData,
 } from '../util/login';
 import { setSecureValue } from '../util/jwt';
-import { TutorialTypes } from '../navigation/TutorialTypes';
+import { TutorialNavType } from '../navigation/NavTypes';
 import { User } from '../types/user';
 
 const { width, height } = Dimensions.get('window');
@@ -77,7 +77,7 @@ type Item = (typeof slides)[0];
 
 const Tutorial = () => {
   let slider: AppIntroSlider | undefined;
-  const navigation = useNavigation<StackNavigationProp<TutorialTypes>>();
+  const navigation = useNavigation<StackNavigationProp<TutorialNavType>>();
   const [isVisible, setIsVisible] = useState(false);
   const [isLoggingIn, setIsLoggingIn] = useState(false);
 

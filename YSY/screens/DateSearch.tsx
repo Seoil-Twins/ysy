@@ -8,7 +8,7 @@ import DateSearchHeader from '../components/DateSearchHeader';
 import CustomText from '../components/CustomText';
 import DateSearchItem from '../components/DateSearchItem';
 
-import { DateNavTypes } from '../navigation/DateStack';
+import { DateNavType } from '../navigation/NavTypes';
 
 import {
   getObjectData,
@@ -19,7 +19,7 @@ import {
 import SadSVG from '../assets/icons/sad.svg';
 
 const DateSearch = () => {
-  const navigation = useNavigation<StackNavigationProp<DateNavTypes>>();
+  const navigation = useNavigation<StackNavigationProp<DateNavType>>();
 
   const [value, setValue] = useState<string>('');
   const [history, setHistory] = useState<string[] | null>(null);
@@ -62,10 +62,8 @@ const DateSearch = () => {
   };
 
   const moveDateDeatil = (text: string) => {
-    // -1은 detailId로 찾지 않겠다는 뜻
-    navigation.replace('Date', {
-      detailId: '-1',
-      title: text,
+    navigation.replace('DateSearchResult', {
+      keyword: text,
     });
   };
 

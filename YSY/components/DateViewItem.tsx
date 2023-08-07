@@ -19,7 +19,7 @@ const { width } = Dimensions.get('window');
 
 type DateViewItemProps = {
   item: Date;
-  onPressDetail: (item: Date) => void;
+  onPressDetail: (id: number) => void;
   onPressFavorite: (id: number, isFavorite: boolean) => void;
 };
 
@@ -45,7 +45,7 @@ const DateViewItem: React.FC<DateViewItemProps> = ({
   };
 
   const emitDetail = () => {
-    onPressDetail(item);
+    onPressDetail(item.id);
   };
 
   return (

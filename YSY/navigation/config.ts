@@ -3,12 +3,10 @@ export const config = {
     Home: 'home',
     Album: 'album',
     Calendar: 'calendar',
-    DateStack: {
-      screens: {
-        Date: 'date',
-        Search: 'search',
-      },
-    },
+    Date: 'date',
+    DateDetail: 'date-detail',
+    DateSearch: 'date-search',
+    DateSearchResult: 'date-search-result',
     More: 'more',
     Tutorial: 'tutorial',
     ConnectCouple: 'connectcouple',

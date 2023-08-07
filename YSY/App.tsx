@@ -25,6 +25,9 @@ import AdditionalInformation from './screens/AdditionalInformation';
 
 import Loading from './components/Loading';
 import { config } from './navigation/config';
+import DateDetail from './screens/DateDetail';
+import DateSearch from './screens/DateSearch';
+import DateSearchResult from './screens/DateSearchResult';
 
 const AppWrapper = () => {
   return (
@@ -74,8 +77,8 @@ const App = () => {
           case 'ConnectCouple':
             result = event.url.replace('kakaolink', 'connectcouple');
             break;
-          case 'Date':
-            result = event.url.replace('kakaolink', 'date');
+          case 'DateDetail':
+            result = event.url.replace('kakaolink', 'date-detail');
             console.log(result);
             break;
           default:
@@ -114,7 +117,20 @@ const App = () => {
       <SafeAreaView style={styles.safeContainer}>
         <NavigationContainer linking={linking}>
           {isLogin ? (
-            <Nav />
+            <Stack.Navigator
+              initialRouteName="Home"
+              screenOptions={{
+                headerShown: false,
+                cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS,
+              }}>
+              <Stack.Screen name="Tabs" component={Nav} />
+              <Stack.Screen name="DateDetail" component={DateDetail} />
+              <Stack.Screen name="DateSearch" component={DateSearch} />
+              <Stack.Screen
+                name="DateSearchResult"
+                component={DateSearchResult}
+              />
+            </Stack.Navigator>
           ) : (
             <Stack.Navigator
               initialRouteName="Tutorial"

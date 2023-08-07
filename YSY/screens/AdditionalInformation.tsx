@@ -9,7 +9,7 @@ import BackHeader from '../components/BackHeader';
 import CustomText from '../components/CustomText';
 import Input from '../components/Input';
 
-import { TutorialTypes } from '../navigation/TutorialTypes';
+import { TutorialNavType } from '../navigation/NavTypes';
 import { AppToken, LoginOptions, appLogin } from '../util/login';
 import { setSecureValue } from '../util/jwt';
 import { User } from '../types/user';
@@ -17,8 +17,8 @@ import { StackNavigationProp } from '@react-navigation/stack';
 
 const AdditionalInformation = () => {
   const { info } =
-    useRoute<RouteProp<TutorialTypes, 'AdditionalInformation'>>().params;
-  const navigation = useNavigation<StackNavigationProp<TutorialTypes>>();
+    useRoute<RouteProp<TutorialNavType, 'AdditionalInformation'>>().params;
+  const navigation = useNavigation<StackNavigationProp<TutorialNavType>>();
   const title = '추가 정보 입력';
   const descriptions = [
     'YSY의 원할한 회원가입을 위해',

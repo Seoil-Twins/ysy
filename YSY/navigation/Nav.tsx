@@ -6,7 +6,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import Home from '../screens/Home';
 import Album from '../screens/Album';
 import Calendar from '../screens/Calendar';
-import DateStack from './DateStack';
+import Date from '../screens/Date';
 import More from '../screens/More';
 
 import HomeNoneSVG from '../assets/icons/home_none.svg';
@@ -39,7 +39,7 @@ const Nav = () => {
             IconComponent = focused ? AlbumActiveSVG : AlbumNoneSVG;
           } else if (route.name === 'Calendar') {
             IconComponent = focused ? CalendarActiveSVG : CalendarNoneSVG;
-          } else if (route.name === 'DateStack') {
+          } else if (route.name === 'Date') {
             IconComponent = focused ? DateActiveSVG : DateNoneSVG;
           } else if (route.name === 'More') {
             IconComponent = focused ? MoreActiveSVG : MoreNoneSVG;
@@ -53,7 +53,7 @@ const Nav = () => {
       <Tab.Screen name="Home" component={Home} />
       <Tab.Screen name="Album" component={Album} />
       <Tab.Screen name="Calendar" component={Calendar} />
-      <Tab.Screen name="DateStack" component={DateStack} />
+      <Tab.Screen name="Date" component={Date} />
       <Tab.Screen name="More" component={More} />
     </Tab.Navigator>
   );
