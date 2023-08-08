@@ -1,7 +1,10 @@
-import React, { useState } from 'react';
-import { View, StyleSheet, Text, TouchableOpacity } from 'react-native';
+import React, { useRef, useState } from 'react';
+import { View, StyleSheet, Text, TouchableOpacity, PanResponder} from 'react-native';
 import { isSameDay } from 'date-fns';
-import { heightPercentageToDP as hp, widthPercentageToDP as wp } from 'react-native-responsive-screen';
+import {
+  heightPercentageToDP as hp,
+  widthPercentageToDP as wp,
+} from 'react-native-responsive-screen';
 
 const screenWidth = wp('100%');
 const screenHeight = hp('100%');
@@ -10,7 +13,7 @@ interface CalendarProps {
   onDateSelect: (date: Date) => void;
 }
 
-const Calendar: React.FC<CalendarProps> = ({ onDateSelect }) => {
+const MyCalendar: React.FC<CalendarProps> = ({ onDateSelect }) => {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date()); // 현재
   const [currentMonth, setCurrentMonth] = useState<number>(
     new Date().getMonth(),
@@ -18,8 +21,41 @@ const Calendar: React.FC<CalendarProps> = ({ onDateSelect }) => {
   const [currentYear, setCurrentYear] = useState<number>(
     new Date().getFullYear(),
   );
+  const [panning, setPanning] = useState(false);
 
   const today = new Date();
+
+  const panResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onMoveShouldSetPanResponderCapture: (evt, gestureState) => {
+        // 캡처하도록 설정
+        return Math.abs(gestureState.dx) > 5;
+      },
+      onPanResponderMove: (evt, gestureState) => {
+        if (!panning) {
+          // 스와이프 동작 중인지 확인
+          console.log('swipe');
+          if (Math.abs(gestureState.dx) > 100) {
+            setPanning(true); // 스와이프 동작 시작
+            if (gestureState.dx > 100) {
+              console.log('swipe1');
+              handlePrevMonth();
+            } else {
+              console.log('swipe2');
+              handleNextMonth();
+            }
+          }
+        }
+        console.log('swipe');
+      },
+      onPanResponderRelease: () => {
+        if (panning) {
+          setPanning(false); // 스와이프 동작 종료
+        }
+      },
+    }),
+  ).current;
 
   const handlePrevMonth = () => {
     if (currentMonth <= 0) {
@@ -122,7 +158,7 @@ const Calendar: React.FC<CalendarProps> = ({ onDateSelect }) => {
   const dividedDates = divideArray(currentMonthDates, 7);
 
   return (
-    <View style={styles.container}>
+    <View style={styles.container} {...panResponder.panHandlers}>
       <View style={styles.titleContainer}>
         {/* 이전 달로 이동하는 버튼 */}
         <TouchableOpacity onPress={handlePrevMonth}>
@@ -279,4 +315,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default Calendar;
+export default MyCalendar;
