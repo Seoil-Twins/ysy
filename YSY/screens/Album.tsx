@@ -267,22 +267,25 @@ export const Album = () => {
             justifyContent: 'flex-end',
           }}>
           {
-          <RenderAlbumHeader
-            selectedAlbums={selectedAlbums}
-            handleSelectAll={handleSelectAll}
-            openSortModal={openSortModal}
-          />}
+            <RenderAlbumHeader
+              selectedAlbums={selectedAlbums}
+              handleSelectAll={handleSelectAll}
+              openSortModal={openSortModal}
+            />
+          }
         </View>
 
         <FlatList
           data={dummyFolder}
           keyExtractor={(item, index) => String(index)}
-          renderItem={({ item }) => (<RenderAlbum
-            item={item}
-            selectedAlbums={selectedAlbums}
-            handleAlbumPress={() => handleAlbumPress(item)}
-            handleLongPress={handleLongPress}
-          />)}
+          renderItem={({ item }) => (
+            <RenderAlbum
+              item={item}
+              selectedAlbums={selectedAlbums}
+              handleAlbumPress={() => handleAlbumPress(item)}
+              handleLongPress={handleLongPress}
+            />
+          )}
         />
         <View style={styles.container}>
           <TouchableOpacity

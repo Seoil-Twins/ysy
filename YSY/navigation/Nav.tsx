@@ -38,7 +38,7 @@ const Nav = () => {
 
           if (route.name === 'Home') {
             IconComponent = focused ? HomeActiveSVG : HomeNoneSVG;
-          } else if (route.name === 'Album') {
+          } else if (route.name === 'AlbumStack') {
             IconComponent = focused ? AlbumActiveSVG : AlbumNoneSVG;
           } else if (route.name === 'Calendar') {
             IconComponent = focused ? CalendarActiveSVG : CalendarNoneSVG;
@@ -54,7 +54,7 @@ const Nav = () => {
         },
       })}>
       <Tab.Screen name="Home" component={Home} />
-      <Tab.Screen name="Album" component={AlbumStack} />
+      <Tab.Screen name="AlbumStack" component={AlbumStack} />
       <Tab.Screen name="Calendar" component={Calendar} />
       <Tab.Screen name="Date" component={Date} />
       <Tab.Screen name="More" component={More} />

@@ -151,8 +151,6 @@ const App = () => {
                 component={DateSearchResult}
               />
             </Stack.Navigator>
-          {isAlbum ? <AlbumNav /> : null}
-          {isImage ? <ImageNav /> : null}
           ) : (
             <Stack.Navigator
               initialRouteName="Tutorial"
@@ -167,9 +165,11 @@ const App = () => {
                 component={AdditionalInformation}
               />
             </Stack.Navigator>
-          )} */}
+          )}
         </NavigationContainer>
         {isLoadding ? <Loading /> : null}
+        {isAlbum ? <AlbumNav /> : null}
+        {isImage ? <ImageNav /> : null}
       </SafeAreaView>
     </View>
   );
