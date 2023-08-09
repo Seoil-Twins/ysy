@@ -1,5 +1,5 @@
 import React, { useRef, useState } from 'react';
-import { View, StyleSheet, Text, TouchableOpacity, PanResponder} from 'react-native';
+import { View, StyleSheet, Text, TouchableOpacity, PanResponder, Pressable} from 'react-native';
 import { isSameDay } from 'date-fns';
 import {
   heightPercentageToDP as hp,
@@ -29,31 +29,38 @@ const MyCalendar: React.FC<CalendarProps> = ({ onDateSelect }) => {
   const panResponder = useRef(
     PanResponder.create({
       onStartShouldSetPanResponder: () => true,
-      onMoveShouldSetPanResponderCapture: (evt, gestureState) => {
-        // 캡처하도록 설정
-        return Math.abs(gestureState.dx) > 5;
+      // onPanResponderMove: (evt, gestureState) => {
+      //   if(panning)
+      //     {
+      //       return;
+      //     }
+      //   setPanning(true); // 스와이프 동작 시작
+      //   console.log('swipe');
+      //   if (Math.abs(gestureState.dx) > 100) {
+      //     if (gestureState.dx > 100) {
+      //       console.log('swipe1');
+      //       handlePrevMonth();
+      //     } else {
+      //       console.log('swipe2');
+      //       handleNextMonth();
+      //     }
+      //     console.log('swipe');
+      //   }
+      //   setTimeout(() => {
+      //       setPanning(false);
+      //   }, 1000);
+      // },
+      // onPanResponderEnd: () => {
+      //   console.log('cex');
+      //   // if (panning) {
+      //   //   setPanning(false); // 스와이프 동작 종료
+      //   // }
+      // },
+      onPanResponderStart: (e, gestureState) => {
+        console.log('start');
       },
-      onPanResponderMove: (evt, gestureState) => {
-        if (!panning) {
-          // 스와이프 동작 중인지 확인
-          console.log('swipe');
-          if (Math.abs(gestureState.dx) > 100) {
-            setPanning(true); // 스와이프 동작 시작
-            if (gestureState.dx > 100) {
-              console.log('swipe1');
-              handlePrevMonth();
-            } else {
-              console.log('swipe2');
-              handleNextMonth();
-            }
-          }
-        }
-        console.log('swipe');
-      },
-      onPanResponderRelease: () => {
-        if (panning) {
-          setPanning(false); // 스와이프 동작 종료
-        }
+      onPanResponderEnd: (e, gestureState) => {
+        console.log('end');
       },
     }),
   ).current;
@@ -165,82 +172,86 @@ const MyCalendar: React.FC<CalendarProps> = ({ onDateSelect }) => {
 
   return (
     <View style={styles.container} {...panResponder.panHandlers}>
-      <View style={styles.titleContainer}>
-        {/* 이전 달로 이동하는 버튼 */}
-        <TouchableOpacity onPress={handlePrevMonth}>
-          <Text style={styles.button}>Prev</Text>
-        </TouchableOpacity>
+      <View style={{flex:1}}>
+          <View style={styles.titleContainer}>
+            {/* 이전 달로 이동하는 버튼 */}
+            <Pressable onPress={handlePrevMonth}>
+              <Text style={styles.button}>Prev</Text>
+            </Pressable>
 
-        {/* 선택된 달과 년도 표시 */}
-        <Text style={styles.title}>
-          {currentYear + ' ' + (currentMonth + 1)}
-        </Text>
-
-        {/* 다음 달로 이동하는 버튼 */}
-        <TouchableOpacity onPress={handleNextMonth}>
-          <Text style={styles.button}>Next</Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* 달력의 날짜들 */}
-      <View style={styles.calendarContainer}>
-        {/* 요일 표시 */}
-        <View style={styles.weekLabelsContainer}>
-          {dayOfWeekLabels.map((label, index) => (
-            <Text
-              key={index}
-              style={[
-                styles.dayOfWeekLabel,
-                index === 0 && { color: '#FB3838' },
-                index === 6 && { color: '#0066FF' },
-              ]}>
-              {label}
+            {/* 선택된 달과 년도 표시 */}
+            <Text style={styles.title}>
+              {currentYear + ' ' + (currentMonth + 1)}
             </Text>
-          ))}
-        </View>
-        {dividedDates.map((week, index) => (
-          <View key={index} style={styles.weekContainer}>
-            {week.map((date, subIndex) =>
-              date ? (
-                <TouchableOpacity
-                  key={date.toString()}
-                  onPress={() => handleDateSelect(date)}
+
+            {/* 다음 달로 이동하는 버튼 */}
+            <Pressable onPress={handleNextMonth}>
+              <Text style={styles.button}>Next</Text>
+            </Pressable>
+          </View>
+
+          {/* 달력의 날짜들 */}
+          <View style={styles.calendarContainer}>
+
+            {/* 요일 표시 월화수목금토일*/}
+            <View style={styles.weekLabelsContainer}>
+              {dayOfWeekLabels.map((label, index) => (
+                <Text
+                  key={index}
                   style={[
-                    styles.dateCell,
-                    isSameDay(date, selectedDate) && styles.selectedDateCell,
-                    isSameDay(date, today) && styles.todayCell,
-                    !isSameMonth(date, currentMonth) &&
-                      styles.prevNextMonthDateCell,
+                    styles.dayOfWeekLabel,
+                    index === 0 && { color: '#FB3838' },
+                    index === 6 && { color: '#0066FF' },
                   ]}>
-                  <Text
-                    style={[
-                      isSameDay(date, selectedDate) && styles.selectedDateText,
-                      date.getDay() === 0 && styles.sundayCell, // 일요일의 스타일
-                      date.getDay() === 6 && styles.saturdayCell, // 토요일의 스타일
-                    ]}>
-                    {date.getDate()}
-                  </Text>
-                </TouchableOpacity>
-              ) : (
-                <View key={subIndex} style={styles.dateCell} />
-              ),
-            )}
-          </View>
-        ))}
-        {showDetailView ?
-          <View style={styles.flexibleSpace}>
-            <View style={styles.detailView}>
-              <Text>This is the toggleable view.</Text>
+                  {label}
+                </Text>
+              ))}
             </View>
+
+            {dividedDates.map((week, index) => (
+              <View key={index} style={styles.weekContainer}>
+                {week.map((date, subIndex) =>
+                  date ? (
+                    <Pressable
+                      key={date.toString()}
+                      onPress={() => handleDateSelect(date)}
+                      style={[
+                        styles.dateCell,
+                        isSameDay(date, selectedDate) && styles.selectedDateCell,
+                        isSameDay(date, today) && styles.todayCell,
+                        !isSameMonth(date, currentMonth) &&
+                          styles.prevNextMonthDateCell,
+                      ]}>
+                      <Text
+                        style={[
+                          isSameDay(date, selectedDate) && styles.selectedDateText,
+                          date.getDay() === 0 && styles.sundayCell, // 일요일의 스타일
+                          date.getDay() === 6 && styles.saturdayCell, // 토요일의 스타일
+                        ]}>
+                        {date.getDate()}
+                      </Text>
+                    </Pressable>
+                  ) : (
+                    <View key={subIndex} style={styles.dateCell} />
+                  ),
+                )}
+              </View>
+            ))}
           </View>
-         : null}
       </View>
+ 
+              <View style={styles.flexibleSpace}>
+                <View style={styles.detailView}>
+                  <Text>This is the toggleable view.</Text>
+                </View>
+              </View>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
+    flex:1,
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 16,
@@ -331,6 +342,9 @@ const styles = StyleSheet.create({
   },
   flexibleSpace: {
     flex: 1,
+    zIndex: 1,
+    width: screenWidth * 1,
+    height: screenHeight * 1,
   },
 
   detailView: {
