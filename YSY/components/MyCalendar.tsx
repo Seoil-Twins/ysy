@@ -15,6 +15,7 @@ interface CalendarProps {
 
 const MyCalendar: React.FC<CalendarProps> = ({ onDateSelect }) => {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date()); // 현재
+  const [showDetailView, setShowDetailView] = useState(false);
   const [currentMonth, setCurrentMonth] = useState<number>(
     new Date().getMonth(),
   );
@@ -74,16 +75,21 @@ const MyCalendar: React.FC<CalendarProps> = ({ onDateSelect }) => {
   };
 
   const handleDateSelect = (date: Date) => {
-    if (isSameMonth(date, currentMonth) && isSameYear(date, currentYear)) {
-      console.log(date.getMonth() + ' :: ' + today.getMonth());
-      setSelectedDate(date);
-      onDateSelect(date);
+    if (isSameDay(selectedDate, date)) {
+      console.log('more Click');
+      setShowDetailView(!showDetailView);
     } else {
-      if (currentMonth == 11 && date.getMonth() == 0)
-        setCurrentYear(currentYear + 1);
-      if (currentMonth == 0 && date.getMonth() == 11)
-        setCurrentYear(currentYear - 1);
-      setCurrentMonth(date.getMonth());
+      if (isSameMonth(date, currentMonth) && isSameYear(date, currentYear)) {
+        console.log(date.getMonth() + ' :: ' + today.getMonth());
+        setSelectedDate(date);
+        onDateSelect(date);
+      } else {
+        if (currentMonth == 11 && date.getMonth() === 0)
+          setCurrentYear(currentYear + 1);
+        if (currentMonth == 0 && date.getMonth() === 11)
+          setCurrentYear(currentYear - 1);
+        setCurrentMonth(date.getMonth());
+      }
     }
   };
 
@@ -185,8 +191,8 @@ const MyCalendar: React.FC<CalendarProps> = ({ onDateSelect }) => {
               key={index}
               style={[
                 styles.dayOfWeekLabel,
-                index == 0 && { color: '#FB3838' },
-                index == 6 && { color: '#0066FF' },
+                index === 0 && { color: '#FB3838' },
+                index === 6 && { color: '#0066FF' },
               ]}>
               {label}
             </Text>
@@ -221,6 +227,13 @@ const MyCalendar: React.FC<CalendarProps> = ({ onDateSelect }) => {
             )}
           </View>
         ))}
+        {showDetailView ?
+          <View style={styles.flexibleSpace}>
+            <View style={styles.detailView}>
+              <Text>This is the toggleable view.</Text>
+            </View>
+          </View>
+         : null}
       </View>
     </View>
   );
@@ -246,16 +259,17 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
   },
   calendarContainer: {
-    flex: 1,
+    flex: 2, // 활성화 여부에 따라 flex 값 변경
     flexDirection: 'row',
     flexWrap: 'wrap',
     marginTop: 10,
     paddingHorizontal: 10,
+    backgroundColor: 'white', // 배경색 변경
   },
   dateCell: {
     width: screenWidth * 0.12,
-    height: screenHeight * 0.07,
-    marginBottom: screenHeight * 0.05,
+    height: screenHeight * 0.1,
+    marginBottom: screenHeight * 0.02,
     alignItems: 'center',
     justifyContent: 'flex-start',
     margin: 2,
@@ -283,6 +297,7 @@ const styles = StyleSheet.create({
     height: screenHeight * 0.03,
     justifyContent: 'space-between',
     marginTop: 10,
+    backgroundColor: 'white', // 배경색 변경
   },
   dayOfWeekLabel: {
     fontSize: 16,
@@ -295,11 +310,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     width: '100%',
     justifyContent: 'space-between',
+    backgroundColor: 'white', // 배경색 변경
   },
   prevNextMonthDateCell: {
     width: screenWidth * 0.12,
-    height: screenHeight * 0.07,
-    marginBottom: screenHeight * 0.05,
+    height: screenHeight * 0.1,
+    marginBottom: screenHeight * 0.02,
     margin: 2,
     opacity: 0.4, // 회색으로 처리하기 위한 투명도 설정
   },
@@ -312,6 +328,14 @@ const styles = StyleSheet.create({
   },
   saturdayCell: {
     color: '#0066FF', // 토요일 색상
+  },
+  flexibleSpace: {
+    flex: 1,
+  },
+
+  detailView: {
+    backgroundColor: 'yellow',
+    padding: 10,
   },
 });
 
