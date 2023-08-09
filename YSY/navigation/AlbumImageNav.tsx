@@ -1,7 +1,7 @@
 import React from 'react';
 import { TouchableOpacity, View } from 'react-native';
 
-import MergeSvg from '../assets/icons/merge.svg';
+import ShareSvg from '../assets/icons/share.svg';
 import DeleteSvg from '../assets/icons/delete.svg';
 import DownloadSvg from '../assets/icons/download.svg';
 
@@ -12,7 +12,7 @@ import { albumFunc } from '../features/albumSlice';
 
 const screenWidth = wp('100%');
 
-const AlbumNav = () => {
+const AlbumImageNav = () => {
   const dispatch = useAppDispatch();
 
   return (
@@ -35,14 +35,14 @@ const AlbumNav = () => {
           marginLeft: screenWidth * 0.1,
         }}
         onPress={() => {
-          dispatch(albumFunc('AlbumMerge'));
+          dispatch(albumFunc('ImageShare'));
         }}>
-        <MergeSvg width={30} height={25} />
+        <ShareSvg width={30} height={25} />
       </TouchableOpacity>
       <TouchableOpacity
         style={{ width: screenWidth * 0.3, alignItems: 'center' }}
         onPress={() => {
-          dispatch(albumFunc('AlbumDownload'));
+          dispatch(albumFunc('ImageDownload'));
         }}>
         <DownloadSvg width={26} height={26} />
       </TouchableOpacity>
@@ -53,7 +53,7 @@ const AlbumNav = () => {
           alignItems: 'flex-end',
         }}
         onPress={() => {
-          dispatch(albumFunc('AlbumDelete'));
+          dispatch(albumFunc('ImageDelete'));
         }}>
         <DeleteSvg width={25} height={27} />
       </TouchableOpacity>
@@ -61,4 +61,4 @@ const AlbumNav = () => {
   );
 };
 
-export default AlbumNav;
+export default AlbumImageNav;
