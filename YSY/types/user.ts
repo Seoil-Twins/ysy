@@ -1,4 +1,5 @@
 export interface User {
+  userId: number;
   cupId: string | null;
   snsId: string;
   code: string;

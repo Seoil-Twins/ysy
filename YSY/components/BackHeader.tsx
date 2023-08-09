@@ -1,10 +1,20 @@
 import React from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import {
+  Pressable,
+  StyleProp,
+  StyleSheet,
+  View,
+  ViewStyle,
+} from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 
 import BackSVG from '../assets/icons/back.svg';
 
-const BackHeader = () => {
+type BackHeaderProps = {
+  style?: StyleProp<ViewStyle>;
+};
+
+const BackHeader: React.FC<BackHeaderProps> = ({ style }) => {
   const navigation = useNavigation();
 
   const backBtn = () => {
@@ -12,7 +22,7 @@ const BackHeader = () => {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, style]}>
       <Pressable onPress={backBtn}>
         <BackSVG />
       </Pressable>

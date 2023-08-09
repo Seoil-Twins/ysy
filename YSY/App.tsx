@@ -28,6 +28,9 @@ import AdditionalInformation from './screens/AdditionalInformation';
 
 import Loading from './components/Loading';
 import { config } from './navigation/config';
+import DateDetail from './screens/DateDetail';
+import DateSearch from './screens/DateSearch';
+import DateSearchResult from './screens/DateSearchResult';
 
 const AppWrapper = () => {
   return (
@@ -85,6 +88,7 @@ const App = () => {
 
     subscribe(listener: any) {
       const onReceiveURL = (event: { url: string }) => {
+        console.log(event.url);
         const convertURL = new URL(event.url);
         const params = new URLSearchParams(convertURL.search);
         let result = '';
@@ -93,6 +97,9 @@ const App = () => {
         switch (params.get('screen')) {
           case 'ConnectCouple':
             result = event.url.replace('kakaolink', 'connectcouple');
+            break;
+          case 'DateDetail':
+            result = event.url.replace('kakaolink', 'date-detail');
             break;
           default:
             result = event.url.replace('kakaolink', 'tutorial');
@@ -129,13 +136,23 @@ const App = () => {
       <StatusBar backgroundColor="#dddddd" />
       <SafeAreaView style={styles.safeContainer}>
         <NavigationContainer linking={linking}>
-          <Nav />
+          {isLogin ? (
+            <Stack.Navigator
+              initialRouteName="Home"
+              screenOptions={{
+                headerShown: false,
+                cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS,
+              }}>
+              <Stack.Screen name="Tabs" component={Nav} />
+              <Stack.Screen name="DateDetail" component={DateDetail} />
+              <Stack.Screen name="DateSearch" component={DateSearch} />
+              <Stack.Screen
+                name="DateSearchResult"
+                component={DateSearchResult}
+              />
+            </Stack.Navigator>
           {isAlbum ? <AlbumNav /> : null}
           {isImage ? <ImageNav /> : null}
-          {/* {isAlbum ? <AlbumNav /> : isImage ? <ImageNav /> : <Nav />} */}
-
-          {/* {isLogin ? (
-            <Nav />
           ) : (
             <Stack.Navigator
               initialRouteName="Tutorial"

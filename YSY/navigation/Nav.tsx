@@ -79,10 +79,6 @@ const styles = StyleSheet.create({
     width: 34,
     height: 34,
   },
-  iconBox: {
-    width: 111,
-    height: 68,
-  },
 });
 
 export default Nav;

@@ -1,6 +1,6 @@
 import { LoginOptions } from '../util/login';
 
-export type TutorialTypes = {
+export type TutorialNavType = {
   Tutorial: undefined;
   ConnectCouple: {
     myCode: string;
@@ -8,5 +8,16 @@ export type TutorialTypes = {
   };
   AdditionalInformation: {
     info: LoginOptions;
+  };
+};
+
+export type DateNavType = {
+  Date: undefined;
+  DateSearch: undefined;
+  DateSearchResult: {
+    keyword: string;
+  };
+  DateDetail: {
+    dateId: number;
   };
 };
