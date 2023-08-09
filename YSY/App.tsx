@@ -17,8 +17,11 @@ import { URL, URLSearchParams } from 'react-native-url-polyfill';
 import store, { RootState } from './redux/store';
 import { useAppSelector, useAppDispatch } from './redux/hooks';
 import { login, logout } from './features/loginStatusSlice';
+import { albumSelectionOn, albumSelectionOff } from './features/albumSlice';
 
 import Nav from './navigation/Nav';
+import AlbumNav from './navigation/AlbumNav';
+import ImageNav from './navigation/AlbumImageNav';
 import Tutorial from './screens/Tutorial';
 import ConnectCouple from './screens/ConnectCouple';
 import AdditionalInformation from './screens/AdditionalInformation';
@@ -46,6 +49,13 @@ const App = () => {
   const isLoadding = useAppSelector(
     (state: RootState) => state.loadingStatus.isLoading,
   );
+  const isAlbum = useAppSelector(
+    (state: RootState) => state.albumStatus.isAlbum,
+  );
+
+  const isImage = useAppSelector(
+    (state: RootState) => state.imageStatus.isImage,
+  );
   const dispatch = useAppDispatch();
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -56,6 +66,16 @@ const App = () => {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const onLogout = () => {
     dispatch(logout());
+  };
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const onAlbumSelection = () => {
+    dispatch(albumSelectionOn());
+  };
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const offAlbumSelection = () => {
+    dispatch(albumSelectionOff());
   };
 
   const linking = {
@@ -131,6 +151,8 @@ const App = () => {
                 component={DateSearchResult}
               />
             </Stack.Navigator>
+          {isAlbum ? <AlbumNav /> : null}
+          {isImage ? <ImageNav /> : null}
           ) : (
             <Stack.Navigator
               initialRouteName="Tutorial"
@@ -145,7 +167,7 @@ const App = () => {
                 component={AdditionalInformation}
               />
             </Stack.Navigator>
-          )}
+          )} */}
         </NavigationContainer>
         {isLoadding ? <Loading /> : null}
       </SafeAreaView>
