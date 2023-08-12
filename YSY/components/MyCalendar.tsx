@@ -1,5 +1,5 @@
 import React, { useRef, useState } from 'react';
-import { View, StyleSheet, Text, TouchableOpacity, PanResponder, Pressable} from 'react-native';
+import { View, StyleSheet, Text, PanResponder, Pressable } from 'react-native';
 import { isSameDay } from 'date-fns';
 import {
   heightPercentageToDP as hp,
@@ -148,6 +148,7 @@ const MyCalendar: React.FC<CalendarProps> = ({ onDateSelect }) => {
     return new Date(year, month, 2).getDay();
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const getEmptyCellsCount = () => {
     const firstDayOfWeek = getFirstDayOfWeek(currentYear, currentMonth);
     return firstDayOfWeek === 0 ? 6 : firstDayOfWeek - 1;
@@ -172,86 +173,86 @@ const MyCalendar: React.FC<CalendarProps> = ({ onDateSelect }) => {
 
   return (
     <View style={styles.container} {...panResponder.panHandlers}>
-      <View style={{flex:1}}>
-          <View style={styles.titleContainer}>
-            {/* 이전 달로 이동하는 버튼 */}
-            <Pressable onPress={handlePrevMonth}>
-              <Text style={styles.button}>Prev</Text>
-            </Pressable>
+      <View style={{ flex: 1 }}>
+        <View style={styles.titleContainer}>
+          {/* 이전 달로 이동하는 버튼 */}
+          <Pressable onPress={handlePrevMonth}>
+            <Text style={styles.button}>Prev</Text>
+          </Pressable>
 
-            {/* 선택된 달과 년도 표시 */}
-            <Text style={styles.title}>
-              {currentYear + ' ' + (currentMonth + 1)}
-            </Text>
+          {/* 선택된 달과 년도 표시 */}
+          <Text style={styles.title}>
+            {currentYear + ' ' + (currentMonth + 1)}
+          </Text>
 
-            {/* 다음 달로 이동하는 버튼 */}
-            <Pressable onPress={handleNextMonth}>
-              <Text style={styles.button}>Next</Text>
-            </Pressable>
-          </View>
+          {/* 다음 달로 이동하는 버튼 */}
+          <Pressable onPress={handleNextMonth}>
+            <Text style={styles.button}>Next</Text>
+          </Pressable>
+        </View>
 
-          {/* 달력의 날짜들 */}
-          <View style={styles.calendarContainer}>
-
-            {/* 요일 표시 월화수목금토일*/}
-            <View style={styles.weekLabelsContainer}>
-              {dayOfWeekLabels.map((label, index) => (
-                <Text
-                  key={index}
-                  style={[
-                    styles.dayOfWeekLabel,
-                    index === 0 && { color: '#FB3838' },
-                    index === 6 && { color: '#0066FF' },
-                  ]}>
-                  {label}
-                </Text>
-              ))}
-            </View>
-
-            {dividedDates.map((week, index) => (
-              <View key={index} style={styles.weekContainer}>
-                {week.map((date, subIndex) =>
-                  date ? (
-                    <Pressable
-                      key={date.toString()}
-                      onPress={() => handleDateSelect(date)}
-                      style={[
-                        styles.dateCell,
-                        isSameDay(date, selectedDate) && styles.selectedDateCell,
-                        isSameDay(date, today) && styles.todayCell,
-                        !isSameMonth(date, currentMonth) &&
-                          styles.prevNextMonthDateCell,
-                      ]}>
-                      <Text
-                        style={[
-                          isSameDay(date, selectedDate) && styles.selectedDateText,
-                          date.getDay() === 0 && styles.sundayCell, // 일요일의 스타일
-                          date.getDay() === 6 && styles.saturdayCell, // 토요일의 스타일
-                        ]}>
-                        {date.getDate()}
-                      </Text>
-                    </Pressable>
-                  ) : (
-                    <View key={subIndex} style={styles.dateCell} />
-                  ),
-                )}
-              </View>
+        {/* 달력의 날짜들 */}
+        <View style={styles.calendarContainer}>
+          {/* 요일 표시 월화수목금토일*/}
+          <View style={styles.weekLabelsContainer}>
+            {dayOfWeekLabels.map((label, index) => (
+              <Text
+                key={index}
+                style={[
+                  styles.dayOfWeekLabel,
+                  index === 0 && { color: '#FB3838' },
+                  index === 6 && { color: '#0066FF' },
+                ]}>
+                {label}
+              </Text>
             ))}
           </View>
+
+          {dividedDates.map((week, index) => (
+            <View key={index} style={styles.weekContainer}>
+              {week.map((date, subIndex) =>
+                date ? (
+                  <Pressable
+                    key={date.toString()}
+                    onPress={() => handleDateSelect(date)}
+                    style={[
+                      styles.dateCell,
+                      isSameDay(date, selectedDate) && styles.selectedDateCell,
+                      isSameDay(date, today) && styles.todayCell,
+                      !isSameMonth(date, currentMonth) &&
+                        styles.prevNextMonthDateCell,
+                    ]}>
+                    <Text
+                      style={[
+                        isSameDay(date, selectedDate) &&
+                          styles.selectedDateText,
+                        date.getDay() === 0 && styles.sundayCell, // 일요일의 스타일
+                        date.getDay() === 6 && styles.saturdayCell, // 토요일의 스타일
+                      ]}>
+                      {date.getDate()}
+                    </Text>
+                  </Pressable>
+                ) : (
+                  <View key={subIndex} style={styles.dateCell} />
+                ),
+              )}
+            </View>
+          ))}
+        </View>
       </View>
- 
-              <View style={styles.flexibleSpace}>
-                <View style={styles.detailView}>
-                  <Text>This is the toggleable view.</Text>
-                </View>
-              </View>
+
+      <View style={styles.flexibleSpace}>
+        <View style={styles.detailView}>
+          <Text>This is the toggleable view.</Text>
+        </View>
+      </View>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    flex:1,
+    flex: 1,
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 16,
