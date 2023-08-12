@@ -3,14 +3,13 @@ import {
   View,
   Text,
   FlatList,
-  Image,
   TouchableOpacity,
   StyleSheet,
   TextInput,
   Modal,
+  BackHandler,
 } from 'react-native';
 import AddSvg from '../assets/icons/add.svg';
-import WCheckSvg from '../assets/icons/white_check.svg';
 
 import {
   albumSelectionOn,
@@ -140,20 +139,43 @@ export const Album = () => {
   // const flatListKey = activeTab === 'AlbumModal' ? 'AlbumModal' : 'Default';
 
   useEffect(() => {
+    const backAction = () => {
+      dispatch(albumSelectionOff());
+      return true; // true를 반환하면 앱이 종료되지 않습니다.
+    };
+
+    const backHandler = BackHandler.addEventListener(
+      'hardwareBackPress',
+      backAction,
+    );
+
+    return () => backHandler.remove();
+  }, []);
+
+  useEffect(() => {
     if (isFunc.includes('Album')) {
       if (isFunc.includes('Download')) {
+        if (selectedAlbums.length <= 0) {
+          return;
+        }
         setIsDownloadVisible(true);
       } else {
         setIsDownloadVisible(false);
       }
 
       if (isFunc.includes('Merge')) {
+        if (selectedAlbums.length <= 0) {
+          return;
+        }
         setIsMergeVisible(true);
       } else {
         setIsMergeVisible(false);
       }
 
       if (isFunc.includes('Delete')) {
+        if (selectedAlbums.length <= 0) {
+          return;
+        }
         setIsDeleteVisible(true);
       } else {
         setIsDeleteVisible(false);
@@ -226,16 +248,19 @@ export const Album = () => {
 
   const closeDownloadModal = () => {
     setIsDownloadVisible(false);
+    dispatch(albumSelectionOff());
     // setActiveTab('AlbumModal');
   };
 
   const closeMergeModal = () => {
     setIsMergeVisible(false);
+    dispatch(albumSelectionOff());
     // setActiveTab('AlbumModal');
   };
 
   const closeDeleteModal = () => {
     setIsDeleteVisible(false);
+    dispatch(albumSelectionOff());
     // setActiveTab('AlbumModal');
   };
 
@@ -501,7 +526,7 @@ const styles = StyleSheet.create({
     zIndex: 999,
   },
   button: {
-    backgroundColor: 'blue',
+    backgroundColor: '#3675FB',
     width: 50,
     height: 50,
     borderRadius: 25,

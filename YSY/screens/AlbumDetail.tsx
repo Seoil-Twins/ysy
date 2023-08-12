@@ -7,6 +7,7 @@ import {
   Text,
   Modal,
   TextInput,
+  BackHandler,
 } from 'react-native';
 import { AlbumTypes } from '../navigation/AlbumTypes';
 import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
@@ -148,24 +149,45 @@ export const AlbumDetail = () => {
     const newData = loadImageFromDB(albumName, 40);
     setAlbumImages(prevData => [...prevData, ...newData]);
     // eslint-disable-next-line react-hooks/exhaustive-deps
+    const backAction = () => {
+      dispatch(imageSelectionOff());
+      return true; // true를 반환하면 앱이 종료되지 않습니다.
+    };
+
+    const backHandler = BackHandler.addEventListener(
+      'hardwareBackPress',
+      backAction,
+    );
+
+    return () => backHandler.remove();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
     console.log(isFunc);
     if (isFunc.includes('Image')) {
       if (isFunc.includes('Download')) {
+        if (selectedImages.length <= 0) {
+          return;
+        }
         setIsImageDownloadVisible(true);
       } else {
         setIsImageDownloadVisible(false);
       }
 
       if (isFunc.includes('Share')) {
+        if (selectedImages.length <= 0) {
+          return;
+        }
         setIsImageShareVisible(true);
       } else {
         setIsImageShareVisible(false);
       }
 
       if (isFunc.includes('Delete')) {
+        if (selectedImages.length <= 0) {
+          return;
+        }
         setIsImageDeleteVisible(true);
       } else {
         setIsImageDeleteVisible(false);
@@ -315,14 +337,17 @@ export const AlbumDetail = () => {
 
   const closeImageDeleteModal = () => {
     setIsImageDeleteVisible(false);
+    dispatch(imageSelectionOff());
   };
 
   const closeImageDownloadModal = () => {
     setIsImageDownloadVisible(false);
+    dispatch(imageSelectionOff());
   };
 
   const closeImageShareModal = () => {
     setIsImageShareVisible(false);
+    dispatch(imageSelectionOff());
     // setActiveTab('ImageModal');
   };
 

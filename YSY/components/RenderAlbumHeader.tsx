@@ -55,7 +55,7 @@ const RenderAlbumHeader: React.FC<RenderAlbumHeaderProps> = ({
           <SortSvg style={styles.imgBox} />
         </TouchableOpacity>
         <TouchableOpacity onPress={() => {}}>
-          <SettingSvg style={styles.imgBox} />
+          <SettingSvg style={{ marginTop: 21 }} height={29} />
         </TouchableOpacity>
       </View>
     );

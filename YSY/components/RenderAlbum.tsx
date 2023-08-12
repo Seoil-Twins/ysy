@@ -3,14 +3,12 @@ import { StyleSheet, TouchableOpacity, View, Image, Text } from 'react-native';
 import { useAppSelector } from '../redux/hooks';
 import { RootState } from '../redux/store';
 import { widthPercentageToDP as wp } from 'react-native-responsive-screen';
-
-import WCheckBigSvg from '../assets/icons/white_check_big.svg';
 import WCheckSvg from '../assets/icons/white_check.svg';
 
 const screenWidth = wp('100%');
 
 type RenderImageProps = {
-  selectedAlbums : string[];
+  selectedAlbums: string[];
   item: string;
   handleAlbumPress: (albumName: string) => void;
   handleLongPress: () => void;
@@ -24,40 +22,37 @@ const RenderImage: React.FC<RenderImageProps> = ({
 }) => {
   const isSelected = selectedAlbums.includes(item);
   const isAlbum = useAppSelector(
-      (state: RootState) => state.albumStatus.isAlbum,
-    );  
+    (state: RootState) => state.albumStatus.isAlbum,
+  );
 
-
-return (
-    <View style={{ flex: 1, paddingTop: 5, alignItems: 'center' }}>
-    <TouchableOpacity
-        style={{ flex: 1, paddingTop: 5, alignItems: 'center' }}
+  return (
+    <View style={{ flex: 1, paddingBottom: 5, alignItems: 'center' }}>
+      <TouchableOpacity
+        style={{ flex: 1, paddingBottom: 5, alignItems: 'center' }}
         onPress={() => handleAlbumPress(item)}
         onLongPress={() => handleLongPress()}>
         <Image
-        source={{ uri: item }}
-        style={{ width: screenWidth, height: 200 }}
+          source={{ uri: item }}
+          style={{ width: screenWidth, height: 200 }}
         />
         <View style={{ position: 'absolute', bottom: 0, left: 0 }}>
-        <Text style={styles.albumTextLeftTitle}>앨범 이름</Text>
-        <Text style={styles.albumTextLeft}>(개수)</Text>
+          <Text style={styles.albumTextLeftTitle}>앨범 이름</Text>
+          <Text style={styles.albumTextLeft}>(개수)</Text>
         </View>
         <View style={{ position: 'absolute', bottom: 0, right: 0 }}>
-        <Text style={styles.albumTextRight}>2023-07-18</Text>
+          <Text style={styles.albumTextRight}>2023-07-18</Text>
         </View>
         {isAlbum && (
-        <View
-            style={
-            isSelected ? styles.checkedCircle : styles.unCheckedCircle
-            }>
+          <View
+            style={isSelected ? styles.checkedCircle : styles.unCheckedCircle}>
             <Text>
-            {isSelected ? <WCheckSvg style={styles.checked} /> : ''}
+              {isSelected ? <WCheckSvg style={styles.checked} /> : ''}
             </Text>
-        </View>
+          </View>
         )}
-    </TouchableOpacity>
+      </TouchableOpacity>
     </View>
-);
+  );
 };
 
 const styles = StyleSheet.create({
