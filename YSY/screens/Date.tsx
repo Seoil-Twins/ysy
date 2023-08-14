@@ -357,10 +357,10 @@ const Date = () => {
   ];
   const navigation = useNavigation<StackNavigationProp<DateNavType>>();
 
-  const [citys, setCitys] = useState<SortItem[]>(() => {
+  const [citys, _setCitys] = useState<SortItem[]>(() => {
     return getCitys();
   });
-  const [subCitys, setSubCitys] = useState<SortItem[]>(() => {
+  const [subCitys, _setSubCitys] = useState<SortItem[]>(() => {
     return getSubCitys();
   });
 

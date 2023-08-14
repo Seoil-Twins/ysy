@@ -25,8 +25,9 @@ import ClockSVG from '../assets/icons/clock.svg';
 import EtcSVG from '../assets/icons/info.svg';
 
 import CustomText from '../components/CustomText';
-import { DateDetailItem } from '../components/DateDetailItem';
+import DateDetailItem from '../components/DateDetailItem';
 import BackHeader from '../components/BackHeader';
+
 import { globalStyles } from '../style/global';
 
 const width = Dimensions.get('window').width;

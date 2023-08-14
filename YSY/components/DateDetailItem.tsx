@@ -14,7 +14,7 @@ type Data = {
   tableData: string[][];
 };
 
-export const DateDetailItem: React.FC<DateDetailItemProps> = ({ item }) => {
+const DateDetailItem: React.FC<DateDetailItemProps> = ({ item }) => {
   const [data, setData] = useState<Data>();
 
   const init = useCallback(() => {
@@ -103,3 +103,5 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
 });
+
+export default DateDetailItem;

@@ -49,6 +49,7 @@
     "react-native-svg": "^13.10.0",
     "react-native-svg-transformer": "^1.0.0",
     "react-native-url-polyfill": "^2.0.0",
+    "react-native-version-check": "^3.4.7",
     "react-redux": "^8.1.1"
   },
   "devDependencies": {
@@ -62,6 +63,7 @@
     "@types/metro-config": "^0.76.3",
     "@types/react": "^18.0.24",
     "@types/react-native-dotenv": "^0.2.0",
+    "@types/react-native-version-check": "^3.4.5",
     "@types/react-test-renderer": "^18.0.0",
     "babel-jest": "^29.2.1",
     "eslint": "^8.19.0",

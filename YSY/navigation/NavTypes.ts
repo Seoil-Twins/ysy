@@ -21,3 +21,15 @@ export type DateNavType = {
     dateId: number;
   };
 };
+
+export type SettingsNavType = {
+  Album: undefined;
+  Date: undefined;
+  Settings: undefined;
+  Notice: undefined;
+  ServiceCenter: undefined;
+  Alram: undefined;
+  Location: undefined;
+  TermsOfUse: undefined;
+  TermsOfPrivacyPolicy: undefined;
+};
