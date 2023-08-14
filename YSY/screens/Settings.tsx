@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { Image, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import VersionCheck from 'react-native-version-check';
+import { useNavigation, useIsFocused } from '@react-navigation/native';
+import { StackNavigationProp } from '@react-navigation/stack';
 
 import { globalStyles } from '../style/global';
 
@@ -13,13 +15,25 @@ import SettingsItem from '../components/SettingsItem';
 
 import { User } from '../types/user';
 import { Couple } from '../types/couple';
+import { SettingsNavType } from '../navigation/NavTypes';
+
+const PROFILE_SIZE = 45;
 
 const Settings = () => {
+  const navigation = useNavigation<StackNavigationProp<SettingsNavType>>();
+  const isFocused = useIsFocused();
+
   const [user, setUser] = useState<User | null>(null);
   const [coupleUser, setCoupleUser] = useState<User | null>(null);
   const [version] = useState<string>(() => {
     return VersionCheck.getCurrentVersion();
   });
+
+  const moveProfile = () => {
+    navigation.navigate('Profile', {
+      user: user!,
+    });
+  };
 
   useEffect(() => {
     const fetchUserInfo = async () => {
@@ -66,8 +80,10 @@ const Settings = () => {
       setCoupleUser(response.users[1]);
     };
 
-    fetchUserInfo();
-  }, []);
+    if (isFocused) {
+      fetchUserInfo();
+    }
+  }, [isFocused]);
 
   return (
     <View style={styles.container}>
@@ -78,7 +94,9 @@ const Settings = () => {
         showsVerticalScrollIndicator={false}>
         <View style={[globalStyles.plpr20, styles.profileBox]}>
           {user ? (
-            <Pressable style={[styles.profile, styles.mb15]}>
+            <Pressable
+              style={[styles.profile, styles.mb15]}
+              onPress={moveProfile}>
               <View style={styles.profileImgBox}>
                 {user.profile ? (
                   <Image
@@ -188,16 +206,17 @@ const styles = StyleSheet.create({
   profileImgBox: {
     overflow: 'hidden',
     position: 'relative',
-    width: 45,
-    height: 45,
-    borderRadius: 45 / 2,
+    width: PROFILE_SIZE,
+    height: PROFILE_SIZE,
+    borderRadius: PROFILE_SIZE / 2,
     backgroundColor: '#E4E8EF',
     marginRight: 20,
+    elevation: 1,
   },
   profileImg: {
-    width: 45,
-    height: 45,
-    borderRadius: 45 / 2,
+    width: PROFILE_SIZE,
+    height: PROFILE_SIZE,
+    borderRadius: PROFILE_SIZE / 2,
   },
   profileDefaultImg: {
     position: 'absolute',

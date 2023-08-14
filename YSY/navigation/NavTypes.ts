@@ -1,3 +1,4 @@
+import { User } from '../types/user';
 import { LoginOptions } from '../util/login';
 
 export type TutorialNavType = {
@@ -26,6 +27,12 @@ export type SettingsNavType = {
   Album: undefined;
   Date: undefined;
   Settings: undefined;
+  Profile: {
+    user: User;
+  };
+  EditProfile: {
+    user: User;
+  };
   Notice: undefined;
   ServiceCenter: undefined;
   Alram: undefined;

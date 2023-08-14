@@ -9,9 +9,14 @@ import CustomText from './CustomText';
 
 import ArrowSVG from '../assets/icons/arrow_right_gray.svg';
 
+type WithoutParamNav = Exclude<
+  keyof SettingsNavType,
+  'Profile' | 'EditProfile'
+>;
+
 type SettingsItemProps = {
   title: string;
-  navName: keyof SettingsNavType;
+  navName: WithoutParamNav;
   isMargin?: boolean;
 };
 

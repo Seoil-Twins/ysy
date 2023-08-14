@@ -29,6 +29,7 @@ import DateDetail from './screens/DateDetail';
 import DateSearch from './screens/DateSearch';
 import DateSearchResult from './screens/DateSearchResult';
 import Settings from './screens/Settings';
+import Profile from './screens/Profile';
 import Alram from './screens/Alram';
 import Notice from './screens/Notice';
 import ServiceCenter from './screens/ServiceCenter';
@@ -39,6 +40,7 @@ import TermsOfUse from './screens/TermsOfUse';
 import Loading from './components/Loading';
 
 import { config } from './navigation/config';
+import EditProfile from './screens/EditProfile';
 
 const AppWrapper = () => {
   return (
@@ -159,6 +161,8 @@ const App = () => {
                 component={DateSearchResult}
               />
               <Stack.Screen name="Settings" component={Settings} />
+              <Stack.Screen name="Profile" component={Profile} />
+              <Stack.Screen name="EditProfile" component={EditProfile} />
               <Stack.Screen name="Alram" component={Alram} />
               <Stack.Screen name="Notice" component={Notice} />
               <Stack.Screen name="ServiceCenter" component={ServiceCenter} />

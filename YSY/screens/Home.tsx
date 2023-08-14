@@ -342,6 +342,7 @@ const styles = StyleSheet.create({
     borderRadius: 45 / 2,
     backgroundColor: '#E4E8EF',
     overflow: 'hidden',
+    elevation: 1,
   },
   loveImg: {
     marginLeft: 35,
