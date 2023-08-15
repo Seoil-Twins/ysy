@@ -8,6 +8,8 @@ import {
   Modal,
   TextInput,
   BackHandler,
+  PermissionsAndroid,
+  Platform,
 } from 'react-native';
 import { AlbumTypes } from '../navigation/AlbumTypes';
 import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
@@ -22,6 +24,8 @@ import {
   ImagePickerResponse,
   launchImageLibrary,
 } from 'react-native-image-picker';
+import RNFetchBlob from 'rn-fetch-blob';
+import { CameraRoll } from '@react-native-camera-roll/camera-roll';
 
 import RenderImageHeader from '../components/RenderImageHeader';
 import RenderImage from '../components/RenderImage';
@@ -345,6 +349,48 @@ export const AlbumDetail = () => {
     dispatch(imageSelectionOff());
   };
 
+  const REMOTE_IMAGE_PATH =
+    'https://raw.githubusercontent.com/AboutReact/sampleresource/master/gift.png'
+
+  const handledownloadImage = () => {
+    // To add the time suffix in filename
+    let date = new Date();
+    // Image URL which we want to download
+    let image_URL = REMOTE_IMAGE_PATH;
+    // Getting the extention of the file
+    let ext = getExtention(image_URL);
+    // Get config and fs from RNFetchBlob
+    // config: To pass the downloading related options
+    // fs: Directory path where we want our image to download
+    const { config, fs } = RNFetchBlob;
+    let PictureDir = fs.dirs.PictureDir;
+    let options = {
+      fileCache: true,
+      addAndroidDownloads: {
+        // Related to the Android only
+        useDownloadManager: true,
+        notification: true,
+        path:
+          PictureDir +
+          '/image_' + 
+          Math.floor(date.getTime() + date.getSeconds() / 2) +
+          ext,
+        description: 'Image',
+      },
+    };
+    config(options)
+      .fetch('GET', image_URL)
+      .then(res => {
+        // Showing alert after successful downloading
+        console.log('res -> ', JSON.stringify(res));
+      });
+  };
+
+  const getExtention = (filename: string) => {
+    // To get the file extension
+    return /[.]/.exec(filename) ? /[^.]+$/.exec(filename) : undefined;
+  };
+
   const closeImageShareModal = () => {
     setIsImageShareVisible(false);
     dispatch(imageSelectionOff());
@@ -500,7 +546,7 @@ export const AlbumDetail = () => {
               <Text>|</Text>
               <Text
                 style={styles.modalButtonOk}
-                onPress={() => closeImageDownloadModal()}>
+                onPress={() => handledownloadImage()}>
                 다운로드
               </Text>
             </View>
