@@ -1,6 +1,10 @@
 import React from 'react';
 import { StyleSheet, TextInput, View } from 'react-native';
+import { useDebouncedCallback } from 'use-debounce';
+
 import CustomText from './CustomText';
+
+const DEBOUNCE_SEC = 500;
 
 type InputProps = {
   maxLength?: number;
@@ -23,9 +27,9 @@ const Input: React.FC<InputProps> = ({
   errorMessage,
   onInputChange,
 }) => {
-  const handleInputChange = (text: string) => {
+  const handleInputChange = useDebouncedCallback((text: string) => {
     onInputChange?.(text);
-  };
+  }, DEBOUNCE_SEC);
 
   return (
     <View

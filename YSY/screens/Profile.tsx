@@ -8,7 +8,12 @@ import {
   Image,
 } from 'react-native';
 import { globalStyles } from '../style/global';
-import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
+import {
+  RouteProp,
+  useNavigation,
+  useRoute,
+  useFocusEffect,
+} from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { PERMISSIONS } from 'react-native-permissions';
 import Modal from 'react-native-modal';
@@ -148,6 +153,10 @@ const Profile = () => {
 
     closeModal();
   };
+
+  useFocusEffect(() => {
+    setUser(params.user);
+  });
 
   return (
     <View style={styles.container}>
