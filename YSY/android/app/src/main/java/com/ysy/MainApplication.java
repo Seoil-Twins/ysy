@@ -12,7 +12,6 @@ import java.util.List;
 
 import com.reactnativecommunity.geolocation.GeolocationPackage;
 import com.reactantivefs.window.RNFS.RNFSPackage;
-import com.RNFetchBlob.RNFetchBlobPackage;
 
 public class MainApplication extends Application implements ReactApplication {
 
@@ -30,7 +29,6 @@ public class MainApplication extends Application implements ReactApplication {
           // Packages that cannot be autolinked yet can be added manually here, for example:
           packages.add(new GeolocationPackage()); // <== add this line
           packages.add(new RNFSPackage());
-          packages.add(new RNFetchBlobPackage());
           // packages.add(new MyReactNativePackage());
           return packages;
         }
