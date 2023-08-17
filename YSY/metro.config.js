@@ -15,6 +15,9 @@ const config = {
   resolver: {
     assetExts: assetExts.filter(ext => ext !== 'svg'),
     sourceExts: [...sourceExts, 'svg'],
+    extraNodeModules: {
+      'react-native-reanimated-carousel': path.resolve(__dirname, 'node_modules/react-native-reanimated-carousel'),
+    },
   },
 };
 
