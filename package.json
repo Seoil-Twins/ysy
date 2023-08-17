@@ -1,0 +1,5 @@
+{
+  "dependencies": {
+    "react-native-reanimated": "^2.9.1"
+  }
+}
