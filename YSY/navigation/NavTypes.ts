@@ -1,3 +1,4 @@
+import { FAQ } from '../types/faq';
 import { User } from '../types/user';
 import { LoginOptions } from '../util/login';
 
@@ -35,6 +36,11 @@ export type SettingsNavType = {
   };
   Notice: undefined;
   ServiceCenter: undefined;
+  Inquiry: undefined;
+  InquiryHistory: undefined;
+  FAQ: {
+    info: FAQ;
+  };
   Alram: undefined;
   Location: undefined;
   TermsOfUse: undefined;

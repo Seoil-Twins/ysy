@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Platform, StyleSheet, Pressable } from 'react-native';
+import { Platform, StyleSheet, Pressable, View } from 'react-native';
 import ImageCropPicker, { ImageOrVideo } from 'react-native-image-crop-picker';
 import { PERMISSIONS } from 'react-native-permissions';
 
@@ -11,16 +11,28 @@ import CustomText from './CustomText';
 
 type ImagePickerProps = {
   placeholder: string;
-  onInputChange?: (value: ImageOrVideo) => void;
+  cropping?: boolean;
+  width?: number;
+  height?: number;
+  multiple?: boolean;
+  isError?: boolean;
+  errorMessage?: string;
+  onInputChange?: (value: ImageOrVideo | ImageOrVideo[]) => void;
 };
 
 const ImagePicker: React.FC<ImagePickerProps> = ({
   placeholder,
+  cropping = true,
+  width = 360,
+  height = 640,
+  multiple = false,
+  isError = false,
+  errorMessage,
   onInputChange,
 }) => {
-  const [value, setValue] = useState('');
+  const [values, setValues] = useState<string[]>([]);
 
-  const onSuccess = (image: ImageOrVideo) => {
+  const onSuccess = (images: ImageOrVideo | ImageOrVideo[]) => {
     // Formdata를 통해 전송
     /**
      * {
@@ -38,9 +50,21 @@ const ImagePicker: React.FC<ImagePickerProps> = ({
         "width":360
        }
      */
-    const name = image.path.substring(image.path.lastIndexOf('/') + 1);
-    setValue(name);
-    onInputChange?.(image);
+    if (Array.isArray(images)) {
+      const newValues: string[] = [];
+
+      images.forEach((image: ImageOrVideo) => {
+        const name = image.path.substring(image.path.lastIndexOf('/') + 1);
+        newValues.push(name);
+      });
+
+      setValues(newValues);
+      onInputChange?.(images);
+    } else {
+      const name = images.path.substring(images.path.lastIndexOf('/') + 1);
+      setValues([name]);
+      onInputChange?.(images);
+    }
   };
 
   const onError = async (error: any) => {
@@ -52,46 +76,82 @@ const ImagePicker: React.FC<ImagePickerProps> = ({
   };
 
   const showImagePicker = () => {
-    ImageCropPicker.openPicker({
-      width: 360,
-      height: 600,
-      cropping: true,
-    })
-      .then(onSuccess)
-      .catch(onError);
+    if (cropping) {
+      ImageCropPicker.openPicker({
+        width: width,
+        height: height,
+        cropping: true,
+        multiple: multiple,
+      })
+        .then(onSuccess)
+        .catch(onError);
+    } else {
+      ImageCropPicker.openPicker({
+        cropping: false,
+        multiple: multiple,
+        maxFiles: 5,
+      })
+        .then(onSuccess)
+        .catch(onError);
+    }
   };
 
   return (
-    <Pressable style={styles.container} onPress={showImagePicker}>
-      {value === '' ? (
-        <CustomText size={16} color="#999999" weight="regular">
-          {placeholder}
+    <View
+      style={[
+        styles.container,
+        isError ? { marginBottom: 30 } : { marginBottom: 15 },
+      ]}>
+      <Pressable
+        onPress={showImagePicker}
+        style={[
+          styles.input,
+          isError ? styles.errorBorder : styles.inputBorder,
+        ]}>
+        {values.length <= 0 ? (
+          <CustomText size={16} color="#999999" weight="regular">
+            {placeholder}
+          </CustomText>
+        ) : (
+          values.map((value: string, index: number) => (
+            <CustomText size={16} weight="regular" numberOfLine={1} key={index}>
+              {value}
+            </CustomText>
+          ))
+        )}
+        <ImagePickerSVG style={styles.img} />
+      </Pressable>
+      {isError ? (
+        <CustomText size={14} weight="regular" color="#FF6D70">
+          {errorMessage}
         </CustomText>
-      ) : (
-        <CustomText size={16} weight="regular" numberOfLine={1}>
-          {value}
-        </CustomText>
-      )}
-      <ImagePickerSVG style={styles.img} />
-    </Pressable>
+      ) : null}
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
+    justifyContent: 'center',
+  },
+  input: {
     position: 'relative',
     justifyContent: 'center',
-    marginBottom: 15,
+    paddingVertical: 5,
     paddingLeft: 15,
     paddingRight: 45,
-    height: 50,
-    maxHeight: 50,
+    minHeight: 50,
     borderWidth: 1,
-    borderColor: '#DDDDDD',
   },
   img: {
     position: 'absolute',
     right: 15,
+  },
+  inputBorder: {
+    borderColor: '#DDDDDD',
+  },
+  errorBorder: {
+    borderColor: '#FF6D70',
   },
 });
 

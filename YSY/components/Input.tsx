@@ -12,6 +12,7 @@ type InputProps = {
   placeholder: string;
   editable?: boolean;
   mode?: 'text' | 'numeric' | 'tel' | 'search' | 'email';
+  multipleLine?: boolean;
   isError?: boolean;
   errorMessage?: string;
   onInputChange?: (text: string) => void;
@@ -23,6 +24,7 @@ const Input: React.FC<InputProps> = ({
   placeholder,
   editable,
   mode,
+  multipleLine = false,
   isError = false,
   errorMessage,
   onInputChange,
@@ -34,7 +36,7 @@ const Input: React.FC<InputProps> = ({
   return (
     <View
       style={[
-        styles.container,
+        multipleLine ? styles.multiplelineContainer : styles.container,
         isError ? { marginBottom: 30 } : { marginBottom: 15 },
       ]}>
       <TextInput
@@ -45,6 +47,8 @@ const Input: React.FC<InputProps> = ({
         maxLength={maxLength}
         editable={!editable ? editable : true}
         inputMode={mode ? mode : 'text'}
+        multiline={multipleLine}
+        numberOfLines={multipleLine ? 4 : 1}
         onChangeText={handleInputChange}
       />
       {isError ? (
@@ -59,6 +63,10 @@ const Input: React.FC<InputProps> = ({
 const styles = StyleSheet.create({
   container: {
     height: 50,
+  },
+  multiplelineContainer: {
+    textAlignVertical: 'top',
+    maxHeight: 150,
   },
   input: {
     paddingLeft: 15,

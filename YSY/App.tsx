@@ -41,6 +41,9 @@ import Loading from './components/Loading';
 
 import { config } from './navigation/config';
 import EditProfile from './screens/EditProfile';
+import Inquiry from './screens/Inquiry';
+import InquiryHistory from './screens/InquiryHistory';
+import FAQ from './screens/FAQ';
 
 const AppWrapper = () => {
   return (
@@ -166,6 +169,9 @@ const App = () => {
               <Stack.Screen name="Alram" component={Alram} />
               <Stack.Screen name="Notice" component={Notice} />
               <Stack.Screen name="ServiceCenter" component={ServiceCenter} />
+              <Stack.Screen name="Inquiry" component={Inquiry} />
+              <Stack.Screen name="InquiryHistory" component={InquiryHistory} />
+              <Stack.Screen name="FAQ" component={FAQ} />
               <Stack.Screen name="Location" component={Location} />
               <Stack.Screen name="TermsOfUse" component={TermsOfUse} />
               <Stack.Screen
