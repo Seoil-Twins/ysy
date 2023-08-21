@@ -33,7 +33,6 @@ import Profile from './screens/Profile';
 import Alram from './screens/Alram';
 import Notice from './screens/Notice';
 import ServiceCenter from './screens/ServiceCenter';
-import Location from './screens/Location';
 import TermsOfPrivacyPolicy from './screens/TermsOfPrivacyPolicy';
 import TermsOfUse from './screens/TermsOfUse';
 
@@ -172,7 +171,6 @@ const App = () => {
               <Stack.Screen name="Inquiry" component={Inquiry} />
               <Stack.Screen name="InquiryHistory" component={InquiryHistory} />
               <Stack.Screen name="FAQ" component={FAQ} />
-              <Stack.Screen name="Location" component={Location} />
               <Stack.Screen name="TermsOfUse" component={TermsOfUse} />
               <Stack.Screen
                 name="TermsOfPrivacyPolicy"

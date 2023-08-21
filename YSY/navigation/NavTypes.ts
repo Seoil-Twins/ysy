@@ -42,7 +42,6 @@ export type SettingsNavType = {
     info: FAQ;
   };
   Alram: undefined;
-  Location: undefined;
   TermsOfUse: undefined;
   TermsOfPrivacyPolicy: undefined;
 };
