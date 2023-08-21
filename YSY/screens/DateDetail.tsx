@@ -12,6 +12,7 @@ import {
 import Carousel from 'react-native-reanimated-carousel';
 import KakaoShareLink from 'react-native-kakao-share-link';
 import { RouteProp, useRoute } from '@react-navigation/native';
+import { useDebouncedCallback } from 'use-debounce';
 
 import { Date } from '../types/date';
 import { DateNavType } from '../navigation/NavTypes';
@@ -42,7 +43,6 @@ const DateDetail = () => {
   const [isOpenDesc, setIsOpenDesc] = useState<boolean>(false);
   const [numberOfLine, setNumberOfLine] = useState<number>(3);
   const [rotation] = useState(new Animated.Value(0));
-  const [loading, setLoading] = useState<boolean>(false);
 
   const rotateAnimation = () => {
     Animated.timing(rotation, {
@@ -79,18 +79,9 @@ const DateDetail = () => {
     }
   };
 
-  const emitFavorite = async () => {
-    if (loading) {
-      return;
-    }
-    setLoading(true);
+  const emitFavorite = useDebouncedCallback(async () => {
     await setFavorite();
-
-    // throttle 적용
-    setTimeout(() => {
-      setLoading(false);
-    }, 500);
-  };
+  }, 500);
 
   const onPressShare = async () => {
     if (!dateInfo) {
