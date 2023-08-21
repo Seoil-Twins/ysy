@@ -29,10 +29,13 @@ const fetchFAQ = async () => {
         <ul>
           <li>어쩌구 저쩌구의 시스템</li>
           <li>저쩌구 어쩌구의 시스템</li>
-          <ul>
-            <li>이러한 시스템 1</li>
-            <li>이러한 시스템 2</li>
-          </ul>
+          <li>
+            뭘까요
+            <ul>
+              <li>이러한 시스템 1</li>
+              <li>이러한 시스템 2</li>
+            </ul>
+          </li>
         </ul>
       `,
       createdTime: '2023-02-08 05:08:37',

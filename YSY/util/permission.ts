@@ -35,8 +35,11 @@ export const checkPermission = async (type: Permission) => {
         openAppSettings();
         break;
     }
+
+    return result;
   } catch (error) {
     console.log('Check Permissions : ', error);
+    return false;
   }
 };
 
