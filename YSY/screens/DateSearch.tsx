@@ -17,6 +17,9 @@ import {
 } from '../util/asyncStorage';
 
 import SadSVG from '../assets/icons/sad.svg';
+import NoItem from '../components/NoItem';
+
+const errorDesc = ['검색 기록이 없습니다.', '원하시는 장소를 검색해보세요!'];
 
 const DateSearch = () => {
   const navigation = useNavigation<StackNavigationProp<DateNavType>>();
@@ -97,19 +100,7 @@ const DateSearch = () => {
           <DateSearchItem key={idx} text={item} onPress={moveDateDeatil} />
         ))
       ) : (
-        <View style={styles.error}>
-          <SadSVG width={70} height={70} />
-          <CustomText
-            size={18}
-            weight="regular"
-            color="#CCCCCC"
-            style={{ marginTop: 15 }}>
-            검색 기록이 없습니다.
-          </CustomText>
-          <CustomText size={18} weight="regular" color="#CCCCCC">
-            원하시는 장소를 검색해보세요!
-          </CustomText>
-        </View>
+        <NoItem icon={SadSVG} descriptions={errorDesc} />
       )}
     </View>
   );
