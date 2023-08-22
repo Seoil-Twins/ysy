@@ -106,9 +106,8 @@ const Profile = () => {
     const response = await fetchEditProfile(image.path);
 
     if (response.statusCode === 204) {
-      const newUser = { ...user };
-      newUser.profile = image.path;
-      setUser(newUser);
+      user.profile = image.path;
+      setUser({ ...user });
     } else {
       console.log('Error!');
     }
@@ -260,7 +259,7 @@ const styles = StyleSheet.create({
   bottomModal: {
     justifyContent: 'flex-end',
     margin: 0,
-    zIndex: 90999,
+    zIndex: 9999,
   },
 });
 
