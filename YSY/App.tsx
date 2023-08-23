@@ -19,13 +19,9 @@ import { useAppSelector, useAppDispatch } from './redux/hooks';
 import { login, logout } from './features/loginStatusSlice';
 import { albumSelectionOn, albumSelectionOff } from './features/albumSlice';
 
-import { config } from './navigation/config';
 import Nav from './navigation/Nav';
 import AlbumNav from './navigation/AlbumNav';
 import ImageNav from './navigation/AlbumImageNav';
-
-import Loading from './components/Loading';
-
 import Tutorial from './screens/Tutorial';
 import ConnectCouple from './screens/ConnectCouple';
 import AdditionalInformation from './screens/AdditionalInformation';
@@ -39,12 +35,14 @@ import Notice from './screens/Notice';
 import ServiceCenter from './screens/ServiceCenter';
 import TermsOfPrivacyPolicy from './screens/TermsOfPrivacyPolicy';
 import TermsOfUse from './screens/TermsOfUse';
+
+import Loading from './components/Loading';
+
+import { config } from './navigation/config';
 import EditProfile from './screens/EditProfile';
 import Inquiry from './screens/Inquiry';
 import InquiryHistory from './screens/InquiryHistory';
 import FAQ from './screens/FAQ';
-import Favorite from './screens/Favorite';
-import Recent from './screens/Recent';
 
 const AppWrapper = () => {
   return (
@@ -178,8 +176,6 @@ const App = () => {
                 name="TermsOfPrivacyPolicy"
                 component={TermsOfPrivacyPolicy}
               />
-              <Stack.Screen name="Favorite" component={Favorite} />
-              <Stack.Screen name="Recent" component={Recent} />
             </Stack.Navigator>
           ) : (
             <Stack.Navigator

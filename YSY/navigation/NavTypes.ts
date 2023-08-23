@@ -22,14 +22,11 @@ export type DateNavType = {
   DateDetail: {
     dateId: number;
   };
-  More: undefined;
-  Settings: undefined;
 };
 
 export type SettingsNavType = {
   Album: undefined;
   Date: undefined;
-  More: undefined;
   Settings: undefined;
   Profile: {
     user: User;
@@ -47,6 +44,4 @@ export type SettingsNavType = {
   Alram: undefined;
   TermsOfUse: undefined;
   TermsOfPrivacyPolicy: undefined;
-  Favorite: undefined;
-  Recent: undefined;
 };
