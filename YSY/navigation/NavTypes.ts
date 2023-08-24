@@ -23,6 +23,7 @@ export type DateNavType = {
     dateId: number;
   };
   More: undefined;
+  Recent: undefined;
   Settings: undefined;
 };
 

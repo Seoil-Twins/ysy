@@ -24,6 +24,10 @@ const More = () => {
     navigation.navigate('Favorite');
   };
 
+  const moveRecent = () => {
+    navigation.navigate('Recent');
+  };
+
   return (
     <View>
       <SettingsHeader style={globalStyles.plpr20} />
@@ -38,7 +42,7 @@ const More = () => {
             찜
           </CustomText>
         </Pressable>
-        <Pressable style={styles.itemBox}>
+        <Pressable style={styles.itemBox} onPress={moveRecent}>
           <RecentSVG style={styles.icon} width={ICON_SIZE} height={ICON_SIZE} />
           <CustomText size={16} weight="regular" style={styles.text}>
             최근에 본 장소
