@@ -15,16 +15,6 @@ const Calendar = () => {
 
   return (
     <View style={styles.container}>
-      <View
-        style={{
-          flexDirection: 'row',
-          height: 50,
-          backgroundColor: 'white',
-          justifyContent: 'flex-end',
-          alignItems: 'center',
-        }}>
-        <CalendarHeader />
-      </View>
       <MyCalendar onDateSelect={handleDayPress} />
     </View>
   );

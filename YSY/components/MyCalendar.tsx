@@ -1,10 +1,16 @@
 import React, { useRef, useState } from 'react';
-import { View, StyleSheet, Text, PanResponder, Pressable } from 'react-native';
+import { View, StyleSheet, Text, PanResponder, Pressable, FlatList, Modal } from 'react-native';
 import { isSameDay } from 'date-fns';
 import {
   heightPercentageToDP as hp,
   widthPercentageToDP as wp,
 } from 'react-native-responsive-screen';
+import SettingSvg from '../assets/icons/settings.svg';
+import CalendarHeader from './CalendarHeader';
+
+import BackSvg from '../assets/icons/back.svg';
+import CalendarSvg from '../assets/icons/calendar.svg';
+import { TextInput } from 'react-native-gesture-handler';
 
 const screenWidth = wp('100%');
 const screenHeight = hp('100%');
@@ -13,9 +19,22 @@ interface CalendarProps {
   onDateSelect: (date: Date) => void;
 }
 
+type Schedule = {
+  date: string;
+  time: string;
+  hl: string;
+  title: string;
+  desc: string;
+  color: string;
+};
+
 const MyCalendar: React.FC<CalendarProps> = ({ onDateSelect }) => {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date()); // 현재
   const [showDetailView, setShowDetailView] = useState(false);
+  const [dateCellFlex, setDateCellFlex] = useState(false);
+  const [scheduleList, setScheduleList] = useState<Schedule[]>([]);
+  const [selectedScheduleList, setSelectedScheduleList] = useState<Schedule[]>([]);
+  const [addScheVisible, setAddScheVisible] = useState(false);
   const [currentMonth, setCurrentMonth] = useState<number>(
     new Date().getMonth(),
   );
@@ -26,50 +45,53 @@ const MyCalendar: React.FC<CalendarProps> = ({ onDateSelect }) => {
 
   const today = new Date();
 
-  const panResponder = useRef(
-    PanResponder.create({
-      onStartShouldSetPanResponder: () => true,
-      // onPanResponderMove: (evt, gestureState) => {
-      //   if(panning)
-      //     {
-      //       return;
-      //     }
-      //   setPanning(true); // 스와이프 동작 시작
-      //   console.log('swipe');
-      //   if (Math.abs(gestureState.dx) > 100) {
-      //     if (gestureState.dx > 100) {
-      //       console.log('swipe1');
-      //       handlePrevMonth();
-      //     } else {
-      //       console.log('swipe2');
-      //       handleNextMonth();
-      //     }
-      //     console.log('swipe');
-      //   }
-      //   setTimeout(() => {
-      //       setPanning(false);
-      //   }, 1000);
-      // },
-      // onPanResponderEnd: () => {
-      //   console.log('cex');
-      //   // if (panning) {
-      //   //   setPanning(false); // 스와이프 동작 종료
-      //   // }
-      // },
-      onPanResponderStart: (e, gestureState) => {
-        console.log('start');
-      },
-      onPanResponderEnd: (e, gestureState) => {
-        console.log('end');
-      },
-    }),
-  ).current;
+  // const panResponder = useRef(
+  //   PanResponder.create({
+  //     onStartShouldSetPanResponder: () => true,
+  //     onPanResponderMove: (evt, gestureState) => {
+  //       console.log('앙');
+  //       if(panning)
+  //         {
+  //           return;
+  //         }
+  //         console.log('앙');
+  //       setPanning(true); // 스와이프 동작 시작
+  //       console.log('swipe');
+  //       if (Math.abs(gestureState.dx) > 30) {
+  //         if (gestureState.dx > 30) {
+  //           console.log('swipe1');
+  //           handlePrevMonth();
+  //         } else {
+  //           console.log('swipe2');
+  //           handleNextMonth();
+  //         }
+  //         console.log('swipe');
+  //       }
+  //       setTimeout(() => {
+  //           setPanning(false);
+  //       }, 1000);
+  //     },
+  //     onPanResponderEnd: () => {
+  //       console.log('cex');
+  //       // if (panning) {
+  //       //   setPanning(false); // 스와이프 동작 종료
+  //       // }
+  //     },
+  //     onPanResponderStart: (e, gestureState) => {
+  //       console.log('start');
+  //     },
+  //     onPanResponderEnd: (e, gestureState) => {
+  //       console.log('end');
+  //     },
+  //   }),
+  // ).current;
 
   const handlePrevMonth = () => {
     if (currentMonth <= 0) {
       setCurrentYear(currentYear - 1);
     }
     setCurrentMonth(prevMonth => (prevMonth === 0 ? 11 : prevMonth - 1));
+    getSchedule(currentMonth);
     getMonthDates(currentYear, currentMonth);
   };
 
@@ -78,14 +100,21 @@ const MyCalendar: React.FC<CalendarProps> = ({ onDateSelect }) => {
       setCurrentYear(currentYear + 1);
     }
     setCurrentMonth(prevMonth => (prevMonth === 11 ? 0 : prevMonth + 1));
+    getSchedule(currentMonth);
     getMonthDates(currentYear, currentMonth);
   };
 
   const handleDateSelect = (date: Date) => {
     if (isSameDay(selectedDate, date)) {
       console.log('more Click');
+      setDateCellFlex(!dateCellFlex);
       setShowDetailView(!showDetailView);
+      filterSchedule();
     } else {
+      if (dateCellFlex && showDetailView) {
+        setDateCellFlex(!dateCellFlex);
+        setShowDetailView(!showDetailView);
+      }
       if (isSameMonth(date, currentMonth) && isSameYear(date, currentYear)) {
         console.log(date.getMonth() + ' :: ' + today.getMonth());
         setSelectedDate(date);
@@ -106,8 +135,104 @@ const MyCalendar: React.FC<CalendarProps> = ({ onDateSelect }) => {
   const isSameYear = (date1: Date, date2: number) => {
     return date1.getFullYear() === date2;
   };
+  const getSchedule = (currentMonth: number) => {
+    // currentMonth를 통해 DB에서 현재 월의 일정을 가져옴
+    console.log(selectedDate + ' :: ' + currentMonth);
+    setScheduleList([
+      {
+        date: '2023-08-14',
+        time: '7:30AM',
+        hl: '20m',
+        title: '중국집',
+        desc: '짜장면 먹기',
+        color: 'red',
+      },
+      {
+        date: '2023-08-14',
+        time: '12:30PM',
+        hl: '30m',
+        title: '파스타',
+        desc: '알리올리오 먹기',
+        color: '#CCCCCC',
+      },
+      {
+        date: '2023-08-14',
+        time: '7:30AM',
+        hl: '20m',
+        title: '중국집',
+        desc: '짜장면 먹기',
+        color: 'red',
+      },
+      {
+        date: '2023-08-14',
+        time: '12:30PM',
+        hl: '30m',
+        title: '파스타',
+        desc: '알리올리오 먹기',
+        color: '#0000FF',
+      },
+      {
+        date: '2023-08-14',
+        time: '7:30AM',
+        hl: '20m',
+        title: '중국집',
+        desc: '짜장면 먹기',
+        color: '#00FF00',
+      },
+      {
+        date: '2023-08-14',
+        time: '7:30AM',
+        hl: '20m',
+        title: '중국집',
+        desc: '짜장면 먹기',
+        color: '#00FF00',
+      },
+      {
+        date: '2023-08-14',
+        time: '7:30AM',
+        hl: '20m',
+        title: '중국집',
+        desc: '짜장면 먹기',
+        color: '#00FF00',
+      },
+      {
+        date: '2023-08-14',
+        time: '7:30AM',
+        hl: '20m',
+        title: '중국집',
+        desc: '짜장면 먹기',
+        color: '#00FF00',
+      },
+      {
+        date: '2023-08-14',
+        time: '7:30AM',
+        hl: '20m',
+        title: '중국집',
+        desc: '짜장면 먹기',
+        color: '#00FF00',
+      },
+      {
+        date: '2023-09-14',
+        time: '7:30AM',
+        hl: '20m',
+        title: '중국집',
+        desc: '짜장면 먹기',
+        color: '#00FF00',
+      },
+      {
+        date: '2023-08-15',
+        time: '12:30PM',
+        hl: '30m',
+        title: '파스타',
+        desc: '알리올리오 먹기',
+        color: 'red',
+      },
+    ]);
+  };
 
   const getMonthDates = (year: number, month: number): Date[] => {
+    if (scheduleList.length <= 0) getSchedule(month);
+
     const firstDay = new Date(year, month, 1);
     const lastDay = new Date(year, month + 1, 0);
     const days = [];
@@ -171,82 +296,316 @@ const MyCalendar: React.FC<CalendarProps> = ({ onDateSelect }) => {
 
   const dividedDates = divideArray(currentMonthDates, 7);
 
-  return (
-    <View style={styles.container} {...panResponder.panHandlers}>
+  const filterSchedule = () => {
+    const newSchedule = scheduleList.filter(
+      item => item.date === selectedDate.toISOString().slice(0, 10),
+    );
+    setSelectedScheduleList(newSchedule);
+  };
+
+  const drawCircle = (color: string) => {
+    return (
+      <View
+        style={{
+          width: '2%', // 원의 너비
+          height: 8, // 원의 높이
+          borderRadius: 5, // 반지름 값의 절반으로 원이 됨
+          backgroundColor: color, // 특정 색상
+          marginRight: '1%',
+        }}
+      />
+    );
+  };
+
+  const drawBar = (day: Date) => {
+    const filtedSchedule = scheduleList.filter(
+      item => item.date === day.toISOString().slice(0, 10),
+    );
+    let totalBarHeight;
+    if (showDetailView) totalBarHeight = screenHeight * 0.02;
+    else totalBarHeight = screenHeight * 0.08;
+
+    return (
       <View style={{ flex: 1 }}>
-        <View style={styles.titleContainer}>
-          {/* 이전 달로 이동하는 버튼 */}
-          <Pressable onPress={handlePrevMonth}>
-            <Text style={styles.button}>Prev</Text>
-          </Pressable>
-
-          {/* 선택된 달과 년도 표시 */}
-          <Text style={styles.title}>
-            {currentYear + ' ' + (currentMonth + 1)}
-          </Text>
-
-          {/* 다음 달로 이동하는 버튼 */}
-          <Pressable onPress={handleNextMonth}>
-            <Text style={styles.button}>Next</Text>
-          </Pressable>
+        <View
+          style={{
+            width: '100%',
+            height: totalBarHeight,
+            overflow: 'hidden', // 막대가 넘어가는 부분 숨김 처리
+          }}>
+          <FlatList
+            data={filtedSchedule}
+            keyExtractor={(item, index) => String(index)}
+            renderItem={({ item }) => RenderBar(item)}
+          />
         </View>
+      </View>
+    );
+  };
 
-        {/* 달력의 날짜들 */}
-        <View style={styles.calendarContainer}>
-          {/* 요일 표시 월화수목금토일*/}
-          <View style={styles.weekLabelsContainer}>
-            {dayOfWeekLabels.map((label, index) => (
-              <Text
-                key={index}
-                style={[
-                  styles.dayOfWeekLabel,
-                  index === 0 && { color: '#FB3838' },
-                  index === 6 && { color: '#0066FF' },
-                ]}>
-                {label}
-              </Text>
-            ))}
+  const RenderBar = (schedule: Schedule) => {
+    return (
+      <View
+        style={{
+          width: '90%', // 원의 너비
+          height: 8, // 원의 높이
+          backgroundColor: schedule.color, // 특정 색상
+          marginRight: '70%',
+          marginLeft: '5%',
+          marginTop: '10%',
+          borderRadius: 20,
+        }}
+      />
+    );
+  }
+
+  const RenderSchecule = (schedule: Schedule) => {
+    return (
+      <View
+        style={{
+          flex: 1,
+          width: screenWidth * 1,
+          height: screenHeight * 0.1,
+          marginBottom: 5,
+          alignItems: 'center',
+          justifyContent: 'flex-start',
+          flexDirection: 'row',
+        }}>
+        <View
+          style={{
+            width: screenWidth * 0.2,
+            height: '100%',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}>
+          <Text style={{ fontSize: 18 }}>{schedule.time}</Text>
+          <Text>{schedule.hl}</Text>
+        </View>
+        <View
+          style={{
+            width: '70%',
+            height: '100%',
+            alignItems: 'flex-start',
+            justifyContent: 'center',
+            marginLeft: '6%',
+            borderBottomColor: '#CCCCCC',
+            borderBottomWidth: 1,
+          }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            {drawCircle(schedule.color)}
+            <Text style={{ fontSize: 18, justifyContent: 'center' }}>
+              {schedule.title}
+            </Text>
+          </View>
+          <Text style={{ paddingLeft: '3.5%', fontSize: 12 }}>
+            {schedule.desc}
+          </Text>
+        </View>
+      </View>
+    );
+  };
+
+  return (
+    <React.Fragment>
+      <View
+        style={{
+          flexDirection: 'row',
+          height: 50,
+          backgroundColor: 'white',
+          justifyContent: 'flex-end',
+          alignItems: 'center',
+        }}>
+        <CalendarHeader openAddModal={() => setAddScheVisible(true)} />
+      </View>
+      <View style={styles.container}>
+        <View style={{ flex: 1 }}>
+          <View style={styles.titleContainer}>
+            {/* 이전 달로 이동하는 버튼 */}
+            <Pressable onPress={handlePrevMonth}>
+              <Text style={styles.button}>Prev</Text>
+            </Pressable>
+
+            {/* 선택된 달과 년도 표시 */}
+            <Text style={styles.title}>
+              {currentYear + ' ' + (currentMonth + 1)}
+            </Text>
+
+            {/* 다음 달로 이동하는 버튼 */}
+            <Pressable onPress={handleNextMonth}>
+              <Text style={styles.button}>Next</Text>
+            </Pressable>
           </View>
 
-          {dividedDates.map((week, index) => (
-            <View key={index} style={styles.weekContainer}>
-              {week.map((date, subIndex) =>
-                date ? (
-                  <Pressable
-                    key={date.toString()}
-                    onPress={() => handleDateSelect(date)}
-                    style={[
-                      styles.dateCell,
-                      isSameDay(date, selectedDate) && styles.selectedDateCell,
-                      isSameDay(date, today) && styles.todayCell,
-                      !isSameMonth(date, currentMonth) &&
-                        styles.prevNextMonthDateCell,
-                    ]}>
-                    <Text
+          {/* 달력의 날짜들 */}
+          <View style={styles.calendarContainer}>
+            {/* 요일 표시 월화수목금토일*/}
+            <View style={styles.weekLabelsContainer}>
+              {dayOfWeekLabels.map((label, index) => (
+                <Text
+                  key={index}
+                  style={[
+                    styles.dayOfWeekLabel,
+                    index === 0 && { color: '#FB3838' },
+                    index === 6 && { color: '#0066FF' },
+                  ]}>
+                  {label}
+                </Text>
+              ))}
+            </View>
+
+            {dividedDates.map((week, index) => (
+              <View key={index} style={styles.weekContainer}>
+                {week.map((date, subIndex) =>
+                  date ? (
+                    <Pressable
+                      key={date.toString()}
+                      onTouchEnd={e => {
+                        e.stopPropagation();
+                      }}
+                      onPress={() => handleDateSelect(date)}
                       style={[
-                        isSameDay(date, selectedDate) &&
-                          styles.selectedDateText,
-                        date.getDay() === 0 && styles.sundayCell, // 일요일의 스타일
-                        date.getDay() === 6 && styles.saturdayCell, // 토요일의 스타일
+                        dateCellFlex ? styles.dateCellFlex : styles.dateCell,
+                        isSameDay(date, selectedDate) && styles.selectedDateCell,
+                        isSameDay(date, today) && styles.todayCell,
+                        !isSameMonth(date, currentMonth) &&
+                          styles.prevNextMonthDateCell,
                       ]}>
-                      {date.getDate()}
-                    </Text>
-                  </Pressable>
-                ) : (
-                  <View key={subIndex} style={styles.dateCell} />
-                ),
+                      <Text
+                        style={[
+                          isSameDay(date, selectedDate) &&
+                            styles.selectedDateText,
+                          date.getDay() === 0 && styles.sundayCell, // 일요일의 스타일
+                          date.getDay() === 6 && styles.saturdayCell, // 토요일의 스타일
+                        ]}>
+                        {date.getDate()}
+                      </Text>
+                      <View>{drawBar(date)}</View>
+                    </Pressable>
+                  ) : (
+                    <View key={subIndex} style={styles.dateCell} />
+                  ),
+                )}
+              </View>
+            ))}
+          </View>
+        </View>
+
+        {showDetailView && (
+          <View style={styles.flexibleSpace}>
+            <View style={styles.detailView}>
+              {selectedScheduleList.length <= 0 ? (
+                <>
+                  <SettingSvg style={styles.sadStyle} />
+                  <Text style={styles.noneScheText}>
+                    일정이 없어요.{'\n'}일정을 추가해주세요!
+                  </Text>
+                </>
+              ) : (
+                <View style={{ alignItems: 'center' }}>
+                  <View
+                    style={{
+                      width: screenWidth * 0.9,
+                      height: '5%',
+                      alignItems: 'flex-start',
+                      justifyContent: 'center',
+                      borderBottomWidth: 1,
+                      borderColor: '#cccccc',
+                    }}>
+                    <Text>{selectedDate.toDateString()}</Text>
+                  </View>
+                  <FlatList
+                    data={selectedScheduleList}
+                    keyExtractor={(item, index) => String(index)}
+                    renderItem={({ item }) => RenderSchecule(item)}
+                  />
+                </View>
               )}
             </View>
-          ))}
-        </View>
+          </View>
+        )}
       </View>
-
-      <View style={styles.flexibleSpace}>
-        <View style={styles.detailView}>
-          <Text>This is the toggleable view.</Text>
+      <Modal // 앨범 합치기
+        visible={addScheVisible}
+        animationType="slide"
+        transparent={true}>
+        <View style={{ flex: 1 }}>
+          <View
+            style={{
+              flexDirection: 'row',
+              height: '5%',
+              backgroundColor: 'white',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+            }}>
+            <BackSvg
+              onPress={() => setAddScheVisible(false)}
+              style={{ marginLeft: '3%' }}
+              height={100}
+            />
+            <Text style={{ marginRight: '3%', fontSize: 18, color: '#CCCCCC' }}>추가</Text>
+          </View>
+          <View style={{ flex: 1, backgroundColor: 'white' }}>
+            <View style={{ height: '20%', alignItems: 'flex-start', justifyContent:'center'}}>
+              <Text style = {{color:'#222222', fontWeight:'bold', fontSize: 24, margin: '3%'}}>일정 추가</Text>
+              <Text
+                style={{
+                  color: '#CCCCCC',
+                  fontWeight: 'bold',
+                  fontSize: 16,
+                  marginLeft: '3%',
+                }}>
+                새로운 일정을 추가합니다.{'\n'}연인과 함께 또는 공유하는 일정을
+                추가해주세요!
+              </Text>
+            </View>
+            <View style={{ backgroundColor:'white', alignItems: 'flex-start', justifyContent:'center', padding: '3%'}}>
+              <TextInput
+                style={styles.input}
+                maxLength={20}
+                onChangeText={() => {}}
+                placeholder="제목"
+              />
+              {/* <Input placeholder={'제목'} /> */}
+              <TextInput
+                style={styles.inputDesc}
+                multiline={true}
+                textAlignVertical="top"
+                onChangeText={() => {}}
+                placeholder="설명"
+              />
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <TextInput
+                  style={[styles.input, { color: 'black' }]}
+                  onChangeText={() => {}}
+                  defaultValue={
+                    selectedDate.toISOString().slice(0, 10) + ' 07:30 AM'
+                  }
+                  editable={false}
+                />
+                <CalendarSvg
+                  style={{ marginRight: 20, position: 'absolute', right: 0 }}
+                  width={50}
+                  height={50}
+                />
+              </View>
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <TextInput
+                  style={styles.input}
+                  onChangeText={() => {}}
+                  placeholder='종료 날짜'
+                  editable={false}
+                />
+                <CalendarSvg
+                  style={{ marginRight: 20, position: 'absolute', right: 0 }}
+                  width={50}
+                  height={50}
+                />
+              </View>
+            </View>
+          </View>
         </View>
-      </View>
-    </View>
+      </Modal>
+    </React.Fragment>
   );
 };
 
@@ -281,6 +640,14 @@ const styles = StyleSheet.create({
   dateCell: {
     width: screenWidth * 0.12,
     height: screenHeight * 0.1,
+    marginBottom: screenHeight * 0.02,
+    alignItems: 'center',
+    justifyContent: 'flex-start',
+    margin: 2,
+  },
+  dateCellFlex: {
+    width: screenWidth * 0.12,
+    height: screenHeight * 0.04,
     marginBottom: screenHeight * 0.02,
     alignItems: 'center',
     justifyContent: 'flex-start',
@@ -326,7 +693,6 @@ const styles = StyleSheet.create({
   },
   prevNextMonthDateCell: {
     width: screenWidth * 0.12,
-    height: screenHeight * 0.1,
     marginBottom: screenHeight * 0.02,
     margin: 2,
     opacity: 0.4, // 회색으로 처리하기 위한 투명도 설정
@@ -343,14 +709,48 @@ const styles = StyleSheet.create({
   },
   flexibleSpace: {
     flex: 1,
-    zIndex: 1,
     width: screenWidth * 1,
-    height: screenHeight * 1,
   },
 
   detailView: {
-    backgroundColor: 'yellow',
-    padding: 10,
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    height: screenHeight * 1,
+  },
+  sadStyle: {
+    marginBottom: 10,
+    width: 48,
+  },
+  noneScheText: {
+    color: '#CCCCCC',
+    textAlign: 'center',
+    fontSize: 18,
+  },
+  circle: {
+    width: '2%', // 원의 너비
+    height: 8, // 원의 높이
+    borderRadius: 5, // 반지름 값의 절반으로 원이 됨
+    backgroundColor: 'blue', // 특정 색상
+    marginRight: '1%',
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: '#CCCCCC',
+    width: screenWidth - screenWidth * 0.1,
+    height: screenHeight * 0.1,
+    padding: 20,
+    marginBottom: 10,
+    fontSize: 24,
+  },
+  inputDesc: {
+    borderWidth: 1,
+    borderColor: '#CCCCCC',
+    width: screenWidth - screenWidth * 0.1,
+    height: screenHeight * 0.2,
+    padding: 20,
+    marginBottom: 10,
+    fontSize: 24,
   },
 });
 

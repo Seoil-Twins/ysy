@@ -37,10 +37,21 @@ export const Album = () => {
   const [isDownloadVisible, setIsDownloadVisible] = useState(false);
   const [isMergeVisible, setIsMergeVisible] = useState(false);
   const [isDeleteVisible, setIsDeleteVisible] = useState(false);
+  const [isMergeNameVisible, setIsMergeNameVisible] = useState(false);
 
   const [selectedAlbums, setSelectedAlbums] = useState<string[]>([]);
   const [selectedImages, setSelectedImages] = useState<string[]>([]);
   const [albumImages, setAlbumImages] = useState<string[]>([]);
+  const [dummyFolder, setDummyFolder] = useState<string[]>([
+    'https://fastly.picsum.photos/id/179/200/200.jpg?hmac=I0g6Uht7h-y3NHqWA4e2Nzrnex7m-RceP1y732tc4Lw',
+    'https://fastly.picsum.photos/id/803/200/300.jpg?hmac=v-3AsAcUOG4kCDsLMlWF9_3Xa2DTODGyKLggZNvReno',
+    'https://fastly.picsum.photos/id/999/200/300.jpg?hmac=XqjgMZW5yK4MjHpQJFs_TiRodRNf9UVKjJiGnDJV8GI',
+    'https://fastly.picsum.photos/id/600/200/300.jpg?hmac=Ub3Deb_eQNe0Un7OyE33D79dnextn3M179L0nRkv1eg',
+    'https://fastly.picsum.photos/id/193/200/300.jpg?hmac=b5ZG1TfdndbrnQ8UJbIu-ykB2PRWv0QpHwehH0pqMgE',
+    'https://fastly.picsum.photos/id/341/200/300.jpg?hmac=tZpxFpS1LmFfC4e_ChqA5I8JfUfJuwH3oZvmQ58SzHc',
+    'https://fastly.picsum.photos/id/387/200/300.jpg?hmac=JlKyfJE4yZ_jxmWXH5sNYl7JdDfP04DOk-hye4p_wtk',
+    'https://fastly.picsum.photos/id/863/200/300.jpg?hmac=4kin1N4a7dzocUZXCwLWHewLobhw1Q6_e_9E3Iy3n0I',
+  ]);
 
   const navigation = useNavigation<StackNavigationProp<AlbumTypes>>();
 
@@ -254,8 +265,43 @@ export const Album = () => {
 
   const closeMergeModal = () => {
     setIsMergeVisible(false);
+    dispatch(albumFunc('Album'));
     dispatch(albumSelectionOff());
     // setActiveTab('AlbumModal');
+  };
+
+  const openMergeNameModal = () => {
+    closeMergeModal();
+    setIsMergeNameVisible(true);
+  };
+
+  const handleMerge = async (newAlbumName: string) => {
+    renewMergeAlbum(selectedAlbums, newAlbumName);
+    console.log('after' + dummyFolder);
+    setIsMergeNameVisible(false);
+    setIsMergeVisible(false);
+  };
+
+  const createNewAlbumDetail = (
+    seletedAlbumNames: string[],
+    newAlbumName: string,
+  ) => {
+    // selectedAlbumNames와 NewAlbumName을 통해 제물들의 이미지들을 하나로 모은 테이블을 생성한는 sql을 날림.
+  };
+
+  const renewMergeAlbum = async (
+    albumNames: string[],
+    newAlbumName: string,
+  ) => {
+    const newData = await dummyFolder.filter(
+      item => !albumNames.includes(item),
+    ); // 데이터 삭제로직
+    createNewAlbumDetail(albumNames, newAlbumName);
+    newData.push(
+      'https://fastly.picsum.photos/id/855/500/500.jpg?hmac=TOLIBgvj-ag8FMNpBsnbDWdmC-6i_R9jFJh0qSSBUK8');
+    setSelectedAlbums([]);
+
+    setDummyFolder(newData);
   };
 
   const closeDeleteModal = () => {
@@ -269,17 +315,7 @@ export const Album = () => {
     closeSortModal();
   };
 
-  const dummyFolder = [
-    'https://fastly.picsum.photos/id/179/200/200.jpg?hmac=I0g6Uht7h-y3NHqWA4e2Nzrnex7m-RceP1y732tc4Lw',
-    'https://fastly.picsum.photos/id/803/200/300.jpg?hmac=v-3AsAcUOG4kCDsLMlWF9_3Xa2DTODGyKLggZNvReno',
-    'https://fastly.picsum.photos/id/999/200/300.jpg?hmac=XqjgMZW5yK4MjHpQJFs_TiRodRNf9UVKjJiGnDJV8GI',
-    'https://fastly.picsum.photos/id/600/200/300.jpg?hmac=Ub3Deb_eQNe0Un7OyE33D79dnextn3M179L0nRkv1eg',
-    'https://fastly.picsum.photos/id/193/200/300.jpg?hmac=b5ZG1TfdndbrnQ8UJbIu-ykB2PRWv0QpHwehH0pqMgE',
-    'https://fastly.picsum.photos/id/341/200/300.jpg?hmac=tZpxFpS1LmFfC4e_ChqA5I8JfUfJuwH3oZvmQ58SzHc',
-    'https://fastly.picsum.photos/id/387/200/300.jpg?hmac=JlKyfJE4yZ_jxmWXH5sNYl7JdDfP04DOk-hye4p_wtk',
-    'https://fastly.picsum.photos/id/863/200/300.jpg?hmac=4kin1N4a7dzocUZXCwLWHewLobhw1Q6_e_9E3Iy3n0I',
-  ];
-
+  
   return (
     <React.Fragment>
       <View style={{ flex: 1 }}>
@@ -468,7 +504,7 @@ export const Album = () => {
               <Text>|</Text>
               <Text
                 style={styles.modalButtonOk}
-                onPress={() => closeMergeModal()}>
+                onPress={() => openMergeNameModal()}>
                 합치기
               </Text>
             </View>
@@ -498,6 +534,37 @@ export const Album = () => {
                 style={styles.modalButtonOk_red}
                 onPress={() => closeDeleteModal()}>
                 삭제
+              </Text>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      <Modal // Merge를 통한 새로운 앨범명 설정
+        visible={isMergeNameVisible}
+        animationType="slide"
+        transparent={true}>
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <Text>새로운 앨범명</Text>
+            <TextInput
+              style={styles.input}
+              onChangeText={() => {}}
+              defaultValue={'새로운 앨범'}
+            />
+            <View style={styles.buttonContainer}>
+              <Text
+                style={styles.modalButtonCancel}
+                onPress={() => {
+                  setIsMergeNameVisible(false);
+                }}>
+                취소
+              </Text>
+              <Text>|</Text>
+              <Text
+                style={styles.modalButtonOk}
+                onPress={() => handleMerge('새로운 이름')}>
+                생성
               </Text>
             </View>
           </View>
