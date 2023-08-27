@@ -19,18 +19,32 @@ import { useAppSelector, useAppDispatch } from './redux/hooks';
 import { login, logout } from './features/loginStatusSlice';
 import { albumSelectionOn, albumSelectionOff } from './features/albumSlice';
 
+import { config } from './navigation/config';
 import Nav from './navigation/Nav';
 import AlbumNav from './navigation/AlbumNav';
 import ImageNav from './navigation/AlbumImageNav';
+
+import Loading from './components/Loading';
+
 import Tutorial from './screens/Tutorial';
 import ConnectCouple from './screens/ConnectCouple';
 import AdditionalInformation from './screens/AdditionalInformation';
-
-import Loading from './components/Loading';
-import { config } from './navigation/config';
 import DateDetail from './screens/DateDetail';
 import DateSearch from './screens/DateSearch';
 import DateSearchResult from './screens/DateSearchResult';
+import Settings from './screens/Settings';
+import Profile from './screens/Profile';
+import Alram from './screens/Alram';
+import Notice from './screens/Notice';
+import ServiceCenter from './screens/ServiceCenter';
+import TermsOfPrivacyPolicy from './screens/TermsOfPrivacyPolicy';
+import TermsOfUse from './screens/TermsOfUse';
+import EditProfile from './screens/EditProfile';
+import Inquiry from './screens/Inquiry';
+import InquiryHistory from './screens/InquiryHistory';
+import FAQ from './screens/FAQ';
+import Favorite from './screens/Favorite';
+import Recent from './screens/Recent';
 
 const AppWrapper = () => {
   return (
@@ -150,6 +164,22 @@ const App = () => {
                 name="DateSearchResult"
                 component={DateSearchResult}
               />
+              <Stack.Screen name="Settings" component={Settings} />
+              <Stack.Screen name="Profile" component={Profile} />
+              <Stack.Screen name="EditProfile" component={EditProfile} />
+              <Stack.Screen name="Alram" component={Alram} />
+              <Stack.Screen name="Notice" component={Notice} />
+              <Stack.Screen name="ServiceCenter" component={ServiceCenter} />
+              <Stack.Screen name="Inquiry" component={Inquiry} />
+              <Stack.Screen name="InquiryHistory" component={InquiryHistory} />
+              <Stack.Screen name="FAQ" component={FAQ} />
+              <Stack.Screen name="TermsOfUse" component={TermsOfUse} />
+              <Stack.Screen
+                name="TermsOfPrivacyPolicy"
+                component={TermsOfPrivacyPolicy}
+              />
+              <Stack.Screen name="Favorite" component={Favorite} />
+              <Stack.Screen name="Recent" component={Recent} />
             </Stack.Navigator>
           ) : (
             <Stack.Navigator

@@ -76,7 +76,11 @@ const ConnectCouple = () => {
     setDate(date);
   };
 
-  const changeImagePicker = (image: ImageOrVideo) => {
+  const changeImagePicker = (image: ImageOrVideo | ImageOrVideo[]) => {
+    if (Array.isArray(image)) {
+      return;
+    }
+
     setImage(image.path);
   };
 

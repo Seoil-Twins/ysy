@@ -11,7 +11,6 @@ import {
   StyleSheet,
   TouchableOpacity,
   Dimensions,
-  Image,
   Pressable,
 } from 'react-native';
 import AppIntroSlider from 'react-native-app-intro-slider';
@@ -27,6 +26,9 @@ import GoogleOAuth from '@react-native-firebase/auth';
 import FirstTutorialSVG from '../assets/icons/tutorial_love.svg';
 import SecondTutorialSVG from '../assets/icons/tutorial_album.svg';
 import ThirdTutorialSVG from '../assets/icons/tutorial_place.svg';
+import KakaoLoginBtnSVG from '../assets/icons/kakao_login_btn.svg';
+import NaverLoginBtnSVG from '../assets/icons/naver_login_btn.svg';
+import GoogleLoginBtnSVG from '../assets/icons/google_login_btn.svg';
 
 import CustomText from '../components/CustomText';
 
@@ -403,19 +405,13 @@ const Tutorial = () => {
           </View>
           <View style={styles.loginBox}>
             <Pressable onPress={kakaoLogin}>
-              <Image
-                source={require('../assets/icons/kakao_login_btn.png')}
-                style={styles.mb15}
-              />
+              <KakaoLoginBtnSVG style={styles.mb15} />
             </Pressable>
             <Pressable onPress={naverLogin}>
-              <Image
-                source={require('../assets/icons/naver_login_btn.png')}
-                style={styles.mb15}
-              />
+              <NaverLoginBtnSVG style={styles.mb15} />
             </Pressable>
             <Pressable onPress={googleLogin}>
-              <Image source={require('../assets/icons/google_login_btn.png')} />
+              <GoogleLoginBtnSVG style={styles.mb15} />
             </Pressable>
           </View>
         </View>

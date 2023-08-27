@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
   StyleSheet,
   View,
@@ -7,6 +7,7 @@ import {
   Dimensions,
   Pressable,
 } from 'react-native';
+import { useDebouncedCallback } from 'use-debounce';
 
 import LoveNoneSVG from '../assets/icons/love_none.svg';
 import LoveActiveSVG from '../assets/icons/love_active.svg';
@@ -28,21 +29,9 @@ const DateViewItem: React.FC<DateViewItemProps> = ({
   onPressDetail,
   onPressFavorite,
 }) => {
-  const [loading, setLoading] = useState<boolean>(false);
-
-  const emitFavorite = () => {
-    if (loading) {
-      return;
-    }
-
-    setLoading(true);
+  const emitFavorite = useDebouncedCallback(() => {
     onPressFavorite(item.id, item.isFavorite);
-
-    // throttle 적용
-    setTimeout(() => {
-      setLoading(false);
-    }, 500);
-  };
+  }, 500);
 
   const emitDetail = () => {
     onPressDetail(item.id);

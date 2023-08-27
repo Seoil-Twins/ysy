@@ -1,3 +1,5 @@
+import { FAQ } from '../types/faq';
+import { User } from '../types/user';
 import { LoginOptions } from '../util/login';
 
 export type TutorialNavType = {
@@ -20,4 +22,32 @@ export type DateNavType = {
   DateDetail: {
     dateId: number;
   };
+  More: undefined;
+  Recent: undefined;
+  Settings: undefined;
+};
+
+export type SettingsNavType = {
+  Album: undefined;
+  Date: undefined;
+  More: undefined;
+  Settings: undefined;
+  Profile: {
+    user: User;
+  };
+  EditProfile: {
+    user: User;
+  };
+  Notice: undefined;
+  ServiceCenter: undefined;
+  Inquiry: undefined;
+  InquiryHistory: undefined;
+  FAQ: {
+    info: FAQ;
+  };
+  Alram: undefined;
+  TermsOfUse: undefined;
+  TermsOfPrivacyPolicy: undefined;
+  Favorite: undefined;
+  Recent: undefined;
 };

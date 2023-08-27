@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { StyleSheet, Pressable } from 'react-native';
+import { StyleSheet, Pressable, View } from 'react-native';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
 
 import DatePickerSVG from '../assets/icons/date_picker.svg';
@@ -10,6 +10,8 @@ type DatePickerProps = {
   mode: 'date' | 'datetime';
   defaultValue?: string;
   placeholder: string;
+  isError?: boolean;
+  errorMessage?: string;
   onInputChange?: (value: string) => void;
 };
 
@@ -17,10 +19,14 @@ const DatePicker: React.FC<DatePickerProps> = ({
   mode,
   defaultValue,
   placeholder,
+  isError = false,
+  errorMessage,
   onInputChange,
 }) => {
   const [value, setValue] = useState(defaultValue ? defaultValue : '');
-  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [selectedDate, setSelectedDate] = useState<Date | null>(
+    defaultValue ? new Date(defaultValue) : null,
+  );
   const [isVisible, setIsVisible] = useState(false);
 
   const showDatePicker = () => {
@@ -77,44 +83,62 @@ const DatePicker: React.FC<DatePickerProps> = ({
   };
 
   return (
-    <Pressable style={styles.container} onPress={showDatePicker}>
-      {value === '' ? (
-        <CustomText size={16} color="#999999" weight="regular">
-          {placeholder}
+    <View
+      style={[
+        styles.container,
+        isError ? { marginBottom: 30 } : { marginBottom: 15 },
+      ]}>
+      <Pressable
+        style={[styles.input, isError ? styles.error : null]}
+        onPress={showDatePicker}>
+        {value === '' ? (
+          <CustomText size={16} color="#999999" weight="regular">
+            {placeholder}
+          </CustomText>
+        ) : (
+          <CustomText size={16} weight="regular">
+            {value}
+          </CustomText>
+        )}
+        <DatePickerSVG style={styles.img} />
+        <DateTimePickerModal
+          isVisible={isVisible}
+          mode={mode}
+          onConfirm={handleConfirm}
+          onCancel={hideDatePicker}
+          locale="ko_KR"
+          date={selectedDate || new Date()}
+          maximumDate={new Date()}
+        />
+      </Pressable>
+      {isError ? (
+        <CustomText size={14} weight="regular" color="#FF6D70">
+          {errorMessage}
         </CustomText>
-      ) : (
-        <CustomText size={16} weight="regular">
-          {value}
-        </CustomText>
-      )}
-      <DatePickerSVG style={styles.img} />
-      <DateTimePickerModal
-        isVisible={isVisible}
-        mode={mode}
-        onConfirm={handleConfirm}
-        onCancel={hideDatePicker}
-        locale="ko_KR"
-        date={selectedDate || new Date()}
-        maximumDate={new Date()}
-      />
-    </Pressable>
+      ) : null}
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
+    height: 50,
+  },
+  input: {
     position: 'relative',
     justifyContent: 'center',
-    marginBottom: 15,
     paddingLeft: 15,
     paddingRight: 15,
-    height: 50,
     borderWidth: 1,
     borderColor: '#DDDDDD',
+    height: 50,
   },
   img: {
     position: 'absolute',
     right: 15,
+  },
+  error: {
+    borderColor: '#FF6D70',
   },
 });
 

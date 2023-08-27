@@ -1,21 +1,28 @@
 import React from 'react';
 import { StyleSheet, View, Pressable } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import { StackNavigationProp } from '@react-navigation/stack';
 
 import SearchSVG from '../assets/icons/search.svg';
 import SettingSVG from '../assets/icons/settings.svg';
+
 import { globalStyles } from '../style/global';
+
+import { SettingsNavType } from '../navigation/NavTypes';
 
 type SearchHeaderProps = {
   onPress: () => void;
 };
 
 const SearchHeader: React.FC<SearchHeaderProps> = ({ onPress }) => {
+  const navigation = useNavigation<StackNavigationProp<SettingsNavType>>();
+
   const clickSearch = () => {
     onPress();
   };
 
   const clickSettings = () => {
-    console.log('move settings');
+    navigation.navigate('Settings');
   };
 
   return (
