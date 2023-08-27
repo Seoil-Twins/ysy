@@ -3,19 +3,18 @@ import { TouchableOpacity, View, StyleSheet } from 'react-native';
 import SettingSvg from '../assets/icons/settings.svg';
 import AddSvg from '../assets/icons/add_black.svg';
 
-type CalendarHeaderProps = {};
+type CalendarHeaderProps = {
+  openAddModal: () => void;
+};
 
-const CalendarHeader: React.FC<CalendarHeaderProps> = ({}) => {
+const CalendarHeader: React.FC<CalendarHeaderProps> = ({ openAddModal }) => {
   return (
     <View style={{ flexDirection: 'row' }}>
-      <TouchableOpacity
-        onPress={() => {
-          console.log('addclick');
-        }}>
+      <TouchableOpacity onPress={openAddModal}>
         <AddSvg style={styles.imgBox} />
       </TouchableOpacity>
       <TouchableOpacity onPress={() => {}}>
-        <SettingSvg style={styles.imgBox} />
+        <SettingSvg style={{ marginTop: 21 }} height={29} />
       </TouchableOpacity>
     </View>
   );

@@ -31,31 +31,31 @@ const AlbumNav = () => {
       }}>
       <TouchableOpacity
         style={{
-          width: screenWidth * 0.2,
-          marginLeft: screenWidth * 0.1,
+          width: screenWidth * 0.15,
+          marginLeft: screenWidth * 0.15,
         }}
         onPress={() => {
           dispatch(albumFunc('AlbumMerge'));
         }}>
-        <MergeSvg width={30} height={25} />
+        <MergeSvg width={25} height={20} />
       </TouchableOpacity>
       <TouchableOpacity
         style={{ width: screenWidth * 0.3, alignItems: 'center' }}
         onPress={() => {
           dispatch(albumFunc('AlbumDownload'));
         }}>
-        <DownloadSvg width={26} height={26} />
+        <DownloadSvg width={21} height={21} />
       </TouchableOpacity>
       <TouchableOpacity
         style={{
-          width: screenWidth * 0.2,
-          marginRight: screenWidth * 0.1,
+          width: screenWidth * 0.15,
+          marginRight: screenWidth * 0.15,
           alignItems: 'flex-end',
         }}
         onPress={() => {
           dispatch(albumFunc('AlbumDelete'));
         }}>
-        <DeleteSvg width={25} height={27} />
+        <DeleteSvg width={20} height={27} />
       </TouchableOpacity>
     </View>
   );

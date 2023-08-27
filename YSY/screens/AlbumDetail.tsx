@@ -7,6 +7,8 @@ import {
   Text,
   Modal,
   TextInput,
+  BackHandler,
+  Share,
 } from 'react-native';
 import { AlbumTypes } from '../navigation/AlbumTypes';
 import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
@@ -24,6 +26,8 @@ import {
 
 import RenderImageHeader from '../components/RenderImageHeader';
 import RenderImage from '../components/RenderImage';
+import RNFS from 'react-native-fs';
+import { albumFunc } from '../features/albumSlice';
 const screenWidth = wp('100%');
 
 export const AlbumDetail = () => {
@@ -60,7 +64,7 @@ export const AlbumDetail = () => {
   const dispatch = useAppDispatch();
   const navigation = useNavigation();
 
-  const dummyImages = [
+  let dummyImages = [
     'https://fastly.picsum.photos/id/179/200/200.jpg?hmac=I0g6Uht7h-y3NHqWA4e2Nzrnex7m-RceP1y732tc4Lw',
     'https://fastly.picsum.photos/id/803/200/300.jpg?hmac=v-3AsAcUOG4kCDsLMlWF9_3Xa2DTODGyKLggZNvReno',
     'https://fastly.picsum.photos/id/999/200/300.jpg?hmac=XqjgMZW5yK4MjHpQJFs_TiRodRNf9UVKjJiGnDJV8GI',
@@ -144,9 +148,32 @@ export const AlbumDetail = () => {
     //... (앨범에 해당하는 이미지 URL 추가)
   ];
 
+  const dummyImages2 = [
+    'https://fastly.picsum.photos/id/179/200/200.jpg?hmac=I0g6Uht7h-y3NHqWA4e2Nzrnex7m-RceP1y732tc4Lw',
+    'https://fastly.picsum.photos/id/803/200/300.jpg?hmac=v-3AsAcUOG4kCDsLMlWF9_3Xa2DTODGyKLggZNvReno',
+    'https://fastly.picsum.photos/id/999/200/300.jpg?hmac=XqjgMZW5yK4MjHpQJFs_TiRodRNf9UVKjJiGnDJV8GI',
+    'https://fastly.picsum.photos/id/600/200/300.jpg?hmac=Ub3Deb_eQNe0Un7OyE33D79dnextn3M179L0nRkv1eg',
+    'https://fastly.picsum.photos/id/193/200/300.jpg?hmac=b5ZG1TfdndbrnQ8UJbIu-ykB2PRWv0QpHwehH0pqMgE',
+    'https://fastly.picsum.photos/id/341/200/300.jpg?hmac=tZpxFpS1LmFfC4e_ChqA5I8JfUfJuwH3oZvmQ58SzHc',
+    'https://fastly.picsum.photos/id/387/200/300.jpg?hmac=JlKyfJE4yZ_jxmWXH5sNYl7JdDfP04DOk-hye4p_wtk',
+    'https://fastly.picsum.photos/id/863/200/300.jpg?hmac=4kin1N4a7dzocUZXCwLWHewLobhw1Q6_e_9E3Iy3n0I',
+  ];
+
   useEffect(() => {
     const newData = loadImageFromDB(albumName, 40);
     setAlbumImages(prevData => [...prevData, ...newData]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    const backAction = () => {
+      dispatch(imageSelectionOff());
+      return true; // true를 반환하면 앱이 종료되지 않습니다.
+    };
+
+    const backHandler = BackHandler.addEventListener(
+      'hardwareBackPress',
+      backAction,
+    );
+
+    return () => backHandler.remove();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -154,18 +181,27 @@ export const AlbumDetail = () => {
     console.log(isFunc);
     if (isFunc.includes('Image')) {
       if (isFunc.includes('Download')) {
+        if (selectedImages.length <= 0) {
+          return;
+        }
         setIsImageDownloadVisible(true);
       } else {
         setIsImageDownloadVisible(false);
       }
 
       if (isFunc.includes('Share')) {
+        if (selectedImages.length <= 0) {
+          return;
+        }
         setIsImageShareVisible(true);
       } else {
         setIsImageShareVisible(false);
       }
 
       if (isFunc.includes('Delete')) {
+        if (selectedImages.length <= 0) {
+          return;
+        }
         setIsImageDeleteVisible(true);
       } else {
         setIsImageDeleteVisible(false);
@@ -175,7 +211,7 @@ export const AlbumDetail = () => {
 
   const loadImageFromDB = (albumName: string, slice: number) => {
     // albumName을 이용한 Image 가져오는 코드 작성해야함
-    const ImageArray = dummyImages.slice(
+    const ImageArray = dummyImages2.slice(
       albumImages.length,
       albumImages.length + slice,
     );
@@ -184,7 +220,7 @@ export const AlbumDetail = () => {
 
   const loadMoreData = () => {
     // 이미 로딩 중이거나 데이터가 모두 로딩되었을 경우 함수 실행 종료
-    if (isLoading || albumImages.length >= dummyImages.length) {
+    if (isLoading || albumImages.length >= dummyImages2.length) {
       return;
     }
 
@@ -315,16 +351,93 @@ export const AlbumDetail = () => {
 
   const closeImageDeleteModal = () => {
     setIsImageDeleteVisible(false);
+    dispatch(albumFunc('Image'));
+    dispatch(imageSelectionOff());
+  };
+
+  const handleImageDelete = async () => {
+    const newData = await albumImages.filter(
+      item => !selectedImages.includes(item),
+    );
+    await setAlbumImages([]);
+    setSelectedImages([]);
+    setAlbumImages(newData);
+    closeImageDeleteModal();
   };
 
   const closeImageDownloadModal = () => {
     setIsImageDownloadVisible(false);
+    dispatch(albumFunc('Image'));
+    dispatch(imageSelectionOff());
+  };
+
+  const ImageDownload = async () => {
+    closeImageDownloadModal();
+    console.log('Download');
+    // const downloadDest = `${RNFS.DocumentDirectoryPath}/sss`;
+    // const { promise } = RNFS.downloadFile({
+    //   fromUrl:
+    //     'https://fastly.picsum.photos/id/179/200/200.jpg?hmac=I0g6Uht7h-y3NHqWA4e2Nzrnex7m-RceP1y732tc4Lw',
+    //   toFile: downloadDest,
+    // });
+    // const { statusCode } = await promise;
+    // console.log(statusCode);
+    // const { config, fs } = RNFetchBlob;
+    // let date = new Date();
+    // let PictureDir = fs.dirs.DocumentDir;
+    // let options = {
+    //   fileCache: true,
+    //   addAndroidDownloads: {
+    //     //Related to the Android only
+    //     useDownloadManager: true,
+    //     notification: true,
+    //     path:
+    //       PictureDir +
+    //       '/image_' +
+    //       Math.floor(date.getTime() + date.getSeconds() / 2),
+    //     description: 'Image',
+    //   },
+    // };
+    // config(options)
+    //   .fetch(
+    //     'GET',
+    //     'https://fastly.picsum.photos/id/179/200/200.jpg?hmac=I0g6Uht7h-y3NHqWA4e2Nzrnex7m-RceP1y732tc4Lw',
+    //   )
+    //   .then(res => {
+    //     //Showing alert after successful downloading
+    //     console.log('res -> ', JSON.stringify(res));
+    //   });
   };
 
   const closeImageShareModal = () => {
     setIsImageShareVisible(false);
+    dispatch(albumFunc('Image'));
+    dispatch(imageSelectionOff());
     // setActiveTab('ImageModal');
   };
+
+  const handleImageShare = async () => {
+    try {
+      const result = await Share.share({
+        message:
+          'React Native | A framework for building native apps using React',
+      });
+      if (result.action === Share.sharedAction) {
+        if (result.activityType) {
+          // shared with activity type of result.activityType
+          console.log('type1');
+        } else {
+          // shared
+          console.log('type2');
+        }
+      } else if (result.action === Share.dismissedAction) {
+        // dismissed
+        console.log('type3');
+      }
+    } catch (error: any) {
+      console.log(error.message);
+    }
+  }
 
   return (
     <View style={{ flex: 1 }}>
@@ -475,7 +588,7 @@ export const AlbumDetail = () => {
               <Text>|</Text>
               <Text
                 style={styles.modalButtonOk}
-                onPress={() => closeImageDownloadModal()}>
+                onPress={() => ImageDownload()}>
                 다운로드
               </Text>
             </View>
@@ -503,7 +616,7 @@ export const AlbumDetail = () => {
               <Text>|</Text>
               <Text
                 style={styles.modalButtonOk}
-                onPress={() => closeImageShareModal()}>
+                onPress={() => handleImageShare()}>
                 공유하기
               </Text>
             </View>
@@ -531,7 +644,7 @@ export const AlbumDetail = () => {
               <Text>|</Text>
               <Text
                 style={styles.modalButtonOk_red}
-                onPress={() => closeImageDeleteModal()}>
+                onPress={() => handleImageDelete()}>
                 삭제
               </Text>
             </View>

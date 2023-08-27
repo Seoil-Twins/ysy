@@ -1,10 +1,10 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { Platform, StyleSheet, View, FlatList } from 'react-native';
 import { PERMISSIONS } from 'react-native-permissions';
-import Geolocation, {
-  GeolocationResponse,
-  GeolocationError,
-} from '@react-native-community/geolocation';
+// import Geolocation, {
+//   GeolocationResponse,
+//   GeolocationError,
+// } from '@react-native-community/geolocation';
 import axios, { AxiosRequestConfig } from 'axios';
 import { KAKAO_REST_API_KEY } from '@env';
 import { useNavigation } from '@react-navigation/native';
@@ -348,16 +348,16 @@ const Date = () => {
     });
   };
 
-  const successPosition = (position: GeolocationResponse) => {
-    setLatitude(position.coords.latitude);
-    setLongitude(position.coords.longitude);
-  };
+  // const successPosition = (position: GeolocationResponse) => {
+  //   setLatitude(position.coords.latitude);
+  //   setLongitude(position.coords.longitude);
+  // };
 
-  const errorPosition = (error: GeolocationError) => {
-    if (error.PERMISSION_DENIED === -1) {
-      openAppSettings();
-    }
-  };
+  // const errorPosition = (error: GeolocationError) => {
+  //   if (error.PERMISSION_DENIED === -1) {
+  //     openAppSettings();
+  //   }
+  // };
 
   const setMyLocation = async () => {
     if (Platform.OS === 'android') {
@@ -366,9 +366,9 @@ const Date = () => {
       await checkPermission(PERMISSIONS.IOS.LOCATION_WHEN_IN_USE);
     }
 
-    Geolocation.getCurrentPosition(successPosition, errorPosition, {
-      enableHighAccuracy: true,
-    });
+    // Geolocation.getCurrentPosition(successPosition, errorPosition, {
+    //   enableHighAccuracy: true,
+    // });
   };
 
   const gpsToAddress = useCallback(async () => {
