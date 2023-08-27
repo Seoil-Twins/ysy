@@ -1,0 +1,29 @@
+export interface Date {
+  id: number;
+  contentId: string;
+  contentTypeId: number;
+  areaCode: number;
+  sigunguCode: number;
+  view: number;
+  title: string;
+  description: string;
+  thumbnails: string[];
+  address: string;
+  mapX: string;
+  mapY: string;
+  signatureDish?: string;
+  phoneNumber: string;
+  babyCarriage?: string;
+  kidsFacility?: string;
+  openTime?: string;
+  parking?: string;
+  restDate: string;
+  smoking?: string;
+  pet?: string;
+  useTime?: string;
+  reservation?: string;
+  homepage: string;
+  tags: string[];
+  favoriteCount: number;
+  isFavorite: boolean;
+}
