@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="33" height="34.951" viewBox="0 0 33 34.951">
+  <g id="person" transform="translate(3 3)">
+    <circle id="head" cx="7.5" cy="7.5" r="7.5" transform="translate(6 -3)" fill="#fff"/>
+    <path id="body" d="M16.5,0h0A16.5,16.5,0,0,1,33,16.5v1.151a0,0,0,0,1,0,0H0a0,0,0,0,1,0,0V16.5A16.5,16.5,0,0,1,16.5,0Z" transform="translate(-3 14.3)" fill="#fff"/>
+  </g>
+</svg>
