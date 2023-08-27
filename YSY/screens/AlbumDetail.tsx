@@ -26,7 +26,7 @@ import {
 
 import RenderImageHeader from '../components/RenderImageHeader';
 import RenderImage from '../components/RenderImage';
-import RNFS from 'react-native-fs';
+// import RNFS from 'react-native-fs';
 import { albumFunc } from '../features/albumSlice';
 const screenWidth = wp('100%');
 
@@ -162,7 +162,7 @@ export const AlbumDetail = () => {
   useEffect(() => {
     const newData = loadImageFromDB(albumName, 40);
     setAlbumImages(prevData => [...prevData, ...newData]);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+
     const backAction = () => {
       dispatch(imageSelectionOff());
       return true; // true를 반환하면 앱이 종료되지 않습니다.
@@ -437,7 +437,7 @@ export const AlbumDetail = () => {
     } catch (error: any) {
       console.log(error.message);
     }
-  }
+  };
 
   return (
     <View style={{ flex: 1 }}>
