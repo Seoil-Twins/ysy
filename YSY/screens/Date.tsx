@@ -17,10 +17,10 @@ import {
   ScrollView,
 } from 'react-native';
 import { PERMISSIONS } from 'react-native-permissions';
-import Geolocation, {
-  GeolocationResponse,
-  GeolocationError,
-} from '@react-native-community/geolocation';
+// import Geolocation, {
+//   GeolocationResponse,
+//   GeolocationError,
+// } from '@react-native-community/geolocation';
 import axios, { AxiosRequestConfig } from 'axios';
 import { KAKAO_REST_API_KEY } from '@env';
 import { useNavigation } from '@react-navigation/native';

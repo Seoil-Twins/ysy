@@ -55,13 +55,11 @@ const RenderImage: React.FC<RenderImageProps> = ({
               style={
                 isSelected ? styles.checkedCircle : styles.unCheckedCircle
               }>
-              <Text>
-                {isSelected ? <WCheckSvg style={styles.checked} /> : ''}
-              </Text>
+              {isSelected ? <WCheckSvg width={12} height={12} /> : ''}
             </View>
           )}
 
-          {isRepImageSelMode && isTmpRepImage && (
+          {/* {isRepImageSelMode && isTmpRepImage && (
             <View
               style={{
                 position: 'absolute',
@@ -77,7 +75,7 @@ const RenderImage: React.FC<RenderImageProps> = ({
               }}>
               <WCheckBigSvg />
             </View>
-          )}
+          )} */}
         </View>
       </TouchableOpacity>
     </View>
@@ -87,33 +85,29 @@ const RenderImage: React.FC<RenderImageProps> = ({
 const styles = StyleSheet.create({
   checkedCircle: {
     position: 'absolute',
-    top: 5,
-    right: 5,
-    width: 30,
-    height: 30,
+    top: 0,
+    right: 0,
+    width: 20,
+    height: 20,
     borderRadius: 20,
     backgroundColor: '#3675FB',
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 15,
-    marginRight: 20,
+    marginTop: 5,
+    marginRight: 5,
   },
   unCheckedCircle: {
     position: 'absolute',
-    top: 5,
-    right: 5,
-    width: 30,
-    height: 30,
+    top: 0,
+    right: 0,
+    width: 20,
+    height: 20,
     borderRadius: 20,
     backgroundColor: '#FFFFFF99',
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 15,
-    marginRight: 20,
-  },
-  checked: {
-    width: 48,
-    height: 48,
+    marginTop: 5,
+    marginRight: 5,
   },
 });
 

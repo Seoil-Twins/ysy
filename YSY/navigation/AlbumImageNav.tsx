@@ -31,31 +31,31 @@ const AlbumImageNav = () => {
       }}>
       <TouchableOpacity
         style={{
-          width: screenWidth * 0.2,
-          marginLeft: screenWidth * 0.1,
+          width: screenWidth * 0.15,
+          marginLeft: screenWidth * 0.15,
         }}
         onPress={() => {
           dispatch(albumFunc('ImageShare'));
         }}>
-        <ShareSvg width={30} height={25} />
+        <ShareSvg height={20} />
       </TouchableOpacity>
       <TouchableOpacity
         style={{ width: screenWidth * 0.3, alignItems: 'center' }}
         onPress={() => {
           dispatch(albumFunc('ImageDownload'));
         }}>
-        <DownloadSvg width={26} height={26} />
+        <DownloadSvg height={21} />
       </TouchableOpacity>
       <TouchableOpacity
         style={{
-          width: screenWidth * 0.2,
-          marginRight: screenWidth * 0.1,
+          width: screenWidth * 0.15,
+          marginRight: screenWidth * 0.15,
           alignItems: 'flex-end',
         }}
         onPress={() => {
           dispatch(albumFunc('ImageDelete'));
         }}>
-        <DeleteSvg width={25} height={27} />
+        <DeleteSvg height={21} />
       </TouchableOpacity>
     </View>
   );
