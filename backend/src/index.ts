@@ -16,7 +16,7 @@ import routes from "./routes/index";
 import errorHandlerMiddleware from "./middlewares/errorHandler.middleware";
 import morganMiddleware from "./middlewares/morgan.middleware";
 
-import association from "./model/association.config";
+import association from "./models/association.config";
 
 import logger from "./logger/logger";
 
@@ -29,18 +29,18 @@ dayjs.extend(isSameOrBefore);
 
 // Dayjs 인터페이스 확장
 declare module "dayjs" {
-    interface Dayjs {
-        formattedHour(): string;
-        formattedDate(): string;
-    }
+  interface Dayjs {
+    formattedHour(): string;
+    formattedDate(): string;
+  }
 }
 const formattedPlugin: PluginFunc = (_, dayjsClass) => {
-    dayjsClass.prototype.formattedDate = function () {
-        return this.format("YYYY-MM-DD");
-    };
-    dayjsClass.prototype.formattedHour = function () {
-        return this.format("YYYY-MM-DD HH:mm:ss");
-    };
+  dayjsClass.prototype.formattedDate = function () {
+    return this.format("YYYY-MM-DD");
+  };
+  dayjsClass.prototype.formattedHour = function () {
+    return this.format("YYYY-MM-DD HH:mm:ss");
+  };
 };
 dayjs.extend(formattedPlugin);
 
@@ -52,19 +52,19 @@ app.use(express.json());
 app.use(boolParser());
 app.use(express.urlencoded({ extended: false }));
 app.use(morganMiddleware);
-app.all("*", (request: Request, _response: Response, next: NextFunction) => {
-    logger.debug(`Request Body Data : ${JSON.stringify(request.body)}`);
-    logger.debug(`Request Params Data : ${JSON.stringify(request.params)}`);
+// app.all("*", (request: Request, _response: Response, next: NextFunction) => {
+//   logger.debug(`Request Body Data : ${JSON.stringify(request.body)}`);
+//   logger.debug(`Request Params Data : ${JSON.stringify(request.params)}`);
 
-    next();
-});
+//   next();
+// });
 
 app.use("/", routes);
 
 app.use(errorHandlerMiddleware);
 
 app.listen(port, () => {
-    logger.debug(`Server Listen on port : ${port}!`);
+  logger.debug(`Server Listen on port : ${port}!`);
 });
 
 export const API_ROOT = process.env.API_ROOT || `http://localhost:${port}`;

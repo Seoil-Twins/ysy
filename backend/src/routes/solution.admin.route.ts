@@ -4,20 +4,20 @@ import formidable from "formidable";
 import joi, { ValidationResult } from "joi";
 import express, { Router, Request, Response, NextFunction } from "express";
 
-import SolutionAdminService from "../service/solution.admin.service";
-import SolutionImageAdminService from "../service/solutionImage.admin.service";
-import InquireAdminService from "../service/inquire.admin.service";
+import SolutionAdminService from "../services/solution.admin.service";
+import SolutionImageAdminService from "../services/solutionImage.admin.service";
+import InquireAdminService from "../services/inquire.admin.service";
 import SolutionAdminController from "../controller/solution.admin.controller";
 
 import { STATUS_CODE } from "../constant/statusCode.constant";
 
-import { FilterOptions, ICreate, ISolutionResponseWithCount, IUpdate, PageOptions, SearchOptions, Solution } from "../model/solution.model";
+import { FilterOptions, ICreate, ISolutionResponseWithCount, IUpdate, PageOptions, SearchOptions, Solution } from "../models/solution.model";
 
-import validator from "../util/validator.util";
-import { canModifyWithEditor, canView } from "../util/checkRole.util";
+import validator from "../utils/validator.util";
+import { canModifyWithEditor, canView } from "../utils/checkRole.util";
 
-import InternalServerError from "../error/internalServer.error";
-import BadRequestError from "../error/badRequest.error";
+import InternalServerError from "../errors/internalServer.error";
+import BadRequestError from "../errors/badRequest.error";
 
 const createSchema = joi.object({
     title: joi.string().required(),

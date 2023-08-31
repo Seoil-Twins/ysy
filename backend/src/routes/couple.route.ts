@@ -3,20 +3,20 @@ import joi, { ValidationResult } from "joi";
 import formidable, { File } from "formidable";
 
 import logger from "../logger/logger";
-import validator from "../util/validator.util";
+import validator from "../utils/validator.util";
 import { STATUS_CODE } from "../constant/statusCode.constant";
 
-import InternalServerError from "../error/internalServer.error";
-import ForbiddenError from "../error/forbidden.error";
-import BadRequestError from "../error/badRequest.error";
+import InternalServerError from "../errors/internalServer.error";
+import ForbiddenError from "../errors/forbidden.error";
+import BadRequestError from "../errors/badRequest.error";
 
-import { ITokenResponse } from "../model/auth.model";
-import { Couple, IRequestCreate, IUpdateWithController } from "../model/couple.model";
+import { ITokenResponse } from "../models/auth.model";
+import { Couple, IRequestCreate, IUpdateWithController } from "../models/couple.model";
 
 import CoupleController from "../controller/couple.controller";
-import CoupleService from "../service/couple.service";
-import UserService from "../service/user.service";
-import UserRoleService from "../service/userRole.service";
+import CoupleService from "../services/couple.service";
+import UserService from "../services/user.service";
+import UserRoleService from "../services/userRole.service";
 
 const router: Router = express.Router();
 const coupleSerivce = new CoupleService();

@@ -12,25 +12,25 @@ import {
     SearchOptions as UserSearchOptions,
     FilterOptions as UserFilterOptions,
     User
-} from "../model/user.model";
+} from "../models/user.model";
 
 import logger from "../logger/logger";
-import validator from "../util/validator.util";
+import validator from "../utils/validator.util";
 import { STATUS_CODE } from "../constant/statusCode.constant";
-import { canModifyWithEditor, canView } from "../util/checkRole.util";
+import { canModifyWithEditor, canView } from "../utils/checkRole.util";
 
-import BadRequestError from "../error/badRequest.error";
-import InternalServerError from "../error/internalServer.error";
+import BadRequestError from "../errors/badRequest.error";
+import InternalServerError from "../errors/internalServer.error";
 
 import UserAdminController from "../controller/user.admin.controller";
-import UserService from "../service/user.service";
-import UserAdminService from "../service/user.admin.service";
-import UserRoleService from "../service/userRole.service";
-import CoupleAdminService from "../service/couple.admin.service";
-import AlbumService from "../service/album.service";
-import InquireService from "../service/inquire.service";
-import CalendarService from "../service/calendar.service";
-import SolutionImageAdminService from "../service/solutionImage.admin.service";
+import UserService from "../services/user.service";
+import UserAdminService from "../services/user.admin.service";
+import UserRoleService from "../services/userRole.service";
+import CoupleAdminService from "../services/couple.admin.service";
+import AlbumService from "../services/album.service";
+import InquireService from "../services/inquire.service";
+import CalendarService from "../services/calendar.service";
+import SolutionImageAdminService from "../services/solutionImage.admin.service";
 
 dayjs.locale("ko");
 

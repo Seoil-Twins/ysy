@@ -3,21 +3,21 @@ import { Transaction } from "sequelize";
 import randomstring from "randomstring";
 
 import logger from "../logger/logger";
-import { deleteFile, deleteFiles, deleteFolder } from "../util/firebase.util";
+import { deleteFile, deleteFiles, deleteFolder } from "../utils/firebase.util";
 
-import UserService from "../service/user.service";
-import CoupleService from "../service/couple.service";
-import CoupleAdminService from "../service/couple.admin.service";
-import AlbumService from "../service/album.service";
+import UserService from "../services/user.service";
+import CoupleService from "../services/couple.service";
+import CoupleAdminService from "../services/couple.admin.service";
+import AlbumService from "../services/album.service";
 
-import sequelize from "../model";
-import { User } from "../model/user.model";
-import { Couple, FilterOptions, ICoupleResponseWithCount, IRequestCreate, IUpdateWithAdmin, PageOptions, SearchOptions } from "../model/couple.model";
-import { Album } from "../model/album.model";
+import sequelize from "../models";
+import { User } from "../models/user.model";
+import { Couple, FilterOptions, ICoupleResponseWithCount, IRequestCreate, IUpdateWithAdmin, PageOptions, SearchOptions } from "../models/couple.model";
+import { Album } from "../models/album.model";
 
-import NotFoundError from "../error/notFound.error";
-import BadRequestError from "../error/badRequest.error";
-import ConflictError from "../error/conflict.error";
+import NotFoundError from "../errors/notFound.error";
+import BadRequestError from "../errors/badRequest.error";
+import ConflictError from "../errors/conflict.error";
 
 export class CoupleAdminController {
     private userService: UserService;

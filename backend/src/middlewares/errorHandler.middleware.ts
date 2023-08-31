@@ -1,6 +1,6 @@
 import { ErrorRequestHandler, Request, Response, NextFunction } from "express";
 
-import AbstractError from "../error/abstract.error";
+import AbstractError from "../errors/abstract.error";
 import logger from "../logger/logger";
 
 import { ERROR_CODE, STATUS_CODE } from "../constant/statusCode.constant";

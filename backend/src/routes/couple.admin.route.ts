@@ -4,10 +4,10 @@ import express, { Router, Request, Response, NextFunction } from "express";
 import formidable, { File } from "formidable";
 import { boolean } from "boolean";
 
-import UserService from "../service/user.service";
-import CoupleService from "../service/couple.service";
-import CoupleAdminService from "../service/couple.admin.service";
-import AlbumService from "../service/album.service";
+import UserService from "../services/user.service";
+import CoupleService from "../services/couple.service";
+import CoupleAdminService from "../services/couple.admin.service";
+import AlbumService from "../services/album.service";
 
 import {
     ICoupleResponseWithCount,
@@ -17,16 +17,16 @@ import {
     IRequestCreate,
     IUpdateWithAdmin,
     Couple
-} from "../model/couple.model";
+} from "../models/couple.model";
 import CoupleAdminController from "../controller/couple.admin.controller";
 
 import logger from "../logger/logger";
-import validator from "../util/validator.util";
+import validator from "../utils/validator.util";
 import { STATUS_CODE } from "../constant/statusCode.constant";
-import { canModifyWithEditor, canView } from "../util/checkRole.util";
+import { canModifyWithEditor, canView } from "../utils/checkRole.util";
 
-import BadRequestError from "../error/badRequest.error";
-import InternalServerError from "../error/internalServer.error";
+import BadRequestError from "../errors/badRequest.error";
+import InternalServerError from "../errors/internalServer.error";
 
 const router: Router = express.Router();
 const userService: UserService = new UserService();

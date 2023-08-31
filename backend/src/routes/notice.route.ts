@@ -1,7 +1,7 @@
 import express, { Router, Request, Response, NextFunction } from "express";
 
 import NoticeController from "../controller/notice.controller";
-import NoticeSerivce from "../service/notice.service";
+import NoticeSerivce from "../services/notice.service";
 
 import { STATUS_CODE } from "../constant/statusCode.constant";
 

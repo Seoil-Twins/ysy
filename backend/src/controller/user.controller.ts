@@ -3,14 +3,14 @@ import { File } from "formidable";
 
 import logger from "../logger/logger";
 
-import sequelize from "../model";
-import { User, ICreate, IUpdateWithController, IUserResponse, IUpdateWithService } from "../model/user.model";
+import sequelize from "../models";
+import { User, ICreate, IUpdateWithController, IUserResponse, IUpdateWithService } from "../models/user.model";
 
-import UserService from "../service/user.service";
-import UserRoleService from "../service/userRole.service";
+import UserService from "../services/user.service";
+import UserRoleService from "../services/userRole.service";
 
-import NotFoundError from "../error/notFound.error";
-import { deleteFile } from "../util/firebase.util";
+import NotFoundError from "../errors/notFound.error";
+import { deleteFile } from "../utils/firebase.util";
 
 class UserController {
     private userService: UserService;

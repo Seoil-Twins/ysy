@@ -1,8 +1,8 @@
-import NoticeSerivce from "../service/notice.service";
+import NoticeSerivce from "../services/notice.service";
 
-import NotFoundError from "../error/notFound.error";
+import NotFoundError from "../errors/notFound.error";
 
-import { Notice } from "../model/notice.model";
+import { Notice } from "../models/notice.model";
 
 class NoticeController {
     private noticeService: NoticeSerivce;

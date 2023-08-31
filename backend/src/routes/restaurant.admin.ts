@@ -1,17 +1,23 @@
 import dayjs from "dayjs";
 import express, { Router, Request, Response, NextFunction } from "express";
 
-import { IRestaurantResponseWithCount, PageOptions as ResPageOptions, SearchOptions as ResSearchOptions, IUpdateWithAdmin, Restaurant} from "../model/restaurant.model";
-import { Wanted } from "../model/wanted.model";
+import {
+  IRestaurantResponseWithCount,
+  PageOptions as ResPageOptions,
+  SearchOptions as ResSearchOptions,
+  IUpdateWithAdmin,
+  Restaurant
+} from "../models/restaurant.model";
+import { Wanted } from "../models/favorite.model";
 
 import RestaurantAdminController from "../controller/restaurant.admin.controller";
-import RestaurantAdminService from "../service/restaurant.admin.service";
+import RestaurantAdminService from "../services/restaurant.admin.service";
 
 import logger from "../logger/logger";
 import { STATUS_CODE } from "../constant/statusCode.constant";
-import { canView } from "../util/checkRole.util";
+import { canView } from "../utils/checkRole.util";
 
-import BadRequestError from "../error/badRequest.error";
+import BadRequestError from "../errors/badRequest.error";
 
 dayjs.locale("ko");
 
@@ -22,127 +28,125 @@ const restaurantAdminController: RestaurantAdminController = new RestaurantAdmin
 // let url = "https://apis.data.go.kr/B551011/KorService1/areaBasedList1?numOfRows=";
 
 router.get("/", canView, async (req: Request, res: Response, next: NextFunction) => {
-    const pageOptions: ResPageOptions = {
-        numOfRows: Number(req.query.numOfRows) || 10,
-        page: Number(req.query.page) || 1,
-        sort: ""
-    };
-    const contentTypeId: String | undefined = req.query.contentTypeId ? String(req.query.contentTypeId) : undefined;
+  const pageOptions: ResPageOptions = {
+    numOfRows: Number(req.query.numOfRows) || 10,
+    page: Number(req.query.page) || 1,
+    sort: ""
+  };
+  const contentTypeId: String | undefined = req.query.contentTypeId ? String(req.query.contentTypeId) : undefined;
 
-    try {
-        const result: IRestaurantResponseWithCount = await restaurantAdminController.getRestaurantFromAPI(pageOptions, contentTypeId);
+  try {
+    const result: IRestaurantResponseWithCount = await restaurantAdminController.getRestaurantFromAPI(pageOptions, contentTypeId);
 
-        logger.debug(`Response Data => ${JSON.stringify(result)}`);
-        return res.status(STATUS_CODE.OK).json(result);
-    } catch (error) {
-        next(error);
-    }
+    logger.debug(`Response Data => ${JSON.stringify(result)}`);
+    return res.status(STATUS_CODE.OK).json(result);
+  } catch (error) {
+    next(error);
+  }
 });
 
 router.post("/create", canView, async (req: Request, res: Response, next: NextFunction) => {
-    const pageOptions: ResPageOptions = {
-        numOfRows: Number(req.query.numOfRows) || 10,
-        page: Number(req.query.page) || 1,
-        sort: ""
-    };
-    const contentTypeId: String | undefined = req.query.contentTypeId ? String(req.query.contentTypeId) : undefined;
+  const pageOptions: ResPageOptions = {
+    numOfRows: Number(req.query.numOfRows) || 10,
+    page: Number(req.query.page) || 1,
+    sort: ""
+  };
+  const contentTypeId: String | undefined = req.query.contentTypeId ? String(req.query.contentTypeId) : undefined;
 
-    try {
-        const result: Restaurant[] = await restaurantAdminController.createRestaurantDB(pageOptions, contentTypeId);
+  try {
+    const result: Restaurant[] = await restaurantAdminController.createRestaurantDB(pageOptions, contentTypeId);
 
-        logger.debug(`Response Data => ${JSON.stringify(result)}`);
-        return res.status(STATUS_CODE.OK).json(result);
-    } catch (error) {
-        next(error);
-    }
+    logger.debug(`Response Data => ${JSON.stringify(result)}`);
+    return res.status(STATUS_CODE.OK).json(result);
+  } catch (error) {
+    next(error);
+  }
 });
 
 router.get("/search/all", canView, async (req: Request, res: Response, next: NextFunction) => {
- 
-    const sort:string = String(req.query.sort);
-    
-    const searchOptions: ResSearchOptions = {
-        contentTypeId: String(req.query.contentTypeId) || undefined,
-        contentId: String(req.query.contentId) || undefined,
-        title: String(req.query.title) || undefined
-    };
-    try {
-        const result: IRestaurantResponseWithCount = await restaurantAdminController.getAllRestaurant(sort, searchOptions);
+  const sort: string = String(req.query.sort);
 
-        logger.debug(`Response Data => ${JSON.stringify(result)}`);
-        return res.status(STATUS_CODE.OK).json(result);
-    } catch (error) {
-        next(error);
-    }
+  const searchOptions: ResSearchOptions = {
+    contentTypeId: String(req.query.contentTypeId) || undefined,
+    contentId: String(req.query.contentId) || undefined,
+    title: String(req.query.title) || undefined
+  };
+  try {
+    const result: IRestaurantResponseWithCount = await restaurantAdminController.getAllRestaurant(sort, searchOptions);
+
+    logger.debug(`Response Data => ${JSON.stringify(result)}`);
+    return res.status(STATUS_CODE.OK).json(result);
+  } catch (error) {
+    next(error);
+  }
 });
 
 router.patch("/update/:content_id", canView, async (req: Request, res: Response, next: NextFunction) => {
-    const contentId = req.params.content_id;
+  const contentId = req.params.content_id;
 
-    const searchOptions: ResSearchOptions = {
-        contentId: contentId
-    };
-    const data: IUpdateWithAdmin = {
-        areaCode: req.query.areaCode ? String(req.query.areaCode) : undefined,
-        sigunguCode: req.query.sigunguCode ? String(req.query.sigunguCode) : undefined,
-        view: req.query.view ? Number(req.query.view) : undefined,
-        title: req.query.title ? String(req.query.title) : undefined,
-        address: req.query.address ? String(req.query.address) : undefined,
-        mapX: req.query.mapX ? String(req.query.mapX) : undefined,
-        mapY: req.query.mapY ? String(req.query.mapY) : undefined,
+  const searchOptions: ResSearchOptions = {
+    contentId: contentId
+  };
+  const data: IUpdateWithAdmin = {
+    areaCode: req.query.areaCode ? String(req.query.areaCode) : undefined,
+    sigunguCode: req.query.sigunguCode ? String(req.query.sigunguCode) : undefined,
+    view: req.query.view ? Number(req.query.view) : undefined,
+    title: req.query.title ? String(req.query.title) : undefined,
+    address: req.query.address ? String(req.query.address) : undefined,
+    mapX: req.query.mapX ? String(req.query.mapX) : undefined,
+    mapY: req.query.mapY ? String(req.query.mapY) : undefined,
 
-        description: req.query.description ? String(req.query.description) : undefined,
-        thumbnail: req.query.thumbnail ? String(req.query.thumbnail) : undefined,
-        signatureDish: req.query.signatureDish ? String(req.query.signatureDish) : undefined,
-        phoneNumber: req.query.phoneNumber ? String(req.query.phoneNumber) : undefined,
-        kidsFacility: req.query.kidsFacility ? String(req.query.kidsFacility) : undefined,
-        useTime: req.query.useTime ? String(req.query.useTime) : undefined,
-        parking: req.query.parking ? String(req.query.parking) : undefined,
-        restDate: req.query.restDate ? String(req.query.restDate) : undefined,
-        smoking: req.query.smoking ? String(req.query.smoking) : undefined,
-        reservation: req.query.reservation ? String(req.query.reservation) : undefined,
-        homepage: req.query.homepage ? String(req.query.homepage) : undefined
-    };
+    description: req.query.description ? String(req.query.description) : undefined,
+    thumbnail: req.query.thumbnail ? String(req.query.thumbnail) : undefined,
+    signatureDish: req.query.signatureDish ? String(req.query.signatureDish) : undefined,
+    phoneNumber: req.query.phoneNumber ? String(req.query.phoneNumber) : undefined,
+    kidsFacility: req.query.kidsFacility ? String(req.query.kidsFacility) : undefined,
+    useTime: req.query.useTime ? String(req.query.useTime) : undefined,
+    parking: req.query.parking ? String(req.query.parking) : undefined,
+    restDate: req.query.restDate ? String(req.query.restDate) : undefined,
+    smoking: req.query.smoking ? String(req.query.smoking) : undefined,
+    reservation: req.query.reservation ? String(req.query.reservation) : undefined,
+    homepage: req.query.homepage ? String(req.query.homepage) : undefined
+  };
 
-    try {
-        //const userId = Number(req.params.content_id);
-        const restaurant: Restaurant = await restaurantAdminController.updateRestaurant(searchOptions, data);
+  try {
+    //const userId = Number(req.params.content_id);
+    const restaurant: Restaurant = await restaurantAdminController.updateRestaurant(searchOptions, data);
 
-        return res.status(STATUS_CODE.OK).json(restaurant);
-    } catch (error) {
-        next(error);
-    }
+    return res.status(STATUS_CODE.OK).json(restaurant);
+  } catch (error) {
+    next(error);
+  }
 });
 
 router.delete("/:content_ids", canView, async (req: Request, res: Response, next: NextFunction) => {
-    const contentIds: string[] = req.params.content_ids.split(",").map(String);
-    // const stringContentIds: String[] = contentIds.filter((val) => {
-    //     return !isUndefined(val);
-    // });
+  const contentIds: string[] = req.params.content_ids.split(",").map(String);
+  // const stringContentIds: String[] = contentIds.filter((val) => {
+  //     return !isUndefined(val);
+  // });
 
-    try {
-        if (!contentIds || contentIds.length <= 0) throw new BadRequestError("content ID must be a string type");
+  try {
+    if (!contentIds || contentIds.length <= 0) throw new BadRequestError("content ID must be a string type");
 
-        await restaurantAdminController.deleteRestaurant(contentIds);
-        return res.status(STATUS_CODE.OK).json({});
-    } catch (error) {
-        next(error);
-    }
+    await restaurantAdminController.deleteRestaurant(contentIds);
+    return res.status(STATUS_CODE.OK).json({});
+  } catch (error) {
+    next(error);
+  }
 });
 
 router.post("/wanted", canView, async (req: Request, res: Response, next: NextFunction) => {
-    const userId: number = Number(req.body.userId);
-    const contentId: string = String(req.query.content_id);
-    
-    try {
-        const result: Wanted = await restaurantAdminController.createWantedRestaurant(contentId, userId);
+  const userId: number = Number(req.body.userId);
+  const contentId: string = String(req.query.content_id);
 
-        logger.debug(`Response Data => ${JSON.stringify(result)}`);
-        return res.status(STATUS_CODE.OK).json(result);
-    } catch (error) {
-        next(error);
-    }
+  try {
+    const result: Wanted = await restaurantAdminController.createWantedRestaurant(contentId, userId);
 
+    logger.debug(`Response Data => ${JSON.stringify(result)}`);
+    return res.status(STATUS_CODE.OK).json(result);
+  } catch (error) {
+    next(error);
+  }
 });
 
 // router.get("/search/title", canView, async (req: Request, res: Response, next: NextFunction) => {

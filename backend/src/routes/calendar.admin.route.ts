@@ -2,20 +2,20 @@ import dayjs from "dayjs";
 import joi, { ValidationResult } from "joi";
 import express, { Router, Request, Response, NextFunction } from "express";
 
-import CoupleService from "../service/couple.service";
-import CalendarService from "../service/calendar.service";
-import CalendarAdminService from "../service/calendar.admin.service";
+import CoupleService from "../services/couple.service";
+import CalendarService from "../services/calendar.service";
+import CalendarAdminService from "../services/calendar.admin.service";
 import CalendarController from "../controller/calendar.controller";
 import CalendarAdminController from "../controller/calendar.admin.controller";
 
-import { Calendar, FilterOptions, ICalendarResponseWithCount, ICreate, IUpdate, SearchOptions } from "../model/calendar.model";
-import { PageOptions } from "../model/album.model";
+import { Calendar, FilterOptions, ICalendarResponseWithCount, ICreate, IUpdate, SearchOptions } from "../models/calendar.model";
+import { PageOptions } from "../models/album.model";
 
-import validator from "../util/validator.util";
-import { canModifyWithEditor, canView } from "../util/checkRole.util";
+import validator from "../utils/validator.util";
+import { canModifyWithEditor, canView } from "../utils/checkRole.util";
 import { STATUS_CODE } from "../constant/statusCode.constant";
 
-import BadRequestError from "../error/badRequest.error";
+import BadRequestError from "../errors/badRequest.error";
 
 const router: Router = express.Router();
 const coupleService: CoupleService = new CoupleService();

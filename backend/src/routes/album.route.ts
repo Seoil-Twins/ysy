@@ -3,18 +3,18 @@ import joi, { ValidationResult } from "joi";
 import formidable, { File } from "formidable";
 
 import AlbumController from "../controller/album.controller";
-import AlbumService from "../service/album.service";
-import AlbumImageService from "../service/albumImage.service";
+import AlbumService from "../services/album.service";
+import AlbumImageService from "../services/albumImage.service";
 
 import logger from "../logger/logger";
-import validator from "../util/validator.util";
+import validator from "../utils/validator.util";
 import { STATUS_CODE } from "../constant/statusCode.constant";
 
-import BadRequestError from "../error/badRequest.error";
-import ForbiddenError from "../error/forbidden.error";
-import InternalServerError from "../error/internalServer.error";
+import BadRequestError from "../errors/badRequest.error";
+import ForbiddenError from "../errors/forbidden.error";
+import InternalServerError from "../errors/internalServer.error";
 
-import { Album, ICreate, IRequestGet, IRequestUpadteThumbnail, IRequestUpadteTitle, IResponse } from "../model/album.model";
+import { Album, ICreate, IRequestGet, IRequestUpadteThumbnail, IRequestUpadteTitle, IResponse } from "../models/album.model";
 
 const router: Router = express.Router();
 const albumService = new AlbumService();

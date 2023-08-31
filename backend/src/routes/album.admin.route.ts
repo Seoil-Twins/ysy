@@ -3,20 +3,20 @@ import joi, { ValidationResult } from "joi";
 import express, { Router, Request, Response, NextFunction } from "express";
 import formidable, { File } from "formidable";
 
-import AlbumService from "../service/album.service";
-import AlbumAdminService from "../service/album.admin.service";
-import AlbumImageService from "../service/albumImage.service";
+import AlbumService from "../services/album.service";
+import AlbumAdminService from "../services/album.admin.service";
+import AlbumImageService from "../services/albumImage.service";
 import AlbumAdminController from "../controller/album.admin.controller";
 
-import { IAlbumResponseWithCount, PageOptions, SearchOptions, FilterOptions, ICreateWithAdmin, IUpdateWithAdmin, Album } from "../model/album.model";
+import { IAlbumResponseWithCount, PageOptions, SearchOptions, FilterOptions, ICreateWithAdmin, IUpdateWithAdmin, Album } from "../models/album.model";
 
 import logger from "../logger/logger";
-import validator from "../util/validator.util";
+import validator from "../utils/validator.util";
 import { STATUS_CODE } from "../constant/statusCode.constant";
-import { canModifyWithEditor, canView } from "../util/checkRole.util";
+import { canModifyWithEditor, canView } from "../utils/checkRole.util";
 
-import BadRequestError from "../error/badRequest.error";
-import InternalServerError from "../error/internalServer.error";
+import BadRequestError from "../errors/badRequest.error";
+import InternalServerError from "../errors/internalServer.error";
 
 const router: Router = express.Router();
 const albumSerivce: AlbumService = new AlbumService();

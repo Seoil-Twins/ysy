@@ -2,17 +2,17 @@ import express, { Router, Request, Response, NextFunction } from "express";
 import joi, { ValidationResult } from "joi";
 
 import CalendarController from "../controller/calendar.controller";
-import CalendarService from "../service/calendar.service";
-import CoupleService from "../service/couple.service";
+import CalendarService from "../services/calendar.service";
+import CoupleService from "../services/couple.service";
 
 import logger from "../logger/logger";
-import validator from "../util/validator.util";
+import validator from "../utils/validator.util";
 import { STATUS_CODE } from "../constant/statusCode.constant";
 
-import BadRequestError from "../error/badRequest.error";
-import ForbiddenError from "../error/forbidden.error";
+import BadRequestError from "../errors/badRequest.error";
+import ForbiddenError from "../errors/forbidden.error";
 
-import { Calendar, ICreate, IResponse, IUpdate } from "../model/calendar.model";
+import { Calendar, ICreate, IResponse, IUpdate } from "../models/calendar.model";
 
 const router: Router = express.Router();
 const calendarService: CalendarService = new CalendarService();

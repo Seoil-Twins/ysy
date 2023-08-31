@@ -2,17 +2,17 @@ import dayjs from "dayjs";
 import express, { Router, Request, Response, NextFunction } from "express";
 import formidable, { File } from "formidable";
 
-import { canModifyWithEditor, canView } from "../util/checkRole.util";
+import { canModifyWithEditor, canView } from "../utils/checkRole.util";
 import { STATUS_CODE } from "../constant/statusCode.constant";
 
-import { FilterOptions, SolutionImageResponseWithCount, PageOptions, SearchOptions } from "../model/solutionImage.model";
+import { FilterOptions, SolutionImageResponseWithCount, PageOptions, SearchOptions } from "../models/solutionImage.model";
 
-import BadRequestError from "../error/badRequest.error";
-import InternalServerError from "../error/internalServer.error";
+import BadRequestError from "../errors/badRequest.error";
+import InternalServerError from "../errors/internalServer.error";
 
-import SolutionAdminService from "../service/solution.admin.service";
-import SolutionImageAdminService from "../service/solutionImage.admin.service";
-import InquireAdminService from "../service/inquire.admin.service";
+import SolutionAdminService from "../services/solution.admin.service";
+import SolutionImageAdminService from "../services/solutionImage.admin.service";
+import InquireAdminService from "../services/inquire.admin.service";
 import SolutionImageAdminController from "../controller/solutionImage.admin.controller";
 
 const router: Router = express.Router();

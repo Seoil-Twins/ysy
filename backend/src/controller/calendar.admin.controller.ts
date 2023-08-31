@@ -1,15 +1,15 @@
 import { Transaction } from "sequelize";
 
-import sequelize from "../model";
-import { Calendar, FilterOptions, ICalendarResponseWithCount, ICreate, PageOptions, SearchOptions } from "../model/calendar.model";
-import { Couple } from "../model/couple.model";
+import sequelize from "../models";
+import { Calendar, FilterOptions, ICalendarResponseWithCount, ICreate, PageOptions, SearchOptions } from "../models/calendar.model";
+import { Couple } from "../models/couple.model";
 
-import CoupleService from "../service/couple.service";
-import CalendarService from "../service/calendar.service";
-import CalendarAdminService from "../service/calendar.admin.service";
+import CoupleService from "../services/couple.service";
+import CalendarService from "../services/calendar.service";
+import CalendarAdminService from "../services/calendar.admin.service";
 
-import NotFoundError from "../error/notFound.error";
-import BadRequestError from "../error/badRequest.error";
+import NotFoundError from "../errors/notFound.error";
+import BadRequestError from "../errors/badRequest.error";
 
 import logger from "../logger/logger";
 

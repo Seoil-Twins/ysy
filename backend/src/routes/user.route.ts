@@ -3,19 +3,19 @@ import joi, { ValidationResult } from "joi";
 import formidable, { File } from "formidable";
 import { boolean } from "boolean";
 
-import { ICreate, IUpdateWithController, IUserResponse, User } from "../model/user.model";
+import { ICreate, IUpdateWithController, IUserResponse, User } from "../models/user.model";
 
 import logger from "../logger/logger";
-import validator from "../util/validator.util";
+import validator from "../utils/validator.util";
 import { STATUS_CODE } from "../constant/statusCode.constant";
 
-import BadRequestError from "../error/badRequest.error";
-import ForbiddenError from "../error/forbidden.error";
-import InternalServerError from "../error/internalServer.error";
+import BadRequestError from "../errors/badRequest.error";
+import ForbiddenError from "../errors/forbidden.error";
+import InternalServerError from "../errors/internalServer.error";
 
 import UserController from "../controller/user.controller";
-import UserService from "../service/user.service";
-import UserRoleService from "../service/userRole.service";
+import UserService from "../services/user.service";
+import UserRoleService from "../services/userRole.service";
 
 const router: Router = express.Router();
 const userService = new UserService();

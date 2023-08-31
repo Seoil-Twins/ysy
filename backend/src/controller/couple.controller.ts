@@ -2,25 +2,25 @@ import randomString from "randomstring";
 import { Transaction } from "sequelize";
 import { File } from "formidable";
 
-import sequelize from "../model";
-import { User } from "../model/user.model";
-import { ITokenResponse } from "../model/auth.model";
-import { Couple, IRequestCreate, IUpdateWithController, IUpdateWithService } from "../model/couple.model";
+import sequelize from "../models";
+import { User } from "../models/user.model";
+import { ITokenResponse } from "../models/auth.model";
+import { Couple, IRequestCreate, IUpdateWithController, IUpdateWithService } from "../models/couple.model";
 
-import NotFoundError from "../error/notFound.error";
-import UnauthorizedError from "../error/unauthorized.error";
-import ForbiddenError from "../error/forbidden.error";
-import BadRequestError from "../error/badRequest.error";
-import ConflictError from "../error/conflict.error";
+import NotFoundError from "../errors/notFound.error";
+import UnauthorizedError from "../errors/unauthorized.error";
+import ForbiddenError from "../errors/forbidden.error";
+import BadRequestError from "../errors/badRequest.error";
+import ConflictError from "../errors/conflict.error";
 
 import logger from "../logger/logger";
-import jwt from "../util/jwt.util";
-import { UserRole } from "../model/userRole.model";
+import jwt from "../utils/jwt.util";
+import { UserRole } from "../models/userRole.model";
 
-import UserService from "../service/user.service";
-import UserRoleService from "../service/userRole.service";
-import CoupleService from "../service/couple.service";
-import { deleteFile } from "../util/firebase.util";
+import UserService from "../services/user.service";
+import UserRoleService from "../services/userRole.service";
+import CoupleService from "../services/couple.service";
+import { deleteFile } from "../utils/firebase.util";
 
 class CoupleController {
     private coupleService: CoupleService;
