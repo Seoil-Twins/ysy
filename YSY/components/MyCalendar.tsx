@@ -1,5 +1,13 @@
-import React, { useRef, useState } from 'react';
-import { View, StyleSheet, Text, PanResponder, Pressable, FlatList, Modal } from 'react-native';
+import React, { useState } from 'react';
+import {
+  View,
+  StyleSheet,
+  Text,
+  PanResponder,
+  Pressable,
+  FlatList,
+  Modal,
+} from 'react-native';
 import { isSameDay } from 'date-fns';
 import {
   heightPercentageToDP as hp,
@@ -9,8 +17,9 @@ import SettingSvg from '../assets/icons/settings.svg';
 import CalendarHeader from './CalendarHeader';
 
 import BackSvg from '../assets/icons/back.svg';
-import CalendarSvg from '../assets/icons/calendar.svg';
-import { TextInput } from 'react-native-gesture-handler';
+import Input from './Input';
+import DatePicker from './DatePicker';
+import ColorPicker from './ColorPicker';
 
 const screenWidth = wp('100%');
 const screenHeight = hp('100%');
@@ -41,7 +50,7 @@ const MyCalendar: React.FC<CalendarProps> = ({ onDateSelect }) => {
   const [currentYear, setCurrentYear] = useState<number>(
     new Date().getFullYear(),
   );
-  const [panning, setPanning] = useState(false);
+  // const [panning, setPanning] = useState(false);
 
   const today = new Date();
 
@@ -357,7 +366,7 @@ const MyCalendar: React.FC<CalendarProps> = ({ onDateSelect }) => {
         }}
       />
     );
-  }
+  };
 
   const RenderSchecule = (schedule: Schedule) => {
     return (
@@ -472,10 +481,10 @@ const MyCalendar: React.FC<CalendarProps> = ({ onDateSelect }) => {
                       ]}>
                       <Text
                         style={[
-                          isSameDay(date, selectedDate) &&
-                            styles.selectedDateText,
                           date.getDay() === 0 && styles.sundayCell, // 일요일의 스타일
                           date.getDay() === 6 && styles.saturdayCell, // 토요일의 스타일
+                          isSameDay(date, selectedDate) &&
+                            styles.selectedDateText,
                         ]}>
                         {date.getDate()}
                       </Text>
@@ -528,78 +537,85 @@ const MyCalendar: React.FC<CalendarProps> = ({ onDateSelect }) => {
         visible={addScheVisible}
         animationType="slide"
         transparent={true}>
-        <View style={{ flex: 1 }}>
+        <View
+          style={{
+            flex: 1,
+            paddingLeft: 20,
+            paddingRight: 20,
+            backgroundColor: 'white',
+          }}>
           <View
             style={{
               flexDirection: 'row',
-              height: '5%',
+              height: 48,
               backgroundColor: 'white',
               justifyContent: 'space-between',
               alignItems: 'center',
             }}>
-            <BackSvg
-              onPress={() => setAddScheVisible(false)}
-              style={{ marginLeft: '3%' }}
-              height={100}
-            />
-            <Text style={{ marginRight: '3%', fontSize: 18, color: '#CCCCCC' }}>추가</Text>
+            <BackSvg onPress={() => setAddScheVisible(false)} height={100} />
+            <Text style={{ fontSize: 18, color: '#CCCCCC' }}>추가</Text>
           </View>
           <View style={{ flex: 1, backgroundColor: 'white' }}>
-            <View style={{ height: '20%', alignItems: 'flex-start', justifyContent:'center'}}>
-              <Text style = {{color:'#222222', fontWeight:'bold', fontSize: 24, margin: '3%'}}>일정 추가</Text>
+            <View
+              style={{
+                alignItems: 'flex-start',
+                justifyContent: 'center',
+                marginTop: 25,
+                marginBottom: 40,
+              }}>
+              <Text
+                style={{
+                  color: '#222222',
+                  fontWeight: 'bold',
+                  fontSize: 24,
+                  marginBottom: 5,
+                }}>
+                일정 추가
+              </Text>
               <Text
                 style={{
                   color: '#CCCCCC',
                   fontWeight: 'bold',
                   fontSize: 16,
-                  marginLeft: '3%',
                 }}>
                 새로운 일정을 추가합니다.{'\n'}연인과 함께 또는 공유하는 일정을
                 추가해주세요!
               </Text>
             </View>
-            <View style={{ backgroundColor:'white', alignItems: 'flex-start', justifyContent:'center', padding: '3%'}}>
-              <TextInput
-                style={styles.input}
-                maxLength={20}
-                onChangeText={() => {}}
-                placeholder="제목"
-              />
-              {/* <Input placeholder={'제목'} /> */}
-              <TextInput
-                style={styles.inputDesc}
-                multiline={true}
-                textAlignVertical="top"
-                onChangeText={() => {}}
-                placeholder="설명"
-              />
-              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                <TextInput
-                  style={[styles.input, { color: 'black' }]}
-                  onChangeText={() => {}}
-                  defaultValue={
-                    selectedDate.toISOString().slice(0, 10) + ' 07:30 AM'
-                  }
-                  editable={false}
-                />
-                <CalendarSvg
-                  style={{ marginRight: 20, position: 'absolute', right: 0 }}
-                  width={50}
-                  height={50}
+            <View
+              style={{
+                backgroundColor: 'white',
+                alignItems: 'flex-start',
+                justifyContent: 'center',
+              }}>
+              <View style={{ width: '100%' }}>
+                <Input placeholder={'제목'} />
+              </View>
+              <View style={{ width: '100%', height: 90 }}>
+                <Input
+                  textAlignVertical="top"
+                  multipleLine={true}
+                  placeholder={'설명s'}
                 />
               </View>
-              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                <TextInput
-                  style={styles.input}
-                  onChangeText={() => {}}
-                  placeholder='종료 날짜'
-                  editable={false}
+              <View style={{ width: '100%' }}>
+                <DatePicker
+                  mode={'datetime'}
+                  placeholder={
+                    selectedDate.toISOString().slice(0, 10) + ' 07:30 AM'
+                  }
                 />
-                <CalendarSvg
-                  style={{ marginRight: 20, position: 'absolute', right: 0 }}
-                  width={50}
-                  height={50}
-                />
+              </View>
+              <View style={{ width: '100%' }}>
+                <DatePicker mode={'datetime'} placeholder={'종료 날짜'} />
+              </View>
+              <View
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  backgroundColor: 'yellow',
+                }}>
+                <ColorPicker placeholder={'#FFFFFF'} />
               </View>
             </View>
           </View>
