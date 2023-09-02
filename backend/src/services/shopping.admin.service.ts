@@ -1,4 +1,4 @@
-import { TOURAPI_CODE } from "../constant/statusCode.constant";
+import { TOURAPI_CODE } from "../constants/statusCode.constant";
 
 import { Op, OrderItem, Transaction, WhereOptions } from "sequelize";
 import fetch from "node-fetch";

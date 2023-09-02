@@ -14,7 +14,7 @@ import RestaurantAdminController from "../controller/restaurant.admin.controller
 import RestaurantAdminService from "../services/restaurant.admin.service";
 
 import logger from "../logger/logger";
-import { STATUS_CODE } from "../constant/statusCode.constant";
+import { STATUS_CODE } from "../constants/statusCode.constant";
 import { canView } from "../utils/checkRole.util";
 
 import BadRequestError from "../errors/badRequest.error";

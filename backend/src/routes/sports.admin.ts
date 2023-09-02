@@ -15,7 +15,7 @@ import SportsAdminController from "../controller/sports.admin.controller";
 import SportsAdminService from "../services/sports.admin.service";
 
 import logger from "../logger/logger";
-import { STATUS_CODE } from "../constant/statusCode.constant";
+import { STATUS_CODE } from "../constants/statusCode.constant";
 import { canView } from "../utils/checkRole.util";
 
 import BadRequestError from "../errors/badRequest.error";

@@ -3,7 +3,7 @@ import { URLSearchParams } from "url";
 
 import { Transaction } from "sequelize";
 
-import { TOURAPI_CODE } from "../constant/statusCode.constant";
+import { TOURAPI_CODE } from "../constants/statusCode.constant";
 
 import sequelize from "../models";
 import { Shopping, PageOptions, SearchOptions, IUpdateWithAdmin } from "../models/shopping.model";

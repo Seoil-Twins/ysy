@@ -3,7 +3,7 @@ import joi, { ValidationResult } from "joi";
 
 import logger from "../logger/logger";
 import validator from "../utils/validator.util";
-import { STATUS_CODE } from "../constant/statusCode.constant";
+import { STATUS_CODE } from "../constants/statusCode.constant";
 
 import AuthController from "../controller/auth.controller";
 
@@ -52,7 +52,11 @@ router.post("/refresh", async (req: Request, res: Response, next: NextFunction) 
     const accessToken = req.header("Authorization");
     const refreshToken = req.header("Refresh");
 
-    if (!accessToken || !refreshToken) throw new UnauthorizedError("Invalid Token");
+    if (!accessToken) {
+      throw new UnauthorizedError("Not found Access Token");
+    } else if (!refreshToken) {
+      throw new UnauthorizedError("Not found Refresh Token");
+    }
 
     const result = await authController.updateToken(accessToken, refreshToken);
 

@@ -12,7 +12,7 @@ import { Wanted } from "../models/favorite.model";
 
 import logger from "../logger/logger";
 import { canView } from "../utils/checkRole.util";
-import { STATUS_CODE } from "../constant/statusCode.constant";
+import { STATUS_CODE } from "../constants/statusCode.constant";
 
 import CultureAdminService from "../services/culture.admin.service";
 import CultureAdminController from "../controller/culture.admin.controller";

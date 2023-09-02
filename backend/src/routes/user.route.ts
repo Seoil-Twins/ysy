@@ -3,11 +3,13 @@ import joi, { ValidationResult } from "joi";
 import formidable, { File } from "formidable";
 import { boolean } from "boolean";
 
-import { ICreate, IUpdateWithController, IUserResponse, User } from "../models/user.model";
+import { User } from "../models/user.model";
+import { CreateUser, UpdateUser, ResponseUser } from "../types/user.type";
 
 import logger from "../logger/logger";
 import validator from "../utils/validator.util";
-import { STATUS_CODE } from "../constant/statusCode.constant";
+import { STATUS_CODE } from "../constants/statusCode.constant";
+import { MAX_FILE_SIZE } from "../constants/file.constant";
 
 import BadRequestError from "../errors/badRequest.error";
 import ForbiddenError from "../errors/forbidden.error";
@@ -22,139 +24,129 @@ const userService = new UserService();
 const userRoleService = new UserRoleService();
 const userController = new UserController(userService, userRoleService);
 
-const pwPattern = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[$@$!%*#?&])[A-Za-z\d$@$!%*#?&]{8,15}$/;
 const phonePattern = /^[0-9]+$/;
 const signupSchema: joi.Schema = joi.object({
-    snsId: joi.string().length(4).required(),
-    name: joi.string().max(8).trim().required(),
-    password: joi.string().trim().min(8).max(15).regex(RegExp(pwPattern)).required(),
-    email: joi.string().trim().email().required(),
-    phone: joi.string().trim().length(11).regex(RegExp(phonePattern)).required(),
-    birthday: joi
-        .date()
-        .greater(new Date("1980-01-01")) // 1980-01-01보다 더 큰 날짜여야 함.
-        .less(new Date("2023-12-31")) // 2023-12-31보다 낮은 날짜여야 함.
-        .required(),
-    eventNofi: joi.bool().default(false)
+  snsId: joi.string().required(),
+  snsKind: joi.string().length(4).required(),
+  name: joi.string().max(10).trim().required(),
+  email: joi.string().trim().email().required(),
+  phone: joi.string().trim().length(11).regex(RegExp(phonePattern)).required(),
+  birthday: joi
+    .date()
+    .greater(new Date("1970-01-01")) // 1970-01-01보다 더 큰 날짜여야 함.
+    .less(new Date("2023-12-31")) // 2023-12-31보다 낮은 날짜여야 함.
+    .required(),
+  eventNofi: joi.bool().default(false)
 });
 
 const updateSchema: joi.Schema = joi.object({
-    userId: joi.number().required(),
-    name: joi.string().max(8).trim(),
-    primaryNofi: joi.boolean(),
-    dateNofi: joi.boolean(),
-    eventNofi: joi.boolean()
+  userId: joi.number().required(),
+  name: joi.string().min(2).max(8).trim()
 });
 
-// Get My Info
+// 내 정보 가져오기
 router.get("/me", async (req: Request, res: Response, next: NextFunction) => {
-    const userId: number = Number(req.body.userId);
+  const userId: number = Number(req.body.userId);
 
-    try {
-        if (isNaN(userId)) throw new BadRequestError("User ID must be a number type");
-        const result: IUserResponse = await userController.getUser(userId);
+  try {
+    if (isNaN(userId)) throw new BadRequestError("User ID must be a number type or number string");
+    const result: ResponseUser = await userController.getUser(userId);
 
-        logger.debug(`Response Data : ${JSON.stringify(result)}`);
-        return res.status(STATUS_CODE.OK).json(result);
-    } catch (error) {
-        next(error);
-    }
+    logger.debug(`Response Data : ${JSON.stringify(result)}`);
+    return res.status(STATUS_CODE.OK).json(result);
+  } catch (error) {
+    next(error);
+  }
 });
 
-// Get User Info
-router.get("/:user_id", async (req: Request, res: Response, next: NextFunction) => {
-    const userId: number = Number(req.params.user_id);
-
-    try {
-        if (isNaN(userId)) throw new BadRequestError("User ID must be a number type");
-        const result: IUserResponse = await userController.getUser(userId);
-
-        logger.debug(`Response Data : ${JSON.stringify(result)}`);
-        return res.status(STATUS_CODE.OK).json(result);
-    } catch (error) {
-        next(error);
-    }
-});
-
-// Signup User
+// 유저 생성
 router.post("/", async (req: Request, res: Response, next: NextFunction) => {
-    const { value, error }: ValidationResult = validator(req.body, signupSchema);
+  const form = formidable({ maxFileSize: MAX_FILE_SIZE });
 
+  form.parse(req, async (err, fields, files) => {
     try {
-        if (error) throw new BadRequestError(error.message);
+      if (err) throw new InternalServerError(`Image Server Error : ${JSON.stringify(err)}`);
 
-        const data: ICreate = {
-            snsId: value.snsId,
-            name: value.name,
-            email: value.email,
-            birthday: new Date(value.birthday),
-            password: value.password,
-            phone: value.phone,
-            eventNofi: boolean(value.eventNofi)
-        };
+      req.body = Object.assign({}, req.body, fields);
 
-        const url: string = await userController.createUser(data);
+      const { value, error }: ValidationResult = validator(req.body, signupSchema);
+      if (error) throw new BadRequestError(error.message);
+      else if (Array.isArray(files.profile)) throw new BadRequestError("You must request only one profile");
 
-        return res.header({ Location: url }).status(STATUS_CODE.CREATED).json({});
+      const data: CreateUser = {
+        snsKind: value.snsKind,
+        snsId: value.snsId,
+        name: value.name,
+        email: value.email,
+        birthday: new Date(value.birthday),
+        phone: value.phone,
+        eventNofi: boolean(value.eventNofi)
+      };
+
+      const url: string = await userController.createUser(data, files.profile);
+
+      return res.header({ Location: url }).status(STATUS_CODE.CREATED).json({});
     } catch (error) {
-        next(error);
+      next(error);
     }
+  });
 });
 
-// Update User Info
+// 유저 업데이트
 router.patch("/:user_id", async (req: Request, res: Response, next: NextFunction) => {
-    const form = formidable({ multiples: false, maxFileSize: 5 * 1024 * 1024 });
+  const form = formidable({ multiples: false, maxFileSize: MAX_FILE_SIZE });
 
-    form.parse(req, async (err, fields, files) => {
-        try {
-            if (err) throw new InternalServerError(`Image Server Error : ${JSON.stringify(err)}`);
+  form.parse(req, async (err, fields, files) => {
+    try {
+      if (err) throw new InternalServerError(`Image Server Error : ${JSON.stringify(err)}`);
 
-            req.body = Object.assign({}, req.body, fields);
+      req.body = Object.assign({}, req.body, fields);
 
-            const { value, error }: ValidationResult = validator(req.body, updateSchema);
+      const { value, error }: ValidationResult = validator(req.body, updateSchema);
 
-            if (req.params.user_id != req.body.userId) throw new ForbiddenError("You don't same token user ID and path parameter user ID");
-            else if (error) throw new BadRequestError(error.message);
-            else if (!value.name && value.dateNofi === undefined && value.primaryNofi === undefined && value.eventNofi && !value.file)
-                throw new BadRequestError("Bad Request Error");
-            else if (value.name && value.name.length <= 1) throw new BadRequestError("Bad Request Error");
-            else if (files.file instanceof Array<formidable.File>) throw new BadRequestError("You must request only one profile");
+      if (req.params.user_id != req.body.userId) throw new ForbiddenError("You don't same token user ID and path parameter user ID.");
+      else if (error) throw new BadRequestError(error.message);
+      else if (!value.name && !value.phone && !files.profile && !req.body.profile) throw new BadRequestError("You have to give more than one piece of data.");
+      else if (Array.isArray(files.profile)) throw new BadRequestError("You must request only one profile.");
 
-            const data: IUpdateWithController = {
-                userId: value.userId,
-                name: value.password,
-                profile: undefined,
-                primaryNofi: value.primaryNofi,
-                dateNofi: value.dateNofi,
-                eventNofi: value.eventNofi
-            };
-            const file: File | undefined = files.file;
+      const data: UpdateUser = {
+        name: value.name,
+        phone: value.phone
+      };
 
-            const user: User = await userController.updateUser(data, file);
+      let file: File | null | undefined = undefined;
 
-            return res.status(STATUS_CODE.OK).json(user);
-        } catch (error) {
-            next(error);
-        }
-    });
+      if (files.profile) {
+        file = files.profile;
+      } else if (!files.profile && (req.body.profile === "null" || req.body.profile === null)) {
+        file = null;
+      }
+
+      const user: User = await userController.updateUser(req.body.userId, data, file);
+
+      return res.status(STATUS_CODE.OK).json(user);
+    } catch (error) {
+      next(error);
+    }
+  });
 });
 
-// Delete User Info
+// 유저 삭제
 router.delete("/:user_id", async (req: Request, res: Response, next: NextFunction) => {
-    const userId: number = Number(req.body.userId);
+  const userId: number = Number(req.body.userId);
 
-    try {
-        // Couple 정보를 삭제 후 요청
-        if (req.body.cupId) throw new BadRequestError("Bad Request Error");
-        else if (req.params.user_id != req.body.userId) throw new ForbiddenError("You don't same token user ID and path parameter user ID");
-        else if (isNaN(userId)) throw new BadRequestError(`User ID must be a number type`);
+  try {
+    // Couple 정보를 삭제 후 요청
+    if (req.body.cupId) throw new BadRequestError("You must first delete couple.");
+    else if (req.params.user_id != req.body.userId) throw new ForbiddenError("You don't same token user ID and path parameter user ID");
+    else if (isNaN(userId)) throw new BadRequestError(`User ID must be a number type or number string`);
 
-        await userController.deleteUser(userId);
+    await userController.deleteUser(userId);
 
-        return res.status(STATUS_CODE.NO_CONTENT).json({});
-    } catch (error) {
-        next(error);
-    }
+    return res.status(STATUS_CODE.NO_CONTENT).json({});
+  } catch (error) {
+    next(error);
+  }
 });
 
 export default router;

@@ -55,7 +55,7 @@ export default {
     // redis database에 refreshToken 저장
     const isOk = await set(String(userId), refreshToken, expiresIn);
     const result: ResponseToken = {
-      accessToken: accessToken
+      accessToken
     };
 
     if (isOk == "OK") result.refreshToken = refreshToken;
@@ -74,14 +74,14 @@ export default {
    * const result: JwtPayload | string = jwt.verify(token, true);
    * ```
    * @param token JWT
-   * @param ignoreExpiration 유효시간이 끝난 토큰의 정보
-   * @returns A {@link JwtPayload} or string
+   * @param ignoreExpiration 유효시간이 끝난 토큰의 정보도 가져올지에 대한 여부
+   * @returns A {@link jwt.JwtPayload} or string
    */
   verify: (token: string, ignoreExpiration: boolean = false): JwtPayload | string => {
     const [bearer, separatedToken] = token.split(" ");
     if (bearer !== "Bearer") throw new UnauthorizedError("Invalid Token");
 
-    const result: JwtPayload | string = jwt.verify(separatedToken, SECRET_KEY, { ignoreExpiration: ignoreExpiration });
+    const result: JwtPayload | string = jwt.verify(separatedToken, SECRET_KEY, { ignoreExpiration });
 
     return result;
   }

@@ -12,7 +12,7 @@ import InquireImageService from "../services/inquireImage.service";
 
 import validator from "../utils/validator.util";
 import { canModifyWithEditor, canView } from "../utils/checkRole.util";
-import { STATUS_CODE } from "../constant/statusCode.constant";
+import { STATUS_CODE } from "../constants/statusCode.constant";
 
 import { FilterOptions, ICreate, IInquireResponseWithCount, Inquire, IUpdateWithController, PageOptions, SearchOptions } from "../models/inquiry.model";
 

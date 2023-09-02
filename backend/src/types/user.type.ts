@@ -31,7 +31,6 @@ export interface CreateUserWithAdmin {
 export interface UpdateUser {
   name?: string;
   phone?: string;
-  profile?: string | null;
 }
 
 export interface UpdateUserNotification {

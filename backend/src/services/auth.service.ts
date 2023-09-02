@@ -14,19 +14,19 @@ import { User } from "../models/user.model";
 class AuthService {
   /**
    * Access Token, Refresh Token을 새로 만듭니다.
+   *
+   * RTR : Refresh Token Rotation
+   *
+   * Refresh Token이 Access Token을 발급했다면 Refresh Token도 재발행 (1회용)
+   *
+   * 1. Access Expired, Refresh 살아있고 Redis와 일치하다면 발급
+   * 2. Access Expired, Refresh Expired => Error
+   * 3. Header Refresh, Redis Refresh Not matched => Error
    * @param accessToken JWT Access Token
    * @param refreshToken JWT Refresh Token
-   * @returns A {@link ITokenResponse}
+   * @returns A {@link ResponseToken}
    */
   async updateToken(accessToken: string, refreshToken: string): Promise<ResponseToken> {
-    /**
-     * RTR : Refresh Token Rotation
-     * Refresh Token이 Access Token을 발급했다면 Refresh Token도 재발행 (1회용)
-     *
-     * 1. Access Expired, Refresh 살아있고 Redis와 일치하다면 발급
-     * 2. Access Expired, Refresh Expired => Error
-     * 3. Header Refresh, Redis Refresh Not matched => Error
-     */
     const accessTokenPayload: JwtPayload | string = jwt.verify(accessToken, true);
     const refreshTokenPayload: JwtPayload | string = jwt.verify(refreshToken, true);
 
@@ -63,8 +63,8 @@ class AuthService {
 
   /**
    * 사용자 로그인을 합니다.
-   * @param data A {@link Login}
-   * @returns A {@link ITokenResponse}
+   * @param data {@link Login} - 로그인을 위한 인터페이스
+   * @returns A {@link ResponseToken}
    */
   async login(user: User, role: UserRole): Promise<ResponseToken> {
     const result: ResponseToken = await jwt.createToken(user.userId, user.cupId, role.roleId);

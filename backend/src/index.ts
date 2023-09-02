@@ -52,12 +52,12 @@ app.use(express.json());
 app.use(boolParser());
 app.use(express.urlencoded({ extended: false }));
 app.use(morganMiddleware);
-// app.all("*", (request: Request, _response: Response, next: NextFunction) => {
-//   logger.debug(`Request Body Data : ${JSON.stringify(request.body)}`);
-//   logger.debug(`Request Params Data : ${JSON.stringify(request.params)}`);
+app.all("*", (request: Request, _response: Response, next: NextFunction) => {
+  logger.debug(`Request Body Data : ${JSON.stringify(request.body)}`);
+  logger.debug(`Request Params Data : ${JSON.stringify(request.params)}`);
 
-//   next();
-// });
+  next();
+});
 
 app.use("/", routes);
 

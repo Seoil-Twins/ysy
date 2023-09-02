@@ -7,7 +7,7 @@ import InquireService from "../services/inquire.service";
 import InquireImageService from "../services/inquireImage.service";
 
 import validator from "../utils/validator.util";
-import { STATUS_CODE } from "../constant/statusCode.constant";
+import { STATUS_CODE } from "../constants/statusCode.constant";
 
 import { ICreate, Inquire, IUpdateWithController } from "../models/inquiry.model";
 

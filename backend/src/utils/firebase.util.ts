@@ -112,7 +112,7 @@ export const deleteFile = async (path: string): Promise<void> => {
   } catch (error) {
     const images: ListResult = await getAllFiles(path);
 
-    if ((error instanceof FirebaseError && error.code === "storage/object-not-found") || (images.items.length && images.items.length > 0)) {
+    if (error instanceof FirebaseError || (images.items.length && images.items.length > 0)) {
       try {
         if (error instanceof Error) logger.warn(`Image not deleted : ${path} => ${error.stack}`);
         else logger.warn(`Image not deleted : ${path} => ${new Error().stack}`);
@@ -158,10 +158,6 @@ export const deleteFiles = async (paths: string[]): Promise<void> => {
       const images = await getAllFiles(path);
 
       if (images.items.length && images.items.length > 0) {
-        try {
-          logger.warn(`Image Folder not deleted : ${path} => ${new Error().stack}`);
-        } catch (_error) {}
-
         for (const image of images.items) {
           logger.warn(`Image not deleted : ${image.fullPath}`);
           await ErrorImage.create({

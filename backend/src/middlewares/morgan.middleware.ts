@@ -27,10 +27,7 @@ const date = (_req: Request, _res: Response) => {
 };
 
 morgan.token("date", date);
-morgan.token("body", (req: Request) => {
-  return JSON.stringify(req.body);
-});
 
-const morganMiddleware = morgan(`${format()} :body`, { stream, skip });
+const morganMiddleware = morgan(`${format()}`, { stream, skip });
 
 export default morganMiddleware;

@@ -1,4 +1,4 @@
-import { STATUS_CODE } from "../constant/statusCode.constant";
+import { STATUS_CODE } from "../constants/statusCode.constant";
 
 import dayjs from "dayjs";
 import express, { Router, Request, Response, NextFunction } from "express";

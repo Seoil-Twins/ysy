@@ -12,7 +12,7 @@ import {
 import { Wanted } from "../models/favorite.model";
 
 import logger from "../logger/logger";
-import { STATUS_CODE } from "../constant/statusCode.constant";
+import { STATUS_CODE } from "../constants/statusCode.constant";
 import { canView } from "../utils/checkRole.util";
 
 import ShoppingAdminService from "../services/shopping.admin.service";
