@@ -6,7 +6,7 @@ import { deleteFile } from "../utils/firebase.util";
 
 import sequelize from "../models";
 import { User } from "../models/user.model";
-import { CreateUser, UpdateUser, ResponseUser } from "../types/user.type";
+import { CreateUser, UpdateUser, ResponseUser, UpdateUserNotification } from "../types/user.type";
 
 import UserService from "../services/user.service";
 import UserRoleService from "../services/userRole.service";
@@ -94,6 +94,16 @@ class UserController {
 
       throw error;
     }
+  }
+
+  async updateUserNotification(userId: number, data: UpdateUserNotification): Promise<User> {
+    const user: User | null = await this.userService.select({ userId });
+
+    if (!user) throw new NotFoundError("Not found user using token user ID");
+    else if (user.deleted) throw new ForbiddenError("User is deleted");
+
+    const updatedUser: User = await this.userService.update(undefined, user, data);
+    return updatedUser;
   }
 
   async deleteUser(userId: number): Promise<void> {

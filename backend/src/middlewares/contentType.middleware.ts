@@ -1,0 +1,19 @@
+import { NextFunction, Request, Response } from "express";
+
+import UnsupportedMediaTypeError from "../errors/unsupportedMediaType.error";
+
+import { checkFormdataType } from "../utils/router.util";
+
+const checkContentType = (req: Request, _res: Response, next: NextFunction) => {
+  if (req.method === "POST" || req.method === "PATCH") {
+    const contentType = checkFormdataType(req);
+    if (!contentType) throw new UnsupportedMediaTypeError("This API must have a content-type of 'multipart/form-data' or 'application/json' unconditionally.");
+
+    req.body.contentType = contentType;
+    next();
+  } else {
+    next();
+  }
+};
+
+export default checkContentType;

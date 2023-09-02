@@ -9,15 +9,13 @@ import { Service } from "./service";
 
 import logger from "../logger/logger";
 import { User } from "../models/user.model";
-import { ResponseUser, CreateUser, UpdateUser } from "../types/user.type";
+import { ResponseUser, CreateUser, UpdateUser, UpdateUserNotification } from "../types/user.type";
 import { Couple } from "../models/couple.model";
 
 import ConflictError from "../errors/conflict.error";
+import NotFoundError from "../errors/notFound.error";
 
 import { uploadFile } from "../utils/firebase.util";
-
-import NotFoundError from "../errors/notFound.error";
-import ForbiddenError from "../errors/forbidden.error";
 
 class UserService extends Service {
   private FOLDER_NAME = "users";
@@ -164,7 +162,7 @@ class UserService extends Service {
    * @param file {@link formidable.File}
    * @returns Promise\<{@link User}\>
    */
-  async update(transaction: Transaction | null = null, user: User, data: UpdateUser): Promise<User> {
+  async update(transaction: Transaction | null = null, user: User, data: UpdateUser | UpdateUserNotification): Promise<User> {
     const updatedUser: User = await user.update(data, { transaction });
 
     return updatedUser;

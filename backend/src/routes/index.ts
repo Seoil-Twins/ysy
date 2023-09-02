@@ -23,12 +23,13 @@ import sportsAdminRouter from "./sports.admin";
 import touristSpotAdminRouter from "./touristSpot.admin";
 
 import authMiddleware from "../middlewares/auth.middleware";
+import checkContentType from "../middlewares/contentType.middleware";
 
 const router: Router = express.Router();
 
 router.use("/auth", authRouter);
 
-router.use("/user", authMiddleware, userRouter);
+router.use("/user", checkContentType, authMiddleware, userRouter);
 // router.use("/couple", authMiddleware, coupleRouter);
 // router.use("/album", authMiddleware, albumRouter);
 // router.use("/calendar", authMiddleware, calendarRouter);

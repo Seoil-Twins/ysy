@@ -4,10 +4,12 @@ import formidable, { File } from "formidable";
 import { boolean } from "boolean";
 
 import { User } from "../models/user.model";
-import { CreateUser, UpdateUser, ResponseUser } from "../types/user.type";
+import { CreateUser, UpdateUser, ResponseUser, UpdateUserNotification } from "../types/user.type";
 
 import logger from "../logger/logger";
 import validator from "../utils/validator.util";
+import { ContentType } from "../utils/router.util";
+
 import { STATUS_CODE } from "../constants/statusCode.constant";
 import { MAX_FILE_SIZE } from "../constants/file.constant";
 
@@ -44,6 +46,15 @@ const updateSchema: joi.Schema = joi.object({
   name: joi.string().min(2).max(8).trim()
 });
 
+const updateNofiSchema: joi.Schema = joi.object({
+  primaryNofi: joi.boolean(),
+  dateNofi: joi.boolean(),
+  eventNofi: joi.boolean(),
+  coupleNofi: joi.boolean(),
+  albumNofi: joi.boolean(),
+  calendarNofi: joi.boolean()
+});
+
 // 내 정보 가져오기
 router.get("/me", async (req: Request, res: Response, next: NextFunction) => {
   const userId: number = Number(req.body.userId);
@@ -61,17 +72,14 @@ router.get("/me", async (req: Request, res: Response, next: NextFunction) => {
 
 // 유저 생성
 router.post("/", async (req: Request, res: Response, next: NextFunction) => {
+  const contentType: ContentType = req.body.contentType;
   const form = formidable({ maxFileSize: MAX_FILE_SIZE });
 
-  form.parse(req, async (err, fields, files) => {
+  const createFunc = async (req: Request, profile?: File) => {
     try {
-      if (err) throw new InternalServerError(`Image Server Error : ${JSON.stringify(err)}`);
-
-      req.body = Object.assign({}, req.body, fields);
-
       const { value, error }: ValidationResult = validator(req.body, signupSchema);
+
       if (error) throw new BadRequestError(error.message);
-      else if (Array.isArray(files.profile)) throw new BadRequestError("You must request only one profile");
 
       const data: CreateUser = {
         snsKind: value.snsKind,
@@ -83,52 +91,99 @@ router.post("/", async (req: Request, res: Response, next: NextFunction) => {
         eventNofi: boolean(value.eventNofi)
       };
 
-      const url: string = await userController.createUser(data, files.profile);
-
+      const url: string = await userController.createUser(data, profile);
       return res.header({ Location: url }).status(STATUS_CODE.CREATED).json({});
     } catch (error) {
       next(error);
     }
-  });
+  };
+
+  if (contentType === "form-data") {
+    form.parse(req, async (err, fields, files) => {
+      try {
+        if (err) throw new InternalServerError(`Image Server Error : ${JSON.stringify(err)}`);
+        else if (Array.isArray(files.profile)) throw new BadRequestError("You must request only one profile");
+
+        req.body = Object.assign({}, req.body, fields);
+
+        createFunc(req, files.profile);
+      } catch (error) {
+        next(error);
+      }
+    });
+  } else if (contentType === "json") {
+    createFunc(req, undefined);
+  }
 });
 
-// 유저 업데이트
+// 유저 수정
 router.patch("/:user_id", async (req: Request, res: Response, next: NextFunction) => {
+  const contentType: ContentType = req.body.contentType;
   const form = formidable({ multiples: false, maxFileSize: MAX_FILE_SIZE });
 
-  form.parse(req, async (err, fields, files) => {
-    try {
-      if (err) throw new InternalServerError(`Image Server Error : ${JSON.stringify(err)}`);
+  const updateFunc = async (req: Request, profile?: formidable.File | null) => {
+    const { value, error }: ValidationResult = validator(req.body, updateSchema);
 
-      req.body = Object.assign({}, req.body, fields);
+    if (req.params.user_id != req.body.userId) throw new ForbiddenError("You don't same token user ID and path parameter user ID.");
+    else if (error) throw new BadRequestError(error.message);
 
-      const { value, error }: ValidationResult = validator(req.body, updateSchema);
+    const data: UpdateUser = {
+      name: value.name,
+      phone: value.phone
+    };
 
-      if (req.params.user_id != req.body.userId) throw new ForbiddenError("You don't same token user ID and path parameter user ID.");
-      else if (error) throw new BadRequestError(error.message);
-      else if (!value.name && !value.phone && !files.profile && !req.body.profile) throw new BadRequestError("You have to give more than one piece of data.");
-      else if (Array.isArray(files.profile)) throw new BadRequestError("You must request only one profile.");
+    const user: User = await userController.updateUser(req.body.userId, data, profile);
+    return res.status(STATUS_CODE.OK).json(user);
+  };
 
-      const data: UpdateUser = {
-        name: value.name,
-        phone: value.phone
-      };
+  if (contentType === "form-data") {
+    form.parse(req, async (err, fields, files) => {
+      try {
+        if (err) throw new InternalServerError(`Image Server Error : ${JSON.stringify(err)}`);
+        else if (!files.profile || Array.isArray(files.profile)) throw new BadRequestError("You must request only one profile.");
 
-      let file: File | null | undefined = undefined;
+        req.body = Object.assign({}, req.body, fields);
 
-      if (files.profile) {
-        file = files.profile;
-      } else if (!files.profile && (req.body.profile === "null" || req.body.profile === null)) {
-        file = null;
+        updateFunc(req, files.profile);
+      } catch (error) {
+        next(error);
       }
+    });
+  } else if (contentType === "json") {
+    let profile: null | undefined = undefined;
 
-      const user: User = await userController.updateUser(req.body.userId, data, file);
-
-      return res.status(STATUS_CODE.OK).json(user);
-    } catch (error) {
-      next(error);
+    if (req.body.profile === "null" || req.body.profile === null) {
+      profile = null;
     }
-  });
+
+    updateFunc(req, profile);
+  }
+});
+
+// 유저 알림 수정
+router.patch("/nofi/:user_id", async (req: Request, res: Response, next: NextFunction) => {
+  const userId: number = Number(req.body.userId);
+
+  try {
+    if (isNaN(userId)) throw new BadRequestError("User ID must be a number type or number string");
+
+    const { value, error }: ValidationResult = validator(req.body, updateNofiSchema);
+    if (error) throw new BadRequestError(error.message);
+
+    const data: UpdateUserNotification = {
+      primaryNofi: value.primaryNofi,
+      dateNofi: value.dateNofi,
+      eventNofi: value.eventNofi,
+      coupleNofi: value.coupleNofi,
+      albumNofi: value.albumNofi,
+      calendarNofi: value.calendarNofi
+    };
+
+    const updatedUser: User = await userController.updateUserNotification(userId, data);
+    return res.status(STATUS_CODE.OK).json(updatedUser);
+  } catch (error) {
+    next(error);
+  }
 });
 
 // 유저 삭제
