@@ -5,7 +5,7 @@
  * ts 파일만 빌드하기 때문에 ts가 아닌 파일들을 복사해서 dist에다가 넣어줘야 함.
  */
 
-import express, { Application, Request, Response, NextFunction } from "express";
+import express, { Application, Request, Response, NextFunction, response } from "express";
 import dotenv from "dotenv";
 import dayjs, { PluginFunc } from "dayjs";
 import utc from "dayjs/plugin/utc";
@@ -19,6 +19,7 @@ import morganMiddleware from "./middlewares/morgan.middleware";
 import association from "./models/association.config";
 
 import logger from "./logger/logger";
+import { ContentType } from "./utils/router.util";
 
 dotenv.config();
 association.config();
@@ -34,6 +35,18 @@ declare module "dayjs" {
     formattedDate(): string;
   }
 }
+
+declare global {
+  namespace Express {
+    interface Request {
+      userId?: number;
+      cupId?: string;
+      roleId?: number;
+      contentType?: ContentType;
+    }
+  }
+}
+
 const formattedPlugin: PluginFunc = (_, dayjsClass) => {
   dayjsClass.prototype.formattedDate = function () {
     return this.format("YYYY-MM-DD");

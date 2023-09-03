@@ -20,11 +20,11 @@ const refreshTokenexpiresIn: object = {
   expiresIn: process.env.DEVELOPMENT_JWT_REFRESHTOKEN_EXPIRES_IN
 };
 
-const createAccessToken = (userId: number, cupId: string | null, role: number): string => {
+const createAccessToken = (userId: number, cupId: string | null, roleId: number): string => {
   let payload = {
     userId,
     cupId,
-    role
+    roleId
   };
 
   return jwt.sign(payload, SECRET_KEY, accessTokenOptions);

@@ -20,6 +20,7 @@ import InternalServerError from "../errors/internalServer.error";
 import UserController from "../controller/user.controller";
 import UserService from "../services/user.service";
 import UserRoleService from "../services/userRole.service";
+import UnauthorizedError from "../errors/unauthorized.error";
 
 const router: Router = express.Router();
 const userService = new UserService();
@@ -57,11 +58,8 @@ const updateNofiSchema: joi.Schema = joi.object({
 
 // 내 정보 가져오기
 router.get("/me", async (req: Request, res: Response, next: NextFunction) => {
-  const userId: number = Number(req.body.userId);
-
   try {
-    if (isNaN(userId)) throw new BadRequestError("User ID must be a number type or number string");
-    const result: ResponseUser = await userController.getUser(userId);
+    const result: ResponseUser = await userController.getUser(req.userId!);
 
     logger.debug(`Response Data : ${JSON.stringify(result)}`);
     return res.status(STATUS_CODE.OK).json(result);
@@ -72,7 +70,7 @@ router.get("/me", async (req: Request, res: Response, next: NextFunction) => {
 
 // 유저 생성
 router.post("/", async (req: Request, res: Response, next: NextFunction) => {
-  const contentType: ContentType = req.body.contentType;
+  const contentType: ContentType | undefined = req.contentType;
   const form = formidable({ maxFileSize: MAX_FILE_SIZE });
 
   const createFunc = async (req: Request, profile?: File) => {
@@ -118,13 +116,13 @@ router.post("/", async (req: Request, res: Response, next: NextFunction) => {
 
 // 유저 수정
 router.patch("/:user_id", async (req: Request, res: Response, next: NextFunction) => {
-  const contentType: ContentType = req.body.contentType;
+  const contentType: ContentType | undefined = req.contentType;
   const form = formidable({ multiples: false, maxFileSize: MAX_FILE_SIZE });
 
   const updateFunc = async (req: Request, profile?: formidable.File | null) => {
     const { value, error }: ValidationResult = validator(req.body, updateSchema);
 
-    if (req.params.user_id != req.body.userId) throw new ForbiddenError("You don't same token user ID and path parameter user ID.");
+    if (req.userId && Number(req.params.user_id) != req.userId) throw new ForbiddenError("You don't same token user ID and path parameter user ID.");
     else if (error) throw new BadRequestError(error.message);
 
     const data: UpdateUser = {
@@ -132,7 +130,7 @@ router.patch("/:user_id", async (req: Request, res: Response, next: NextFunction
       phone: value.phone
     };
 
-    const user: User = await userController.updateUser(req.body.userId, data, profile);
+    const user: User = await userController.updateUser(req.userId!, data, profile);
     return res.status(STATUS_CODE.OK).json(user);
   };
 
@@ -162,11 +160,7 @@ router.patch("/:user_id", async (req: Request, res: Response, next: NextFunction
 
 // 유저 알림 수정
 router.patch("/nofi/:user_id", async (req: Request, res: Response, next: NextFunction) => {
-  const userId: number = Number(req.body.userId);
-
   try {
-    if (isNaN(userId)) throw new BadRequestError("User ID must be a number type or number string");
-
     const { value, error }: ValidationResult = validator(req.body, updateNofiSchema);
     if (error) throw new BadRequestError(error.message);
 
@@ -179,7 +173,7 @@ router.patch("/nofi/:user_id", async (req: Request, res: Response, next: NextFun
       calendarNofi: value.calendarNofi
     };
 
-    const updatedUser: User = await userController.updateUserNotification(userId, data);
+    const updatedUser: User = await userController.updateUserNotification(req.userId!, data);
     return res.status(STATUS_CODE.OK).json(updatedUser);
   } catch (error) {
     next(error);
@@ -188,15 +182,12 @@ router.patch("/nofi/:user_id", async (req: Request, res: Response, next: NextFun
 
 // 유저 삭제
 router.delete("/:user_id", async (req: Request, res: Response, next: NextFunction) => {
-  const userId: number = Number(req.body.userId);
-
   try {
     // Couple 정보를 삭제 후 요청
-    if (req.body.cupId) throw new BadRequestError("You must first delete couple.");
-    else if (req.params.user_id != req.body.userId) throw new ForbiddenError("You don't same token user ID and path parameter user ID");
-    else if (isNaN(userId)) throw new BadRequestError(`User ID must be a number type or number string`);
+    if (req.cupId) throw new BadRequestError("You must first delete couple.");
+    else if (Number(req.params.user_id) != req.userId) throw new ForbiddenError("You don't same token user ID and path parameter user ID");
 
-    await userController.deleteUser(userId);
+    await userController.deleteUser(req.userId!);
 
     return res.status(STATUS_CODE.NO_CONTENT).json({});
   } catch (error) {
