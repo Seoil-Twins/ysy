@@ -8,6 +8,7 @@ import {
   TextInput,
   Modal,
   BackHandler,
+  TouchableWithoutFeedback,
 } from 'react-native';
 import AddSvg from '../assets/icons/add.svg';
 
@@ -315,7 +316,6 @@ export const Album = () => {
     closeSortModal();
   };
 
-  
   return (
     <React.Fragment>
       <View style={{ flex: 1 }}>
@@ -361,214 +361,244 @@ export const Album = () => {
         visible={isAddModalVisible}
         animationType="slide"
         transparent={true}>
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <Text>앨범 추가</Text>
-            <TextInput style={styles.input} onChangeText={() => {}} />
-            <View style={styles.buttonContainer}>
-              <Text
-                style={styles.modalButtonCancel}
-                onPress={() => {
-                  setIsAddModalVisible(false);
-                  setAlbumImages([]);
-                }}>
-                취소
-              </Text>
-              <Text>|</Text>
-              <Text
-                style={styles.modalButtonOk}
-                onPress={() => setIsAddModalVisible(false)}>
-                추가
-              </Text>
+        <TouchableWithoutFeedback
+          onPress={() => {
+            setIsAddModalVisible(false);
+          }}>
+          <View style={styles.modalContainer}>
+            <View style={styles.modalContent}>
+              <Text>앨범 추가</Text>
+              <TextInput style={styles.input} onChangeText={() => {}} />
+              <View style={styles.buttonContainer}>
+                <Text
+                  style={styles.modalButtonCancel}
+                  onPress={() => {
+                    setIsAddModalVisible(false);
+                    setAlbumImages([]);
+                  }}>
+                  취소
+                </Text>
+                <Text>|</Text>
+                <Text
+                  style={styles.modalButtonOk}
+                  onPress={() => setIsAddModalVisible(false)}>
+                  추가
+                </Text>
+              </View>
             </View>
           </View>
-        </View>
+        </TouchableWithoutFeedback>
       </Modal>
 
       <Modal // 정렬 Modal
         visible={isSortModalVisible}
         animationType="slide"
         transparent={true}>
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>정렬</Text>
-            <TouchableOpacity
-              style={[styles.sortMethodButton]}
-              onPress={() => handleSortMethodSelect('최신순')}>
-              <Text
-                style={[
-                  styles.sortMethodText,
-                  selectedSortMethod === '최신순' &&
-                    styles.selectedSortMethodText,
-                ]}>
-                최신순
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.sortMethodButton]}
-              onPress={() => handleSortMethodSelect('오래된순')}>
-              <Text
-                style={[
-                  styles.sortMethodText,
-                  selectedSortMethod === '오래된순' &&
-                    styles.selectedSortMethodText,
-                ]}>
-                오래된순
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.sortMethodButton]}
-              onPress={() => handleSortMethodSelect('제목순')}>
-              <Text
-                style={[
-                  styles.sortMethodText,
-                  selectedSortMethod === '제목순' &&
-                    styles.selectedSortMethodText,
-                ]}>
-                제목순
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.sortMethodButton]}
-              onPress={() => handleSortMethodSelect('사진많은순')}>
-              <Text
-                style={[
-                  styles.sortMethodText,
-                  selectedSortMethod === '사진많은순' &&
-                    styles.selectedSortMethodText,
-                ]}>
-                사진많은순
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.sortMethodButton]}
-              onPress={() => handleSortMethodSelect('사진적은순')}>
-              <Text
-                style={[
-                  styles.sortMethodText,
-                  selectedSortMethod === '사진적은순' &&
-                    styles.selectedSortMethodText,
-                ]}>
-                사진적은순
-              </Text>
-            </TouchableOpacity>
+        <TouchableWithoutFeedback
+          onPress={() => {
+            setIsSortModalVisible(false);
+          }}>
+          <View style={styles.modalContainer}>
+            <View style={styles.modalContent}>
+              <Text style={styles.modalTitle}>정렬</Text>
+              <TouchableOpacity
+                style={[styles.sortMethodButton]}
+                onPress={() => handleSortMethodSelect('최신순')}>
+                <Text
+                  style={[
+                    styles.sortMethodText,
+                    selectedSortMethod === '최신순' &&
+                      styles.selectedSortMethodText,
+                  ]}>
+                  최신순
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.sortMethodButton]}
+                onPress={() => handleSortMethodSelect('오래된순')}>
+                <Text
+                  style={[
+                    styles.sortMethodText,
+                    selectedSortMethod === '오래된순' &&
+                      styles.selectedSortMethodText,
+                  ]}>
+                  오래된순
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.sortMethodButton]}
+                onPress={() => handleSortMethodSelect('제목순')}>
+                <Text
+                  style={[
+                    styles.sortMethodText,
+                    selectedSortMethod === '제목순' &&
+                      styles.selectedSortMethodText,
+                  ]}>
+                  제목순
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.sortMethodButton]}
+                onPress={() => handleSortMethodSelect('사진많은순')}>
+                <Text
+                  style={[
+                    styles.sortMethodText,
+                    selectedSortMethod === '사진많은순' &&
+                      styles.selectedSortMethodText,
+                  ]}>
+                  사진많은순
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.sortMethodButton]}
+                onPress={() => handleSortMethodSelect('사진적은순')}>
+                <Text
+                  style={[
+                    styles.sortMethodText,
+                    selectedSortMethod === '사진적은순' &&
+                      styles.selectedSortMethodText,
+                  ]}>
+                  사진적은순
+                </Text>
+              </TouchableOpacity>
+            </View>
           </View>
-        </View>
+        </TouchableWithoutFeedback>
       </Modal>
 
       <Modal // 앨범 다운로드
         visible={isDownloadVisible}
         animationType="slide"
         transparent={true}>
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>앨범 다운로드</Text>
-            <Text style={styles.modalContentTitle}>
-              앨범 {selectedAlbums.length}개를 다운로드 하시겠습니까?
-            </Text>
-            <Text>다운로드된 앨범은 기기의 내부 저장소에 저장됩니다.</Text>
-            <View style={styles.buttonContainer}>
-              <Text
-                style={styles.modalButtonCancel}
-                onPress={() => closeDownloadModal()}>
-                취소
+        <TouchableWithoutFeedback
+          onPress={() => {
+            closeDownloadModal();
+          }}>
+          <View style={styles.modalContainer}>
+            <View style={styles.modalContent}>
+              <Text style={styles.modalTitle}>앨범 다운로드</Text>
+              <Text style={styles.modalContentTitle}>
+                앨범 {selectedAlbums.length}개를 다운로드 하시겠습니까?
               </Text>
-              <Text>|</Text>
-              <Text
-                style={styles.modalButtonOk}
-                onPress={() => closeDownloadModal()}>
-                다운로드
-              </Text>
+              <Text>다운로드된 앨범은 기기의 내부 저장소에 저장됩니다.</Text>
+              <View style={styles.buttonContainer}>
+                <Text
+                  style={styles.modalButtonCancel}
+                  onPress={() => closeDownloadModal()}>
+                  취소
+                </Text>
+                <Text>|</Text>
+                <Text
+                  style={styles.modalButtonOk}
+                  onPress={() => closeDownloadModal()}>
+                  다운로드
+                </Text>
+              </View>
             </View>
           </View>
-        </View>
+        </TouchableWithoutFeedback>
       </Modal>
 
       <Modal // 앨범 합치기
         visible={isMergeVisible}
         animationType="slide"
         transparent={true}>
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>앨범 합치기</Text>
-            <Text style={styles.modalContentTitle}>
-              앨범 {selectedAlbums.length}개를 합치겠습니까?
-            </Text>
-            <Text>앨범을 합치면 더 이상 되돌릴 수 없습니다.</Text>
-            <View style={styles.buttonContainer}>
-              <Text
-                style={styles.modalButtonCancel}
-                onPress={() => closeMergeModal()}>
-                취소
+        <TouchableWithoutFeedback
+          onPress={() => {
+            closeMergeModal();
+          }}>
+          <View style={styles.modalContainer}>
+            <View style={styles.modalContent}>
+              <Text style={styles.modalTitle}>앨범 합치기</Text>
+              <Text style={styles.modalContentTitle}>
+                앨범 {selectedAlbums.length}개를 합치겠습니까?
               </Text>
-              <Text>|</Text>
-              <Text
-                style={styles.modalButtonOk}
-                onPress={() => openMergeNameModal()}>
-                합치기
-              </Text>
+              <Text>앨범을 합치면 더 이상 되돌릴 수 없습니다.</Text>
+              <View style={styles.buttonContainer}>
+                <Text
+                  style={styles.modalButtonCancel}
+                  onPress={() => closeMergeModal()}>
+                  취소
+                </Text>
+                <Text>|</Text>
+                <Text
+                  style={styles.modalButtonOk}
+                  onPress={() => openMergeNameModal()}>
+                  합치기
+                </Text>
+              </View>
             </View>
           </View>
-        </View>
+        </TouchableWithoutFeedback>
       </Modal>
 
       <Modal // 앨범 삭제
         visible={isDeleteVisible}
         animationType="slide"
         transparent={true}>
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>앨범 삭제</Text>
-            <Text style={styles.modalContentTitle}>
-              앨범 {selectedAlbums.length}개를 삭제 하시겠습니까?
-            </Text>
-            <Text>앨범을 삭제하시면 더 이상 되돌릴 수 없습니다.</Text>
-            <View style={styles.buttonContainer}>
-              <Text
-                style={styles.modalButtonCancel}
-                onPress={() => closeDeleteModal()}>
-                취소
+        <TouchableWithoutFeedback
+          onPress={() => {
+            closeDeleteModal();
+          }}>
+          <View style={styles.modalContainer}>
+            <View style={styles.modalContent}>
+              <Text style={styles.modalTitle}>앨범 삭제</Text>
+              <Text style={styles.modalContentTitle}>
+                앨범 {selectedAlbums.length}개를 삭제 하시겠습니까?
               </Text>
-              <Text>|</Text>
-              <Text
-                style={styles.modalButtonOk_red}
-                onPress={() => closeDeleteModal()}>
-                삭제
-              </Text>
+              <Text>앨범을 삭제하시면 더 이상 되돌릴 수 없습니다.</Text>
+              <View style={styles.buttonContainer}>
+                <Text
+                  style={styles.modalButtonCancel}
+                  onPress={() => closeDeleteModal()}>
+                  취소
+                </Text>
+                <Text>|</Text>
+                <Text
+                  style={styles.modalButtonOk_red}
+                  onPress={() => closeDeleteModal()}>
+                  삭제
+                </Text>
+              </View>
             </View>
           </View>
-        </View>
+        </TouchableWithoutFeedback>
       </Modal>
 
       <Modal // Merge를 통한 새로운 앨범명 설정
         visible={isMergeNameVisible}
         animationType="slide"
         transparent={true}>
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <Text>새로운 앨범명</Text>
-            <TextInput
-              style={styles.input}
-              onChangeText={() => {}}
-              defaultValue={'새로운 앨범'}
-            />
-            <View style={styles.buttonContainer}>
-              <Text
-                style={styles.modalButtonCancel}
-                onPress={() => {
-                  setIsMergeNameVisible(false);
-                }}>
-                취소
-              </Text>
-              <Text>|</Text>
-              <Text
-                style={styles.modalButtonOk}
-                onPress={() => handleMerge('새로운 이름')}>
-                생성
-              </Text>
+        <TouchableWithoutFeedback
+          onPress={() => {
+            setIsMergeNameVisible(false);
+          }}>
+          <View style={styles.modalContainer}>
+            <View style={styles.modalContent}>
+              <Text>새로운 앨범명</Text>
+              <TextInput
+                style={styles.input}
+                onChangeText={() => {}}
+                defaultValue={'새로운 앨범'}
+              />
+              <View style={styles.buttonContainer}>
+                <Text
+                  style={styles.modalButtonCancel}
+                  onPress={() => {
+                    setIsMergeNameVisible(false);
+                  }}>
+                  취소
+                </Text>
+                <Text>|</Text>
+                <Text
+                  style={styles.modalButtonOk}
+                  onPress={() => handleMerge('새로운 이름')}>
+                  생성
+                </Text>
+              </View>
             </View>
           </View>
-        </View>
+        </TouchableWithoutFeedback>
       </Modal>
     </React.Fragment>
   );

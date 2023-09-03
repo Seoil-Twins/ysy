@@ -24,7 +24,7 @@ const ColorPicker: React.FC<ColorPickerProps> = ({
   onColorChange,
 }) => {
   const [color, setColor] = useState<string>(
-    defaultValue ? defaultValue : '#FFFFFF',
+    defaultValue ? defaultValue : '#00FF00',
   );
   const [isVisible, setIsVisible] = useState<boolean>(false);
 
@@ -44,14 +44,21 @@ const ColorPicker: React.FC<ColorPickerProps> = ({
     [onColorChange],
   );
 
-  const renderSliderComponent = () => {
+  const drawCircle = () => {
     return (
-      <View>
-        <Slider
-          value={0.5} // 슬라이더의 초기값
-          onValueChange={value => console.log(value)} // 값이 변경될 때 호출되는 함수
-        />
-      </View>
+      <View
+        style={{
+          backgroundColor: color,
+          width: 20,
+          height: 20,
+          borderRadius: 25,
+          justifyContent: 'center',
+          alignItems: 'center',
+          position: 'absolute',
+          right: 15,
+          borderWidth: 0.3,
+        }}
+      />
     );
   };
 
@@ -68,16 +75,16 @@ const ColorPicker: React.FC<ColorPickerProps> = ({
       <Pressable
         style={[styles.input, isError ? styles.error : null]}
         onPress={showColorPicker}>
-        <CustomText size={16} weight="regular">
+        <CustomText color={color} size={16} weight="regular">
           {color}
         </CustomText>
-        <ColorPickerSVG style={styles.img} />
+        {drawCircle()}
       </Pressable>
       <Modal // 앨범 이름 변경
         visible={isVisible}
         animationType="slide"
         transparent={true}>
-        <View style = {{flex : 1, backgroundColor : 'blye', height: '80%'}}>
+        <View style={{ flex: 1, backgroundColor: 'blye', height: '80%' }}>
           <TriangleColorPicker
             oldColor="purple"
             color={color}
