@@ -20,7 +20,6 @@ import InternalServerError from "../errors/internalServer.error";
 import UserController from "../controller/user.controller";
 import UserService from "../services/user.service";
 import UserRoleService from "../services/userRole.service";
-import UnauthorizedError from "../errors/unauthorized.error";
 
 const router: Router = express.Router();
 const userService = new UserService();
@@ -43,7 +42,6 @@ const signupSchema: joi.Schema = joi.object({
 });
 
 const updateSchema: joi.Schema = joi.object({
-  userId: joi.number().required(),
   name: joi.string().min(2).max(8).trim()
 });
 
@@ -90,6 +88,8 @@ router.post("/", async (req: Request, res: Response, next: NextFunction) => {
       };
 
       const url: string = await userController.createUser(data, profile);
+
+      logger.debug(`Response Data : ${JSON.stringify(data)}`);
       return res.header({ Location: url }).status(STATUS_CODE.CREATED).json({});
     } catch (error) {
       next(error);

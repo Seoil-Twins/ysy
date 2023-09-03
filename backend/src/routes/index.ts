@@ -30,7 +30,7 @@ const router: Router = express.Router();
 router.use("/auth", authRouter);
 
 router.use("/user", checkContentType, authMiddleware, userRouter);
-// router.use("/couple", checkContentType, authMiddleware, coupleRouter);
+router.use("/couple", checkContentType, authMiddleware, coupleRouter);
 // router.use("/album", authMiddleware, albumRouter);
 // router.use("/calendar", authMiddleware, calendarRouter);
 // router.use("/inquire", authMiddleware, inquireRouter);

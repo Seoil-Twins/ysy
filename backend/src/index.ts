@@ -40,7 +40,7 @@ declare global {
   namespace Express {
     interface Request {
       userId?: number;
-      cupId?: string;
+      cupId: string | null;
       roleId?: number;
       contentType?: ContentType;
     }
@@ -78,6 +78,10 @@ app.use(errorHandlerMiddleware);
 
 app.listen(port, () => {
   logger.debug(`Server Listen on port : ${port}!`);
+});
+
+process.on("uncaughtException", (error) => {
+  logger.error(`UnCaughtException : ${JSON.stringify(error)}`);
 });
 
 export const API_ROOT = process.env.API_ROOT || `http://localhost:${port}`;

@@ -2,14 +2,13 @@ import { Couple } from "../models/couple.model";
 import { User } from "../models/user.model";
 
 export interface CreateCouple {
-  othderCode: number;
+  otherCode: number;
   cupDay: Date;
   thumbnail?: string | null;
 }
 
 export interface UpdateCouple {
   cupDay?: Date;
-  thumbnail?: string | null;
 }
 
 export interface UpdateCoupleWithAdmin {

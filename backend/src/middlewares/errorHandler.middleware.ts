@@ -6,7 +6,7 @@ import logger from "../logger/logger";
 import { ERROR_CODE, STATUS_CODE } from "../constants/statusCode.constant";
 
 const globalErrorHandler: ErrorRequestHandler = (e: any, req: Request, res: Response, next: NextFunction) => {
-  logger.debug(`Error Handler => ${e}`);
+  logger.debug(`${e}`);
 
   if (e instanceof AbstractError) {
     const { message, statusCode } = e;

@@ -9,7 +9,7 @@ const checkContentType = (req: Request, _res: Response, next: NextFunction) => {
     const contentType = checkFormdataType(req);
     if (!contentType) throw new UnsupportedMediaTypeError("This API must have a content-type of 'multipart/form-data' or 'application/json' unconditionally.");
 
-    req.body.contentType = contentType;
+    req.contentType = contentType;
     next();
   } else {
     next();
