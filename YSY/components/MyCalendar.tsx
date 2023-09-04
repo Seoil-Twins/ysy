@@ -704,7 +704,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'white', // 배경색 변경
   },
   dayOfWeekLabel: {
-    fontSize: 16,
+    fontSize: 10,
     color: '#333333',
     width: screenWidth * 0.12,
     margin: 2,

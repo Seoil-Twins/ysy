@@ -322,7 +322,7 @@ export const Album = () => {
         <View
           style={{
             flexDirection: 'row',
-            height: 50,
+            height: 48,
             backgroundColor: 'white',
             alignItems: 'center',
             justifyContent: 'flex-end',
@@ -478,7 +478,11 @@ export const Album = () => {
             <View style={styles.modalContent}>
               <Text style={styles.modalTitle}>앨범 다운로드</Text>
               <Text style={styles.modalContentTitle}>
-                앨범 {selectedAlbums.length}개를 다운로드 하시겠습니까?
+                앨범{' '}
+                <Text style={{ color: '#3675FB' }}>
+                  {selectedAlbums.length}
+                </Text>
+                개를 다운로드 하시겠습니까?
               </Text>
               <Text>다운로드된 앨범은 기기의 내부 저장소에 저장됩니다.</Text>
               <View style={styles.buttonContainer}>
@@ -511,7 +515,11 @@ export const Album = () => {
             <View style={styles.modalContent}>
               <Text style={styles.modalTitle}>앨범 합치기</Text>
               <Text style={styles.modalContentTitle}>
-                앨범 {selectedAlbums.length}개를 합치겠습니까?
+                앨범{' '}
+                <Text style={{ color: '#3675FB' }}>
+                  {selectedAlbums.length}
+                </Text>
+                개를 합치겠습니까?
               </Text>
               <Text>앨범을 합치면 더 이상 되돌릴 수 없습니다.</Text>
               <View style={styles.buttonContainer}>
@@ -544,7 +552,11 @@ export const Album = () => {
             <View style={styles.modalContent}>
               <Text style={styles.modalTitle}>앨범 삭제</Text>
               <Text style={styles.modalContentTitle}>
-                앨범 {selectedAlbums.length}개를 삭제 하시겠습니까?
+                앨범{' '}
+                <Text style={{ color: '#3675FB' }}>
+                  {selectedAlbums.length}
+                </Text>
+                개를 삭제 하시겠습니까?
               </Text>
               <Text>앨범을 삭제하시면 더 이상 되돌릴 수 없습니다.</Text>
               <View style={styles.buttonContainer}>
@@ -618,14 +630,14 @@ const styles = StyleSheet.create({
   },
   container: {
     position: 'absolute',
-    bottom: 20,
-    right: 20,
+    bottom: 30,
+    right: 30,
     zIndex: 999,
   },
   button: {
     backgroundColor: '#3675FB',
-    width: 50,
-    height: 50,
+    width: 40,
+    height: 40,
     borderRadius: 25,
     justifyContent: 'center',
     alignItems: 'center',

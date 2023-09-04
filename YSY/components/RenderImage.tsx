@@ -4,7 +4,6 @@ import { useAppSelector } from '../redux/hooks';
 import { RootState } from '../redux/store';
 import { widthPercentageToDP as wp } from 'react-native-responsive-screen';
 
-import WCheckBigSvg from '../assets/icons/white_check_big.svg';
 import WCheckSvg from '../assets/icons/white_check.svg';
 
 const screenWidth = wp('100%');
@@ -33,18 +32,17 @@ const RenderImage: React.FC<RenderImageProps> = ({
   );
 
   return (
-    <View style={{ flex: 1, paddingTop: 1, alignItems: 'center' }}>
+    <View style={{ flex: 1, paddingTop: 1, alignItems: 'flex-start' }}>
       <TouchableOpacity
         style={{
           flex: 1,
           paddingTop: 1,
           paddingRight: 1,
-          position: 'relative',
-          alignItems: 'center',
+          backgroundColor: 'red',
         }}
         onPress={() => handleImagePress(item)}
         onLongPress={() => handleImageLongPress()}>
-        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+        <View style={{ flexDirection: 'row' }}>
           <Image
             source={{ uri: item }}
             style={{ width: screenWidth / 4 - 2, height: 100 }}

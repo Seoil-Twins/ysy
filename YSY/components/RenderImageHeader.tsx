@@ -102,13 +102,13 @@ const RenderImageHeader: React.FC<RenderImageHeaderProps> = ({
             onPress={() => {
               selectImageFromGallery();
             }}>
-            <BAddSvg style={{ width: 70, height: 70, margin: 18 }} />
+            <BAddSvg style={{ margin: 15 }} width={20} height={20} />
           </TouchableOpacity>
           <TouchableOpacity
             onPress={() => {
               handleMoreBtn();
             }}>
-            <MoreSvg style={{ width: 70, height: 70, margin: 18 }} />
+            <MoreSvg style={{ margin: 15 }} width={20} height={20} />
           </TouchableOpacity>
         </View>
       </View>

@@ -9,6 +9,7 @@ import {
   TextInput,
   BackHandler,
   Share,
+  TouchableWithoutFeedback,
 } from 'react-native';
 import { AlbumTypes } from '../navigation/AlbumTypes';
 import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
@@ -461,195 +462,221 @@ export const AlbumDetail = () => {
           />
         }
       </View>
-
-      <FlatList
-        data={albumImages} // 앨범에 해당하는 이미지 데이터를 사용합니다.
-        renderItem={({ item }) => (
-          <RenderImage
-            selectedImages={selectedImages}
-            tmpRepImage={tmpRepImage}
-            isRepImageSelMode={isRepImageSelMode}
-            handleImagePress={() => handleImagePress(item)}
-            handleImageLongPress={handleImageLongPress}
-            item={item}
-          />
-        )}
-        keyExtractor={(item, index) => String(index)}
-        numColumns={numColumns}
-        key={'ImageModal'}
-        onEndReached={loadMoreData}
-        onEndReachedThreshold={0.1}
-      />
+      <View>
+        <FlatList
+          data={albumImages} // 앨범에 해당하는 이미지 데이터를 사용합니다.
+          renderItem={({ item }) => (
+            <RenderImage
+              selectedImages={selectedImages}
+              tmpRepImage={tmpRepImage}
+              isRepImageSelMode={isRepImageSelMode}
+              handleImagePress={() => handleImagePress(item)}
+              handleImageLongPress={handleImageLongPress}
+              item={item}
+            />
+          )}
+          keyExtractor={(item, index) => String(index)}
+          numColumns={numColumns}
+          key={'ImageModal'}
+          onEndReached={loadMoreData}
+          onEndReachedThreshold={0.1}
+        />
+      </View>
 
       <Modal // 상세 페이지 설정메뉴
         visible={isMoreModalVisible}
         animationType="none"
         transparent={true}>
-        <View style={(styles.modalContainer, { flexDirection: 'row' })}>
-          <View
-            style={{
-              flex: 1,
-              width: screenWidth * 0.6,
-            }}
-          />
-          <View
-            style={{
-              backgroundColor: 'white',
-              borderRadius: 10,
-              elevation: 5,
-              marginTop: screenWidth * 0.01,
-              marginRight: screenWidth * 0.01,
-              width: screenWidth * 0.4,
-            }}>
-            <TouchableOpacity
-              onPress={() => handleRepImage()}
-              onPressIn={() => handleOptionPressIn('option1')}
-              onPressOut={() => handleOptionPressOut('option1')}
-              activeOpacity={1}
-              style={[
-                isPressed.option1 ? styles.touchableOpacityPressed : null,
-              ]}>
-              <View>
-                <Text style={styles.moreText}>대표 사진 변경</Text>
-              </View>
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() => handleModName()}
-              onPressIn={() => handleOptionPressIn('option2')}
-              onPressOut={() => handleOptionPressOut('option2')}
-              activeOpacity={1}
-              style={[
-                isPressed.option2 ? styles.touchableOpacityPressed : null,
-              ]}>
-              <Text style={styles.moreText}>앨범 이름 변경</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() => closeMoreModal()}
-              onPressIn={() => handleOptionPressIn('option3')}
-              onPressOut={() => handleOptionPressOut('option3')}
-              activeOpacity={1}
-              style={[
-                isPressed.option3 ? styles.touchableOpacityPressed : null,
-              ]}>
-              <Text style={styles.moreTextRed}>앨범 삭제</Text>
-            </TouchableOpacity>
+        <TouchableWithoutFeedback
+          onPress={() => {
+            setIsMoreModalVisible(false);
+          }}>
+          <View style={(styles.modalContainer, { flexDirection: 'row' })}>
+            <View
+              style={{
+                flex: 1,
+                width: screenWidth * 0.6,
+              }}
+            />
+            <View
+              style={{
+                backgroundColor: 'white',
+                borderRadius: 10,
+                elevation: 5,
+                marginTop: screenWidth * 0.01,
+                marginRight: screenWidth * 0.01,
+                width: screenWidth * 0.4,
+              }}>
+              <TouchableOpacity
+                onPress={() => handleRepImage()}
+                onPressIn={() => handleOptionPressIn('option1')}
+                onPressOut={() => handleOptionPressOut('option1')}
+                activeOpacity={1}
+                style={[
+                  isPressed.option1 ? styles.touchableOpacityPressed : null,
+                ]}>
+                <View>
+                  <Text style={styles.moreText}>대표 사진 변경</Text>
+                </View>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => handleModName()}
+                onPressIn={() => handleOptionPressIn('option2')}
+                onPressOut={() => handleOptionPressOut('option2')}
+                activeOpacity={1}
+                style={[
+                  isPressed.option2 ? styles.touchableOpacityPressed : null,
+                ]}>
+                <Text style={styles.moreText}>앨범 이름 변경</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => closeMoreModal()}
+                onPressIn={() => handleOptionPressIn('option3')}
+                onPressOut={() => handleOptionPressOut('option3')}
+                activeOpacity={1}
+                style={[
+                  isPressed.option3 ? styles.touchableOpacityPressed : null,
+                ]}>
+                <Text style={styles.moreTextRed}>앨범 삭제</Text>
+              </TouchableOpacity>
+            </View>
           </View>
-        </View>
+        </TouchableWithoutFeedback>
       </Modal>
 
       <Modal // 앨범 이름 변경
         visible={isModNameVisible}
         animationType="slide"
         transparent={true}>
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <Text>앨범명 변경</Text>
-            <TextInput
-              style={styles.input}
-              onChangeText={() => {}}
-              defaultValue={albumName}
-            />
-            <View style={styles.buttonContainer}>
-              <Text
-                style={styles.modalButtonCancel}
-                onPress={() => {
-                  setIsModNameVisible(false);
-                }}>
-                취소
-              </Text>
-              <Text>|</Text>
-              <Text
-                style={styles.modalButtonOk}
-                onPress={() => setIsModNameVisible(false)}>
-                변경
-              </Text>
+        <TouchableWithoutFeedback
+          onPress={() => {
+            setIsModNameVisible(false);
+          }}>
+          <View style={styles.modalContainer}>
+            <View style={styles.modalContent}>
+              <Text>앨범명 변경</Text>
+              <TextInput
+                style={styles.input}
+                onChangeText={() => {}}
+                defaultValue={albumName}
+              />
+              <View style={styles.buttonContainer}>
+                <Text
+                  style={styles.modalButtonCancel}
+                  onPress={() => {
+                    setIsModNameVisible(false);
+                  }}>
+                  취소
+                </Text>
+                <Text>|</Text>
+                <Text
+                  style={styles.modalButtonOk}
+                  onPress={() => setIsModNameVisible(false)}>
+                  변경
+                </Text>
+              </View>
             </View>
           </View>
-        </View>
+        </TouchableWithoutFeedback>
       </Modal>
 
       <Modal // 이미지 다운로드
         visible={isImageDownloadVisible}
         animationType="slide"
         transparent={true}>
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>이미지 다운로드</Text>
-            <Text style={styles.modalContentTitle}>
-              이미지 {selectedImages.length}개를 다운로드 하시겠습니까?
-            </Text>
-            <Text>다운로드된 이미지는 기기의 내부 저장소에 저장됩니다.</Text>
-            <View style={styles.buttonContainer}>
-              <Text
-                style={styles.modalButtonCancel}
-                onPress={() => closeImageDownloadModal()}>
-                취소
+        <TouchableWithoutFeedback
+          onPress={() => {
+            closeImageDownloadModal();
+          }}>
+          <View style={styles.modalContainer}>
+            <View style={styles.modalContent}>
+              <Text style={styles.modalTitle}>이미지 다운로드</Text>
+              <Text style={styles.modalContentTitle}>
+                이미지 {selectedImages.length}개를 다운로드 하시겠습니까?
               </Text>
-              <Text>|</Text>
-              <Text
-                style={styles.modalButtonOk}
-                onPress={() => ImageDownload()}>
-                다운로드
-              </Text>
+              <Text>다운로드된 이미지는 기기의 내부 저장소에 저장됩니다.</Text>
+              <View style={styles.buttonContainer}>
+                <Text
+                  style={styles.modalButtonCancel}
+                  onPress={() => closeImageDownloadModal()}>
+                  취소
+                </Text>
+                <Text>|</Text>
+                <Text
+                  style={styles.modalButtonOk}
+                  onPress={() => ImageDownload()}>
+                  다운로드
+                </Text>
+              </View>
             </View>
           </View>
-        </View>
+        </TouchableWithoutFeedback>
       </Modal>
 
       <Modal // 이미지 공유하기
         visible={isImageShareVisible}
         animationType="slide"
         transparent={true}>
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>이미지 공유하기</Text>
-            <Text style={styles.modalContentTitle}>
-              이미지 {selectedImages.length}개를 공유하시겠습니까?
-            </Text>
-            <Text>이미지는 공유하면 더 이상 되돌릴 수 없습니다.</Text>
-            <View style={styles.buttonContainer}>
-              <Text
-                style={styles.modalButtonCancel}
-                onPress={() => closeImageShareModal()}>
-                취소
+        <TouchableWithoutFeedback
+          onPress={() => {
+            closeImageShareModal();
+          }}>
+          <View style={styles.modalContainer}>
+            <View style={styles.modalContent}>
+              <Text style={styles.modalTitle}>이미지 공유하기</Text>
+              <Text style={styles.modalContentTitle}>
+                이미지 {selectedImages.length}개를 공유하시겠습니까?
               </Text>
-              <Text>|</Text>
-              <Text
-                style={styles.modalButtonOk}
-                onPress={() => handleImageShare()}>
-                공유하기
-              </Text>
+              <Text>이미지는 공유하면 더 이상 되돌릴 수 없습니다.</Text>
+              <View style={styles.buttonContainer}>
+                <Text
+                  style={styles.modalButtonCancel}
+                  onPress={() => closeImageShareModal()}>
+                  취소
+                </Text>
+                <Text>|</Text>
+                <Text
+                  style={styles.modalButtonOk}
+                  onPress={() => handleImageShare()}>
+                  공유하기
+                </Text>
+              </View>
             </View>
           </View>
-        </View>
+        </TouchableWithoutFeedback>
       </Modal>
 
       <Modal // 이미지 삭제
         visible={isImageDeleteVisible}
         animationType="slide"
         transparent={true}>
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>이미지 삭제</Text>
-            <Text style={styles.modalContentTitle}>
-              이미지 {selectedImages.length}개를 삭제 하시겠습니까?
-            </Text>
-            <Text>이미지를 삭제하시면 더 이상 되돌릴 수 없습니다.</Text>
-            <View style={styles.buttonContainer}>
-              <Text
-                style={styles.modalButtonCancel}
-                onPress={() => closeImageDeleteModal()}>
-                취소
+        <TouchableWithoutFeedback
+          onPress={() => {
+            closeImageDeleteModal();
+          }}>
+          <View style={styles.modalContainer}>
+            <View style={styles.modalContent}>
+              <Text style={styles.modalTitle}>이미지 삭제</Text>
+              <Text style={styles.modalContentTitle}>
+                이미지 {selectedImages.length}개를 삭제 하시겠습니까?
               </Text>
-              <Text>|</Text>
-              <Text
-                style={styles.modalButtonOk_red}
-                onPress={() => handleImageDelete()}>
-                삭제
-              </Text>
+              <Text>이미지를 삭제하시면 더 이상 되돌릴 수 없습니다.</Text>
+              <View style={styles.buttonContainer}>
+                <Text
+                  style={styles.modalButtonCancel}
+                  onPress={() => closeImageDeleteModal()}>
+                  취소
+                </Text>
+                <Text>|</Text>
+                <Text
+                  style={styles.modalButtonOk_red}
+                  onPress={() => handleImageDelete()}>
+                  삭제
+                </Text>
+              </View>
             </View>
           </View>
-        </View>
+        </TouchableWithoutFeedback>
       </Modal>
     </View>
   );
