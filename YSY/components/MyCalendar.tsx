@@ -121,6 +121,8 @@ const MyCalendar: React.FC<CalendarProps> = ({ onDateSelect }) => {
       setDateCellFlex(!dateCellFlex);
       setShowDetailView(!showDetailView);
       filterSchedule();
+      const dateCk = new Date(date);
+      console.log('요일 : ' + dateCk.getDay());
     } else {
       if (dateCellFlex && showDetailView) {
         setDateCellFlex(!dateCellFlex);
@@ -190,6 +192,26 @@ const MyCalendar: React.FC<CalendarProps> = ({ onDateSelect }) => {
         desc: '짜장면 먹기',
         color: '#00FF00',
       },
+      {
+        startDate: '2023-09-01',
+        endDate: '2023-09-05',
+        startTime: '8:30AM',
+        endTime: '9:30AM',
+        hl: '20m',
+        title: '한식집',
+        desc: '짜장면 먹기',
+        color: '#00FFFF',
+      },
+      {
+        startDate: '2023-09-01',
+        endDate: '2023-09-03',
+        startTime: '8:30AM',
+        endTime: '9:30AM',
+        hl: '20m',
+        title: '한식집',
+        desc: '짜장면 먹기',
+        color: '#00FFFF',
+      }, // DB에서 이벤트 지속시간에 따라 내림차순 정렬을 해야함 아니면, 모양이 꼬임
     ]);
   };
 
@@ -260,8 +282,15 @@ const MyCalendar: React.FC<CalendarProps> = ({ onDateSelect }) => {
   const dividedDates = divideArray(currentMonthDates, 7);
 
   const filterSchedule = () => {
-    const newSchedule = scheduleList.filter(
-      item => item.startDate === selectedDate.toISOString().slice(0, 10),
+    // const newSchedule = scheduleList.filter(
+    //   item => item.startDate === selectedDate.toISOString().slice(0, 10),
+    // );
+    const newSchedule = scheduleList.filter(item =>
+      isDateBetween(
+        item.startDate,
+        item.endDate,
+        selectedDate.toISOString().slice(0, 10),
+      ),
     );
     setSelectedScheduleList(newSchedule);
   };
@@ -280,10 +309,27 @@ const MyCalendar: React.FC<CalendarProps> = ({ onDateSelect }) => {
     );
   };
 
+  const isDateBetween = (
+    startDateStr: string,
+    endDateStr: string,
+    targetDateStr: string,
+  ) => {
+    const startDate = new Date(startDateStr);
+    const endDate = new Date(endDateStr);
+    const targetDate = new Date(targetDateStr);
+    // targetDate가 startDate와 endDate 사이에 있는지 검사
+    return startDate <= targetDate && targetDate <= endDate;
+  };
+
   const drawBar = (day: Date) => {
-    const filtedSchedule = scheduleList.filter(
-      item => item.startDate === day.toISOString().slice(0, 10),
+    const filtedSchedule = scheduleList.filter(item =>
+      isDateBetween(
+        item.startDate,
+        item.endDate,
+        day.toISOString().slice(0, 10),
+      ),
     );
+
     let totalBarHeight;
     if (showDetailView) {
       totalBarHeight = screenHeight * 0.02;
@@ -292,42 +338,39 @@ const MyCalendar: React.FC<CalendarProps> = ({ onDateSelect }) => {
     }
     // console.log(parseInt(day.toISOString().slice(8, 10), 10));
     return (
-      <View>
-        <View
-          style={{
-            width: '100%', // 100%
-            height: totalBarHeight,
-            // overflow: 'hidden', // 막대가 넘어가는 부분 숨김 처리
-            overflow: 'visible', // overflow 속성을 visible로 설정
-          }}>
-          <FlatList
-            data={filtedSchedule}
-            keyExtractor={(item, index) => String(index)}
-            renderItem={({ item }) => RenderBar(item)}
-          />
-        </View>
+      <View
+        style={{
+          width: '110%', // 100%
+          height: totalBarHeight,
+        }}>
+        <FlatList
+          data={filtedSchedule}
+          keyExtractor={(item, index) => String(index)}
+          renderItem={({ item }) => RenderBar(item, day)}
+        />
       </View>
     );
   };
 
-  const RenderBar = (schedule: Schedule) => {
+  const RenderBar = (schedule: Schedule, day: Date) => {
     const eventDay =
       parseInt(schedule.endDate.toString().slice(8, 10), 10) -
-      parseInt(schedule.startDate.toString().slice(8, 10), 10) +
-      1;
-    const widthPercentage = eventDay * 50; // 예시로 1일당 10%씩 증가하도록 설정
-    console.log(eventDay);
+      parseInt(schedule.startDate.toString().slice(8, 10), 10);
+    const dayOfWeek = day.getDay();
+    const lastDayFlag =
+      parseInt(schedule.endDate.toString().slice(8, 10)) == day.getDate();
+
     return (
       <View
         style={{
-          width: widthPercentage,
+          width: `${
+            eventDay ? (dayOfWeek != 6 ? ( lastDayFlag ? 90 : 110) : 90) : 90
+          }%`,
           height: 8,
           backgroundColor: schedule.color,
-          overflow: 'visible', // overflow 속성을 visible로 설정
           // marginRight: '70%',
-          // marginLeft: '5%',
           marginTop: 5,
-          borderRadius: 20,
+          borderRadius: 5,
         }}
       />
     );
@@ -492,6 +535,7 @@ const MyCalendar: React.FC<CalendarProps> = ({ onDateSelect }) => {
                           {
                             color: '#333333',
                             fontWeight: 'bold',
+                            alignSelf: 'center',
                           },
                           date.getDay() === 0 && styles.sundayCell, // 일요일의 스타일
                           date.getDay() === 6 && styles.saturdayCell, // 토요일의 스타일
@@ -500,7 +544,12 @@ const MyCalendar: React.FC<CalendarProps> = ({ onDateSelect }) => {
                         ]}>
                         {date.getDate()}
                       </Text>
-                      <View>{drawBar(date)}</View>
+                      <View
+                        style={{
+                          overflow: 'visible',
+                        }}>
+                        {drawBar(date)}
+                      </View>
                     </Pressable>
                   ) : (
                     <View key={subIndex} style={styles.dateCell} />
@@ -680,17 +729,13 @@ const styles = StyleSheet.create({
     width: screenWidth * 0.12,
     height: screenHeight * 0.1,
     marginBottom: screenHeight * 0.02,
-    alignItems: 'center',
     justifyContent: 'flex-start',
-    margin: 2,
   },
   dateCellFlex: {
     width: screenWidth * 0.12,
     height: screenHeight * 0.04,
     marginBottom: screenHeight * 0.02,
-    alignItems: 'center',
     justifyContent: 'flex-start',
-    margin: 2,
   },
   selectedDateCell: {
     borderWidth: 1,
@@ -722,7 +767,7 @@ const styles = StyleSheet.create({
     fontSize: 10,
     color: '#333333',
     width: screenWidth * 0.12,
-    margin: 2,
+    margin: 1,
     fontWeight: 'bold',
     textAlign: 'center',
   },
@@ -735,7 +780,6 @@ const styles = StyleSheet.create({
   prevNextMonthDateCell: {
     width: screenWidth * 0.12,
     marginBottom: screenHeight * 0.02,
-    margin: 2,
     opacity: 0.4, // 회색으로 처리하기 위한 투명도 설정
   },
   selectedPrevNextMonthDateCell: {
