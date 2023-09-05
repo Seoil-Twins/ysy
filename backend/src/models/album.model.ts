@@ -2,7 +2,7 @@ import { DataTypes, Model, literal, NonAttribute, HasManyGetAssociationsMixin } 
 import { CreationOptional, InferAttributes, InferCreationAttributes } from "sequelize/types/model";
 
 import sequelize, { applyDateHook } from ".";
-import { AlbumImage } from "./albnmImage.model";
+import { AlbumImage } from "./albumImage.model";
 import { Couple } from "./couple.model";
 
 export class Album extends Model<InferAttributes<Album>, InferCreationAttributes<Album>> {
@@ -15,6 +15,8 @@ export class Album extends Model<InferAttributes<Album>, InferCreationAttributes
   declare cupId: string;
   declare title: string;
   declare thumbnail: CreationOptional<string | null>;
+  declare thumbnailSize: CreationOptional<number | null>;
+  declare thumbnailType: CreationOptional<string | null>;
   declare createdTime: CreationOptional<Date>;
 
   declare getAlbumImages: HasManyGetAssociationsMixin<AlbumImage>;
@@ -43,6 +45,14 @@ Album.init(
     },
     thumbnail: {
       type: DataTypes.STRING(200)
+    },
+    thumbnailSize: {
+      field: "thumbnail_size",
+      type: DataTypes.INTEGER.UNSIGNED
+    },
+    thumbnailType: {
+      field: "thumbnail_type",
+      type: DataTypes.STRING(20)
     },
     createdTime: {
       field: "created_time",

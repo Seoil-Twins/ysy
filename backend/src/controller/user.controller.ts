@@ -1,4 +1,4 @@
-import { Transaction } from "sequelize";
+import { Op, Transaction, WhereOptions } from "sequelize";
 import { File } from "formidable";
 
 import logger from "../logger/logger";
@@ -17,6 +17,7 @@ import ForbiddenError from "../errors/forbidden.error";
 import ConflictError from "../errors/conflict.error";
 
 class UserController {
+  private ERROR_LOCATION_PREFIX = "user";
   private userService: UserService;
   private userRoleService: UserRoleService;
 
@@ -39,7 +40,9 @@ class UserController {
     let transaction: Transaction | null = null;
     let createdUser: User | null = null;
 
-    const user: User | null = await this.userService.select({ email: data.email, phone: data.phone });
+    const user: User | null = await this.userService.select({
+      [Op.or]: [{ email: data.email }, { phone: data.phone }]
+    });
     if (user) throw new ConflictError("Duplicated User");
 
     try {
@@ -52,11 +55,18 @@ class UserController {
       const url: string = this.userService.getURL();
       return url;
     } catch (error) {
+      if (transaction) await transaction.rollback();
+
       if (createdUser?.profile) {
-        await deleteFile(createdUser.profile);
+        await deleteFile({
+          path: createdUser.profile,
+          location: `${this.ERROR_LOCATION_PREFIX}/createUser`,
+          size: createdUser.profileSize ? createdUser.profileSize : 0,
+          type: createdUser.profileType ? createdUser.profileType : "unknown"
+        });
         logger.error(`After creating the firebase, a db error occurred and the firebase profile is deleted => ${profile}`);
       }
-      if (transaction) await transaction.rollback();
+
       logger.error(`User create error => ${JSON.stringify(error)}`);
 
       throw error;
@@ -64,43 +74,64 @@ class UserController {
   }
 
   async updateUser(userId: number, data: UpdateUser, profile?: File | null): Promise<User> {
-    console.log(userId);
     let transaction: Transaction | null = null;
     let updateUser: User | null = null;
 
-    const user: User | null = await this.userService.select({ userId });
-    if (!user) throw new NotFoundError("Not found user using token user ID");
-    else if (user.deleted) throw new ForbiddenError("User is deleted");
+    const userByUserId: User | null = await this.userService.select({ userId });
+    if (!userByUserId) throw new NotFoundError("Not found user using token user ID");
+    else if (userByUserId.deleted) throw new ForbiddenError("User is deleted");
+
+    if (data.phone) {
+      const userByPhone: User | null = await this.userService.select({ phone: data.phone });
+      if (userByUserId.phone !== userByPhone?.phone) {
+        throw new ConflictError("Duplicated Phone");
+      }
+    }
 
     try {
       transaction = await sequelize.transaction();
-      const prevProfile: string | null = user.profile;
+      const prevProfilePath: string | null = userByUserId.profile;
+      const prevProfileSize: number = userByUserId.profileSize ? userByUserId.profileSize : 0;
+      const prevProfileType: string = userByUserId.profileType ? userByUserId.profileType : "unknown";
 
       if (profile) {
-        updateUser = await this.userService.updateWithProfile(transaction, user, data, profile);
+        updateUser = await this.userService.updateWithProfile(transaction, userByUserId, data, profile);
       } else if (profile === null) {
-        updateUser = await this.userService.update(transaction, user, {
+        updateUser = await this.userService.update(transaction, userByUserId, {
           ...data,
-          profile: null
+          profile: null,
+          profileSize: null,
+          profileType: null
         });
       } else {
-        updateUser = await this.userService.update(transaction, user, data);
+        updateUser = await this.userService.update(transaction, userByUserId, data);
       }
 
       await transaction.commit();
 
-      if (prevProfile && (profile || profile === null)) await deleteFile(prevProfile);
+      if (prevProfilePath && (profile || profile === null)) {
+        await deleteFile({
+          path: prevProfilePath,
+          location: `${this.ERROR_LOCATION_PREFIX}/updateUser`,
+          size: prevProfileSize,
+          type: prevProfileType
+        });
+      }
 
       return updateUser;
     } catch (error) {
+      if (transaction) await transaction.rollback();
+
       // Firebase에는 업로드 되었지만 DB 오류가 발생했다면 Firebase Profile 삭제
       if (updateUser?.profile) {
-        await deleteFile(updateUser.profile);
+        await deleteFile({
+          path: updateUser.profile,
+          location: `${this.ERROR_LOCATION_PREFIX}/updateUser`,
+          size: updateUser.profileSize ? updateUser.profileSize : 0,
+          type: updateUser.profileType ? updateUser.profileType : "unknown"
+        });
         logger.error(`After updating the firebase, a db error occurred and the firebase profile is deleted => ${profile}`);
       }
-
-      if (transaction) await transaction.rollback();
-      logger.error(`User update error => UserId : ${userId} | ${JSON.stringify(error)}`);
 
       throw error;
     }
@@ -112,7 +143,7 @@ class UserController {
     if (!user) throw new NotFoundError("Not found user using token user ID");
     else if (user.deleted) throw new ForbiddenError("User is deleted");
 
-    const updatedUser: User = await this.userService.update(undefined, user, data);
+    const updatedUser: User = await this.userService.update(null, user, data);
     return updatedUser;
   }
 

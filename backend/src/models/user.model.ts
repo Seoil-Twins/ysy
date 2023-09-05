@@ -23,6 +23,8 @@ export class User extends Model<InferAttributes<User>, InferCreationAttributes<U
   declare birthday: Date;
   declare phone: string;
   declare profile: CreationOptional<string | null>;
+  declare profileSize: CreationOptional<number | null>;
+  declare profileType: CreationOptional<string | null>;
   declare primaryNofi: CreationOptional<boolean>;
   declare dateNofi: CreationOptional<boolean>;
   declare eventNofi: CreationOptional<boolean>;
@@ -88,6 +90,14 @@ User.init(
     },
     profile: {
       type: DataTypes.STRING(200)
+    },
+    profileSize: {
+      field: "profile_size",
+      type: DataTypes.INTEGER.UNSIGNED
+    },
+    profileType: {
+      field: "profile_type",
+      type: DataTypes.STRING(20)
     },
     primaryNofi: {
       field: "primary_nofi",

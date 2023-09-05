@@ -17,6 +17,8 @@ export class Couple extends Model<InferAttributes<Couple>, InferCreationAttribut
   declare cupId: CreationOptional<string>;
   declare cupDay: Date;
   declare thumbnail: CreationOptional<string | null>;
+  declare thumbnailSize: CreationOptional<number | null>;
+  declare thumbnailType: CreationOptional<string | null>;
   declare createdTime: CreationOptional<Date>;
   declare deleted: CreationOptional<boolean>;
   declare deletedTime: CreationOptional<Date | null>;
@@ -40,6 +42,14 @@ Couple.init(
     },
     thumbnail: {
       type: DataTypes.STRING(200)
+    },
+    thumbnailSize: {
+      field: "thumbnail_size",
+      type: DataTypes.INTEGER.UNSIGNED
+    },
+    thumbnailType: {
+      field: "thumbnail_type",
+      type: DataTypes.STRING(20)
     },
     createdTime: {
       field: "created_time",

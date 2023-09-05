@@ -1,115 +1,123 @@
 import dayjs from "dayjs";
 import { File } from "formidable";
-import { FindOptions, InferAttributes, Transaction } from "sequelize";
+import { FindOptions, InferAttributes, OrderItem, Transaction } from "sequelize";
 
 import { API_ROOT } from "..";
 
-import logger from "../logger/logger";
-
 import sequelize from "../models";
-import { AlbumImage } from "../models/albnmImage.model";
-import { Album, ICreate } from "../models/album.model";
+import { AlbumImage } from "../models/albumImage.model";
+import { Album } from "../models/album.model";
 import { Couple } from "../models/couple.model";
-import { deleteFile, deleteFolder, uploadFile } from "../utils/firebase.util";
+import { uploadFile } from "../utils/firebase.util";
 
 import { Service } from "./service";
+import { PageOptions } from "../types/album.type";
+import { createSortOptions } from "../utils/sort.util";
 
 // Album Select Option Type
 type SelectOptions =
-    | FindOptions<
-          InferAttributes<
-              Album,
-              {
-                  omit: never;
-              }
-          >
+  | FindOptions<
+      InferAttributes<
+        Album,
+        {
+          omit: never;
+        }
       >
-    | undefined;
+    >
+  | undefined;
 
 class AlbumService extends Service {
-    private FOLDER_NAME = "couples";
+  private FOLDER_NAME = "couples";
 
-    getAlbumFolderPath(cupId: string, albumId: number): string {
-        return `${this.FOLDER_NAME}/${cupId}/${albumId}`;
-    }
+  getAlbumFolderPath(cupId: string, albumId: number): string {
+    return `${this.FOLDER_NAME}/${cupId}/${albumId}`;
+  }
 
-    private getAlbumWithTotal(): SelectOptions {
-        const data: SelectOptions = {
-            attributes: { include: [[sequelize.fn("COUNT", sequelize.col("albumImages.album_id")), "total"]] },
-            include: {
-                model: AlbumImage,
-                as: "albumImages",
-                attributes: []
-            },
-            group: "Album.album_id"
-        };
+  private createTotalOptions(): SelectOptions {
+    const options: SelectOptions = {
+      attributes: { include: [[sequelize.fn("COUNT", sequelize.col("albumImages.album_image_id")), "total"]] },
+      include: {
+        model: AlbumImage,
+        as: "albumImages",
+        attributes: []
+      },
+      group: "Album.album_id"
+    };
 
-        return data;
-    }
+    return options;
+  }
 
-    getURL(): string {
-        throw new Error("Method not implemented.");
-    }
+  getURL(): string {
+    throw new Error("Method not implemented.");
+  }
 
-    getFolderUrl(cupId: string): string {
-        return `${API_ROOT}/album/${cupId}`;
-    }
+  getFolderUrl(cupId: string): string {
+    return `${API_ROOT}/album/${cupId}`;
+  }
 
-    getAlbumUrl(cupId: string, albumId: number): string {
-        return `${API_ROOT}/album/${cupId}/${albumId}`;
-    }
+  getAlbumUrl(cupId: string, albumId: number): string {
+    return `${API_ROOT}/album/${cupId}/${albumId}`;
+  }
 
-    async select(albumId: number): Promise<Album | null> {
-        const options: SelectOptions = this.getAlbumWithTotal();
-        const album: Album | null = await Album.findByPk(albumId, options);
+  async select(albumId: number): Promise<Album | null> {
+    const album: Album | null = await Album.findByPk(albumId);
+    return album;
+  }
 
-        return album;
-    }
+  async selectWithTotal(albumId: number): Promise<Album | null> {
+    const options: SelectOptions = this.createTotalOptions();
+    const album: Album | null = await Album.findByPk(albumId, options);
 
-    async selectAll(cupId: string): Promise<Album[]> {
-        const options: SelectOptions = this.getAlbumWithTotal();
-        options!.where = { cupId };
+    return album;
+  }
 
-        const albums: Album[] = await Album.findAll(options);
-        return albums;
-    }
+  async selectAllWithTotal(cupId: string, pageOptions: PageOptions): Promise<{ albums: Album[]; total: number }> {
+    const sortOptions: OrderItem = createSortOptions(pageOptions.sort);
+    const offset: number = (pageOptions.page - 1) * pageOptions.count;
 
-    async selectWithCouple(couple: Couple): Promise<Album[]> {
-        const albums: Album[] = await couple.getAlbums();
-        return albums;
-    }
+    const { rows, count }: { rows: Album[]; count: number } = await Album.findAndCountAll({
+      where: { cupId },
+      order: [sortOptions],
+      offset,
+      limit: pageOptions.count
+    });
+    return { albums: rows, total: count };
+  }
 
-    async create(transaction: Transaction | null = null, data: ICreate): Promise<Album> {
-        const album: Album = await Album.create(data, { transaction });
-        return album;
-    }
+  async selectWithCouple(couple: Couple): Promise<Album[]> {
+    const albums: Album[] = await couple.getAlbums();
+    return albums;
+  }
 
-    update(_transaction: Transaction | null = null): Promise<any> {
-        throw new Error("Method not implemented.");
-    }
+  async create(transaction: Transaction | null, cupId: string, title: string): Promise<Album> {
+    const album: Album = await Album.create({ cupId, title }, { transaction });
+    return album;
+  }
 
-    async updateTitle(transaction: Transaction | null = null, album: Album, title: string): Promise<Album> {
-        const updatedAlbum = await album.update({ title }, { transaction });
-        return updatedAlbum;
-    }
+  async update(transaction: Transaction | null, album: Album, data: Partial<InferAttributes<Album>>): Promise<Album> {
+    const updatedAlbum = await album.update(data, { transaction });
+    return updatedAlbum;
+  }
 
-    async updateThumbnail(transaction: Transaction | null = null, album: Album, thumbnail: File): Promise<Album> {
-        const path = `${this.FOLDER_NAME}/${album.cupId}/${album.albumId}/thumbnail/${dayjs().valueOf()}.${thumbnail.originalFilename}`;
+  async updateWithThumbnail(transaction: Transaction | null, album: Album, thumbnail: File): Promise<Album> {
+    const path = `${this.FOLDER_NAME}/${album.cupId}/${album.albumId}/thumbnail/${dayjs().valueOf()}.${thumbnail.originalFilename}`;
 
-        const updatedAlbum: Album = await album.update(
-            {
-                thumbnail: path
-            },
-            { transaction }
-        );
+    const updatedAlbum: Album = await album.update(
+      {
+        thumbnail: path,
+        thumbnailSize: thumbnail.size,
+        thumbnailType: thumbnail.mimetype ? thumbnail.mimetype : "unknown"
+      },
+      { transaction }
+    );
 
-        await uploadFile(path, thumbnail.filepath);
-        return updatedAlbum;
-    }
+    await uploadFile(path, thumbnail.filepath);
+    return updatedAlbum;
+  }
 
-    async delete(transaction: Transaction | null = null, album: Album): Promise<void> {
-        await album.destroy({ transaction });
-    }
+  async delete(transaction: Transaction | null, album: Album): Promise<void> {
+    await album.destroy({ transaction });
+  }
 }
 
 export default AlbumService;

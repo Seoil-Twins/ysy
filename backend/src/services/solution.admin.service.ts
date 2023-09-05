@@ -219,7 +219,7 @@ class SolutionAdminService extends Service {
     return solutions;
   }
 
-  async create(transaction: Transaction | null, inquireId: number, data: ICreate): Promise<Solution> {
+  async create(transaction: Transaction | null = null, inquireId: number, data: ICreate): Promise<Solution> {
     const createdSolution: Solution = await Solution.create(
       {
         inquireId,
@@ -231,16 +231,16 @@ class SolutionAdminService extends Service {
     return createdSolution;
   }
 
-  async update(transaction: Transaction | null, solution: Solution, data: IUpdate): Promise<Solution> {
+  async update(transaction: Transaction | null = null, solution: Solution, data: IUpdate): Promise<Solution> {
     const updatedSolution = await solution.update(data, { transaction });
     return updatedSolution;
   }
 
-  delete(transaction: Transaction | null, ...args: any[]): Promise<any> {
+  delete(transaction: Transaction | null = null, ...args: any[]): Promise<any> {
     throw new Error("Method not implemented.");
   }
 
-  async deletes(transaction: Transaction | null, solutionIds: number[]): Promise<any> {
+  async deletes(transaction: Transaction | null = null, solutionIds: number[]): Promise<any> {
     await Solution.destroy({
       where: { solutionId: solutionIds }
     });

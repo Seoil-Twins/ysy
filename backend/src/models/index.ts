@@ -24,6 +24,8 @@ const formatDate = (results: any[]) => {
   if (!Array.isArray(results)) return;
 
   results.forEach((result) => {
+    if (!result.dataValues) return;
+
     for (const [key, value] of Object.entries(result.dataValues)) {
       if (value instanceof Array) {
         formatDate(value);

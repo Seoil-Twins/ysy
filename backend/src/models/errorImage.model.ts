@@ -22,11 +22,11 @@ ErrorImage.init(
     },
     errorLocation: {
       field: "error_location",
-      type: DataTypes.STRING(15),
+      type: DataTypes.STRING(60),
       allowNull: false
     },
     size: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.INTEGER.UNSIGNED,
       allowNull: false
     },
     type: {

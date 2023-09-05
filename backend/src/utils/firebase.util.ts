@@ -1,7 +1,7 @@
 import dotenv from "dotenv";
 import * as fs from "fs";
 import { initializeApp, FirebaseError } from "firebase/app";
-import { getStorage, ref, uploadBytes, deleteObject, ListResult, listAll } from "firebase/storage";
+import { getStorage, ref, uploadBytes, deleteObject, ListResult, listAll, UploadMetadata, UploadResult } from "firebase/storage";
 
 import logger from "../logger/logger";
 
@@ -27,6 +27,13 @@ const firebaseConfig = {
 // Initialize Firebase
 const firebaseApp = initializeApp(firebaseConfig);
 const storage = getStorage(firebaseApp);
+
+export interface Image {
+  size: number;
+  type: string;
+  path: string;
+  location: string;
+}
 
 /**
  * 이미지 파일 이름이 default로 변경하기 위한 이미지인지 확인합니다.
@@ -61,7 +68,7 @@ const getAllFiles = async (path: string): Promise<ListResult> => {
  * @param path 이미지 경로
  * @param filePath 이미지가 임시 저장된 경로
  */
-export const uploadFile = async (path: string, filePath: string): Promise<void> => {
+export const uploadFile = async (path: string, filePath: string): Promise<UploadResult> => {
   const storageRef = ref(storage, path);
 
   /**
@@ -70,7 +77,8 @@ export const uploadFile = async (path: string, filePath: string): Promise<void> 
    */
   const buffer = await fs.readFileSync(filePath);
 
-  await uploadBytes(storageRef, buffer);
+  const result: UploadResult = await uploadBytes(storageRef, buffer);
+  return result;
 };
 
 /**
@@ -79,7 +87,7 @@ export const uploadFile = async (path: string, filePath: string): Promise<void> 
  * @param imagePaths Firebase Storage에 저장할 주소
  * @returns [성공한 배열, 실패한 배열]
  */
-export const uploadFiles = async (filePaths: string[], imagePaths: string[]): Promise<PromiseSettledResult<any>[][]> => {
+export const uploadFiles = async (filePaths: string[], imagePaths: string[]): Promise<[UploadResult[], PromiseSettledResult<any>[]]> => {
   const promises: any[] = [];
 
   for (let i = 0; i < filePaths.length; i++) {
@@ -92,8 +100,12 @@ export const uploadFiles = async (filePaths: string[], imagePaths: string[]): Pr
   }
 
   const results: PromiseSettledResult<any>[] = await Promise.allSettled(promises);
-  const successResults = results.filter((result) => result.status === "fulfilled" && result.value);
-  const failedResults = results.filter((result) => result.status === "rejected");
+  const successResults: UploadResult[] = results.map((result) => {
+    if (result.status === "fulfilled") {
+      return result.value;
+    }
+  }) as UploadResult[];
+  const failedResults: PromiseSettledResult<any>[] = results.filter((result) => result.status === "rejected");
 
   return [successResults, failedResults];
 };
@@ -104,26 +116,30 @@ export const uploadFiles = async (filePaths: string[], imagePaths: string[]): Pr
  * @param path 이미지 경로
  * @param folderName Firebase Storage 폴더 이름
  */
-export const deleteFile = async (path: string): Promise<void> => {
-  const delRef = ref(storage, path);
+export const deleteFile = async (imageOfParma: Image): Promise<void> => {
+  const delRef = ref(storage, imageOfParma.path);
 
   try {
     await deleteObject(delRef);
   } catch (error) {
-    const images: ListResult = await getAllFiles(path);
+    const images: ListResult = await getAllFiles(imageOfParma.path);
 
     if (error instanceof FirebaseError || (images.items.length && images.items.length > 0)) {
       try {
-        if (error instanceof Error) logger.warn(`Image not deleted : ${path} => ${error.stack}`);
-        else logger.warn(`Image not deleted : ${path} => ${new Error().stack}`);
+        if (error instanceof Error) logger.warn(`Image not deleted : ${imageOfParma.path} => ${error.stack}`);
+        else logger.warn(`Image not deleted : ${imageOfParma.path} => ${new Error().stack}`);
       } catch (_error) {}
 
-      await ErrorImage.create({
-        path: path,
-        size: 1,
-        errorLocation: "any",
-        type: "images/type"
-      });
+      try {
+        await ErrorImage.create({
+          path: imageOfParma.path,
+          size: imageOfParma.size,
+          errorLocation: imageOfParma.location,
+          type: imageOfParma.type
+        });
+      } catch (error) {
+        logger.error(`Unknown error with insert image ${imageOfParma.path}`);
+      }
       return;
     } else {
       throw error;
@@ -135,13 +151,13 @@ export const deleteFile = async (path: string): Promise<void> => {
  * 여러 개의 파일을 Firebase storage에서 삭제합니다.
  * @param paths 파일 경로 리스트
  */
-export const deleteFiles = async (paths: string[]): Promise<void> => {
-  if (!paths.length || paths.length <= 0) return;
+export const deleteFiles = async (imagesOfParma: Image[]): Promise<void> => {
+  if (!imagesOfParma.length || imagesOfParma.length <= 0) return;
 
   const promises: any[] = [];
 
-  paths.forEach((path: string) => {
-    const delRef = ref(storage, path);
+  imagesOfParma.forEach((image: Image) => {
+    const delRef = ref(storage, image.path);
     promises.push(deleteObject(delRef));
   });
 
@@ -154,18 +170,23 @@ export const deleteFiles = async (paths: string[]): Promise<void> => {
     });
 
     // firebase storage error는 무조건 요청한 path의 값을 주지 않기 때문에 모두 확인
-    paths.forEach(async (path: string) => {
-      const images = await getAllFiles(path);
+    imagesOfParma.forEach(async (imageOfParma: Image) => {
+      const imagesOfFirebase = await getAllFiles(imageOfParma.path);
 
-      if (images.items.length && images.items.length > 0) {
-        for (const image of images.items) {
-          logger.warn(`Image not deleted : ${image.fullPath}`);
-          await ErrorImage.create({
-            path: image.fullPath,
-            size: 1,
-            errorLocation: "any",
-            type: "images/type"
-          });
+      if (imagesOfFirebase.items.length && imagesOfFirebase.items.length > 0) {
+        for (const imageOfFIrebase of imagesOfFirebase.items) {
+          logger.warn(`Image not deleted : ${imageOfFIrebase.fullPath}`);
+
+          try {
+            await ErrorImage.create({
+              path: imageOfFIrebase.fullPath,
+              size: imageOfParma.size,
+              errorLocation: imageOfParma.location,
+              type: imageOfParma.type
+            });
+          } catch (_error) {
+            logger.error(`Unknown error with insert image ${imageOfFIrebase.fullPath}`);
+          }
         }
 
         logger.warn(`------------------------------------------------------------------------------------------`);

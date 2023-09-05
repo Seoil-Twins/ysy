@@ -65,15 +65,15 @@ class InquireImageAdminService extends Service {
     return inquireImages;
   }
 
-  create(transaction: Transaction | null, ...args: any[]): Promise<any> {
+  create(transaction: Transaction | null = null, ...args: any[]): Promise<any> {
     throw new Error("Method not implemented.");
   }
 
-  update(transaction: Transaction | null, ...args: any[]): Promise<any> {
+  update(transaction: Transaction | null = null, ...args: any[]): Promise<any> {
     throw new Error("Method not implemented.");
   }
 
-  delete(transaction: Transaction | null, ...args: any[]): Promise<any> {
+  delete(transaction: Transaction | null = null, ...args: any[]): Promise<any> {
     throw new Error("Method not implemented.");
   }
 }

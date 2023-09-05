@@ -31,7 +31,7 @@ AlbumImage.init(
       }
     },
     size: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.INTEGER.UNSIGNED,
       allowNull: false
     },
     type: {

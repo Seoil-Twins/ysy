@@ -1,5 +1,11 @@
-import { AlbumImage } from "../models/albnmImage.model";
+import { AlbumImage } from "../models/albumImage.model";
 import { Album } from "../models/album.model";
+
+export const isSortItem = (item: any): item is SortItem => {
+  return ["r", "o", "cd", "ca"].includes(item);
+};
+
+export type SortItem = "r" | "o" | "cd" | "ca";
 
 export interface ResponseAlbumFolder {
   albums: Album[];
@@ -19,7 +25,7 @@ export interface ResponseAlbum {
 export interface PageOptions {
   count: number;
   page: number;
-  sort: string | "r" | "o" | "cd" | "ca";
+  sort: SortItem;
 }
 
 export interface SearchOptions {

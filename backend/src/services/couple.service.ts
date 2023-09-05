@@ -5,7 +5,7 @@ import { FindAttributeOptions, InferAttributes, Transaction } from "sequelize";
 import { API_ROOT } from "..";
 
 import { Couple } from "../models/couple.model";
-import { CreateCouple } from "../types/couple.type";
+import { CreateCouple, UpdateCouple } from "../types/couple.type";
 import { User } from "../models/user.model";
 
 import { Service } from "./service";
@@ -80,7 +80,7 @@ class CoupleService extends Service {
    * @param thumbnail {@link formidable.File}
    * @returns Promise\<{@link Couple}\>
    */
-  async create(transaction: Transaction | null = null, cupId: string, data: CreateCouple, thumbnail?: File): Promise<Couple> {
+  async create(transaction: Transaction | null, cupId: string, data: CreateCouple, thumbnail?: File): Promise<Couple> {
     const path: string | null = thumbnail ? this.createProfile(cupId, thumbnail) : null;
     const createdCouple = await Couple.create(
       {
@@ -112,7 +112,7 @@ class CoupleService extends Service {
    * @param data {@link Couple}
    * @returns Promise\<{@link Couple}\>
    */
-  async update(transaction: Transaction | null = null, couple: Couple, data: Partial<InferAttributes<Couple>>): Promise<Couple> {
+  async update(transaction: Transaction | null, couple: Couple, data: Partial<InferAttributes<Couple>>): Promise<Couple> {
     await couple.update(data, { transaction });
     return couple;
   }
@@ -125,12 +125,20 @@ class CoupleService extends Service {
    * @param thumbnail {@link formidable.File}
    * @returns Promise\<{@link Couple}\>
    */
-  async updateWithThumbnail(transaction: Transaction | null = null, couple: Couple, data: Partial<InferAttributes<Couple>>, thumbnail: File): Promise<Couple> {
-    const reqFileName = thumbnail.originalFilename!;
-    data.thumbnail = `${this.FOLDER_NAME}/${couple.cupId}/thumbnail/${dayjs().valueOf()}.${reqFileName}`;
+  async updateWithThumbnail(transaction: Transaction | null, couple: Couple, data: UpdateCouple, thumbnail: File): Promise<Couple> {
+    const firebasePath = this.createProfile(couple.cupId, thumbnail);
 
-    await couple.update(data, { transaction });
-    await uploadFile(data.thumbnail, thumbnail.filepath);
+    await couple.update(
+      {
+        ...data,
+        thumbnail: firebasePath,
+        thumbnailSize: thumbnail.size,
+        thumbnailType: thumbnail.mimetype ? thumbnail.mimetype : "unknown"
+      },
+      { transaction }
+    );
+
+    await uploadFile(firebasePath, thumbnail.filepath);
     return couple;
   }
 
@@ -139,7 +147,7 @@ class CoupleService extends Service {
    * @param transaction 현재 사용중인 트랜잭션
    * @param couple {@link Couple}
    */
-  async delete(transaction: Transaction | null = null, couple: Couple): Promise<void> {
+  async delete(transaction: Transaction | null, couple: Couple): Promise<void> {
     const currentTime = new Date(dayjs().valueOf());
 
     await couple.update(

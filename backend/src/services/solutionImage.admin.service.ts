@@ -13,127 +13,121 @@ import { uploadFile } from "../utils/firebase.util";
 import UploadError from "../errors/upload.error";
 
 class SolutionImageAdminService extends Service {
-    private FOLDER_NAME = "users";
+  private FOLDER_NAME = "users";
 
-    private createSort(sort: string): OrderItem {
-        let result: OrderItem = ["createdTime", "DESC"];
+  private createSort(sort: string): OrderItem {
+    let result: OrderItem = ["createdTime", "DESC"];
 
-        switch (sort) {
-            case "r":
-                result = ["createdTime", "DESC"];
-                break;
-            case "o":
-                result = ["createdTime", "ASC"];
-                break;
-            default:
-                result = ["createdTime", "DESC"];
-                break;
-        }
-
-        return result;
+    switch (sort) {
+      case "r":
+        result = ["createdTime", "DESC"];
+        break;
+      case "o":
+        result = ["createdTime", "ASC"];
+        break;
+      default:
+        result = ["createdTime", "DESC"];
+        break;
     }
 
-    private createWhere(searchOptions: SearchOptions, filterOptions: FilterOptions): WhereOptions {
-        let result: WhereOptions<SolutionImage> = {};
+    return result;
+  }
 
-        if (searchOptions.solutionId) result.solutionId = searchOptions.solutionId;
-        if (filterOptions.fromDate && filterOptions.toDate) result.createdTime = { [Op.between]: [filterOptions.fromDate, filterOptions.toDate] };
+  private createWhere(searchOptions: SearchOptions, filterOptions: FilterOptions): WhereOptions {
+    let result: WhereOptions<SolutionImage> = {};
 
-        return result;
-    }
+    if (searchOptions.solutionId) result.solutionId = searchOptions.solutionId;
+    if (filterOptions.fromDate && filterOptions.toDate) result.createdTime = { [Op.between]: [filterOptions.fromDate, filterOptions.toDate] };
 
-    getFolderPath(userId: number, inquireId: number): string {
-        return `${this.FOLDER_NAME}/${userId}/inquires/${inquireId}/solution`;
-    }
+    return result;
+  }
 
-    getURL(): string {
-        return `${API_ROOT}/admin/solution-image?count=10&page=1`;
-    }
+  getFolderPath(userId: number, inquireId: number): string {
+    return `${this.FOLDER_NAME}/${userId}/inquires/${inquireId}/solution`;
+  }
 
-    async select(pageOptions: PageOptions, searchOptions: SearchOptions, filterOptions: FilterOptions): Promise<SolutionImageResponseWithCount> {
-        const offset: number = (pageOptions.page - 1) * pageOptions.count;
-        const sort: OrderItem = this.createSort(pageOptions.sort);
-        const where: WhereOptions<SolutionImage> = this.createWhere(searchOptions, filterOptions);
+  getURL(): string {
+    return `${API_ROOT}/admin/solution-image?count=10&page=1`;
+  }
 
-        const { rows, count }: { rows: SolutionImage[]; count: number } = await SolutionImage.findAndCountAll({
-            where,
-            offset,
-            limit: pageOptions.count,
-            order: [sort]
-        });
-        const result: SolutionImageResponseWithCount = {
-            images: rows,
-            count: count
-        };
+  async select(pageOptions: PageOptions, searchOptions: SearchOptions, filterOptions: FilterOptions): Promise<SolutionImageResponseWithCount> {
+    const offset: number = (pageOptions.page - 1) * pageOptions.count;
+    const sort: OrderItem = this.createSort(pageOptions.sort);
+    const where: WhereOptions<SolutionImage> = this.createWhere(searchOptions, filterOptions);
 
-        return result;
-    }
+    const { rows, count }: { rows: SolutionImage[]; count: number } = await SolutionImage.findAndCountAll({
+      where,
+      offset,
+      limit: pageOptions.count,
+      order: [sort]
+    });
+    const result: SolutionImageResponseWithCount = {
+      images: rows,
+      count: count
+    };
 
-    async selectAll(imageIds: number[]): Promise<SolutionImage[]> {
-        const solutionImages: SolutionImage[] = await SolutionImage.findAll({
-            where: { imageId: imageIds }
-        });
+    return result;
+  }
 
-        return solutionImages;
-    }
+  async selectAll(imageIds: number[]): Promise<SolutionImage[]> {
+    const solutionImages: SolutionImage[] = await SolutionImage.findAll({
+      where: { imageId: imageIds }
+    });
 
-    async create(transaction: Transaction | null = null, solutionId: number, inquireId: number, userId: number, images: File): Promise<SolutionImage> {
-        const path = `${this.getFolderPath(userId, inquireId)}/${dayjs().valueOf()}.${images.originalFilename}`;
+    return solutionImages;
+  }
+
+  async create(transaction: Transaction | null = null, solutionId: number, inquireId: number, userId: number, images: File): Promise<SolutionImage> {
+    const path = `${this.getFolderPath(userId, inquireId)}/${dayjs().valueOf()}.${images.originalFilename}`;
+    const createdSolutionImage: SolutionImage = await SolutionImage.create(
+      {
+        solutionId: solutionId,
+        image: path
+      },
+      { transaction }
+    );
+
+    await uploadFile(path, images.filepath);
+    logger.debug(`Create solution image => ${path}`);
+
+    return createdSolutionImage;
+  }
+
+  async createMutiple(transaction: Transaction | null = null, solutionId: number, inquireId: number, userId: number, images: File[]): Promise<SolutionImage[]> {
+    const imagePaths: string[] = [];
+    const solutionImages: SolutionImage[] = [];
+
+    try {
+      for (const image of images) {
+        const path: string = `${this.getFolderPath(userId, inquireId)}/${dayjs().valueOf()}.${image.originalFilename}`;
+
         const createdSolutionImage: SolutionImage = await SolutionImage.create(
-            {
-                solutionId: solutionId,
-                image: path
-            },
-            { transaction }
+          {
+            solutionId: solutionId,
+            image: path
+          },
+          { transaction }
         );
+        await uploadFile(path, image.filepath);
 
-        await uploadFile(path, images.filepath);
-        logger.debug(`Create solution image => ${path}`);
-
-        return createdSolutionImage;
+        imagePaths.push(path);
+        solutionImages.push(createdSolutionImage);
+        logger.debug(`created solution image => ${path}`);
+      }
+    } catch (error) {
+      throw new UploadError(imagePaths, "solution firebase upload error");
     }
 
-    async createMutiple(
-        transaction: Transaction | null = null,
-        solutionId: number,
-        inquireId: number,
-        userId: number,
-        images: File[]
-    ): Promise<SolutionImage[]> {
-        const imagePaths: string[] = [];
-        const solutionImages: SolutionImage[] = [];
+    return solutionImages;
+  }
 
-        try {
-            for (const image of images) {
-                const path: string = `${this.getFolderPath(userId, inquireId)}/${dayjs().valueOf()}.${image.originalFilename}`;
+  update(transaction: Transaction | null = null, ...args: any[]): Promise<any> {
+    throw new Error("Method not implemented.");
+  }
 
-                const createdSolutionImage: SolutionImage = await SolutionImage.create(
-                    {
-                        solutionId: solutionId,
-                        image: path
-                    },
-                    { transaction }
-                );
-                await uploadFile(path, image.filepath);
-
-                imagePaths.push(path);
-                solutionImages.push(createdSolutionImage);
-                logger.debug(`created solution image => ${path}`);
-            }
-        } catch (error) {
-            throw new UploadError(imagePaths, "solution firebase upload error");
-        }
-
-        return solutionImages;
-    }
-
-    update(transaction: Transaction | null, ...args: any[]): Promise<any> {
-        throw new Error("Method not implemented.");
-    }
-
-    async delete(transaction: Transaction | null, imageIds: number[]): Promise<void> {
-        await SolutionImage.destroy({ where: { imageId: imageIds }, transaction });
-    }
+  async delete(transaction: Transaction | null = null, imageIds: number[]): Promise<void> {
+    await SolutionImage.destroy({ where: { imageId: imageIds }, transaction });
+  }
 }
 
 export default SolutionImageAdminService;

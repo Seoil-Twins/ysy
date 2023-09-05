@@ -72,11 +72,11 @@ class InquireImageService extends Service {
     return inquireImages;
   }
 
-  update(transaction: Transaction | null, ...args: any[]): Promise<any> {
+  update(transaction: Transaction | null = null, ...args: any[]): Promise<any> {
     throw new Error("Method not implemented.");
   }
 
-  async delete(transaction: Transaction | null, imageIds: number[]): Promise<void> {
+  async delete(transaction: Transaction | null = null, imageIds: number[]): Promise<void> {
     await InquireImage.destroy({ where: { imageId: imageIds }, transaction });
   }
 }

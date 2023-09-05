@@ -120,15 +120,15 @@ class InquireAdminService extends Service {
     return inquires;
   }
 
-  create(transaction: Transaction | null, ...args: any[]): Promise<any> {
+  create(transaction: Transaction | null = null, ...args: any[]): Promise<any> {
     throw new Error("Method not implemented.");
   }
 
-  update(transaction: Transaction | null, ...args: any[]): Promise<any> {
+  update(transaction: Transaction | null = null, ...args: any[]): Promise<any> {
     throw new Error("Method not implemented.");
   }
 
-  async delete(transaction: Transaction | null, inquireIds: number[]): Promise<void> {
+  async delete(transaction: Transaction | null = null, inquireIds: number[]): Promise<void> {
     await Inquire.destroy({ where: { inquireId: inquireIds }, transaction });
   }
 }

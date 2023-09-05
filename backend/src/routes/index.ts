@@ -31,7 +31,7 @@ router.use("/auth", authRouter);
 
 router.use("/user", checkContentType, authMiddleware, userRouter);
 router.use("/couple", checkContentType, authMiddleware, coupleRouter);
-// router.use("/album", authMiddleware, albumRouter);
+router.use("/album", checkContentType, authMiddleware, albumRouter);
 // router.use("/calendar", authMiddleware, calendarRouter);
 // router.use("/inquire", authMiddleware, inquireRouter);
 // router.use("/notice", authMiddleware, noticeRouter);

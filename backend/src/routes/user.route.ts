@@ -120,18 +120,22 @@ router.patch("/:user_id", async (req: Request, res: Response, next: NextFunction
   const form = formidable({ multiples: false, maxFileSize: MAX_FILE_SIZE });
 
   const updateFunc = async (req: Request, profile?: formidable.File | null) => {
-    const { value, error }: ValidationResult = validator(req.body, updateSchema);
+    try {
+      const { value, error }: ValidationResult = validator(req.body, updateSchema);
 
-    if (req.userId && Number(req.params.user_id) != req.userId) throw new ForbiddenError("You don't same token user ID and path parameter user ID.");
-    else if (error) throw new BadRequestError(error.message);
+      if (req.userId && Number(req.params.user_id) != req.userId) throw new ForbiddenError("You don't same token user ID and path parameter user ID.");
+      else if (error) throw new BadRequestError(error.message);
 
-    const data: UpdateUser = {
-      name: value.name,
-      phone: value.phone
-    };
+      const data: UpdateUser = {
+        name: value.name,
+        phone: value.phone
+      };
 
-    const user: User = await userController.updateUser(req.userId!, data, profile);
-    return res.status(STATUS_CODE.OK).json(user);
+      const user: User = await userController.updateUser(req.userId!, data, profile);
+      return res.status(STATUS_CODE.OK).json(user);
+    } catch (error) {
+      next(error);
+    }
   };
 
   if (contentType === "form-data") {

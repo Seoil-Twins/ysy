@@ -25,6 +25,7 @@ import UserRoleService from "../services/userRole.service";
 import CoupleService from "../services/couple.service";
 
 class CoupleController {
+  private ERROR_LOCATION_PREFIX = "album";
   private coupleService: CoupleService;
   private userService: UserService;
   private userRoleService: UserRoleService;
@@ -81,11 +82,18 @@ class CoupleController {
       const url: string = this.coupleService.getURL(cupId);
       return [result, url];
     } catch (error) {
+      if (transaction) await transaction.rollback();
+
       if (createdCouple?.thumbnail) {
-        deleteFile(createdCouple.thumbnail);
+        await deleteFile({
+          path: createdCouple.thumbnail,
+          location: `${this.ERROR_LOCATION_PREFIX}/createCouple`,
+          size: createdCouple.thumbnailSize ? createdCouple.thumbnailSize : 0,
+          type: createdCouple.thumbnailType ? createdCouple.thumbnailType : "unknown"
+        });
         logger.error(`After updating the firebase, a db error occurred and the firebase thumbnail is deleted => ${createdCouple.thumbnail}`);
       }
-      if (transaction) await transaction.rollback();
+
       logger.error(`Couple create Error => ${JSON.stringify(error)}`);
 
       throw error;
@@ -113,14 +121,18 @@ class CoupleController {
     try {
       transaction = await sequelize.transaction();
 
-      const prevThumbnail: string | null = couple.thumbnail;
+      const prevThumbnailPath: string | null = couple.thumbnail;
+      const prevThumbnailSize: number = couple.thumbnailSize ? couple.thumbnailSize : 0;
+      const prevThumbnailType: string = couple.thumbnailType ? couple.thumbnailType : "unknown";
 
       if (thumbnail) {
         updatedCouple = await this.coupleService.updateWithThumbnail(transaction, couple, data, thumbnail);
       } else if (thumbnail === null) {
         updatedCouple = await this.coupleService.update(transaction, couple, {
           ...data,
-          thumbnail: null
+          thumbnail: null,
+          thumbnailSize: null,
+          thumbnailType: null
         });
       } else {
         updatedCouple = await this.coupleService.update(transaction, couple, data);
@@ -128,18 +140,32 @@ class CoupleController {
 
       await transaction.commit();
 
-      if (prevThumbnail && (thumbnail || thumbnail === null)) {
-        await deleteFile(prevThumbnail);
-        logger.debug(`Deleted Previous thumbnail => ${prevThumbnail}`);
+      if (prevThumbnailPath && (thumbnail || thumbnail === null)) {
+        await deleteFile({
+          path: prevThumbnailPath,
+          location: `${this.ERROR_LOCATION_PREFIX}/updateCouple`,
+          size: prevThumbnailSize,
+          type: prevThumbnailType
+        });
+
+        logger.debug(`Deleted Previous thumbnail => ${prevThumbnailPath}`);
       }
 
       return updatedCouple;
     } catch (error) {
+      if (transaction) await transaction.rollback();
+
       if (updatedCouple?.thumbnail) {
-        deleteFile(updatedCouple.thumbnail);
+        await deleteFile({
+          path: updatedCouple.thumbnail,
+          location: `${this.ERROR_LOCATION_PREFIX}/updateUser`,
+          size: updatedCouple.thumbnailSize ? updatedCouple.thumbnailSize : 0,
+          type: updatedCouple.thumbnailType ? updatedCouple.thumbnailType : "unknown"
+        });
+
         logger.error(`After updating the firebase, a db error occurred and the firebase thumbnail is deleted => ${updatedCouple.thumbnail}`);
       }
-      if (transaction) await transaction.rollback();
+
       logger.error(`User update error => ${JSON.stringify(error)}`);
 
       throw error;

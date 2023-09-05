@@ -65,7 +65,7 @@ class UserService extends Service {
    * @param where {@link WhereOptions}
    * @returns Promise\<{@link User} | null\>
    */
-  async select(where: WhereOptions): Promise<User | null> {
+  async select(where: WhereOptions<User>): Promise<User | null> {
     const user: User | null = await User.findOne({ where });
     return user;
   }
@@ -121,7 +121,7 @@ class UserService extends Service {
    * @param data {@link CreateUser}
    * @returns Promise\<{@link User}\>
    */
-  async create(transaction: Transaction | null = null, data: CreateUser, profile?: File): Promise<User> {
+  async create(transaction: Transaction | null, data: CreateUser, profile?: File): Promise<User> {
     const code = await this.createCode();
     let createdUser: User = await User.create(
       {
@@ -142,10 +142,13 @@ class UserService extends Service {
 
       createdUser = await createdUser.update(
         {
-          profile: path
+          profile: path,
+          profileSize: profile.size,
+          profileType: profile.mimetype ? profile.mimetype : "unknown"
         },
         { transaction }
       );
+
       await uploadFile(path, profile.filepath);
     }
 
@@ -169,9 +172,8 @@ class UserService extends Service {
    * @param data {@link User}
    * @returns Promise\<{@link User}\>
    */
-  async update(transaction: Transaction | null = null, user: User, data: Partial<InferAttributes<User>>): Promise<User> {
+  async update(transaction: Transaction | null, user: User, data: Partial<InferAttributes<User>>): Promise<User> {
     const updatedUser: User = await user.update(data, { transaction });
-
     return updatedUser;
   }
 
@@ -184,12 +186,14 @@ class UserService extends Service {
    * @param profile {@link formidable.File}
    * @returns Promise\<{@link User}\>
    */
-  async updateWithProfile(transaction: Transaction | null = null, user: User, data: Partial<InferAttributes<User>>, profile: File): Promise<User> {
+  async updateWithProfile(transaction: Transaction | null, user: User, data: Partial<InferAttributes<User>>, profile: File): Promise<User> {
     const path = this.createProfile(user.userId, profile);
     const updatedUser = await user.update(
       {
         ...data,
-        profile: path
+        profile: path,
+        profileSize: profile.size,
+        profileType: profile.mimetype ? profile.mimetype : "unknown"
       },
       { transaction }
     );
@@ -198,9 +202,8 @@ class UserService extends Service {
     return updatedUser;
   }
 
-  async updateWithData(transaction: Transaction | null = null, user: User, data: Partial<InferAttributes<User>>): Promise<User> {
+  async updateWithData(transaction: Transaction | null, user: User, data: Partial<InferAttributes<User>>): Promise<User> {
     const updatedUser: User = await user.update(data, { transaction });
-
     return updatedUser;
   }
 
@@ -209,7 +212,7 @@ class UserService extends Service {
    * @param transaction 현재 사용 중인 트랜잭션
    * @param user {@link User}
    */
-  async delete(transaction: Transaction | null = null, user: User): Promise<void> {
+  async delete(transaction: Transaction | null, user: User): Promise<void> {
     if (!user) throw new NotFoundError("Not Found User");
 
     await user.update(

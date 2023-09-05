@@ -1,4 +1,4 @@
-import { AlbumImage } from "./albnmImage.model";
+import { AlbumImage } from "./albumImage.model";
 import { Album } from "./album.model";
 import { Calendar } from "./calendar.model";
 import { ContentType } from "./contentType.model";
