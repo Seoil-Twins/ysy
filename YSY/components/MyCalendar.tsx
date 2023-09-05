@@ -180,6 +180,16 @@ const MyCalendar: React.FC<CalendarProps> = ({ onDateSelect }) => {
         desc: '짜장면 먹기',
         color: '#00FF00',
       },
+      {
+        startDate: '2023-09-07',
+        endDate: '2023-09-09',
+        startTime: '7:30AM',
+        endTime: '7:30AM',
+        hl: '20m',
+        title: '중국집',
+        desc: '짜장면 먹기',
+        color: '#00FF00',
+      },
     ]);
   };
 
@@ -253,7 +263,7 @@ const MyCalendar: React.FC<CalendarProps> = ({ onDateSelect }) => {
     const newSchedule = scheduleList.filter(
       item => item.startDate === selectedDate.toISOString().slice(0, 10),
     );
-    console.log(scheduleList);
+    setSelectedScheduleList(newSchedule);
   };
 
   const drawCircle = (color: string) => {
@@ -275,16 +285,20 @@ const MyCalendar: React.FC<CalendarProps> = ({ onDateSelect }) => {
       item => item.startDate === day.toISOString().slice(0, 10),
     );
     let totalBarHeight;
-    if (showDetailView) totalBarHeight = screenHeight * 0.02;
-    else totalBarHeight = screenHeight * 0.08;
+    if (showDetailView) {
+      totalBarHeight = screenHeight * 0.02;
+    } else {
+      totalBarHeight = screenHeight * 0.08;
+    }
     // console.log(parseInt(day.toISOString().slice(8, 10), 10));
     return (
-      <View style={{ flex: 1 }}>
+      <View>
         <View
           style={{
-            width: '100%',
+            width: '100%', // 100%
             height: totalBarHeight,
-            overflow: 'hidden', // 막대가 넘어가는 부분 숨김 처리
+            // overflow: 'hidden', // 막대가 넘어가는 부분 숨김 처리
+            overflow: 'visible', // overflow 속성을 visible로 설정
           }}>
           <FlatList
             data={filtedSchedule}
@@ -306,11 +320,12 @@ const MyCalendar: React.FC<CalendarProps> = ({ onDateSelect }) => {
     return (
       <View
         style={{
-          width: `${widthPercentage}%`, // 원의 너비
-          height: 8, // 원의 높이
-          backgroundColor: schedule.color, // 특정 색상
-          marginRight: '70%',
-          marginLeft: '5%',
+          width: widthPercentage,
+          height: 8,
+          backgroundColor: schedule.color,
+          overflow: 'visible', // overflow 속성을 visible로 설정
+          // marginRight: '70%',
+          // marginLeft: '5%',
           marginTop: 5,
           borderRadius: 20,
         }}
