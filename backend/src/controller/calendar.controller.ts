@@ -1,14 +1,14 @@
 import dayjs from "dayjs";
 
-import NotFoundError from "../error/notFound.error";
+import NotFoundError from "../errors/notFound.error";
 
-import { Couple } from "../model/couple.model";
-import { Calendar, ICreate, IUpdate, IResponse } from "../model/calendar.model";
+import { Couple } from "../models/couple.model";
+import { Calendar, ICreate, IUpdate, IResponse } from "../models/calendar.model";
 
 import logger from "../logger/logger";
 
-import CalendarService from "../service/calendar.service";
-import CoupleService from "../service/couple.service";
+import CalendarService from "../services/calendar.service";
+import CoupleService from "../services/couple.service";
 
 class CalendarController {
     private calendarService: CalendarService;

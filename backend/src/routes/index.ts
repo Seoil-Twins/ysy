@@ -23,31 +23,32 @@ import sportsAdminRouter from "./sports.admin";
 import touristSpotAdminRouter from "./touristSpot.admin";
 
 import authMiddleware from "../middlewares/auth.middleware";
+import checkContentType from "../middlewares/contentType.middleware";
 
 const router: Router = express.Router();
 
 router.use("/auth", authRouter);
-router.use("/notice", noticeRouter);
 
-router.use("/user", authMiddleware, userRouter);
-router.use("/couple", authMiddleware, coupleRouter);
-router.use("/album", authMiddleware, albumRouter);
-router.use("/calendar", authMiddleware, calendarRouter);
-router.use("/inquire", authMiddleware, inquireRouter);
+router.use("/user", checkContentType, authMiddleware, userRouter);
+router.use("/couple", checkContentType, authMiddleware, coupleRouter);
+router.use("/album", checkContentType, authMiddleware, albumRouter);
+// router.use("/calendar", authMiddleware, calendarRouter);
+// router.use("/inquire", authMiddleware, inquireRouter);
+// router.use("/notice", authMiddleware, noticeRouter);
 
-router.use("/admin/user", authMiddleware, userAdminRouter);
-router.use("/admin/couple", authMiddleware, coupleAdminRouter);
-router.use("/admin/album", authMiddleware, albumAdminRouter);
-router.use("/admin/calendar", authMiddleware, calendarAdminRouter);
-router.use("/admin/inquire", authMiddleware, InquireAdminRouter);
-router.use("/admin/inquire-image", authMiddleware, InquireImageAdminRouter);
-router.use("/admin/solution", authMiddleware, SolutionAdminRouter);
-router.use("/admin/solution-image", authMiddleware, SolutionImageAdminRouter);
+// router.use("/admin/user", authMiddleware, userAdminRouter);
+// router.use("/admin/couple", authMiddleware, coupleAdminRouter);
+// router.use("/admin/album", authMiddleware, albumAdminRouter);
+// router.use("/admin/calendar", authMiddleware, calendarAdminRouter);
+// router.use("/admin/inquire", authMiddleware, InquireAdminRouter);
+// router.use("/admin/inquire-image", authMiddleware, InquireImageAdminRouter);
+// router.use("/admin/solution", authMiddleware, SolutionAdminRouter);
+// router.use("/admin/solution-image", authMiddleware, SolutionImageAdminRouter);
 
-router.use("/admin/restaurant", authMiddleware, restaurantAdminRouter);
-router.use("/admin/culture", authMiddleware, cultureAdminRouter);
-router.use("/admin/shopping", authMiddleware, shoppingAdminRouter);
-router.use("/admin/sports", authMiddleware, sportsAdminRouter);
-router.use("/admin/tourist_spot", authMiddleware, touristSpotAdminRouter);
+// router.use("/admin/restaurant", authMiddleware, restaurantAdminRouter);
+// router.use("/admin/culture", authMiddleware, cultureAdminRouter);
+// router.use("/admin/shopping", authMiddleware, shoppingAdminRouter);
+// router.use("/admin/sports", authMiddleware, sportsAdminRouter);
+// router.use("/admin/tourist_spot", authMiddleware, touristSpotAdminRouter);
 
 export default router;
