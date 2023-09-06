@@ -658,13 +658,18 @@ const MyCalendar: React.FC<CalendarProps> = ({ onDateSelect }) => {
                 justifyContent: 'flex-start',
               }}>
               <View style={{ width: '100%' }}>
-                <Input onInputChange={handleTitle} placeholder={'제목'} />
+                <Input
+                  onInputChange={handleTitle}
+                  maxLength={12}
+                  placeholder={'제목'}
+                />
               </View>
               <View style={{ width: '100%', height: 90 }}>
                 <Input
                   onInputChange={handleDesc}
                   textAlignVertical="top"
                   multipleLine={true}
+                  maxLength={50}
                   placeholder={'설명s'}
                 />
               </View>
@@ -672,6 +677,7 @@ const MyCalendar: React.FC<CalendarProps> = ({ onDateSelect }) => {
                 <DatePicker
                   mode={'datetime'}
                   onInputChange={handleSD}
+                  maximumDate2={false}
                   placeholder={
                     selectedDate.toISOString().slice(0, 10) + ' 07:30 AM'
                   }
@@ -681,6 +687,8 @@ const MyCalendar: React.FC<CalendarProps> = ({ onDateSelect }) => {
                 <DatePicker
                   onInputChange={handleED}
                   mode={'datetime'}
+                  maximumDate2={false}
+                  minimumDateValue={selectedDate}
                   placeholder={'종료 날짜'}
                 />
               </View>

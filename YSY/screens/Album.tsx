@@ -22,7 +22,7 @@ import { widthPercentageToDP as wp } from 'react-native-responsive-screen';
 import { useAppDispatch, useAppSelector } from '../redux/hooks';
 import { RootState } from '../redux/store';
 
-import { useNavigation } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { AlbumTypes } from '../navigation/AlbumTypes';
 
@@ -149,20 +149,34 @@ export const Album = () => {
   ];
 
   // const flatListKey = activeTab === 'AlbumModal' ? 'AlbumModal' : 'Default';
+  const backAction = () => {
+    dispatch(albumSelectionOff());
+    return true; // true를 반환하면 앱이 종료되지 않습니다.
+  };
 
-  useEffect(() => {
-    const backAction = () => {
-      dispatch(albumSelectionOff());
-      return true; // true를 반환하면 앱이 종료되지 않습니다.
-    };
+  // useEffect(() => {
+  //   const backAction = () => {
+  //     dispatch(albumSelectionOff());
+  //     return true; // true를 반환하면 앱이 종료되지 않습니다.
+  //   };
 
-    const backHandler = BackHandler.addEventListener(
-      'hardwareBackPress',
-      backAction,
-    );
+  //   const backHandler = BackHandler.addEventListener(
+  //     'hardwareBackPress',
+  //     backAction,
+  //   );
 
-    return () => backHandler.remove();
-  }, []);
+  //   return () => backHandler.remove();
+  // }, []);
+
+  useFocusEffect(
+    React.useCallback(() => {
+      BackHandler.addEventListener('hardwareBackPress', backAction);
+      return () => {
+        // 화면 이동 시 핸들러 언마운트
+        BackHandler.removeEventListener('hardwareBackPress', backAction);
+      };
+    }, [])
+  );
 
   useEffect(() => {
     if (isFunc.includes('Album')) {

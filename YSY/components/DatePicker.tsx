@@ -12,6 +12,8 @@ type DatePickerProps = {
   placeholder: string;
   isError?: boolean;
   errorMessage?: string;
+  maximumDateValue?: boolean;
+  minimumDateValue?: Date;
   onInputChange?: (value: string) => void;
 };
 
@@ -21,6 +23,8 @@ const DatePicker: React.FC<DatePickerProps> = ({
   placeholder,
   isError = false,
   errorMessage,
+  maximumDateValue = true,
+  minimumDateValue = null,
   onInputChange,
 }) => {
   const [value, setValue] = useState(defaultValue ? defaultValue : '');
@@ -108,7 +112,8 @@ const DatePicker: React.FC<DatePickerProps> = ({
           onCancel={hideDatePicker}
           locale="ko_KR"
           date={selectedDate || new Date()}
-          maximumDate={new Date()}
+          // maximumDate={maximumDateValue ? new Date() : null}
+          // minimumDate={minimumDateValue ? minimumDateValue : undefined}
         />
       </Pressable>
       {isError ? (
