@@ -1,9 +1,8 @@
-import React, { useRef, useState } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   StyleSheet,
   Text,
-  PanResponder,
   Pressable,
   FlatList,
   Modal,
@@ -45,7 +44,9 @@ const MyCalendar: React.FC<CalendarProps> = ({ onDateSelect }) => {
   const [showDetailView, setShowDetailView] = useState(false);
   const [dateCellFlex, setDateCellFlex] = useState(false);
   const [scheduleList, setScheduleList] = useState<Schedule[]>([]);
-  const [selectedScheduleList, setSelectedScheduleList] = useState<Schedule[]>([]);
+  const [selectedScheduleList, setSelectedScheduleList] = useState<Schedule[]>(
+    [],
+  );
   const [addScheVisible, setAddScheVisible] = useState(false);
   const [currentMonth, setCurrentMonth] = useState<number>(
     new Date().getMonth(),
@@ -58,44 +59,8 @@ const MyCalendar: React.FC<CalendarProps> = ({ onDateSelect }) => {
   const [inputStartDate, setInputStartDate] = useState('');
   const [inputEndDate, setInputEndDate] = useState('');
   const [isAdd, setIsAdd] = useState(false);
-  const [panning, setPanning] = useState(false);
   const [swipeStart, setSwipeStart] = useState(0);
-  const [swipeEnd, setSwipeEnd] = useState(0);
-
   const today = new Date();
-
-  const panResponder = useRef(
-    PanResponder.create({
-      onStartShouldSetPanResponder: () => true,
-      onPanResponderMove: (evt, gestureState) => {
-        console.log('앙');
-        if (panning) {
-          return;
-        }
-        setPanning(true); // 스와이프 동작 시작
-        console.log('swipe');
-        if (Math.abs(gestureState.dx) > 30) {
-          if (gestureState.dx > 30) {
-            console.log('swipe1');
-            handlePrevMonth();
-          } else {
-            console.log('swipe2');
-            handleNextMonth();
-          }
-          console.log('swipe');
-        }
-        setTimeout(() => {
-          setPanning(false);
-        }, 1000);
-      },
-      onPanResponderStart: (e, gestureState) => {
-        console.log('start');
-      },
-      onPanResponderEnd: (e, gestureState) => {
-        console.log('end');
-      },
-    }),
-  ).current;
 
   const handlePrevMonth = () => {
     if (currentMonth <= 0) {
@@ -200,7 +165,7 @@ const MyCalendar: React.FC<CalendarProps> = ({ onDateSelect }) => {
         hl: '20m',
         title: '한식집',
         desc: '짜장면 먹기',
-        color: '#00FFFF',
+        color: '#FF00FF',
       },
       {
         startDate: '2023-09-01',
@@ -364,7 +329,7 @@ const MyCalendar: React.FC<CalendarProps> = ({ onDateSelect }) => {
       <View
         style={{
           width: `${
-            eventDay ? (dayOfWeek != 6 ? ( lastDayFlag ? 90 : 110) : 90) : 90
+            eventDay ? (dayOfWeek != 6 ? (lastDayFlag ? 90 : 110) : 90) : 90
           }%`,
           height: 8,
           backgroundColor: schedule.color,
@@ -664,7 +629,7 @@ const MyCalendar: React.FC<CalendarProps> = ({ onDateSelect }) => {
                   placeholder={'제목'}
                 />
               </View>
-              <View style={{ width: '100%', height: 90 }}>
+              <View style={{ width: '100%', height: 180 }}>
                 <Input
                   onInputChange={handleDesc}
                   textAlignVertical="top"
@@ -677,7 +642,7 @@ const MyCalendar: React.FC<CalendarProps> = ({ onDateSelect }) => {
                 <DatePicker
                   mode={'datetime'}
                   onInputChange={handleSD}
-                  maximumDate2={false}
+                  // maximumDate2={false}
                   placeholder={
                     selectedDate.toISOString().slice(0, 10) + ' 07:30 AM'
                   }
@@ -687,7 +652,7 @@ const MyCalendar: React.FC<CalendarProps> = ({ onDateSelect }) => {
                 <DatePicker
                   onInputChange={handleED}
                   mode={'datetime'}
-                  maximumDate2={false}
+                  // maximumDate2={false}
                   minimumDateValue={selectedDate}
                   placeholder={'종료 날짜'}
                 />

@@ -1,10 +1,11 @@
 import React from 'react';
-import { StyleSheet, TouchableOpacity, View, Image, Text } from 'react-native';
+import { StyleSheet, TouchableOpacity, View, Image } from 'react-native';
 import { useAppSelector } from '../redux/hooks';
 import { RootState } from '../redux/store';
 import { widthPercentageToDP as wp } from 'react-native-responsive-screen';
 
 import WCheckSvg from '../assets/icons/white_check.svg';
+import WCheckBigSvg from '../assets/icons/white_check_big.svg';
 
 const screenWidth = wp('100%');
 
@@ -57,7 +58,7 @@ const RenderImage: React.FC<RenderImageProps> = ({
             </View>
           )}
 
-          {/* {isRepImageSelMode && isTmpRepImage && (
+          {isRepImageSelMode && isTmpRepImage && (
             <View
               style={{
                 position: 'absolute',
@@ -73,7 +74,7 @@ const RenderImage: React.FC<RenderImageProps> = ({
               }}>
               <WCheckBigSvg />
             </View>
-          )} */}
+          )}
         </View>
       </TouchableOpacity>
     </View>

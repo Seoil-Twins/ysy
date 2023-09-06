@@ -60,10 +60,6 @@ export const Album = () => {
     (state: RootState) => state.albumStatus.isAlbum,
   );
   const isFunc = useAppSelector((state: RootState) => state.albumStatus.isFunc);
-  const isImage = useAppSelector(
-    (state: RootState) => state.imageStatus.isImage,
-  );
-
   const dummyImages = [
     'https://fastly.picsum.photos/id/179/200/200.jpg?hmac=I0g6Uht7h-y3NHqWA4e2Nzrnex7m-RceP1y732tc4Lw',
     'https://fastly.picsum.photos/id/803/200/300.jpg?hmac=v-3AsAcUOG4kCDsLMlWF9_3Xa2DTODGyKLggZNvReno',
@@ -217,15 +213,6 @@ export const Album = () => {
       } else {
         // 선택된 앨범이 없는 경우 전체 선택 동작 수행
         setSelectedAlbums(dummyFolder);
-      }
-    }
-    if (isImage) {
-      if (selectedImages.length > 0) {
-        // 이미 선택된 앨범이 있는 경우 전체 해제 동작 수행
-        setSelectedImages([]);
-      } else {
-        // 선택된 앨범이 없는 경우 전체 선택 동작 수행
-        setSelectedImages(albumImages);
       }
     }
   };

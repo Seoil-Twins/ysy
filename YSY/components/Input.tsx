@@ -77,6 +77,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#DDDDDD',
     fontSize: 16,
+    height: '100%',
   },
   error: {
     borderColor: '#FF6D70',
