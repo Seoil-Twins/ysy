@@ -15,6 +15,7 @@ type InputProps = {
   multipleLine?: boolean;
   isError?: boolean;
   errorMessage?: string;
+  textAlignVertical?: string;
   onInputChange?: (text: string) => void;
 };
 
@@ -27,6 +28,7 @@ const Input: React.FC<InputProps> = ({
   multipleLine = false,
   isError = false,
   errorMessage,
+  textAlignVertical = 'auto',
   onInputChange,
 }) => {
   const handleInputChange = useDebouncedCallback((text: string) => {
@@ -49,6 +51,7 @@ const Input: React.FC<InputProps> = ({
         inputMode={mode ? mode : 'text'}
         multiline={multipleLine}
         numberOfLines={multipleLine ? 4 : 1}
+        textAlignVertical={textAlignVertical}
         onChangeText={handleInputChange}
       />
       {isError ? (
@@ -74,6 +77,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#DDDDDD',
     fontSize: 16,
+    height: '100%',
   },
   error: {
     borderColor: '#FF6D70',

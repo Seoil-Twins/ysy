@@ -135,6 +135,7 @@ const Inquiry = () => {
           placeholder="20자 이상의 설명을 입력해주세요."
           onInputChange={changeDescription}
           multipleLine={true}
+          textAlignVertical="top"
           isError={isErrorDescription}
           errorMessage={errorMsgDescription}
         />
