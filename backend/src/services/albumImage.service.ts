@@ -1,10 +1,13 @@
 import dayjs from "dayjs";
 import { File } from "formidable";
-import { OrderItem, Transaction } from "sequelize";
+import { InferCreationAttributes, Optional, OrderItem, Transaction } from "sequelize";
 import { UploadResult } from "firebase/storage";
+import { NullishPropertiesOf } from "sequelize/types/utils";
+
+import { UNKNOWN_NAME } from "../constants/file.constant";
 
 import logger from "../logger/logger";
-import { uploadFile, uploadFiles } from "../utils/firebase.util";
+import { Image, uploadFile, uploadFiles } from "../utils/firebase.util";
 import { createSortOptions } from "../utils/sort.util";
 
 import { PageOptions } from "../types/album.type";
@@ -12,6 +15,8 @@ import { PageOptions } from "../types/album.type";
 import { AlbumImage } from "../models/albumImage.model";
 
 import { Service } from "./service";
+
+import UploadError from "../errors/upload.error";
 
 class AlbumImageService extends Service {
   private FOLDER_NAME = "couples";
@@ -55,7 +60,7 @@ class AlbumImageService extends Service {
         albumId,
         path,
         size: image.size,
-        type: image.mimetype ? image.mimetype : "unknown"
+        type: image.mimetype ? image.mimetype : UNKNOWN_NAME
       },
       { transaction }
     );
@@ -77,24 +82,34 @@ class AlbumImageService extends Service {
       logger.error(`Add album error and ignore => ${JSON.stringify(failed)}`);
     });
 
-    const mappedRecords = successResults.map((value) => {
-      const regex = /(\d+)_(.+)/;
-      const matched: RegExpMatchArray | null = value.metadata.name.match(regex);
-      const result = matched ? matched[2] : null;
-      const finedImg = images.find((img) => img.originalFilename === result);
+    const mappedRecords: readonly Optional<InferCreationAttributes<AlbumImage>, NullishPropertiesOf<InferCreationAttributes<AlbumImage>>>[] =
+      successResults.map((value) => {
+        const regex = /(\d+)_(.+)/;
+        const matched: RegExpMatchArray | null = value.metadata.name.match(regex);
+        const result = matched ? matched[2] : null;
+        const finedImg = images.find((img) => img.originalFilename === result);
 
-      return {
-        albumId,
-        path: value.metadata.fullPath,
-        size: Number(value.metadata.size),
-        type: finedImg?.mimetype || "unknown"
-      };
-    });
+        return {
+          albumId,
+          path: value.metadata.fullPath,
+          size: Number(value.metadata.size),
+          type: finedImg?.mimetype || UNKNOWN_NAME
+        };
+      });
 
     try {
       createdImages = await AlbumImage.bulkCreate(mappedRecords, { transaction });
     } catch (error) {
-      logger.error(`Create album images error => ${JSON.stringify(error)} | ${mappedRecords}`);
+      const failedRecords: Image[] = mappedRecords.map((value) => {
+        return {
+          size: value.size,
+          type: value.type,
+          path: value.path,
+          location: `albumImage/createMultiple`
+        };
+      });
+
+      throw new UploadError(failedRecords, "Album image error");
     }
 
     return createdImages;

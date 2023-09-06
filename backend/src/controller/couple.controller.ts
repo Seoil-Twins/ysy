@@ -8,6 +8,8 @@ import { ResponseToken } from "../types/auth.type";
 import { Couple } from "../models/couple.model";
 import { CreateCouple, UpdateCouple } from "../types/couple.type";
 
+import { UNKNOWN_NAME } from "../constants/file.constant";
+
 import NotFoundError from "../errors/notFound.error";
 import UnauthorizedError from "../errors/unauthorized.error";
 import ForbiddenError from "../errors/forbidden.error";
@@ -89,7 +91,7 @@ class CoupleController {
           path: createdCouple.thumbnail,
           location: `${this.ERROR_LOCATION_PREFIX}/createCouple`,
           size: createdCouple.thumbnailSize ? createdCouple.thumbnailSize : 0,
-          type: createdCouple.thumbnailType ? createdCouple.thumbnailType : "unknown"
+          type: createdCouple.thumbnailType ? createdCouple.thumbnailType : UNKNOWN_NAME
         });
         logger.error(`After updating the firebase, a db error occurred and the firebase thumbnail is deleted => ${createdCouple.thumbnail}`);
       }
@@ -102,6 +104,7 @@ class CoupleController {
 
   async updateCouple(userId: number, cupId: string, data: UpdateCouple, thumbnail?: File | null): Promise<Couple> {
     let transaction: Transaction | undefined = undefined;
+    console.log(data);
     let updatedCouple: Couple | null = null;
     const user: User | null = await this.userService.select({ userId });
     const couple: Couple | null = await this.coupleService.select(cupId);
@@ -123,7 +126,7 @@ class CoupleController {
 
       const prevThumbnailPath: string | null = couple.thumbnail;
       const prevThumbnailSize: number = couple.thumbnailSize ? couple.thumbnailSize : 0;
-      const prevThumbnailType: string = couple.thumbnailType ? couple.thumbnailType : "unknown";
+      const prevThumbnailType: string = couple.thumbnailType ? couple.thumbnailType : UNKNOWN_NAME;
 
       if (thumbnail) {
         updatedCouple = await this.coupleService.updateWithThumbnail(transaction, couple, data, thumbnail);
@@ -160,7 +163,7 @@ class CoupleController {
           path: updatedCouple.thumbnail,
           location: `${this.ERROR_LOCATION_PREFIX}/updateUser`,
           size: updatedCouple.thumbnailSize ? updatedCouple.thumbnailSize : 0,
-          type: updatedCouple.thumbnailType ? updatedCouple.thumbnailType : "unknown"
+          type: updatedCouple.thumbnailType ? updatedCouple.thumbnailType : UNKNOWN_NAME
         });
 
         logger.error(`After updating the firebase, a db error occurred and the firebase thumbnail is deleted => ${updatedCouple.thumbnail}`);

@@ -10,6 +10,8 @@ export const createSortOptions = (sort: string): OrderItem => {
     case "o":
       result = ["createdTime", "ASC"];
       break;
+    case "t":
+      result = ["title", "ASC"];
     case "cd":
       result = ["cupId", "DESC"];
       break;

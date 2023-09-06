@@ -1,15 +1,16 @@
 import AbstractError from "./abstract.error";
 import { STATUS_CODE, ERROR_CODE } from "../constants/statusCode.constant";
+import { Image } from "../utils/firebase.util";
 
 class UploadError extends AbstractError {
-  paths: string[] = [];
+  errors: Image[] = [];
 
-  constructor(paths: string[], ...args: any) {
+  constructor(errors: Image[], ...args: any) {
     super(...args);
     this.name = "FirebaseUploadError";
     this.statusCode = STATUS_CODE.INTERNAL_SERVER_ERROR;
     this.errorCode = ERROR_CODE.FAILED_UPLOAD;
-    this.paths = paths;
+    this.errors = errors;
   }
 }
 

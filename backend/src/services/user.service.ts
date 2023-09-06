@@ -3,6 +3,8 @@ import formidable, { File } from "formidable";
 import randomString from "randomstring";
 import { FindAttributeOptions, InferAttributes, Op, Transaction, WhereOptions } from "sequelize";
 
+import { UNKNOWN_NAME } from "../constants/file.constant";
+
 import { API_ROOT } from "..";
 
 import { Service } from "./service";
@@ -144,7 +146,7 @@ class UserService extends Service {
         {
           profile: path,
           profileSize: profile.size,
-          profileType: profile.mimetype ? profile.mimetype : "unknown"
+          profileType: profile.mimetype ? profile.mimetype : UNKNOWN_NAME
         },
         { transaction }
       );
@@ -193,7 +195,7 @@ class UserService extends Service {
         ...data,
         profile: path,
         profileSize: profile.size,
-        profileType: profile.mimetype ? profile.mimetype : "unknown"
+        profileType: profile.mimetype ? profile.mimetype : UNKNOWN_NAME
       },
       { transaction }
     );

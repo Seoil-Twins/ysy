@@ -1,5 +1,7 @@
-import { Op, Transaction, WhereOptions } from "sequelize";
+import { Op, Transaction } from "sequelize";
 import { File } from "formidable";
+
+import { UNKNOWN_NAME } from "../constants/file.constant";
 
 import logger from "../logger/logger";
 import { deleteFile } from "../utils/firebase.util";
@@ -62,7 +64,7 @@ class UserController {
           path: createdUser.profile,
           location: `${this.ERROR_LOCATION_PREFIX}/createUser`,
           size: createdUser.profileSize ? createdUser.profileSize : 0,
-          type: createdUser.profileType ? createdUser.profileType : "unknown"
+          type: createdUser.profileType ? createdUser.profileType : UNKNOWN_NAME
         });
         logger.error(`After creating the firebase, a db error occurred and the firebase profile is deleted => ${profile}`);
       }
@@ -83,7 +85,7 @@ class UserController {
 
     if (data.phone) {
       const userByPhone: User | null = await this.userService.select({ phone: data.phone });
-      if (userByUserId.phone !== userByPhone?.phone) {
+      if (userByPhone) {
         throw new ConflictError("Duplicated Phone");
       }
     }
@@ -92,7 +94,7 @@ class UserController {
       transaction = await sequelize.transaction();
       const prevProfilePath: string | null = userByUserId.profile;
       const prevProfileSize: number = userByUserId.profileSize ? userByUserId.profileSize : 0;
-      const prevProfileType: string = userByUserId.profileType ? userByUserId.profileType : "unknown";
+      const prevProfileType: string = userByUserId.profileType ? userByUserId.profileType : UNKNOWN_NAME;
 
       if (profile) {
         updateUser = await this.userService.updateWithProfile(transaction, userByUserId, data, profile);
@@ -128,7 +130,7 @@ class UserController {
           path: updateUser.profile,
           location: `${this.ERROR_LOCATION_PREFIX}/updateUser`,
           size: updateUser.profileSize ? updateUser.profileSize : 0,
-          type: updateUser.profileType ? updateUser.profileType : "unknown"
+          type: updateUser.profileType ? updateUser.profileType : UNKNOWN_NAME
         });
         logger.error(`After updating the firebase, a db error occurred and the firebase profile is deleted => ${profile}`);
       }

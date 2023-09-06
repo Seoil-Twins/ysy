@@ -2,11 +2,13 @@ import dayjs from "dayjs";
 import formidable, { File } from "formidable";
 import { FindAttributeOptions, InferAttributes, Transaction } from "sequelize";
 
+import { UNKNOWN_NAME } from "../constants/file.constant";
+
 import { API_ROOT } from "..";
 
 import { Couple } from "../models/couple.model";
-import { CreateCouple, UpdateCouple } from "../types/couple.type";
 import { User } from "../models/user.model";
+import { CreateCouple, UpdateCouple } from "../types/couple.type";
 
 import { Service } from "./service";
 
@@ -133,7 +135,7 @@ class CoupleService extends Service {
         ...data,
         thumbnail: firebasePath,
         thumbnailSize: thumbnail.size,
-        thumbnailType: thumbnail.mimetype ? thumbnail.mimetype : "unknown"
+        thumbnailType: thumbnail.mimetype ? thumbnail.mimetype : UNKNOWN_NAME
       },
       { transaction }
     );
