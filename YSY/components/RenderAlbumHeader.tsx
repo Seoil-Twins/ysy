@@ -49,22 +49,26 @@ const RenderAlbumHeader: React.FC<RenderAlbumHeaderProps> = ({
     );
   } else {
     return (
-      <View style={{ flexDirection: 'row' }}>
+      <View
+        style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+        }}>
         <TouchableOpacity
           onPress={() => {
             openSortModal();
           }}>
           <SortSvg
-            style={{ marginTop: 15, marginBottom: 15, marginRight: 15 }}
-            height={20}
-            width={20}
+            style={{ marginTop: 40, marginBottom: 15, marginRight: 5 }}
+            height={50}
+            width={50}
           />
         </TouchableOpacity>
         <TouchableOpacity onPress={() => {}}>
           <SettingSvg
-            style={{ marginTop: 15, marginBottom: 15, marginRight: 20 }}
-            width={20}
-            height={20}
+            style={{ marginTop: 10, marginBottom: 15, marginRight: 20 }}
+            width={30}
+            height={30}
           />
         </TouchableOpacity>
       </View>
