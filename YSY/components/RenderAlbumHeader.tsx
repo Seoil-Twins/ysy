@@ -1,5 +1,5 @@
 import React from 'react';
-import { TouchableOpacity, View, Text, StyleSheet } from 'react-native';
+import { TouchableOpacity, View, Text } from 'react-native';
 import { useAppSelector } from '../redux/hooks';
 import { RootState } from '../redux/store';
 
@@ -75,13 +75,5 @@ const RenderAlbumHeader: React.FC<RenderAlbumHeaderProps> = ({
     );
   }
 };
-
-const styles = StyleSheet.create({
-  imgBox: {
-    width: 20,
-    height: 20,
-    marginTop: 15,
-  },
-});
 
 export default RenderAlbumHeader;
