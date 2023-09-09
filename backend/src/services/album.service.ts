@@ -1,6 +1,5 @@
 import dayjs from "dayjs";
-import formidable, { File } from "formidable";
-import { FindOptions, InferAttributes, OrderItem, Transaction } from "sequelize";
+import { FindOptions, InferAttributes, OrderItem, Transaction, WhereOptions } from "sequelize";
 
 import { UNKNOWN_NAME } from "../constants/file.constant";
 
@@ -12,7 +11,7 @@ import { Album } from "../models/album.model";
 import { Couple } from "../models/couple.model";
 import { PageOptions } from "../types/album.type";
 
-import { uploadFile } from "../utils/firebase.util";
+import { uploadFileWithGCP } from "../utils/gcp.util";
 import { createSortOptions } from "../utils/sort.util";
 
 import { Service } from "./service";
@@ -52,6 +51,11 @@ class AlbumService extends Service {
 
     const album: Album | null = await Album.findByPk(albumId, options);
     return album;
+  }
+
+  async selectAll(where: WhereOptions<Album>): Promise<Album[]> {
+    const albums: Album[] = await Album.findAll({ where });
+    return albums;
   }
 
   /**
@@ -125,8 +129,8 @@ class AlbumService extends Service {
    * @param thumbnail {@link formidable.File}
    * @returns Promise\<{@link Album}\>
    */
-  async updateWithThumbnail(transaction: Transaction | null, album: Album, thumbnail: File): Promise<Album> {
-    const path = `${this.FOLDER_NAME}/${album.cupId}/${album.albumId}/thumbnail/${dayjs().valueOf()}.${thumbnail.originalFilename}`;
+  async updateWithThumbnail(transaction: Transaction | null, album: Album, thumbnail: Express.Multer.File): Promise<Album> {
+    const path = `${this.FOLDER_NAME}/${album.cupId}/${album.albumId}/thumbnail/${dayjs().valueOf()}.${thumbnail.originalname}`;
 
     const updatedAlbum: Album = await album.update(
       {
@@ -137,7 +141,12 @@ class AlbumService extends Service {
       { transaction }
     );
 
-    await uploadFile(path, thumbnail.filepath);
+    await uploadFileWithGCP({
+      filename: path,
+      buffer: thumbnail.buffer,
+      mimetype: thumbnail.mimetype
+    });
+
     return updatedAlbum;
   }
 
@@ -148,6 +157,17 @@ class AlbumService extends Service {
    */
   async delete(transaction: Transaction | null, album: Album): Promise<void> {
     await album.destroy({ transaction });
+  }
+
+  /**
+   * 앨범 삭제
+   * @param transaction 현재 사용중인 트랜잭션
+   * @param albums {@link Album}[]
+   */
+  async deletes(transaction: Transaction | null, albums: Album[]): Promise<void> {
+    for (const album of albums) {
+      await album.destroy({ transaction });
+    }
   }
 }
 

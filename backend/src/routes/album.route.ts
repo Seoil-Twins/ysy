@@ -9,6 +9,7 @@ import AlbumImageService from "../services/albumImage.service";
 import logger from "../logger/logger";
 import validator from "../utils/validator.util";
 import { ContentType } from "../utils/router.util";
+import { isDefaultFile, multerUpload } from "../utils/multer";
 
 import { STATUS_CODE } from "../constants/statusCode.constant";
 import { MAX_FILE_COUNT, MAX_FILE_SIZE } from "../constants/file.constant";
@@ -16,11 +17,11 @@ import { MAX_FILE_COUNT, MAX_FILE_SIZE } from "../constants/file.constant";
 import BadRequestError from "../errors/badRequest.error";
 import ForbiddenError from "../errors/forbidden.error";
 import InternalServerError from "../errors/internalServer.error";
+import UnsupportedMediaTypeError from "../errors/unsupportedMediaType.error";
 
 import { Album } from "../models/album.model";
 
 import { ResponseAlbumFolder, ResponseAlbum, PageOptions, SortItem, isSortItem } from "../types/album.type";
-import UnsupportedMediaTypeError from "../errors/unsupportedMediaType.error";
 
 const router: Router = express.Router();
 const albumService = new AlbumService();
@@ -29,6 +30,12 @@ const albumController = new AlbumController(albumService, albumImageService);
 
 const titleSchema: joi.Schema = joi.object({
   title: joi.string().required()
+});
+
+const mergeSchema: joi.Schema = joi.object({
+  title: joi.string().required(),
+  albumId: joi.number().required(),
+  targetId: joi.number().required()
 });
 
 // 앨범 정보 가져오기
@@ -96,11 +103,10 @@ router.post("/:cup_id", async (req: Request, res: Response, next: NextFunction) 
 });
 
 // 앨범 사진 추가
-router.post("/:cup_id/:album_id", async (req: Request, res: Response, next: NextFunction) => {
+router.post("/:cup_id/:album_id", multerUpload.array("images"), async (req: Request, res: Response, next: NextFunction) => {
   const contentType: ContentType = req.contentType;
-  const form = formidable({ multiples: true, maxFileSize: MAX_FILE_SIZE, maxFiles: MAX_FILE_COUNT });
 
-  const createFunc = async (images: File | File[]) => {
+  const createFunc = async (images: Express.Multer.File[]) => {
     try {
       const albumId = Number(req.params.album_id);
 
@@ -115,21 +121,40 @@ router.post("/:cup_id/:album_id", async (req: Request, res: Response, next: Next
     }
   };
 
-  if (contentType === "form-data") {
-    form.parse(req, async (err, fields, files) => {
-      try {
-        if (err) throw new InternalServerError(`Image Server Error : ${JSON.stringify(err)}`);
-        if (!files.images) throw new BadRequestError("You must request images");
+  try {
+    if (contentType === "form-data") {
+      if (!req.files) throw new BadRequestError("You must request images");
+      else if (req.originalFileNames?.length !== req.files.length)
+        throw new BadRequestError("The image is not uploaded properly. Please check if there are any damaged images.");
 
-        createFunc(files.images);
-      } catch (error) {
-        next(error);
-      }
-    });
-  } else {
-    next(new UnsupportedMediaTypeError("This API must have a content-type of 'multipart/form-data' unconditionally."));
+      createFunc(req.files as Express.Multer.File[]);
+    } else {
+      throw new UnsupportedMediaTypeError("This API must have a content-type of 'multipart/form-data' unconditionally.");
+    }
+  } catch (error) {
+    next(error);
   }
 });
+
+// 앨범 합치기
+// router.patch("/merge/:cup_id", async (req: Request, res: Response, next: NextFunction) => {
+//   const contentType: ContentType = req.contentType;
+
+//   try {
+//     if (contentType === "json") throw new UnsupportedMediaTypeError("This API must have a content-type of 'multipart/form-data' unconditionally.");
+
+//     const { value, error }: ValidationResult = validator(req.body, mergeSchema);
+//     if (error) throw new BadRequestError(error);
+
+//     const albumId: number = Number(value.albumId);
+//     const targerIds: number[] = value.targerIds.split(",").map((targetId: number) => Number(targetId));
+
+//     const response: Album = await albumController.mergeAlbum(req.cupId!, albumId, targerIds, value.title);
+//     return res.status(STATUS_CODE.OK).json(response);
+//   } catch (error) {
+//     next(error);
+//   }
+// });
 
 // 앨범 제목 변경
 router.patch("/:cup_id/:album_id/title", async (req: Request, res: Response, next: NextFunction) => {
@@ -150,42 +175,35 @@ router.patch("/:cup_id/:album_id/title", async (req: Request, res: Response, nex
 });
 
 // 앨범 대표 사진 변경
-router.patch("/:cup_id/:album_id/thumbnail", async (req: Request, res: Response, next: NextFunction) => {
+router.patch("/:cup_id/:album_id/thumbnail", multerUpload.single("thumbnail"), async (req: Request, res: Response, next: NextFunction) => {
   const contentType: ContentType = req.contentType;
-  const form = formidable({ multiples: false, maxFileSize: MAX_FILE_SIZE });
-  const albumId: number = Number(req.params.album_id);
 
-  const updateThumbnailFunc = async (req: Request, thumbnail: File | null) => {
-    const albumId: number = Number(req.params.album_id);
-    if (req.cupId !== req.params.cup_id) throw new ForbiddenError("You don't same token couple ID and path parameter couple ID");
-    else if (isNaN(albumId)) throw new BadRequestError("Album ID must be a number type");
-
-    const album: Album = await albumController.updateThumbnail(albumId, req.cupId!, thumbnail);
-    return res.status(STATUS_CODE.OK).json(album);
-  };
-
-  if (contentType === "form-data") {
-    form.parse(req, async (err, fields, files) => {
+  try {
+    const updateThumbnailFunc = async (req: Request, thumbnail: Express.Multer.File | null) => {
       try {
-        if (err) throw new InternalServerError(`Image Server Error : ${JSON.stringify(err)}`);
+        const albumId: number = Number(req.params.album_id);
+        if (req.cupId !== req.params.cup_id) throw new ForbiddenError("You don't same token couple ID and path parameter couple ID");
+        else if (isNaN(albumId)) throw new BadRequestError("Album ID must be a number type");
 
-        const thumbnail: File | File[] = files.thumbnail;
-        console.log(thumbnail);
-
-        if (!thumbnail) throw new BadRequestError("You must request only one thumbnail");
-        else if (Array.isArray(thumbnail)) throw new BadRequestError("You must request only one thumbnail");
-
-        updateThumbnailFunc(req, thumbnail);
+        const album: Album = await albumController.updateThumbnail(albumId, req.cupId!, thumbnail);
+        return res.status(STATUS_CODE.OK).json(album);
       } catch (error) {
         next(error);
       }
-    });
-  } else if (contentType === "json") {
-    if (req.body.thumbnail === "null" || req.body.thumbnail === null) {
+    };
+
+    if (contentType === "form-data") {
+      const thumbnail: Express.Multer.File | undefined = req.file;
+      if (!thumbnail) throw new BadRequestError("You must request only one thumbnail");
+
+      updateThumbnailFunc(req, thumbnail);
+    } else if (contentType === "json" && isDefaultFile(req.body.thumbnail)) {
       updateThumbnailFunc(req, null);
     } else {
-      next(new BadRequestError("You must request only 'null'"));
+      throw new BadRequestError("You must request only 'null'");
     }
+  } catch (error) {
+    next(error);
   }
 });
 

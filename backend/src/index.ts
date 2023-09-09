@@ -5,7 +5,7 @@
  * ts 파일만 빌드하기 때문에 ts가 아닌 파일들을 복사해서 dist에다가 넣어줘야 함.
  */
 
-import express, { Application, Request, Response, NextFunction, response } from "express";
+import express, { Application, Request, Response, NextFunction } from "express";
 import dotenv from "dotenv";
 import dayjs, { PluginFunc } from "dayjs";
 import utc from "dayjs/plugin/utc";
@@ -43,6 +43,7 @@ declare global {
       cupId: string | null;
       roleId?: number;
       contentType?: ContentType;
+      originalFileNames?: string[];
     }
   }
 }
@@ -65,6 +66,7 @@ app.use(express.json());
 app.use(boolParser());
 app.use(express.urlencoded({ extended: false }));
 app.use(morganMiddleware);
+
 app.all("*", (request: Request, _response: Response, next: NextFunction) => {
   logger.debug(`Request Body Data : ${JSON.stringify(request.body)}`);
   logger.debug(`Request Params Data : ${JSON.stringify(request.params)}`);

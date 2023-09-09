@@ -92,7 +92,7 @@ export const uploadFiles = async (filePaths: string[], imagePaths: string[]): Pr
     const storageRef = ref(storage, imagePath);
     const buffer = await fs.readFileSync(filePath);
 
-    promises.push(uploadBytes(storageRef, buffer));
+    promises.push(uploadBytes(storageRef, buffer, { contentType: "image/png" }));
   }
 
   const results: PromiseSettledResult<any>[] = await Promise.allSettled(promises);
