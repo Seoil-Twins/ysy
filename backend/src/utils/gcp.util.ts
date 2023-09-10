@@ -4,6 +4,8 @@ import { ApiError, Storage } from "@google-cloud/storage";
 import logger from "../logger/logger";
 
 import { ErrorImage } from "../models/errorImage.model";
+import UploadError from "../errors/upload.error";
+import { UNKNOWN_NAME } from "../constants/file.constant";
 
 dotenv.config();
 
@@ -94,6 +96,66 @@ export const uploadFilesWithGCP = async (files: UploadImageInfo[]): Promise<bool
   } catch (error) {
     logger.warn(`Multiple Image Upload Failed : ${JSON.stringify(error)}`);
     return false;
+  }
+};
+
+export const moveFilesWithGCP = async (rootPath: string, filePaths: string[]): Promise<string[]> => {
+  const files = filePaths.map((filePath: string) => {
+    return {
+      path: filePath,
+      size: 0,
+      mimetype: UNKNOWN_NAME,
+      isMoved: false
+    };
+  });
+
+  try {
+    const movePromises = files.map(async (file) => {
+      const blob = bucket.file(file.path);
+      const splitedName = blob.name.split("/");
+      const filename = splitedName[splitedName.length - 1];
+
+      try {
+        await blob.copy(rootPath + filename);
+
+        file.size = blob.metadata.size ? Number(blob.metadata.size) : 0;
+        file.mimetype = blob.metadata.contentType ? blob.metadata.contentType : UNKNOWN_NAME;
+        file.isMoved = true;
+      } catch (error) {
+        if (error instanceof ApiError && error.code === 404) {
+          logger.warn(`Not found image with gcp : ${JSON.stringify(file.path)}`);
+          file.isMoved = true;
+        }
+      }
+    });
+
+    await Promise.all(movePromises);
+
+    const successFiles = files.filter((file) => file.isMoved);
+    const failedFiles = files.filter((file) => !file.isMoved);
+
+    if (failedFiles.length > 0) {
+      const rollbackFiles: DeleteImageInfo[] = successFiles.map((file) => {
+        return {
+          location: "gcp/moveFiles",
+          path: file.path,
+          size: file.size,
+          type: file.mimetype
+        };
+      });
+
+      throw new UploadError(rollbackFiles, "File Moves Error");
+    }
+
+    return successFiles.map((item) => item.path);
+  } catch (error) {
+    if (error instanceof UploadError) {
+      deleteFilesWithGCP(error.errors);
+      throw error;
+    } else {
+      logger.error(`Unknown Error : ${JSON.stringify(error)}`);
+      throw error;
+    }
   }
 };
 

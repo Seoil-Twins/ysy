@@ -37,7 +37,7 @@ class UserController {
     return result;
   }
 
-  async createUser(data: CreateUser, profile?: File): Promise<string> {
+  async createUser(data: CreateUser, profile?: File): Promise<void> {
     let transaction: Transaction | null = null;
     let createdUser: User | null = null;
 
@@ -52,9 +52,6 @@ class UserController {
 
       await this.userRoleService.create(transaction, createdUser.userId, 4);
       await transaction.commit();
-
-      const url: string = this.userService.getURL();
-      return url;
     } catch (error) {
       if (transaction) await transaction.rollback();
 

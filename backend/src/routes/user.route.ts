@@ -85,10 +85,10 @@ router.post("/", multerUpload.single("profile"), async (req: Request, res: Respo
         eventNofi: boolean(value.eventNofi)
       };
 
-      const url: string = await userController.createUser(data, profile);
+      await userController.createUser(data, profile);
 
       logger.debug(`Response Data : ${JSON.stringify(data)}`);
-      return res.header({ Location: url }).status(STATUS_CODE.CREATED).json({});
+      return res.status(STATUS_CODE.CREATED).json({});
     } catch (error) {
       next(error);
     }

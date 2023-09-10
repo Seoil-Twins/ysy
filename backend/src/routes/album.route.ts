@@ -32,7 +32,7 @@ const titleSchema: joi.Schema = joi.object({
 const mergeSchema: joi.Schema = joi.object({
   title: joi.string().required(),
   albumId: joi.number().required(),
-  targetId: joi.number().required()
+  targetIds: joi.array().items(joi.number()).required()
 });
 
 // 앨범 정보 가져오기
@@ -134,24 +134,24 @@ router.post("/:cup_id/:album_id", multerUpload.array("images"), async (req: Requ
 });
 
 // 앨범 합치기
-// router.patch("/merge/:cup_id", async (req: Request, res: Response, next: NextFunction) => {
-//   const contentType: ContentType = req.contentType;
+router.post("/merge/:cup_id", async (req: Request, res: Response, next: NextFunction) => {
+  const contentType: ContentType = req.contentType;
 
-//   try {
-//     if (contentType === "json") throw new UnsupportedMediaTypeError("This API must have a content-type of 'multipart/form-data' unconditionally.");
+  try {
+    if (contentType === "form-data") throw new UnsupportedMediaTypeError("This API must have a content-type of 'json' unconditionally.");
 
-//     const { value, error }: ValidationResult = validator(req.body, mergeSchema);
-//     if (error) throw new BadRequestError(error);
+    const { value, error }: ValidationResult = validator(req.body, mergeSchema);
+    if (error) throw new BadRequestError(error);
 
-//     const albumId: number = Number(value.albumId);
-//     const targerIds: number[] = value.targerIds.split(",").map((targetId: number) => Number(targetId));
+    const albumId: number = value.albumId;
+    const targerIds: number[] = value.targetIds;
 
-//     const response: Album = await albumController.mergeAlbum(req.cupId!, albumId, targerIds, value.title);
-//     return res.status(STATUS_CODE.OK).json(response);
-//   } catch (error) {
-//     next(error);
-//   }
-// });
+    const url: string = await albumController.mergeAlbum(req.cupId!, albumId, targerIds, value.title);
+    return res.header({ Location: url }).status(STATUS_CODE.NO_CONTENT).json({});
+  } catch (error) {
+    next(error);
+  }
+});
 
 // 앨범 제목 변경
 router.patch("/:cup_id/:album_id/title", async (req: Request, res: Response, next: NextFunction) => {
@@ -204,6 +204,7 @@ router.patch("/:cup_id/:album_id/thumbnail", multerUpload.single("thumbnail"), a
   }
 });
 
+// 앨범 삭제
 router.delete("/:cup_id/:album_id", async (req: Request, res: Response, next: NextFunction) => {
   try {
     const albumId = Number(req.params.album_id);
@@ -219,6 +220,7 @@ router.delete("/:cup_id/:album_id", async (req: Request, res: Response, next: Ne
   }
 });
 
+// 앨범 이미지 삭제
 router.delete("/:cup_id/:album_id/images", async (req: Request, res: Response, next: NextFunction) => {
   const imageIds: string[] | undefined = Array.isArray(req.body.imageIds) ? [...req.body.imageIds] : undefined;
   const numImageIds: number[] | undefined = imageIds?.map(Number).filter((imageId: number) => {

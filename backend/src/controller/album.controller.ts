@@ -16,7 +16,16 @@ import logger from "../logger/logger";
 import AlbumService from "../services/album.service";
 import AlbumImageService from "../services/albumImage.service";
 
-import { DeleteImageInfo, UploadImageInfo, deleteFileWithGCP, deleteFilesWithGCP, getFileBufferWithGCP, uploadFileWithGCP } from "../utils/gcp.util";
+import {
+  DeleteImageInfo,
+  UploadImageInfo,
+  deleteFileWithGCP,
+  deleteFilesWithGCP,
+  getFileBufferWithGCP,
+  moveFilesWithGCP,
+  uploadFileWithGCP,
+  uploadFilesWithGCP
+} from "../utils/gcp.util";
 
 class AlbumController {
   private ERROR_LOCATION_PREFIX = "album";
@@ -78,7 +87,7 @@ class AlbumController {
       if (transaction) await transaction.rollback();
 
       if (error instanceof UploadError) {
-        await deleteFilesWithGCP(error.errors);
+        deleteFilesWithGCP(error.errors);
       }
 
       logger.error(`Album Create Error ${JSON.stringify(error)}`);
@@ -86,32 +95,112 @@ class AlbumController {
     }
   }
 
-  // async mergeAlbum(cupId: string, albumId: number, targerIds: number[], title: string): Promise<Album> {
-  //   let transaction: Transaction | null = null;
-  //   let updatedAlbum: Album | null = null;
+  async mergeAlbum(cupId: string, albumId: number, targerIds: number[], title: string): Promise<string> {
+    let transaction: Transaction | undefined = undefined;
+    let movedPaths: string[] = [];
+    let updatedAlbumImages: AlbumImage[] = [];
+    const prevThumbnails = [];
 
-  //   const albumFolder: Album | null = await this.albumService.select(albumId);
-  //   if (!albumFolder) throw new NotFoundError("Not found album using albumId");
-  //   else if (albumFolder.cupId !== cupId) throw new ForbiddenError("The ID of the album folder and the body ID don't match.");
+    const albumFolder: Album | null = await this.albumService.select(albumId);
+    if (!albumFolder) throw new NotFoundError("Not found album using albumId");
+    else if (albumFolder.cupId !== cupId) throw new ForbiddenError("The ID of the album folder and the body ID don't match.");
 
-  //   try {
-  //     transaction = await sequelize.transaction();
-  //     updatedAlbum = await this.albumService.update(transaction, albumFolder, { title });
+    try {
+      transaction = await sequelize.transaction();
+      await this.albumService.update(transaction, albumFolder, { title });
 
-  //     await this.albumImageService.updates(transaction, albumId, targerIds);
-  //     await transaction.commit();
+      const targetAlbums: Album[] = await this.albumService.selectAll({ albumId: targerIds });
+      const targetAlbumImages: AlbumImage[] = await this.albumImageService.selectAll({ albumId: targerIds });
+      // 딥카피
+      const copyAlbumImages: AlbumImage[] = JSON.parse(JSON.stringify(targetAlbumImages));
 
-  //     const targetImages: AlbumImage[] = await this.albumImageService.selectAll({ albumId: targerIds });
+      updatedAlbumImages = await this.albumImageService.updates(transaction, albumId, targetAlbumImages);
+      movedPaths = await moveFilesWithGCP(
+        `couples/${cupId}/${albumId}/`,
+        copyAlbumImages.map((image: AlbumImage) => image.path)
+      );
 
-  //     // const targetAlbums: Album[] = await this.albumService.selectAll({ albumId: targerIds });
-  //     // await this.albumService.deletes(transaction, targetAlbums);
+      for (const targetAlbum of targetAlbums) {
+        if (!targetAlbum.thumbnail) continue;
 
-  //     await transaction.commit();
-  //   } catch (error) {
-  //     if (transaction) await transaction.rollback();
-  //     throw error;
-  //   }
-  // }
+        const buffer: Buffer | null = await getFileBufferWithGCP(targetAlbum.thumbnail);
+        if (!buffer) continue;
+
+        prevThumbnails.push({
+          path: targetAlbum.thumbnail,
+          size: targetAlbum.thumbnailSize!,
+          mimetype: targetAlbum.thumbnailType!,
+          buffer: buffer
+        });
+      }
+
+      deleteFilesWithGCP(
+        prevThumbnails.map((thumbnail) => {
+          return {
+            location: "album/mergeAlbum",
+            path: thumbnail.path,
+            size: thumbnail.size,
+            type: thumbnail.mimetype
+          };
+        })
+      );
+
+      await this.albumService.deletes(transaction, targetAlbums);
+      await transaction.commit();
+
+      deleteFilesWithGCP(
+        copyAlbumImages.map((image: AlbumImage) => {
+          console.log("targetImage : ", image.path);
+          return {
+            location: "album/mergeAlbum",
+            path: image.path,
+            size: image.size,
+            type: image.type
+          };
+        })
+      );
+
+      const url: string = this.albumService.getAlbumUrl(cupId, albumId);
+      return url;
+    } catch (error) {
+      if (transaction) await transaction.rollback();
+
+      if (movedPaths.length > 0) {
+        const finded: DeleteImageInfo[] = movedPaths
+          .map((path: string) => {
+            const find = updatedAlbumImages.find((image: AlbumImage) => path === image.path);
+
+            if (!find) return null;
+
+            return {
+              location: "album/mergeAlbum",
+              size: find.size,
+              type: find.type,
+              path: find.path
+            } as DeleteImageInfo;
+          })
+          .filter((item) => item !== null) as DeleteImageInfo[];
+
+        deleteFilesWithGCP(finded);
+      }
+
+      if (prevThumbnails && movedPaths.length > 0) {
+        uploadFilesWithGCP(
+          prevThumbnails.map((thumbnail) => {
+            return {
+              buffer: thumbnail.buffer,
+              filename: thumbnail.path,
+              mimetype: thumbnail.mimetype
+            };
+          })
+        );
+      }
+
+      logger.error(`Merge Album Error : ${JSON.stringify(error)}`);
+
+      throw error;
+    }
+  }
 
   async updateTitle(albumId: number, cupId: string, title: string): Promise<Album> {
     const albumFolder = await this.albumService.select(albumId);
@@ -245,7 +334,7 @@ class AlbumController {
     });
 
     if (images) {
-      await deleteFilesWithGCP(images);
+      deleteFilesWithGCP(images);
     }
   }
 
@@ -280,7 +369,7 @@ class AlbumController {
       throw error;
     }
 
-    await deleteFilesWithGCP(imagesOfParam);
+    deleteFilesWithGCP(imagesOfParam);
   }
 }
 

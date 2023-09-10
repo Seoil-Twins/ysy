@@ -38,6 +38,10 @@ class AlbumImageService extends Service {
     return `${this.FOLDER_NAME}/${cupId}/${albumId}/${dayjs().valueOf()}_${filename}`;
   }
 
+  private createFolderURL(cupId: string, albumId: number) {
+    return `${this.FOLDER_NAME}/${cupId}/${albumId}/`;
+  }
+
   /**
    * Where 절을 사용해 검색 후 모든 결과를 반환합니다.
    * @param where {@link WhereOptions}
@@ -166,20 +170,24 @@ class AlbumImageService extends Service {
    * @param targetAlbumIds 수정하고싶은 앨범 아이디
    * @returns number - 쿼리를 통해 업데이트된 행의 개수입니다.
    */
-  async updates(transaction: Transaction | null, albumId: number, targetAlbumIds: number[]): Promise<number> {
-    const [isUpdated]: [number] = await AlbumImage.update(
-      { albumId },
-      {
-        transaction,
-        where: {
-          albumId: targetAlbumIds
-        }
-      }
-    );
+  async updates(transaction: Transaction | null, albumId: number, targetAlbumImages: AlbumImage[]): Promise<AlbumImage[]> {
+    const updatedAlbumImages: AlbumImage[] = [];
 
-    console.log("after Updates : ", isUpdated);
+    for (const albumImage of targetAlbumImages) {
+      const changePath = albumImage.path.replace(/\/\d+\//, `/${albumId}/`);
 
-    return isUpdated;
+      const updatedAlbumImage = await albumImage.update(
+        {
+          albumId,
+          path: changePath
+        },
+        { transaction }
+      );
+
+      updatedAlbumImages.push(updatedAlbumImage);
+    }
+
+    return updatedAlbumImages;
   }
 
   /**
