@@ -1,5 +1,4 @@
 import dayjs from "dayjs";
-import formidable, { File } from "formidable";
 import { FindAttributeOptions, InferAttributes, Transaction } from "sequelize";
 
 import { UNKNOWN_NAME } from "../constants/file.constant";
@@ -12,20 +11,21 @@ import { CreateCouple, UpdateCouple } from "../types/couple.type";
 
 import { Service } from "./service";
 
-import { uploadFile } from "../utils/firebase.util";
+import { File, uploadFileWithGCP } from "../utils/gcp.util";
 
 class CoupleService extends Service {
   private readonly FOLDER_NAME = "couples";
 
   /**
-   * 썸네일 사진 경로 생성합니다.
+   * 썸네일 사진 경로를 생성합니다.
+   *
    * @param userId 유저 ID
    * @param file 사진 객체
    * @returns string
    */
   createProfile(cupId: string, thumbnail: File): string {
-    const reqFileName = thumbnail.originalFilename!;
-    const path: string = `${this.FOLDER_NAME}/${cupId}/thumbnail/${dayjs().valueOf()}_${reqFileName}`;
+    const reqFileName = thumbnail.originalname!;
+    const path: string = `${this.FOLDER_NAME}/${cupId}/thumbnail/${dayjs().valueOf()}.${reqFileName}`;
 
     return path;
   }
@@ -36,6 +36,7 @@ class CoupleService extends Service {
 
   /**
    * cupId를 통해 검색합니다.
+   *
    * @param cupId 커플이 가지는 고유한 아이디
    * @returns Promise\<{@link Couple} | null\>
    */
@@ -76,10 +77,11 @@ class CoupleService extends Service {
 
   /**
    * 커플 정보를 수정합니다.
+   *
    * @param transaction 현재 사용중인 트랜잭션
    * @param cupId 커플이 가지는 고유한 ID
    * @param data {@link CreateCouple}
-   * @param thumbnail {@link formidable.File}
+   * @param thumbnail {@link Express.Multer.File}
    * @returns Promise\<{@link Couple}\>
    */
   async create(transaction: Transaction | null, cupId: string, data: CreateCouple, thumbnail?: File): Promise<Couple> {
@@ -93,7 +95,12 @@ class CoupleService extends Service {
       { transaction }
     );
 
-    if (thumbnail && path) await uploadFile(path, thumbnail.filepath);
+    if (thumbnail && path)
+      await uploadFileWithGCP({
+        filename: path,
+        mimetype: thumbnail.mimetype,
+        buffer: thumbnail.buffer
+      });
     return createdCouple;
   }
 
@@ -120,32 +127,38 @@ class CoupleService extends Service {
   }
 
   /**
-   * 커플 정보 수정 및 썸네일을 수정 합니다.
+   * 커플 정보 수정 및 썸네일 정보를 수정 합니다.
+   *
    * @param transaction 현재 사용중인 트랜잭션
    * @param couple {@link Couple}
    * @param data {@link Couple}
-   * @param thumbnail {@link formidable.File}
+   * @param thumbnail {@link Express.Multer.File}
    * @returns Promise\<{@link Couple}\>
    */
   async updateWithThumbnail(transaction: Transaction | null, couple: Couple, data: UpdateCouple, thumbnail: File): Promise<Couple> {
-    const firebasePath = this.createProfile(couple.cupId, thumbnail);
+    const path = this.createProfile(couple.cupId, thumbnail);
 
     await couple.update(
       {
         ...data,
-        thumbnail: firebasePath,
+        thumbnail: path,
         thumbnailSize: thumbnail.size,
         thumbnailType: thumbnail.mimetype ? thumbnail.mimetype : UNKNOWN_NAME
       },
       { transaction }
     );
 
-    await uploadFile(firebasePath, thumbnail.filepath);
+    await uploadFileWithGCP({
+      buffer: thumbnail.buffer,
+      filename: path,
+      mimetype: thumbnail.mimetype
+    });
     return couple;
   }
 
   /**
-   * 커플을 삭제합니다.
+   * 커플을 삭제합니다. (soft delete)
+   *
    * @param transaction 현재 사용중인 트랜잭션
    * @param couple {@link Couple}
    */

@@ -1,4 +1,3 @@
-import { File } from "formidable";
 import { Transaction } from "sequelize";
 
 import { UNKNOWN_NAME } from "../constants/file.constant";
@@ -17,8 +16,7 @@ import logger from "../logger/logger";
 import AlbumService from "../services/album.service";
 import AlbumImageService from "../services/albumImage.service";
 
-import { Image, deleteFile, deleteFiles } from "../utils/firebase.util";
-import { UploadImageInfo, deleteFileWithGCP, deleteFilesWithGCP, getFileBufferWithGCP, uploadFileWithGCP } from "../utils/gcp.util";
+import { DeleteImageInfo, UploadImageInfo, deleteFileWithGCP, deleteFilesWithGCP, getFileBufferWithGCP, uploadFileWithGCP } from "../utils/gcp.util";
 
 class AlbumController {
   private ERROR_LOCATION_PREFIX = "album";
@@ -61,7 +59,6 @@ class AlbumController {
   }
 
   async addImages(cupId: string, albumId: number, images: Express.Multer.File[]): Promise<string> {
-    let albumImages: AlbumImage | AlbumImage[] | null = null;
     const albumFolder: Album | null = await this.albumService.select(albumId);
     if (!albumFolder) throw new NotFoundError("Not found album using query parameter album ID");
     else if (albumFolder.cupId !== cupId) throw new ForbiddenError("The ID of the album folder and the body ID don't match.");
@@ -71,8 +68,8 @@ class AlbumController {
     try {
       transaction = await sequelize.transaction();
 
-      if (images.length === 1) albumImages = await this.albumImageService.create(transaction, cupId, albumId, images[0]);
-      else albumImages = await this.albumImageService.createMutiple(transaction, cupId, albumId, images);
+      if (images.length === 1) await this.albumImageService.create(transaction, cupId, albumId, images[0]);
+      else await this.albumImageService.createMutiple(transaction, cupId, albumId, images);
 
       await transaction.commit();
       const url: string = this.albumService.getAlbumUrl(cupId, albumId);
@@ -199,7 +196,7 @@ class AlbumController {
           });
         }
 
-        logger.error(`After updating the firebase, a db error occurred and the firebase thumbnail is deleted => ${updatedAlbum.thumbnail}`);
+        logger.error(`After updating the gcp, a db error occurred and the gcp thumbnail is deleted => ${updatedAlbum.thumbnail}`);
       }
 
       throw error;
@@ -219,31 +216,6 @@ class AlbumController {
       await this.albumService.delete(transaction, albumFolder);
       await transaction.commit();
 
-      if (albumFolder.thumbnail) {
-        const splitedPath = albumFolder.thumbnail.split(".");
-        const mimetype = splitedPath[splitedPath.length - 1];
-
-        await deleteFile({
-          path: albumFolder.thumbnail,
-          location: `${this.ERROR_LOCATION_PREFIX}/deletedAlbum`,
-          size: 0,
-          type: mimetype
-        });
-      }
-
-      const images: Image[] | undefined = albumFolder.albumImages?.map((image: AlbumImage) => {
-        return {
-          path: image.path,
-          size: image.size ? image.size : 0,
-          type: image.type ? image.type : UNKNOWN_NAME,
-          location: `${this.ERROR_LOCATION_PREFIX}/deleteAlbum`
-        };
-      });
-
-      if (images) {
-        await deleteFiles(images);
-      }
-
       logger.debug(`Success Deleted albums => ${cupId}, ${albumId}`);
     } catch (error) {
       if (transaction) await transaction.rollback();
@@ -251,9 +223,35 @@ class AlbumController {
       logger.error(`Delete album error => ${JSON.stringify(error)}`);
       throw error;
     }
+
+    if (albumFolder.thumbnail) {
+      const mimetype = albumFolder.thumbnailType!;
+
+      await deleteFileWithGCP({
+        path: albumFolder.thumbnail,
+        location: `${this.ERROR_LOCATION_PREFIX}/deletedAlbum`,
+        size: 0,
+        type: mimetype
+      });
+    }
+
+    const images: DeleteImageInfo[] | undefined = albumFolder.albumImages?.map((image: AlbumImage) => {
+      return {
+        path: image.path,
+        size: image.size ? image.size : 0,
+        type: image.type ? image.type : UNKNOWN_NAME,
+        location: `${this.ERROR_LOCATION_PREFIX}/deleteAlbum`
+      };
+    });
+
+    if (images) {
+      await deleteFilesWithGCP(images);
+    }
   }
 
   async deleteAlbumImages(cupId: string, albumId: number, imageIds: number[]): Promise<void> {
+    let transaction: Transaction | undefined = undefined;
+
     const albumFolder: Album | null = await this.albumService.select(albumId);
     if (!albumFolder) throw new NotFoundError("Not found album using query parameter album ID");
     else if (albumFolder.cupId !== cupId) throw new ForbiddenError("The ID of the album folder and the body ID don't match.");
@@ -261,7 +259,7 @@ class AlbumController {
     const images: AlbumImage[] = await this.albumImageService.selectAll({ albumImageId: imageIds });
     if (!images.length || images.length <= 0) throw new NotFoundError("Not found images");
 
-    const imagesOfParam: Image[] = images.map((image: AlbumImage) => {
+    const imagesOfParam: DeleteImageInfo[] = images.map((image: AlbumImage) => {
       return {
         path: image.path,
         location: `${this.ERROR_LOCATION_PREFIX}/deleteAlbumImages`,
@@ -270,21 +268,19 @@ class AlbumController {
       };
     });
 
-    let transaction: Transaction | undefined = undefined;
-
     try {
       transaction = await sequelize.transaction();
 
       await this.albumImageService.delete(transaction, imageIds);
       await transaction.commit();
-
-      await deleteFiles(imagesOfParam);
     } catch (error) {
       logger.error(`Delete album error => ${JSON.stringify(error)}`);
       if (transaction) await transaction.rollback();
 
       throw error;
     }
+
+    await deleteFilesWithGCP(imagesOfParam);
   }
 }
 

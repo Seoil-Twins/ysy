@@ -1,17 +1,16 @@
 import express, { Router, Request, Response, NextFunction } from "express";
 import joi, { ValidationResult } from "joi";
-import formidable, { File } from "formidable";
 
 import { Couple } from "../models/couple.model";
 
 import logger from "../logger/logger";
 import validator from "../utils/validator.util";
 import { ContentType } from "../utils/router.util";
+import { isDefaultFile, multerUpload } from "../utils/multer";
+import { File } from "../utils/gcp.util";
 
 import { STATUS_CODE } from "../constants/statusCode.constant";
-import { MAX_FILE_SIZE } from "../constants/file.constant";
 
-import InternalServerError from "../errors/internalServer.error";
 import ForbiddenError from "../errors/forbidden.error";
 import BadRequestError from "../errors/badRequest.error";
 import UnauthorizedError from "../errors/unauthorized.error";
@@ -57,9 +56,8 @@ router.get("/:cup_id", async (req: Request, res: Response, next: NextFunction) =
 });
 
 // 커플 생성
-router.post("/", async (req: Request, res: Response, next: NextFunction) => {
+router.post("/", multerUpload.single("thumbnail"), async (req: Request, res: Response, next: NextFunction) => {
   const contentType: ContentType | undefined = req.contentType;
-  const form = formidable({ multiples: false, maxFileSize: MAX_FILE_SIZE });
 
   const createFunc = async (req: Request, thumbnail?: File) => {
     try {
@@ -80,27 +78,22 @@ router.post("/", async (req: Request, res: Response, next: NextFunction) => {
     }
   };
 
-  if (contentType === "form-data") {
-    form.parse(req, async (err, fields, files) => {
-      try {
-        if (err) throw new InternalServerError(`Image Server Error : ${JSON.stringify(err)}`);
-        else if (Array.isArray(files.thumbnail)) throw new BadRequestError("You must request only one thumbnail.");
-        req.body = Object.assign({}, req.body, fields);
+  try {
+    if (contentType === "form-data") {
+      if (!req.file) throw new BadRequestError("You must request images");
 
-        createFunc(req, files.thumbnail);
-      } catch (error) {
-        next(error);
-      }
-    });
-  } else if (contentType === "json") {
-    createFunc(req, undefined);
+      createFunc(req, req.file);
+    } else if (contentType === "json") {
+      createFunc(req, undefined);
+    }
+  } catch (error) {
+    next(error);
   }
 });
 
 // 커플 정보 수정
-router.patch("/:cup_id", async (req: Request, res: Response, next: NextFunction) => {
+router.patch("/:cup_id", multerUpload.single("thumbnail"), async (req: Request, res: Response, next: NextFunction) => {
   const contentType: ContentType = req.contentType;
-  const form = formidable({ multiples: false, maxFileSize: MAX_FILE_SIZE });
 
   const updateFunc = async (req: Request, thumbnail?: File | null) => {
     try {
@@ -120,27 +113,22 @@ router.patch("/:cup_id", async (req: Request, res: Response, next: NextFunction)
     }
   };
 
-  if (contentType === "form-data") {
-    form.parse(req, async (err, fields, files) => {
-      try {
-        if (err) throw new InternalServerError(`Image Server Error : ${JSON.stringify(err)}`);
-        else if (!files.thumbnail || Array.isArray(files.thumbnail)) throw new BadRequestError("You must request only one thumbnail.");
+  try {
+    if (contentType === "form-data") {
+      if (!req.file) throw new BadRequestError("You must request only one thumbnail.");
 
-        req.body = Object.assign({}, req.body, fields);
+      updateFunc(req, req.file);
+    } else if (contentType === "json") {
+      let thumbnail: null | undefined = undefined;
 
-        updateFunc(req, files.thumbnail);
-      } catch (error) {
-        next(error);
+      if (isDefaultFile(req.body.thumbnail)) {
+        thumbnail = null;
       }
-    });
-  } else if (contentType === "json") {
-    let thumbnail: null | undefined = undefined;
 
-    if (req.body.thumbnail === "null" || req.body.thumbnail === null) {
-      thumbnail = null;
+      updateFunc(req, thumbnail);
     }
-
-    updateFunc(req, thumbnail);
+  } catch (error) {
+    next(error);
   }
 });
 

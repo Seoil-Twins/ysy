@@ -1,6 +1,5 @@
 import express, { Router, Request, Response, NextFunction } from "express";
 import joi, { ValidationResult } from "joi";
-import formidable, { File } from "formidable";
 
 import AlbumController from "../controller/album.controller";
 import AlbumService from "../services/album.service";
@@ -12,11 +11,9 @@ import { ContentType } from "../utils/router.util";
 import { isDefaultFile, multerUpload } from "../utils/multer";
 
 import { STATUS_CODE } from "../constants/statusCode.constant";
-import { MAX_FILE_COUNT, MAX_FILE_SIZE } from "../constants/file.constant";
 
 import BadRequestError from "../errors/badRequest.error";
 import ForbiddenError from "../errors/forbidden.error";
-import InternalServerError from "../errors/internalServer.error";
 import UnsupportedMediaTypeError from "../errors/unsupportedMediaType.error";
 
 import { Album } from "../models/album.model";
@@ -200,7 +197,7 @@ router.patch("/:cup_id/:album_id/thumbnail", multerUpload.single("thumbnail"), a
     } else if (contentType === "json" && isDefaultFile(req.body.thumbnail)) {
       updateThumbnailFunc(req, null);
     } else {
-      throw new BadRequestError("You must request only 'null'");
+      throw new UnsupportedMediaTypeError("You must request any data");
     }
   } catch (error) {
     next(error);
@@ -222,9 +219,9 @@ router.delete("/:cup_id/:album_id", async (req: Request, res: Response, next: Ne
   }
 });
 
-router.delete("/:cup_id/:album_id/image/:image_ids", async (req: Request, res: Response, next: NextFunction) => {
-  const imageIds: number[] = req.params.image_ids.split(",").map(Number);
-  const numImageIds: number[] = imageIds.filter((imageId: number) => {
+router.delete("/:cup_id/:album_id/images", async (req: Request, res: Response, next: NextFunction) => {
+  const imageIds: string[] | undefined = Array.isArray(req.body.imageIds) ? [...req.body.imageIds] : undefined;
+  const numImageIds: number[] | undefined = imageIds?.map(Number).filter((imageId: number) => {
     if (!isNaN(imageId)) return imageId;
   });
 

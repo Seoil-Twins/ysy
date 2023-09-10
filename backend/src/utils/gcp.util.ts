@@ -1,5 +1,5 @@
 import dotenv from "dotenv";
-import { ApiError, Storage, File as StorageFile } from "@google-cloud/storage";
+import { ApiError, Storage } from "@google-cloud/storage";
 
 import logger from "../logger/logger";
 
@@ -33,6 +33,11 @@ export interface DeleteImageInfo {
   location: string;
 }
 
+/**
+ * 이미지를 다운로드 받아 Buffer로 변환시켜 반환합니다.
+ * @param path 이미지 저장 경로
+ * @returns <Promise<{@link Buffer} | null>>
+ */
 export const getFileBufferWithGCP = async (path: string): Promise<Buffer | null> => {
   try {
     const [buffer]: [Buffer] = await bucket.file(path).download();
@@ -47,6 +52,10 @@ export const getFileBufferWithGCP = async (path: string): Promise<Buffer | null>
   }
 };
 
+/**
+ * 단일 이미지를 업로드 합니다.
+ * @param file {@link UploadImageInfo}
+ */
 export const uploadFileWithGCP = async (file: UploadImageInfo): Promise<void> => {
   try {
     await bucket.file(file.filename).save(file.buffer, {
@@ -58,6 +67,13 @@ export const uploadFileWithGCP = async (file: UploadImageInfo): Promise<void> =>
   }
 };
 
+/**
+ * 다중 이미지를 업로드 합니다.
+ * 모두 성공한다면 true를 반환하고, 1개라도 실패하면 false를 반환합니다.
+ * 한 개라도 실패하였다면 deleteFiles를 호출해 이미지를 삭제해야합니다.
+ * @param files {@link UploadImageInfo UploadImageInfo[]}
+ * @returns Promise\<boolean\>
+ */
 export const uploadFilesWithGCP = async (files: UploadImageInfo[]): Promise<boolean> => {
   const promises: any[] = [];
 
@@ -81,6 +97,11 @@ export const uploadFilesWithGCP = async (files: UploadImageInfo[]): Promise<bool
   }
 };
 
+/**
+ * 단일 이미지를 삭제합니다.
+ * 만약, 삭제하지 못했다면 Error Image에 추가됩니다.
+ * @param info {@link DeleteImageInfo}
+ */
 export const deleteFileWithGCP = async (info: DeleteImageInfo): Promise<void> => {
   try {
     await bucket.file(info.path).delete();
@@ -104,23 +125,28 @@ export const deleteFileWithGCP = async (info: DeleteImageInfo): Promise<void> =>
   }
 };
 
-export const deleteFilesWithGCP = async (infos: DeleteImageInfo[]): Promise<void> => {
+/**
+ * 다중 이미지를 삭제합니다.
+ * 만약, 삭제하지 못했다면 Error Image에 추가됩니다.
+ *
+ * 이 작업은 비동기로 이루어지기 때문에 백그라운드에서 동작됩니다.
+ * @param infos {@link DeleteImageInfo DeleteImageInfo[]}
+ */
+export const deleteFilesWithGCP = (infos: DeleteImageInfo[]): void => {
   for (const info of infos) {
     const blob = bucket.file(info.path);
 
-    blob.delete().catch(async (error) => {
+    blob.delete().catch((error) => {
       if (error instanceof ApiError && error.code === 404) return;
 
-      try {
-        await ErrorImage.create({
-          path: info.path,
-          size: info.size,
-          errorLocation: info.location,
-          type: info.type
-        });
-      } catch (error) {
+      ErrorImage.create({
+        path: info.path,
+        size: info.size,
+        errorLocation: info.location,
+        type: info.type
+      }).catch((error) => {
         logger.error(`Unknown error with insert images ${JSON.stringify(error)}`);
-      }
+      });
     });
   }
 };
