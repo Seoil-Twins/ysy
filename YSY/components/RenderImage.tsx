@@ -53,9 +53,8 @@ const RenderImage: React.FC<RenderImageProps> = ({
             <View
               style={{
                 position: 'absolute',
-                width: 100,
+                width: screenWidth / 4 - 2,
                 height: 100,
-                flex: 1,
                 backgroundColor: 'rgba(0, 0, 0, 0.4)',
               }}
             />
@@ -76,7 +75,7 @@ const RenderImage: React.FC<RenderImageProps> = ({
                 position: 'absolute',
                 justifyContent: 'center',
                 alignItems: 'center',
-                width: 100,
+                width: screenWidth / 4 - 2,
                 height: 100,
               }}>
               <WCheckBigSvg width={80} height={80} />
