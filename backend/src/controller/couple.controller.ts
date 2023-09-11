@@ -1,6 +1,5 @@
 import randomString from "randomstring";
 import { Transaction } from "sequelize";
-import { File } from "formidable";
 
 import sequelize from "../models";
 import { User } from "../models/user.model";
@@ -18,7 +17,7 @@ import ConflictError from "../errors/conflict.error";
 
 import logger from "../logger/logger";
 import jwt from "../utils/jwt.util";
-import { deleteFile } from "../utils/firebase.util";
+import { File, UploadImageInfo, deleteFileWithGCP, getFileBufferWithGCP, uploadFileWithGCP } from "../utils/gcp.util";
 
 import { UserRole } from "../models/userRole.model";
 
@@ -27,7 +26,7 @@ import UserRoleService from "../services/userRole.service";
 import CoupleService from "../services/couple.service";
 
 class CoupleController {
-  private ERROR_LOCATION_PREFIX = "album";
+  private ERROR_LOCATION_PREFIX = "couple";
   private coupleService: CoupleService;
   private userService: UserService;
   private userRoleService: UserRoleService;
@@ -87,13 +86,13 @@ class CoupleController {
       if (transaction) await transaction.rollback();
 
       if (createdCouple?.thumbnail) {
-        await deleteFile({
+        await deleteFileWithGCP({
           path: createdCouple.thumbnail,
           location: `${this.ERROR_LOCATION_PREFIX}/createCouple`,
           size: createdCouple.thumbnailSize ? createdCouple.thumbnailSize : 0,
           type: createdCouple.thumbnailType ? createdCouple.thumbnailType : UNKNOWN_NAME
         });
-        logger.error(`After updating the firebase, a db error occurred and the firebase thumbnail is deleted => ${createdCouple.thumbnail}`);
+        logger.error(`After updating the gcp, a db error occurred and the gcp thumbnail is deleted => ${createdCouple.thumbnail}`);
       }
 
       logger.error(`Couple create Error => ${JSON.stringify(error)}`);
@@ -104,8 +103,9 @@ class CoupleController {
 
   async updateCouple(userId: number, cupId: string, data: UpdateCouple, thumbnail?: File | null): Promise<Couple> {
     let transaction: Transaction | undefined = undefined;
-    console.log(data);
     let updatedCouple: Couple | null = null;
+    let prevFile: UploadImageInfo | null = null;
+
     const user: User | null = await this.userService.select({ userId });
     const couple: Couple | null = await this.coupleService.select(cupId);
 
@@ -122,11 +122,20 @@ class CoupleController {
     }
 
     try {
-      transaction = await sequelize.transaction();
-
       const prevThumbnailPath: string | null = couple.thumbnail;
       const prevThumbnailSize: number = couple.thumbnailSize ? couple.thumbnailSize : 0;
       const prevThumbnailType: string = couple.thumbnailType ? couple.thumbnailType : UNKNOWN_NAME;
+      const prevBuffer = prevThumbnailPath ? await getFileBufferWithGCP(prevThumbnailPath) : null;
+
+      if (prevThumbnailPath && prevBuffer) {
+        prevFile = {
+          filename: prevThumbnailPath,
+          buffer: prevBuffer,
+          mimetype: prevThumbnailType
+        };
+      }
+
+      transaction = await sequelize.transaction();
 
       if (thumbnail) {
         updatedCouple = await this.coupleService.updateWithThumbnail(transaction, couple, data, thumbnail);
@@ -141,32 +150,40 @@ class CoupleController {
         updatedCouple = await this.coupleService.update(transaction, couple, data);
       }
 
-      await transaction.commit();
-
       if (prevThumbnailPath && (thumbnail || thumbnail === null)) {
-        await deleteFile({
+        await deleteFileWithGCP({
           path: prevThumbnailPath,
           location: `${this.ERROR_LOCATION_PREFIX}/updateCouple`,
-          size: prevThumbnailSize,
-          type: prevThumbnailType
+          size: prevThumbnailSize!,
+          type: prevThumbnailType!
         });
-
-        logger.debug(`Deleted Previous thumbnail => ${prevThumbnailPath}`);
       }
+
+      await transaction.commit();
 
       return updatedCouple;
     } catch (error) {
       if (transaction) await transaction.rollback();
 
       if (updatedCouple?.thumbnail) {
-        await deleteFile({
+        await deleteFileWithGCP({
           path: updatedCouple.thumbnail,
-          location: `${this.ERROR_LOCATION_PREFIX}/updateUser`,
+          location: `${this.ERROR_LOCATION_PREFIX}/updateCouple`,
           size: updatedCouple.thumbnailSize ? updatedCouple.thumbnailSize : 0,
           type: updatedCouple.thumbnailType ? updatedCouple.thumbnailType : UNKNOWN_NAME
         });
 
-        logger.error(`After updating the firebase, a db error occurred and the firebase thumbnail is deleted => ${updatedCouple.thumbnail}`);
+        if (prevFile) {
+          await uploadFileWithGCP({
+            filename: prevFile.filename,
+            buffer: prevFile.buffer,
+            mimetype: prevFile.mimetype
+          });
+
+          logger.error(`After updating the gcp, a db error occurred and the gcp thumbnail is reuploaded => ${updatedCouple.thumbnail}`);
+        }
+
+        logger.error(`After updating the gcp, a db error occurred and the gcp thumbnail is deleted => ${updatedCouple.thumbnail}`);
       }
 
       logger.error(`User update error => ${JSON.stringify(error)}`);

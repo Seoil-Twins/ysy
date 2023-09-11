@@ -123,3 +123,5 @@ gradle/wrapper/gradle-wrapper.jar
 .gradle/6.1.1/executionHistory/executionHistory.lock
 .gradle/6.1.1/executionHistory/executionHistory.bin
 .idea/workspace.xml
+
+/backend/gcp.json

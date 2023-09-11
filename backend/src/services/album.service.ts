@@ -1,6 +1,5 @@
 import dayjs from "dayjs";
-import formidable, { File } from "formidable";
-import { FindOptions, InferAttributes, OrderItem, Transaction } from "sequelize";
+import { FindOptions, InferAttributes, OrderItem, Transaction, WhereOptions } from "sequelize";
 
 import { UNKNOWN_NAME } from "../constants/file.constant";
 
@@ -12,7 +11,7 @@ import { Album } from "../models/album.model";
 import { Couple } from "../models/couple.model";
 import { PageOptions } from "../types/album.type";
 
-import { uploadFile } from "../utils/firebase.util";
+import { File, uploadFileWithGCP } from "../utils/gcp.util";
 import { createSortOptions } from "../utils/sort.util";
 
 import { Service } from "./service";
@@ -33,7 +32,19 @@ class AlbumService extends Service {
   }
 
   /**
-   * 앨범 가져오기
+   * 앨범 정보를 가져옵니다.
+   *
+   * ### Example
+   * ```typescript
+   * // 앨범 정보를 가져옵니다.
+   * const response: Album = select(albumId);
+   *
+   * // 앨범 정보와 해당하는 앨범 이미지 정보를 가져옵니다.
+   * const response: Album = select(albumId, true);
+   * // include를 하면 albumImages라는 값이 존재합니다.
+   * console.log(response.albumImages);
+   * ```
+   *
    * @param albumId 앨범이 가지는 고유한 아이디
    * @param isInclude 앨범 이미지 조인 여부
    * @returns Promise\<{@link Album} | null\>
@@ -54,8 +65,14 @@ class AlbumService extends Service {
     return album;
   }
 
+  async selectAll(where: WhereOptions<Album>): Promise<Album[]> {
+    const albums: Album[] = await Album.findAll({ where });
+    return albums;
+  }
+
   /**
-   * 폴더 가져오기를 위한 검색 메소드
+   * 폴더 가져오기를 위한 검색 메소드입니다.
+   *
    * @param cupId 커플이 가지는 고유한 아이디
    * @param pageOptions {@link PageOptions}
    * @returns Promise\<{ albums: {@link Album}[], total: number \}>
@@ -85,7 +102,8 @@ class AlbumService extends Service {
   }
 
   /**
-   * Couple 객체에 해당 하는 앨범들 가져오기
+   * Couple 객체에 해당 하는 앨범들을 가져옵니다.
+   *
    * @param couple {@link Couple}
    * @returns Promise\<{@link Album}[]\>
    */
@@ -95,7 +113,8 @@ class AlbumService extends Service {
   }
 
   /**
-   * 앨범 폴더 생성
+   * 앨범 폴더를 생성합니다.
+   *
    * @param transaction 현재 사용중인 트랜잭션
    * @param cupId 커플이 가지는 고유한 아이디
    * @param title 앨범 제목
@@ -107,7 +126,8 @@ class AlbumService extends Service {
   }
 
   /**
-   * 앨범 정보 수정
+   * 앨범 정보를 수정합니다.
+   *
    * @param transaction 현재 사용중인 트랜잭션
    * @param album {@link Album}
    * @param data {@link Album}
@@ -119,14 +139,15 @@ class AlbumService extends Service {
   }
 
   /**
-   * 앨범 대표 사진 수정
+   * 앨범 대표 사진 정보를 수정합니다.
+   *
    * @param transaction 현재 사용중인 트랜잭션
    * @param album {@link Album}
-   * @param thumbnail {@link formidable.File}
+   * @param thumbnail {@link Express.Multer.File}
    * @returns Promise\<{@link Album}\>
    */
   async updateWithThumbnail(transaction: Transaction | null, album: Album, thumbnail: File): Promise<Album> {
-    const path = `${this.FOLDER_NAME}/${album.cupId}/${album.albumId}/thumbnail/${dayjs().valueOf()}.${thumbnail.originalFilename}`;
+    const path = `${this.FOLDER_NAME}/${album.cupId}/${album.albumId}/thumbnail/${dayjs().valueOf()}.${thumbnail.originalname}`;
 
     const updatedAlbum: Album = await album.update(
       {
@@ -137,17 +158,35 @@ class AlbumService extends Service {
       { transaction }
     );
 
-    await uploadFile(path, thumbnail.filepath);
+    await uploadFileWithGCP({
+      filename: path,
+      buffer: thumbnail.buffer,
+      mimetype: thumbnail.mimetype
+    });
+
     return updatedAlbum;
   }
 
   /**
-   * 앨범 삭제
+   * 하나의 앨범 정보를 삭제합니다.
+   *
    * @param transaction 현재 사용중인 트랜잭션
    * @param album {@link Album}
    */
   async delete(transaction: Transaction | null, album: Album): Promise<void> {
     await album.destroy({ transaction });
+  }
+
+  /**
+   * 여러 개의 앨범 정보를 삭제합니다.
+   *
+   * @param transaction 현재 사용중인 트랜잭션
+   * @param albums {@link Album}[]
+   */
+  async deletes(transaction: Transaction | null, albums: Album[]): Promise<void> {
+    for (const album of albums) {
+      await album.destroy({ transaction });
+    }
   }
 }
 

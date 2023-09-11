@@ -1,6 +1,5 @@
 import express, { Router, Request, Response, NextFunction } from "express";
 import joi, { ValidationResult } from "joi";
-import formidable, { File } from "formidable";
 import { boolean } from "boolean";
 
 import { User } from "../models/user.model";
@@ -9,13 +8,13 @@ import { CreateUser, UpdateUser, ResponseUser, UpdateUserNotification } from "..
 import logger from "../logger/logger";
 import validator from "../utils/validator.util";
 import { ContentType } from "../utils/router.util";
+import { isDefaultFile, multerUpload } from "../utils/multer";
+import { File } from "../utils/gcp.util";
 
 import { STATUS_CODE } from "../constants/statusCode.constant";
-import { MAX_FILE_SIZE } from "../constants/file.constant";
 
 import BadRequestError from "../errors/badRequest.error";
 import ForbiddenError from "../errors/forbidden.error";
-import InternalServerError from "../errors/internalServer.error";
 
 import UserController from "../controller/user.controller";
 import UserService from "../services/user.service";
@@ -67,9 +66,8 @@ router.get("/me", async (req: Request, res: Response, next: NextFunction) => {
 });
 
 // 유저 생성
-router.post("/", async (req: Request, res: Response, next: NextFunction) => {
+router.post("/", multerUpload.single("profile"), async (req: Request, res: Response, next: NextFunction) => {
   const contentType: ContentType | undefined = req.contentType;
-  const form = formidable({ maxFileSize: MAX_FILE_SIZE });
 
   const createFunc = async (req: Request, profile?: File) => {
     try {
@@ -87,39 +85,33 @@ router.post("/", async (req: Request, res: Response, next: NextFunction) => {
         eventNofi: boolean(value.eventNofi)
       };
 
-      const url: string = await userController.createUser(data, profile);
+      await userController.createUser(data, profile);
 
       logger.debug(`Response Data : ${JSON.stringify(data)}`);
-      return res.header({ Location: url }).status(STATUS_CODE.CREATED).json({});
+      return res.status(STATUS_CODE.CREATED).json({});
     } catch (error) {
       next(error);
     }
   };
 
-  if (contentType === "form-data") {
-    form.parse(req, async (err, fields, files) => {
-      try {
-        if (err) throw new InternalServerError(`Image Server Error : ${JSON.stringify(err)}`);
-        else if (Array.isArray(files.profile)) throw new BadRequestError("You must request only one profile");
+  try {
+    if (contentType === "form-data") {
+      if (!req.file) throw new BadRequestError("You must request profile");
 
-        req.body = Object.assign({}, req.body, fields);
-
-        createFunc(req, files.profile);
-      } catch (error) {
-        next(error);
-      }
-    });
-  } else if (contentType === "json") {
-    createFunc(req, undefined);
+      createFunc(req, req.file);
+    } else if (contentType === "json") {
+      createFunc(req, undefined);
+    }
+  } catch (error) {
+    next(error);
   }
 });
 
 // 유저 수정
-router.patch("/:user_id", async (req: Request, res: Response, next: NextFunction) => {
+router.patch("/:user_id", multerUpload.single("profile"), async (req: Request, res: Response, next: NextFunction) => {
   const contentType: ContentType | undefined = req.contentType;
-  const form = formidable({ multiples: false, maxFileSize: MAX_FILE_SIZE });
 
-  const updateFunc = async (req: Request, profile?: formidable.File | null) => {
+  const updateFunc = async (req: Request, profile?: File | null) => {
     try {
       const { value, error }: ValidationResult = validator(req.body, updateSchema);
 
@@ -138,27 +130,22 @@ router.patch("/:user_id", async (req: Request, res: Response, next: NextFunction
     }
   };
 
-  if (contentType === "form-data") {
-    form.parse(req, async (err, fields, files) => {
-      try {
-        if (err) throw new InternalServerError(`Image Server Error : ${JSON.stringify(err)}`);
-        else if (!files.profile || Array.isArray(files.profile)) throw new BadRequestError("You must request only one profile.");
+  try {
+    if (contentType === "form-data") {
+      if (!req.file) throw new BadRequestError("You must request only one profile.");
 
-        req.body = Object.assign({}, req.body, fields);
+      updateFunc(req, req.file);
+    } else if (contentType === "json") {
+      let profile: null | undefined = undefined;
 
-        updateFunc(req, files.profile);
-      } catch (error) {
-        next(error);
+      if (isDefaultFile(req.body.profile)) {
+        profile = null;
       }
-    });
-  } else if (contentType === "json") {
-    let profile: null | undefined = undefined;
 
-    if (req.body.profile === "null" || req.body.profile === null) {
-      profile = null;
+      updateFunc(req, profile);
     }
-
-    updateFunc(req, profile);
+  } catch (error) {
+    next(error);
   }
 });
 

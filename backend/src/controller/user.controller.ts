@@ -1,10 +1,8 @@
 import { Op, Transaction } from "sequelize";
-import { File } from "formidable";
 
 import { UNKNOWN_NAME } from "../constants/file.constant";
 
 import logger from "../logger/logger";
-import { deleteFile } from "../utils/firebase.util";
 
 import sequelize from "../models";
 import { User } from "../models/user.model";
@@ -17,6 +15,7 @@ import NotFoundError from "../errors/notFound.error";
 import UnauthorizedError from "../errors/unauthorized.error";
 import ForbiddenError from "../errors/forbidden.error";
 import ConflictError from "../errors/conflict.error";
+import { File, UploadImageInfo, deleteFileWithGCP, getFileBufferWithGCP, uploadFileWithGCP } from "../utils/gcp.util";
 
 class UserController {
   private ERROR_LOCATION_PREFIX = "user";
@@ -38,7 +37,7 @@ class UserController {
     return result;
   }
 
-  async createUser(data: CreateUser, profile?: File): Promise<string> {
+  async createUser(data: CreateUser, profile?: File): Promise<void> {
     let transaction: Transaction | null = null;
     let createdUser: User | null = null;
 
@@ -53,20 +52,17 @@ class UserController {
 
       await this.userRoleService.create(transaction, createdUser.userId, 4);
       await transaction.commit();
-
-      const url: string = this.userService.getURL();
-      return url;
     } catch (error) {
       if (transaction) await transaction.rollback();
 
       if (createdUser?.profile) {
-        await deleteFile({
+        await deleteFileWithGCP({
           path: createdUser.profile,
           location: `${this.ERROR_LOCATION_PREFIX}/createUser`,
-          size: createdUser.profileSize ? createdUser.profileSize : 0,
-          type: createdUser.profileType ? createdUser.profileType : UNKNOWN_NAME
+          size: createdUser.profileSize!,
+          type: createdUser.profileType!
         });
-        logger.error(`After creating the firebase, a db error occurred and the firebase profile is deleted => ${profile}`);
+        logger.error(`After creating the gcp, a db error occurred and the gcp profile is deleted => ${profile}`);
       }
 
       logger.error(`User create error => ${JSON.stringify(error)}`);
@@ -78,6 +74,7 @@ class UserController {
   async updateUser(userId: number, data: UpdateUser, profile?: File | null): Promise<User> {
     let transaction: Transaction | null = null;
     let updateUser: User | null = null;
+    let prevFile: UploadImageInfo | null = null;
 
     const userByUserId: User | null = await this.userService.select({ userId });
     if (!userByUserId) throw new NotFoundError("Not found user using token user ID");
@@ -92,9 +89,19 @@ class UserController {
 
     try {
       transaction = await sequelize.transaction();
+
       const prevProfilePath: string | null = userByUserId.profile;
       const prevProfileSize: number = userByUserId.profileSize ? userByUserId.profileSize : 0;
       const prevProfileType: string = userByUserId.profileType ? userByUserId.profileType : UNKNOWN_NAME;
+      const prevBuffer = prevProfilePath ? await getFileBufferWithGCP(prevProfilePath) : null;
+
+      if (prevProfilePath && prevBuffer) {
+        prevFile = {
+          filename: prevProfilePath,
+          buffer: prevBuffer,
+          mimetype: prevProfileType
+        };
+      }
 
       if (profile) {
         updateUser = await this.userService.updateWithProfile(transaction, userByUserId, data, profile);
@@ -109,10 +116,8 @@ class UserController {
         updateUser = await this.userService.update(transaction, userByUserId, data);
       }
 
-      await transaction.commit();
-
       if (prevProfilePath && (profile || profile === null)) {
-        await deleteFile({
+        await deleteFileWithGCP({
           path: prevProfilePath,
           location: `${this.ERROR_LOCATION_PREFIX}/updateUser`,
           size: prevProfileSize,
@@ -120,19 +125,31 @@ class UserController {
         });
       }
 
+      await transaction.commit();
+
       return updateUser;
     } catch (error) {
       if (transaction) await transaction.rollback();
 
-      // Firebase에는 업로드 되었지만 DB 오류가 발생했다면 Firebase Profile 삭제
       if (updateUser?.profile) {
-        await deleteFile({
+        await deleteFileWithGCP({
           path: updateUser.profile,
           location: `${this.ERROR_LOCATION_PREFIX}/updateUser`,
           size: updateUser.profileSize ? updateUser.profileSize : 0,
           type: updateUser.profileType ? updateUser.profileType : UNKNOWN_NAME
         });
-        logger.error(`After updating the firebase, a db error occurred and the firebase profile is deleted => ${profile}`);
+
+        if (prevFile) {
+          await uploadFileWithGCP({
+            filename: prevFile.filename,
+            buffer: prevFile.buffer,
+            mimetype: prevFile.mimetype
+          });
+
+          logger.error(`After updating the gcp, a db error occurred and the gcp profile is reuploaded => ${updateUser.profile}`);
+        }
+
+        logger.error(`After updating the gcp, a db error occurred and the gcp profile is deleted => ${profile}`);
       }
 
       throw error;

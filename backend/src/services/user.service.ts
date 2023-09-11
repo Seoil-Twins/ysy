@@ -1,5 +1,4 @@
 import dayjs from "dayjs";
-import formidable, { File } from "formidable";
 import randomString from "randomstring";
 import { FindAttributeOptions, InferAttributes, Op, Transaction, WhereOptions } from "sequelize";
 
@@ -16,7 +15,7 @@ import { Couple } from "../models/couple.model";
 
 import NotFoundError from "../errors/notFound.error";
 
-import { uploadFile } from "../utils/firebase.util";
+import { File, uploadFileWithGCP } from "../utils/gcp.util";
 
 class UserService extends Service {
   private readonly FOLDER_NAME: string = "users";
@@ -25,20 +24,22 @@ class UserService extends Service {
   };
 
   /**
-   * 프로필 사진 경로 생성
+   * 프로필 사진 경로를 생성합니다.
+   *
    * @param userId 유저 ID
    * @param file 사진 객체
    * @returns string | null - 프로필 사진 경로 또는 없음
    */
   createProfile(userId: number, file: File): string {
-    const reqFileName = file.originalFilename!;
-    const path: string = `${this.FOLDER_NAME}/${userId}/profile/${dayjs().valueOf()}_${reqFileName}`;
+    const reqFileName = file.originalname;
+    const path: string = `${this.FOLDER_NAME}/${userId}/profile/${dayjs().valueOf()}.${reqFileName}`;
 
     return path;
   }
 
   /**
-   * 유저 코드 생성
+   * 유저 코드를 생성합니다.
+   *
    * @returns Promise\<string\> - 생성한 유저 코드
    */
   async createCode(): Promise<string> {
@@ -63,7 +64,8 @@ class UserService extends Service {
   }
 
   /**
-   * Where을 사용한 유저 가져오기
+   * Where을 사용한 유저 가져옵니다.
+   *
    * @param where {@link WhereOptions}
    * @returns Promise\<{@link User} | null\>
    */
@@ -73,7 +75,8 @@ class UserService extends Service {
   }
 
   /**
-   * ResponseUser에 맞는 User 객체 반환
+   * ResponseUser에 맞는 User 객체 반환합니다.
+   *
    * @param userId 유저 ID
    * @returns Promise\<{@link ResponseUser} | null\>
    */
@@ -108,7 +111,8 @@ class UserService extends Service {
   }
 
   /**
-   * couple를 통해 User 가져오기
+   * couple를 통해 User를 가져옵니다.
+   *
    * @param couple {@link Couple}
    * @returns Promise\<{@link User User[]}\>
    */
@@ -118,7 +122,8 @@ class UserService extends Service {
   }
 
   /**
-   * 사용자 생성
+   * 사용자를 생성합니다.
+   *
    * @param transaction 현재 사용 중인 트랜잭션
    * @param data {@link CreateUser}
    * @returns Promise\<{@link User}\>
@@ -151,14 +156,18 @@ class UserService extends Service {
         { transaction }
       );
 
-      await uploadFile(path, profile.filepath);
+      await uploadFileWithGCP({
+        buffer: profile.buffer,
+        filename: path,
+        mimetype: profile.mimetype
+      });
     }
 
     return createdUser;
   }
 
   /**
-   * 유저 기본 정보 수정
+   * 유저 기본 정보를 수정합니다.
    *
    * ### Example
    * ```typescript
@@ -180,12 +189,12 @@ class UserService extends Service {
   }
 
   /**
-   * 유저 기본 정보 업데이트 및 profile 수정
+   * 유저 기본 정보 업데이트 및 profile 정보를 수정합니다.
    *
    * @param transaction 현재 사용 중인 트랜잭션
    * @param user {@link User}
    * @param data {@link User}
-   * @param profile {@link formidable.File}
+   * @param profile {@link Express.Multer.File}
    * @returns Promise\<{@link User}\>
    */
   async updateWithProfile(transaction: Transaction | null, user: User, data: Partial<InferAttributes<User>>, profile: File): Promise<User> {
@@ -200,7 +209,11 @@ class UserService extends Service {
       { transaction }
     );
 
-    await uploadFile(path, profile.filepath);
+    await uploadFileWithGCP({
+      buffer: profile.buffer,
+      filename: path,
+      mimetype: profile.mimetype
+    });
     return updatedUser;
   }
 
@@ -210,7 +223,8 @@ class UserService extends Service {
   }
 
   /**
-   * 사용자 삭제
+   * 사용자 정보를 삭제합니다. (soft delete)
+   *
    * @param transaction 현재 사용 중인 트랜잭션
    * @param user {@link User}
    */
