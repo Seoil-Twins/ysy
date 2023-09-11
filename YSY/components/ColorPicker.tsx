@@ -1,13 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { StyleSheet, Pressable, View, Modal } from 'react-native';
 import { TriangleColorPicker, toHsv, fromHsv } from 'react-native-color-picker';
-import { ColorPicker as ColorPicker2 } from 'react-native-color-picker';
-
-import ColorPickerSVG from '../assets/icons/calendar.svg';
 
 import CustomText from './CustomText';
-import Slider from '@react-native-community/slider';
-
 type ColorPickerProps = {
   defaultValue?: string;
   placeholder: string;
@@ -18,12 +13,13 @@ type ColorPickerProps = {
 
 const ColorPicker: React.FC<ColorPickerProps> = ({
   defaultValue,
-  placeholder,
   isError = false,
-  errorMessage,
   onColorChange,
 }) => {
   const [color, setColor] = useState<string>(
+    defaultValue ? defaultValue : '#00FF00',
+  );
+  const [oldColor, setOldColor] = useState<string>(
     defaultValue ? defaultValue : '#00FF00',
   );
   const [isVisible, setIsVisible] = useState<boolean>(false);
@@ -43,6 +39,16 @@ const ColorPicker: React.FC<ColorPickerProps> = ({
     },
     [onColorChange],
   );
+
+  const handleCancel = () => {
+    hideColorPicker();
+    setColor(oldColor);
+  };
+
+  const handleOk = () => {
+    hideColorPicker();
+    setOldColor(color);
+  };
 
   const drawCircle = () => {
     return (
@@ -84,43 +90,18 @@ const ColorPicker: React.FC<ColorPickerProps> = ({
         visible={isVisible}
         animationType="slide"
         transparent={true}>
-        <View style={{ flex: 1, backgroundColor: 'blye', height: '80%' }}>
+        <View style={{ flex: 1, height: '80%' }}>
           <TriangleColorPicker
-            oldColor="purple"
+            oldColor={oldColor}
             color={color}
             onColorChange={handleColorChange}
-            onColorSelected={hideColorPicker}
-            onOldColorSelected={hideColorPicker}
+            onColorSelected={handleOk}
+            onOldColorSelected={handleCancel}
             style={{ flex: 1 }}
           />
         </View>
       </Modal>
     </View>
-    // <View
-    //   style={[
-    //     styles.container,
-    //     isError ? { marginBottom: 30 } : { marginBottom: 15 },
-    //   ]}>
-    //   <Pressable
-    //     style={[styles.input, isError ? styles.error : null]}
-    //     onPress={showColorPicker}>
-    //     <CustomText size={16} weight="regular">
-    //       {color}
-    //     </CustomText>
-    //     <ColorPickerSVG style={styles.img} />
-    //     <ColorPicker2
-    //       isVisible={isVisible}
-    //       onColorChange={handleColorChange}
-    //       onDismiss={hideColorPicker}
-    //       color={toHsv(color)}
-    //     />
-    //   </Pressable>
-    //   {isError ? (
-    //     <CustomText size={14} weight="regular" color="#FF6D70">
-    //       {errorMessage}
-    //     </CustomText>
-    //   ) : null}
-    // </View>
   );
 };
 

@@ -4,6 +4,8 @@ import { useAppSelector } from '../redux/hooks';
 import { RootState } from '../redux/store';
 import { widthPercentageToDP as wp } from 'react-native-responsive-screen';
 
+import { Darkroom } from 'react-native-image-filter-kit';
+
 import WCheckSvg from '../assets/icons/white_check.svg';
 import WCheckBigSvg from '../assets/icons/white_check_big.svg';
 
@@ -39,7 +41,6 @@ const RenderImage: React.FC<RenderImageProps> = ({
           flex: 1,
           paddingTop: 1,
           paddingRight: 1,
-          backgroundColor: 'red',
         }}
         onPress={() => handleImagePress(item)}
         onLongPress={() => handleImageLongPress()}>
@@ -48,6 +49,16 @@ const RenderImage: React.FC<RenderImageProps> = ({
             source={{ uri: item }}
             style={{ width: screenWidth / 4 - 2, height: 100 }}
           />
+          {isTmpRepImage && (
+            <View
+              style={{
+                position: 'absolute',
+                width: screenWidth / 4 - 2,
+                height: 100,
+                backgroundColor: 'rgba(0, 0, 0, 0.4)',
+              }}
+            />
+          )}
 
           {isImage && (
             <View
@@ -62,17 +73,12 @@ const RenderImage: React.FC<RenderImageProps> = ({
             <View
               style={{
                 position: 'absolute',
-                top: 0,
-                right: 0,
-                width: 60,
-                height: 60,
-                borderRadius: 20,
                 justifyContent: 'center',
                 alignItems: 'center',
-                marginTop: 15,
-                marginRight: 20,
+                width: screenWidth / 4 - 2,
+                height: 100,
               }}>
-              <WCheckBigSvg />
+              <WCheckBigSvg width={80} height={80} />
             </View>
           )}
         </View>
@@ -107,6 +113,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 5,
     marginRight: 5,
+  },
+  darkImage: {
+    tintColor: 'rgba(0, 0, 0, 0.5)', // 어두운 효과 생성 (투명도 조절 가능)
   },
 });
 

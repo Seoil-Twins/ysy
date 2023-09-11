@@ -98,10 +98,12 @@ const MyCalendar: React.FC<CalendarProps> = ({ onDateSelect }) => {
         setSelectedDate(date);
         onDateSelect(date);
       } else {
-        if (currentMonth == 11 && date.getMonth() === 0)
+        if (currentMonth == 11 && date.getMonth() === 0) {
           setCurrentYear(currentYear + 1);
-        if (currentMonth == 0 && date.getMonth() === 11)
+        }
+        if (currentMonth == 0 && date.getMonth() === 11) {
           setCurrentYear(currentYear - 1);
+        }
         setCurrentMonth(date.getMonth());
       }
     }
@@ -181,7 +183,9 @@ const MyCalendar: React.FC<CalendarProps> = ({ onDateSelect }) => {
   };
 
   const getMonthDates = (year: number, month: number): Date[] => {
-    if (scheduleList.length <= 0) getSchedule(month);
+    if (scheduleList.length <= 0) {
+      getSchedule(month);
+    }
 
     const firstDay = new Date(year, month, 1);
     const lastDay = new Date(year, month + 1, 0);
@@ -410,7 +414,9 @@ const MyCalendar: React.FC<CalendarProps> = ({ onDateSelect }) => {
   const checkEmpty = () => {
     if (inputTitle && inputDesc && inputStartDate && inputEndDate) {
       setIsAdd(true);
-    } else setIsAdd(false);
+    } else {
+      setIsAdd(false);
+    }
   };
 
   const swipeEvent = (diff: number) => {
@@ -486,7 +492,6 @@ const MyCalendar: React.FC<CalendarProps> = ({ onDateSelect }) => {
                       }}
                       key={date.toString()}
                       onPress={() => handleDateSelect(date)}
-                      // eslint-disable-next-line no-sparse-arrays
                       style={[
                         dateCellFlex ? styles.dateCellFlex : styles.dateCell,
                         isSameDay(date, selectedDate) &&
@@ -723,7 +728,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.5,
   },
   todayCell: {
-    backgroundColor: 'green',
+    // backgroundColor: 'green',
     borderRadius: 10,
   },
   weekLabelsContainer: {
