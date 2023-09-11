@@ -134,7 +134,7 @@ router.post("/:cup_id/:album_id", multerUpload.array("images"), async (req: Requ
 });
 
 // 앨범 합치기
-router.post("/merge/:cup_id", async (req: Request, res: Response, next: NextFunction) => {
+router.patch("/merge/:cup_id", async (req: Request, res: Response, next: NextFunction) => {
   const contentType: ContentType = req.contentType;
 
   try {
