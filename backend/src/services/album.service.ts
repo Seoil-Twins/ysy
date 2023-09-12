@@ -9,7 +9,7 @@ import sequelize from "../models";
 import { AlbumImage } from "../models/albumImage.model";
 import { Album } from "../models/album.model";
 import { Couple } from "../models/couple.model";
-import { PageOptions } from "../types/album.type";
+import { PageOptions, ResponseAlbumFolder } from "../types/album.type";
 
 import { File, uploadFileWithGCP } from "../utils/gcp.util";
 import { createSortOptions } from "../utils/sort.util";
@@ -77,7 +77,7 @@ class AlbumService extends Service {
    * @param pageOptions {@link PageOptions}
    * @returns Promise\<{ albums: {@link Album}[], total: number \}>
    */
-  async selectAllForFolder(cupId: string, pageOptions: PageOptions): Promise<{ albums: Album[]; total: number }> {
+  async selectAllForFolder(cupId: string, pageOptions: PageOptions): Promise<ResponseAlbumFolder> {
     const sortOptions: OrderItem = createSortOptions(pageOptions.sort);
     const offset: number = (pageOptions.page - 1) * pageOptions.count;
 

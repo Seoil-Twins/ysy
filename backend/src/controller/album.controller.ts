@@ -38,9 +38,7 @@ class AlbumController {
   }
 
   async getAlbumsFolder(cupId: string, options: PageOptions): Promise<ResponseAlbumFolder> {
-    const { albums, total }: { albums: Album[]; total: number } = await this.albumService.selectAllForFolder(cupId, options);
-    const response: ResponseAlbumFolder = { albums, total };
-
+    const response: ResponseAlbumFolder = await this.albumService.selectAllForFolder(cupId, options);
     return response;
   }
 
@@ -346,7 +344,7 @@ class AlbumController {
     else if (albumFolder.cupId !== cupId) throw new ForbiddenError("The ID of the album folder and the body ID don't match.");
 
     const images: AlbumImage[] = await this.albumImageService.selectAll({ albumImageId: imageIds });
-    if (!images.length || images.length <= 0) throw new NotFoundError("Not found images");
+    if (!images.length || images.length <= 0) return;
 
     const imagesOfParam: DeleteImageInfo[] = images.map((image: AlbumImage) => {
       return {

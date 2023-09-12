@@ -10,10 +10,6 @@ export interface CreateCalendar {
 
 export interface UpdateCalendar extends Partial<CreateCalendar> {}
 
-export interface ResponseCalendar {
-  calendars: Calendar[];
-}
-
 export interface ResponseCalendarWithAdmin {
   calendars: Calendar[];
   total: number;
