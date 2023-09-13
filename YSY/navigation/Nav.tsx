@@ -21,44 +21,50 @@ import DateNoneSVG from '../assets/icons/date_none.svg';
 import DateActiveSVG from '../assets/icons/date_active.svg';
 import MoreNoneSVG from '../assets/icons/more_none.svg';
 import MoreActiveSVG from '../assets/icons/more_active.svg';
+import { QueryClient, QueryClientProvider } from 'react-query';
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
 
 const Nav = () => {
+  const queryClient = new QueryClient();
   return (
-    <Tab.Navigator
-      initialRouteName="Home"
-      screenOptions={({ route }) => ({
-        headerShown: false,
-        tabBarShowLabel: false,
-        tabBarStyle: { height: 48, alignItems: 'center' },
-        tabBarIcon: ({ focused }) => {
-          let IconComponent: React.FC<SvgProps> | null;
+    <QueryClientProvider client={queryClient}>
+      <Tab.Navigator
+        initialRouteName="Home"
+        screenOptions={({ route }) => ({
+          headerShown: false,
+          tabBarShowLabel: false,
+          tabBarStyle: { height: 48, alignItems: 'center' },
+          tabBarIcon: ({ focused }) => {
+            let IconComponent: React.FC<SvgProps> | null;
 
-          if (route.name === 'Home') {
-            IconComponent = focused ? HomeActiveSVG : HomeNoneSVG;
-          } else if (route.name === 'AlbumStack') {
-            IconComponent = focused ? AlbumActiveSVG : AlbumNoneSVG;
-          } else if (route.name === 'Calendar') {
-            IconComponent = focused ? CalendarActiveSVG : CalendarNoneSVG;
-          } else if (route.name === 'Date') {
-            IconComponent = focused ? DateActiveSVG : DateNoneSVG;
-          } else if (route.name === 'More') {
-            IconComponent = focused ? MoreActiveSVG : MoreNoneSVG;
-          } else {
-            IconComponent = HomeActiveSVG;
-          }
+            if (route.name === 'Home') {
+              IconComponent = focused ? HomeActiveSVG : HomeNoneSVG;
+            } else if (route.name === 'AlbumStack') {
+              IconComponent = focused ? AlbumActiveSVG : AlbumNoneSVG;
+            } else if (route.name === 'Calendar') {
+              IconComponent = focused ? CalendarActiveSVG : CalendarNoneSVG;
+            } else if (route.name === 'Date') {
+              IconComponent = focused ? DateActiveSVG : DateNoneSVG;
+            } else if (route.name === 'More') {
+              IconComponent = focused ? MoreActiveSVG : MoreNoneSVG;
+            } else {
+              IconComponent = HomeActiveSVG;
+            }
 
-          return IconComponent ? <IconComponent style={styles.imgBox} /> : null;
-        },
-      })}>
-      <Tab.Screen name="Home" component={Home} />
-      <Tab.Screen name="AlbumStack" component={AlbumStack} />
-      <Tab.Screen name="Calendar" component={Calendar} />
-      <Tab.Screen name="Date" component={Date} />
-      <Tab.Screen name="More" component={More} />
-    </Tab.Navigator>
+            return IconComponent ? (
+              <IconComponent style={styles.imgBox} />
+            ) : null;
+          },
+        })}>
+        <Tab.Screen name="Home" component={Home} />
+        <Tab.Screen name="AlbumStack" component={AlbumStack} />
+        <Tab.Screen name="Calendar" component={Calendar} />
+        <Tab.Screen name="Date" component={Date} />
+        <Tab.Screen name="More" component={More} />
+      </Tab.Navigator>
+    </QueryClientProvider>
   );
 };
 

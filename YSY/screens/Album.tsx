@@ -28,8 +28,58 @@ import { AlbumTypes } from '../navigation/AlbumTypes';
 
 import RenderAlbumHeader from '../components/RenderAlbumHeader';
 import RenderAlbum from '../components/RenderAlbum';
+import axios from 'axios';
+import { useQuery } from 'react-query';
 
 const screenWidth = wp('100%');
+function MyComponent() {
+  const ROOT_API_URL = 'http://10.0.2.2:3000';
+
+  const headers = {
+    'Content-Type': 'application/json', // 예시: JSON 형식의 데이터를 보낼 때
+    Authorization:
+      'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjQsImN1cElkIjpudWxsLCJyb2xlSWQiOjQsImlhdCI6MTY5NDUwMzM5MywiZXhwIjoxNjk3MDk1MzkzLCJpc3MiOiJ5c3l1c2VyIn0.6YEGd9PMlB43CHTjvOsRWVc11gr0ryiIzuEpMGJZNhk', // 예시: 인증 토큰을 보낼 때
+  };
+
+  const callAPI = async () => {
+    const response = await axios
+      .get(`${ROOT_API_URL}${'/user/me'}`, {
+        headers: headers, // 설정한 헤더를 여기에 전달합니다.
+      })
+      .then(response => {
+        // 성공적으로 데이터를 받아왔을 때 처리
+        console.log(response.data);
+      })
+      .catch(error => {
+        // 오류 처리
+        console.error(error);
+      });
+
+    // xhr.setRequestHeader('Authorization', '');
+    // xhr.setRequestHeader('content-type', 'application/json');
+    return response;
+  };
+
+  const { data, error, isLoading } = useQuery('userme', callAPI);
+
+  const callQuery = () => {
+    // 데이터 확인은 이 함수 내에서 수행
+    if (!isLoading) {
+      if (error) {
+        console.error(error);
+      } else {
+        console.log(data);
+      }
+    }
+  };
+
+  const openSortModal = () => {
+    callQuery(); // callQuery 함수 호출
+  };
+
+  // ...
+  openSortModal();
+}
 
 export const Album = () => {
   const [isAddModalVisible, setIsAddModalVisible] = useState(false);
@@ -171,8 +221,35 @@ export const Album = () => {
         // 화면 이동 시 핸들러 언마운트
         BackHandler.removeEventListener('hardwareBackPress', backAction);
       };
-    }, [])
+    }, []),
   );
+
+  const ROOT_API_URL = 'http://10.0.2.2:3000';
+
+  const headers = {
+    'Content-Type': 'application/json', // 예시: JSON 형식의 데이터를 보낼 때
+    Authorization:
+      'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjQsImN1cElkIjpudWxsLCJyb2xlSWQiOjQsImlhdCI6MTY5NDUwMzM5MywiZXhwIjoxNjk3MDk1MzkzLCJpc3MiOiJ5c3l1c2VyIn0.6YEGd9PMlB43CHTjvOsRWVc11gr0ryiIzuEpMGJZNhk', // 예시: 인증 토큰을 보낼 때
+  };
+
+  const callAPI = async () => {
+    const response = await axios
+      .get(`${ROOT_API_URL}${'/user/me'}`, {
+        headers: headers, // 설정한 헤더를 여기에 전달합니다.
+      })
+      .then(response => {
+        // 성공적으로 데이터를 받아왔을 때 처리
+        console.log(response.data);
+      })
+      .catch(error => {
+        // 오류 처리
+        console.error(error);
+      });
+
+    // xhr.setRequestHeader('Authorization', '');
+    // xhr.setRequestHeader('content-type', 'application/json');
+    return response;
+  };
 
   useEffect(() => {
     if (isFunc.includes('Album')) {
@@ -251,6 +328,16 @@ export const Album = () => {
     }
   };
 
+  // function callQuery() {
+  //   const { data } = useQuery('userme', callAPI);
+  //   console.log(data);
+
+  //   return (
+  //     <View style={{ flex: 1 }}>
+  //       <Text>asd</Text>
+  //     </View>
+  //   );
+  // }
   const openSortModal = () => {
     setIsSortModalVisible(true);
   };
@@ -300,7 +387,8 @@ export const Album = () => {
     ); // 데이터 삭제로직
     createNewAlbumDetail(albumNames, newAlbumName);
     newData.push(
-      'https://fastly.picsum.photos/id/855/500/500.jpg?hmac=TOLIBgvj-ag8FMNpBsnbDWdmC-6i_R9jFJh0qSSBUK8');
+      'https://fastly.picsum.photos/id/855/500/500.jpg?hmac=TOLIBgvj-ag8FMNpBsnbDWdmC-6i_R9jFJh0qSSBUK8',
+    );
     setSelectedAlbums([]);
 
     setDummyFolder(newData);
@@ -319,6 +407,7 @@ export const Album = () => {
 
   return (
     <React.Fragment>
+      <MyComponent />
       <View style={{ flex: 1 }}>
         <View
           style={{
