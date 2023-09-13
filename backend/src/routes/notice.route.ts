@@ -5,19 +5,24 @@ import NoticeSerivce from "../services/notice.service";
 
 import { STATUS_CODE } from "../constants/statusCode.constant";
 
+import { PageOptions, ResponseNotice } from "../types/noitce.type";
+
 const router: Router = express.Router();
 const noticeService: NoticeSerivce = new NoticeSerivce();
 const noticeController: NoticeController = new NoticeController(noticeService);
 
 router.get("/", async (req: Request, res: Response, next: NextFunction) => {
-  let count = Number(req.query.count),
-    page = Number(req.query.page);
+  const page: number = !isNaN(Number(req.query.page)) ? Number(req.query.page) : 1;
+  const count: number = !isNaN(Number(req.query.count)) ? Number(req.query.count) : 10;
 
   try {
-    if (isNaN(count)) count = 1;
-    if (isNaN(page)) page = 1;
+    const pageOptions: PageOptions = {
+      count,
+      page,
+      sort: "r"
+    };
+    const results: ResponseNotice = await noticeController.getNotices(pageOptions);
 
-    const results = await noticeController.getNotices(count, page);
     return res.status(STATUS_CODE.OK).json(results);
   } catch (error) {
     next(error);

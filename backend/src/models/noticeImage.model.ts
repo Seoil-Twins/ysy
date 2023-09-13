@@ -5,7 +5,7 @@ import sequelize, { applyDateHook } from ".";
 import { Notice } from "./notice.model";
 
 export class NoticeImage extends Model<InferAttributes<NoticeImage>, InferCreationAttributes<NoticeImage>> {
-  declare notionImageId: CreationOptional<number>;
+  declare noticeImageId: CreationOptional<number>;
   declare noticeId: number;
   declare size: number;
   declare type: string;
@@ -15,8 +15,8 @@ export class NoticeImage extends Model<InferAttributes<NoticeImage>, InferCreati
 
 NoticeImage.init(
   {
-    notionImageId: {
-      field: "notion_image_id",
+    noticeImageId: {
+      field: "notice_image_id",
       type: DataTypes.INTEGER.UNSIGNED,
       autoIncrement: true,
       primaryKey: true
