@@ -1,6 +1,13 @@
 import { Inquiry } from "../models/inquiry.model";
 
+export const isSortItem = (item: any): item is SortItem => {
+  return ["r", "o", "sr", "so"].includes(item);
+};
+
+export type SortItem = "r" | "o" | "sr" | "so";
+
 export interface CreateInquiry {
+  userId: number;
   title: string;
   contents: string;
 }
@@ -13,7 +20,7 @@ export interface ResponseInquiry {
 export interface PageOptions {
   count: number;
   page: number;
-  sort: string | "r" | "o" | "sr" | "so";
+  sort: SortItem;
 }
 
 export interface SearchOptions {

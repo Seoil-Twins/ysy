@@ -124,12 +124,12 @@ export default {
 
     // ------------------------------------------ InquiryImage to Inquiry ---------------------------------------- //
     Inquiry.hasMany(InquiryImage, {
-      foreignKey: "InquiryId",
-      as: "InquiryImages"
+      foreignKey: "inquiryId",
+      as: "inquiryImages"
     });
 
     InquiryImage.belongsTo(Inquiry, {
-      foreignKey: "InquiryId",
+      foreignKey: "inquiryId",
       as: "Inquiry",
       onDelete: "CASCADE",
       onUpdate: "CASCADE"
@@ -137,12 +137,12 @@ export default {
 
     // ------------------------------------------ Solution : Inquiry ---------------------------------------- //
     Inquiry.hasOne(Solution, {
-      foreignKey: "InquiryId",
+      foreignKey: "inquiryId",
       as: "solution"
     });
 
     Solution.hasOne(Inquiry, {
-      foreignKey: "InquiryId",
+      foreignKey: "inquiryId",
       as: "Inquiry",
       onDelete: "CASCADE",
       onUpdate: "CASCADE"

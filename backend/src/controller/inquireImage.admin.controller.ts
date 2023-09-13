@@ -5,9 +5,9 @@ import sequelize from "../models";
 import { Inquire } from "../models/inquiry.model";
 import { FilterOptions, InquireImage, InquireImageResponseWithCount, PageOptions, SearchOptions } from "../models/inquiryImage.model";
 
-import InquireService from "../services/inquire.service";
+import InquireService from "../services/inquiry.service";
 import InquireImageAdminService from "../services/inquireImage.admin.service";
-import InquireImageService from "../services/inquireImage.service";
+import InquireImageService from "../services/inquiryImage.service";
 
 import UploadError from "../errors/upload.error";
 import BadRequestError from "../errors/badRequest.error";

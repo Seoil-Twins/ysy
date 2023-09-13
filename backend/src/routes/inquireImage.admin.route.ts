@@ -2,8 +2,8 @@ import dayjs from "dayjs";
 import express, { Router, Request, Response, NextFunction } from "express";
 import formidable, { File } from "formidable";
 
-import InquireService from "../services/inquire.service";
-import InquireImageService from "../services/inquireImage.service";
+import InquireService from "../services/inquiry.service";
+import InquireImageService from "../services/inquiryImage.service";
 
 import { canModifyWithEditor, canView } from "../utils/checkRole.util";
 import { STATUS_CODE } from "../constants/statusCode.constant";

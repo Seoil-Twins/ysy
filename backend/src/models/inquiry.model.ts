@@ -55,7 +55,7 @@ Inquiry.init(
   },
   {
     sequelize: sequelize,
-    tableName: "inquire",
+    tableName: "inquiry",
     timestamps: false
   }
 );
