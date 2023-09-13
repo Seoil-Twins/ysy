@@ -5,7 +5,7 @@ import authRouter from "./auth.route";
 import coupleRouter from "./couple.route";
 import albumRouter from "./album.route";
 import calendarRouter from "./calendar.route";
-import inquireRouter from "./inquire.route";
+import inquireRouter from "./inquiry.route";
 import noticeRouter from "./notice.route";
 
 import userAdminRouter from "./user.admin.route";
@@ -33,7 +33,7 @@ router.use("/user", checkContentType, authMiddleware, userRouter);
 router.use("/couple", checkContentType, authMiddleware, coupleRouter);
 router.use("/album", checkContentType, authMiddleware, albumRouter);
 router.use("/calendar", checkContentType, authMiddleware, calendarRouter);
-// router.use("/inquire", authMiddleware, inquireRouter);
+router.use("/inquiry", checkContentType, authMiddleware, inquireRouter);
 // router.use("/notice", authMiddleware, noticeRouter);
 
 // router.use("/admin/user", authMiddleware, userAdminRouter);

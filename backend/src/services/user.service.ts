@@ -157,9 +157,10 @@ class UserService extends Service {
       );
 
       await uploadFileWithGCP({
-        buffer: profile.buffer,
         filename: path,
-        mimetype: profile.mimetype
+        buffer: profile.buffer,
+        mimetype: profile.mimetype,
+        size: profile.size
       });
     }
 
@@ -210,9 +211,10 @@ class UserService extends Service {
     );
 
     await uploadFileWithGCP({
-      buffer: profile.buffer,
       filename: path,
-      mimetype: profile.mimetype
+      buffer: profile.buffer,
+      mimetype: profile.mimetype,
+      size: profile.size
     });
     return updatedUser;
   }

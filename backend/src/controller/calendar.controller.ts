@@ -28,11 +28,11 @@ class CalendarController {
     return calendars;
   }
 
-  async addCalendar(cupId: string, data: CreateCalendar): Promise<string> {
-    const couple: Couple | null = await this.coupleService.select(cupId);
-    if (!couple) throw new NotFoundError(`Not found calendar using query parameter cupId => ${cupId}`);
+  async addCalendar(data: CreateCalendar): Promise<string> {
+    const couple: Couple | null = await this.coupleService.select(data.cupId);
+    if (!couple) throw new NotFoundError(`Not found calendar using query parameter cupId => ${data.cupId}`);
 
-    const createdCalendar: Calendar = await this.calendarService.create(null, cupId, data);
+    const createdCalendar: Calendar = await this.calendarService.create(null, data);
     logger.debug(`Add Calendar => ${JSON.stringify(data)}`);
 
     const url: string = this.calendarService.getURL(createdCalendar.cupId, createdCalendar.fromDate.getFullYear());

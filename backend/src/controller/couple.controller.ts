@@ -131,7 +131,8 @@ class CoupleController {
         prevFile = {
           filename: prevThumbnailPath,
           buffer: prevBuffer,
-          mimetype: prevThumbnailType
+          mimetype: prevThumbnailType,
+          size: prevThumbnailSize
         };
       }
 
@@ -174,13 +175,18 @@ class CoupleController {
         });
 
         if (prevFile) {
-          await uploadFileWithGCP({
-            filename: prevFile.filename,
-            buffer: prevFile.buffer,
-            mimetype: prevFile.mimetype
-          });
+          try {
+            await uploadFileWithGCP({
+              filename: prevFile.filename,
+              buffer: prevFile.buffer,
+              mimetype: prevFile.mimetype,
+              size: prevFile.size
+            });
 
-          logger.error(`After updating the gcp, a db error occurred and the gcp thumbnail is reuploaded => ${updatedCouple.thumbnail}`);
+            logger.error(`After updating the gcp, a db error occurred and the gcp thumbnail is reuploaded => ${updatedCouple.thumbnail}`);
+          } catch (error) {
+            logger.error(`Previous thumbnail upload error : ${JSON.stringify(error)}`);
+          }
         }
 
         logger.error(`After updating the gcp, a db error occurred and the gcp thumbnail is deleted => ${updatedCouple.thumbnail}`);

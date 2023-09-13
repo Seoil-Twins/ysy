@@ -24,6 +24,7 @@ const router: Router = express.Router();
 const albumService = new AlbumService();
 const albumImageService = new AlbumImageService();
 const albumController = new AlbumController(albumService, albumImageService);
+const MAX_IMAGE_COUNT = 100;
 
 const titleSchema: joi.Schema = joi.object({
   title: joi.string().required()
@@ -100,7 +101,7 @@ router.post("/:cup_id", async (req: Request, res: Response, next: NextFunction) 
 });
 
 // 앨범 사진 추가
-router.post("/:cup_id/:album_id", multerUpload.array("images"), async (req: Request, res: Response, next: NextFunction) => {
+router.post("/:cup_id/:album_id", multerUpload.array("images", MAX_IMAGE_COUNT), async (req: Request, res: Response, next: NextFunction) => {
   const contentType: ContentType = req.contentType;
 
   const createFunc = async (images: Express.Multer.File[]) => {

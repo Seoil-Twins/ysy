@@ -99,7 +99,8 @@ class CoupleService extends Service {
       await uploadFileWithGCP({
         filename: path,
         mimetype: thumbnail.mimetype,
-        buffer: thumbnail.buffer
+        buffer: thumbnail.buffer,
+        size: thumbnail.size
       });
     return createdCouple;
   }
@@ -149,9 +150,10 @@ class CoupleService extends Service {
     );
 
     await uploadFileWithGCP({
-      buffer: thumbnail.buffer,
       filename: path,
-      mimetype: thumbnail.mimetype
+      buffer: thumbnail.buffer,
+      mimetype: thumbnail.mimetype,
+      size: thumbnail.size
     });
     return couple;
   }

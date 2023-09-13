@@ -161,7 +161,8 @@ class AlbumService extends Service {
     await uploadFileWithGCP({
       filename: path,
       buffer: thumbnail.buffer,
-      mimetype: thumbnail.mimetype
+      mimetype: thumbnail.mimetype,
+      size: thumbnail.size
     });
 
     return updatedAlbum;

@@ -38,10 +38,6 @@ class AlbumImageService extends Service {
     return `${this.FOLDER_NAME}/${cupId}/${albumId}/${dayjs().valueOf()}_${filename}`;
   }
 
-  private createFolderURL(cupId: string, albumId: number) {
-    return `${this.FOLDER_NAME}/${cupId}/${albumId}/`;
-  }
-
   /**
    * Where 절을 사용해 검색 후 모든 결과를 반환합니다.
    * @param where {@link WhereOptions}
@@ -98,7 +94,8 @@ class AlbumImageService extends Service {
     await uploadFileWithGCP({
       filename: path,
       buffer: image.buffer,
-      mimetype: image.mimetype
+      mimetype: image.mimetype,
+      size: image.size
     });
     logger.debug(`Create album image => ${path}`);
 
@@ -126,35 +123,20 @@ class AlbumImageService extends Service {
         albumId,
         path,
         size: image.size,
-        type: image.mimetype
+        type: image.mimetype ? image.mimetype : UNKNOWN_NAME
       });
 
       imageInfos.push({
+        filename: path,
         buffer: image.buffer,
         mimetype: image.mimetype,
-        filename: path
+        size: image.size
       });
     });
 
     createdImages = await AlbumImage.bulkCreate(dbInfos, { transaction });
 
-    const isSuccess: boolean = await uploadFilesWithGCP(imageInfos);
-
-    if (!isSuccess) {
-      const deleteFiles: DeleteImageInfo[] = [];
-
-      createdImages.forEach((image: AlbumImage) => {
-        deleteFiles.push({
-          location: "albumImage/createMultiple",
-          path: image.path,
-          size: image.size,
-          type: image.type
-        });
-      });
-
-      throw new UploadError(deleteFiles, "Album Upload Error");
-    }
-
+    await uploadFilesWithGCP(imageInfos);
     return createdImages;
   }
 

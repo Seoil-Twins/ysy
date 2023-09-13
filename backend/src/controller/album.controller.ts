@@ -85,7 +85,13 @@ class AlbumController {
       if (transaction) await transaction.rollback();
 
       if (error instanceof UploadError) {
-        deleteFilesWithGCP(error.errors);
+        const rollbackFiles: DeleteImageInfo[] = error.errors.map((info: DeleteImageInfo) => {
+          return {
+            ...info,
+            location: "album/addImages"
+          };
+        });
+        deleteFilesWithGCP(rollbackFiles);
       }
 
       logger.error(`Album Create Error ${JSON.stringify(error)}`);
@@ -182,16 +188,21 @@ class AlbumController {
         deleteFilesWithGCP(finded);
       }
 
-      if (prevThumbnails && movedPaths.length > 0) {
-        uploadFilesWithGCP(
-          prevThumbnails.map((thumbnail) => {
-            return {
-              buffer: thumbnail.buffer,
-              filename: thumbnail.path,
-              mimetype: thumbnail.mimetype
-            };
-          })
-        );
+      try {
+        if (prevThumbnails && movedPaths.length > 0) {
+          uploadFilesWithGCP(
+            prevThumbnails.map((thumbnail) => {
+              return {
+                buffer: thumbnail.buffer,
+                filename: thumbnail.path,
+                mimetype: thumbnail.mimetype,
+                size: thumbnail.size
+              };
+            })
+          );
+        }
+      } catch (error) {
+        logger.error(`Previous thumbnail upload error : ${JSON.stringify(error)}`);
       }
 
       logger.error(`Merge Album Error : ${JSON.stringify(error)}`);
@@ -235,7 +246,8 @@ class AlbumController {
         prevFile = {
           filename: prevAlbumPath,
           buffer: prevBuffer,
-          mimetype: prevAlbumType
+          mimetype: prevAlbumType,
+          size: prevAlbumSize
         };
       }
 
@@ -275,12 +287,17 @@ class AlbumController {
           type: updatedAlbum.thumbnailType ? updatedAlbum.thumbnailType : UNKNOWN_NAME
         });
 
-        if (prevFile) {
-          await uploadFileWithGCP({
-            filename: prevFile.filename,
-            buffer: prevFile.buffer,
-            mimetype: prevFile.mimetype
-          });
+        try {
+          if (prevFile) {
+            await uploadFileWithGCP({
+              filename: prevFile.filename,
+              buffer: prevFile.buffer,
+              mimetype: prevFile.mimetype,
+              size: prevFile.size
+            });
+          }
+        } catch (error) {
+          logger.error(`Previous thumbnail upload error : ${JSON.stringify(error)}`);
         }
 
         logger.error(`After updating the gcp, a db error occurred and the gcp thumbnail is deleted => ${updatedAlbum.thumbnail}`);

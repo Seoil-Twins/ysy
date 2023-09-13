@@ -2,8 +2,8 @@ import { File } from "formidable";
 import { Transaction } from "sequelize";
 
 import InquireAdminService from "../services/inquire.admin.service";
-import InquireService from "../services/inquire.service";
-import InquireImageService from "../services/inquireImage.service";
+import InquireService from "../services/inquiry.service";
+import InquireImageService from "../services/inquiryImage.service";
 
 import sequelize from "../models";
 import { InquireImage } from "../models/inquiryImage.model";

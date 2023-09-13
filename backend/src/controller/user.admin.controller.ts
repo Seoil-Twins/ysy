@@ -20,11 +20,11 @@ import ConflictError from "../errors/conflict.error";
 import UserAdminService from "../services/user.admin.service";
 import UserService from "../services/user.service";
 import UserRoleService from "../services/userRole.service";
-import InquireService from "../services/inquire.service";
+import InquireService from "../services/inquiry.service";
 import AlbumService from "../services/album.service";
 import CalendarService from "../services/calendar.service";
 import CoupleAdminService from "../services/couple.admin.service";
-import InquireImageService from "../services/inquireImage.service";
+import InquireImageService from "../services/inquiryImage.service";
 import SolutionImageAdminService from "../services/solutionImage.admin.service";
 
 class UserAdminController {

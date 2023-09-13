@@ -99,7 +99,8 @@ class UserController {
         prevFile = {
           filename: prevProfilePath,
           buffer: prevBuffer,
-          mimetype: prevProfileType
+          mimetype: prevProfileType,
+          size: prevProfileSize
         };
       }
 
@@ -143,7 +144,8 @@ class UserController {
           await uploadFileWithGCP({
             filename: prevFile.filename,
             buffer: prevFile.buffer,
-            mimetype: prevFile.mimetype
+            mimetype: prevFile.mimetype,
+            size: prevFile.size
           });
 
           logger.error(`After updating the gcp, a db error occurred and the gcp profile is reuploaded => ${updateUser.profile}`);

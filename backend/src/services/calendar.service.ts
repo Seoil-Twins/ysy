@@ -100,14 +100,8 @@ class CalendarService extends Service {
    * @param data {@link CreateCalendar}
    * @returns Promise\<{@link Calendar}\>
    */
-  async create(transaction: Transaction | null = null, cupId: string, data: CreateCalendar): Promise<Calendar> {
-    const createdCalendar: Calendar = await Calendar.create(
-      {
-        cupId,
-        ...data
-      },
-      { transaction }
-    );
+  async create(transaction: Transaction | null = null, data: CreateCalendar): Promise<Calendar> {
+    const createdCalendar: Calendar = await Calendar.create(data, { transaction });
     return createdCalendar;
   }
 

@@ -1,6 +1,7 @@
 import { Calendar } from "../models/calendar.model";
 
 export interface CreateCalendar {
+  cupId: string;
   title: string;
   description: string;
   fromDate: Date;

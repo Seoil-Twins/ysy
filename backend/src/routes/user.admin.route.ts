@@ -28,7 +28,7 @@ import UserAdminService from "../services/user.admin.service";
 import UserRoleService from "../services/userRole.service";
 import CoupleAdminService from "../services/couple.admin.service";
 import AlbumService from "../services/album.service";
-import InquireService from "../services/inquire.service";
+import InquireService from "../services/inquiry.service";
 import CalendarService from "../services/calendar.service";
 import SolutionImageAdminService from "../services/solutionImage.admin.service";
 

@@ -76,6 +76,7 @@ router.post("/:cup_id", async (req: Request, res: Response, next: NextFunction) 
     else if (cupId !== req.params.cup_id) throw new ForbiddenError("You don't same token couple ID and path parameter couple ID");
 
     const data: CreateCalendar = {
+      cupId,
       title: value.title,
       description: value.description,
       fromDate: value.fromDate,
@@ -83,7 +84,7 @@ router.post("/:cup_id", async (req: Request, res: Response, next: NextFunction) 
       color: value.color
     };
 
-    const url: string = await calendarController.addCalendar(cupId, data);
+    const url: string = await calendarController.addCalendar(data);
     res.header({ Location: url }).status(STATUS_CODE.CREATED).json({});
   } catch (error) {
     next(error);
