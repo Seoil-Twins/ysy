@@ -65,7 +65,7 @@ router.get("/:cup_id/:album_id", async (req: Request, res: Response, next: NextF
     const albumId: number = Number(req.params.album_id);
     const page: number = !isNaN(Number(req.query.page)) ? Number(req.query.page) : 1;
     const count: number = !isNaN(Number(req.query.count)) ? Number(req.query.count) : 50;
-    const sort: SortItem = isSortItem(req.query.sort) ? req.query.sort : "r";
+    const sort: SortItem = "r";
 
     if (req.cupId !== req.params.cup_id) throw new ForbiddenError("You don't same token couple ID and path parameter couple ID");
     else if (isNaN(albumId)) throw new BadRequestError("Album ID must be a number type");

@@ -3,6 +3,7 @@ import { Login, ResponseToken } from "../types/auth.type";
 import { UserRole } from "../models/userRole.model";
 
 import UnauthorizedError from "../errors/unauthorized.error";
+import NotFoundError from "../errors/notFound.error";
 
 import UserService from "../services/user.service";
 import UserRoleService from "../services/userRole.service";
@@ -25,11 +26,11 @@ class AuthController {
   }
 
   async login(data: Login): Promise<ResponseToken> {
-    const user: User | null = await this.userService.select({ email: data.email, snsId: data.snsId });
-    if (!user) throw new UnauthorizedError("Invalid Email");
+    const user: User | null = await this.userService.select({ email: data.email, snsId: data.snsId, snsKind: data.snsKind });
+    if (!user) throw new NotFoundError("Not found user using request");
 
     const role: UserRole | null = await this.userRoleService.select(user.userId);
-    if (!role) throw new UnauthorizedError("Invalid Role");
+    if (!role) throw new UnauthorizedError("User information is invalid. Please contact the backend developer.");
 
     const result: ResponseToken = await this.authService.login(user, role);
     return result;

@@ -78,7 +78,17 @@ class AlbumService extends Service {
    * @returns Promise\<{ albums: {@link Album}[], total: number \}>
    */
   async selectAllForFolder(cupId: string, pageOptions: PageOptions): Promise<ResponseAlbumFolder> {
-    const sortOptions: OrderItem = createSortOptions(pageOptions.sort);
+    let sortOptions: OrderItem | undefined = ["createdTime", "DESC"];
+
+    if (pageOptions.sort === "il") {
+      sortOptions = ["total", "ASC"];
+    } else if (pageOptions.sort === "im") {
+      sortOptions = ["total", "DESC"];
+    } else {
+      sortOptions = createSortOptions(pageOptions.sort);
+      console.log(sortOptions);
+    }
+
     const offset: number = (pageOptions.page - 1) * pageOptions.count;
 
     const total = await Album.count({ where: { cupId } });

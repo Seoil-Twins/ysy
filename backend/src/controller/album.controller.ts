@@ -39,6 +39,21 @@ class AlbumController {
 
   async getAlbumsFolder(cupId: string, options: PageOptions): Promise<ResponseAlbumFolder> {
     const response: ResponseAlbumFolder = await this.albumService.selectAllForFolder(cupId, options);
+
+    if (response.total > 0) {
+      for (const album of response.albums) {
+        if (album.thumbnail) continue;
+
+        const image: AlbumImage | null = await this.albumImageService.select(album.albumId);
+
+        if (image) {
+          album.thumbnail = image.path;
+          album.thumbnailSize = image.size;
+          album.thumbnailType = image.type;
+        }
+      }
+    }
+
     return response;
   }
 
@@ -378,8 +393,8 @@ class AlbumController {
       await this.albumImageService.delete(transaction, imageIds);
       await transaction.commit();
     } catch (error) {
-      logger.error(`Delete album error => ${JSON.stringify(error)}`);
       if (transaction) await transaction.rollback();
+      logger.error(`Delete album error => ${JSON.stringify(error)}`);
 
       throw error;
     }

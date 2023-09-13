@@ -23,10 +23,6 @@ class AlbumImageService extends Service {
     throw new Error("Method not implemented.");
   }
 
-  async select(_transaction: Transaction | null): Promise<any> {
-    throw new Error("Method not implemented.");
-  }
-
   /**
    * 앨범 이미지가 저장될 경로를 반환합니다.
    * @param cupId 커플이 가지는 고유한 아이디
@@ -36,6 +32,15 @@ class AlbumImageService extends Service {
    */
   private createImageURL(cupId: string, albumId: number, filename: string): string {
     return `${this.FOLDER_NAME}/${cupId}/${albumId}/${dayjs().valueOf()}_${filename}`;
+  }
+
+  async select(albumId: number): Promise<AlbumImage | null> {
+    const image: AlbumImage | null = await AlbumImage.findOne({
+      where: { albumId },
+      order: [["createdTime", "DESC"]]
+    });
+
+    return image;
   }
 
   /**

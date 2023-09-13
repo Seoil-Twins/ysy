@@ -24,7 +24,8 @@ const authController = new AuthController(authService, userService, userRoleServ
 
 const loginSchema: joi.Schema = joi.object({
   email: joi.string().trim().email().required(),
-  snsId: joi.string().trim().required()
+  snsId: joi.string().trim().required(),
+  snsKind: joi.string().length(4).required()
 });
 
 router.post("/login", async (req: Request, res: Response, next: NextFunction) => {
@@ -35,7 +36,8 @@ router.post("/login", async (req: Request, res: Response, next: NextFunction) =>
 
     const data: Login = {
       email: req.body.email,
-      snsId: req.body.snsId
+      snsId: req.body.snsId,
+      snsKind: req.body.snsKind
     };
 
     const result: ResponseToken = await authController.login(data);
