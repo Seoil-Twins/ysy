@@ -30,6 +30,7 @@ import RenderAlbumHeader from '../components/RenderAlbumHeader';
 import RenderAlbum from '../components/RenderAlbum';
 import axios from 'axios';
 import { useQuery } from 'react-query';
+import { userAPI } from '../apis/userAPI';
 
 const screenWidth = wp('100%');
 function MyComponent() {
@@ -340,6 +341,7 @@ export const Album = () => {
   // }
   const openSortModal = () => {
     setIsSortModalVisible(true);
+    userAPI.getUserMe();
   };
 
   const closeSortModal = () => {
@@ -407,7 +409,7 @@ export const Album = () => {
 
   return (
     <React.Fragment>
-      <MyComponent />
+      {/* <MyComponent /> */}
       <View style={{ flex: 1 }}>
         <View
           style={{
