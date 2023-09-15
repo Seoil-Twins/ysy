@@ -131,7 +131,7 @@ TouristSpot.init(
   },
   {
     sequelize: sequelize,
-    tableName: "restaurant",
+    tableName: "tourist_spot",
     timestamps: false
   }
 );

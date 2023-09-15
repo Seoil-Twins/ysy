@@ -131,7 +131,7 @@ Shopping.init(
   },
   {
     sequelize: sequelize,
-    tableName: "restaurant",
+    tableName: "shopping",
     timestamps: false
   }
 );

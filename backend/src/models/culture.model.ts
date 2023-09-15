@@ -131,7 +131,7 @@ Culture.init(
   },
   {
     sequelize: sequelize,
-    tableName: "restaurant",
+    tableName: "culture",
     timestamps: false
   }
 );

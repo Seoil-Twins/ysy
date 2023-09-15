@@ -343,6 +343,13 @@ export default {
       onUpdate: "CASCADE"
     });
 
+    Favorite.belongsTo(ContentType, {
+      foreignKey: "contentTypeId",
+      as: "contentType",
+      onDelete: "CASCADE",
+      onUpdate: "CASCADE"
+    });
+
     // ------------------------------------------ Favorite to Restaurant, TouristSpot, Culture, Sports, Shopping ---------------------------------------- //
     Restaurant.hasMany(Favorite, {
       foreignKey: "contentId",

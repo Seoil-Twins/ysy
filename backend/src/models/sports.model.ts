@@ -136,7 +136,7 @@ Sports.init(
   },
   {
     sequelize: sequelize,
-    tableName: "restaurant",
+    tableName: "sports",
     timestamps: false
   }
 );

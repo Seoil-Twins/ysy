@@ -35,7 +35,7 @@ VenuesImage.init(
   },
   {
     sequelize: sequelize,
-    tableName: "solution_image",
+    tableName: "venues_image",
     timestamps: false
   }
 );
