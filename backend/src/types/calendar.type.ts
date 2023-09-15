@@ -1,4 +1,4 @@
-import { Calendar } from "../models/calendar.model";
+import { Calendar } from "../models/calendar.model.js";
 
 export interface CreateCalendar {
   cupId: string;

@@ -1,6 +1,6 @@
 import * as redis from "redis";
 import dotenv from "dotenv";
-import logger from "../logger/logger";
+import logger from "../logger/logger.js";
 
 dotenv.config();
 
@@ -9,20 +9,20 @@ const password = process.env.REDIS_PASSWORD;
 const host = process.env.REDIS_HOST;
 const port = process.env.REDIS_PORT;
 const redisClient = redis.createClient({
-    url: `redis://${username}:${password}@${host}:${port}`,
-    legacyMode: true,
-    socket: {
-        connectTimeout: 70000,
-        reconnectStrategy: (retries) => Math.min(retries * 50, 5000)
-    }
+  url: `redis://${username}:${password}@${host}:${port}`,
+  legacyMode: true,
+  socket: {
+    connectTimeout: 70000,
+    reconnectStrategy: (retries) => Math.min(retries * 50, 5000)
+  }
 });
 
 redisClient.on("connect", () => {
-    logger.debug("Connected to Redis server");
+  logger.debug("Connected to Redis server");
 });
 
 redisClient.on("error", (err) => {
-    logger.error(`Redis Error: ${JSON.stringify(err)}`);
+  logger.error(`Redis Error: ${JSON.stringify(err)}`);
 });
 
 /**
@@ -33,9 +33,9 @@ redisClient.on("error", (err) => {
  * @returns "OK" or null
  */
 export const set = async (key: string, value: any, expiresIn: number): Promise<string | null> => {
-    const isOk: string | null = await redisClient.v4.setEx(key, expiresIn, value);
+  const isOk: string | null = await redisClient.v4.setEx(key, expiresIn, value);
 
-    return isOk;
+  return isOk;
 };
 
 /**
@@ -44,9 +44,9 @@ export const set = async (key: string, value: any, expiresIn: number): Promise<s
  * @returns Redis Value or null
  */
 export const get = async (key: string): Promise<string | null> => {
-    const data: string | null = await redisClient.v4.get(key);
+  const data: string | null = await redisClient.v4.get(key);
 
-    return data;
+  return data;
 };
 
 /**
@@ -55,9 +55,9 @@ export const get = async (key: string): Promise<string | null> => {
  * @returns 삭제된 개수(number) or null
  */
 export const del = async (key: string): Promise<number | null> => {
-    const data: number | null = await redisClient.v4.del(key);
+  const data: number | null = await redisClient.v4.del(key);
 
-    return data;
+  return data;
 };
 
 redisClient.connect();

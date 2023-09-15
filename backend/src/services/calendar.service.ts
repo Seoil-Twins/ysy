@@ -1,14 +1,14 @@
 import { InferAttributes, Op, Transaction } from "sequelize";
 
-import { API_ROOT } from "..";
+import { API_ROOT } from "../index.js";
 
-import { Calendar } from "../models/calendar.model";
-import { Couple } from "../models/couple.model";
+import { Calendar } from "../models/calendar.model.js";
+import { Couple } from "../models/couple.model.js";
 
-import { CreateCalendar, UpdateCalendar } from "../types/calendar.type";
+import { CreateCalendar, UpdateCalendar } from "../types/calendar.type.js";
 
-import { Service } from "./service";
-import sequelize from "../models";
+import { Service } from "./service.js";
+import sequelize from "../models/index.js";
 
 class CalendarService extends Service {
   getURL(cupId: string, year: number): string {

@@ -1,5 +1,5 @@
-import { AlbumImage } from "../models/albumImage.model";
-import { Album } from "../models/album.model";
+import { AlbumImage } from "../models/albumImage.model.js";
+import { Album } from "../models/album.model.js";
 
 export const isSortItem = (item: any): item is SortItem => {
   return ["r", "o", "t", "im", "il"].includes(item);

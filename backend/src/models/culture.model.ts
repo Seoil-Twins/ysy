@@ -1,8 +1,8 @@
 import { DataTypes, Model, literal } from "sequelize";
 import { CreationOptional, InferAttributes, InferCreationAttributes } from "sequelize/types/model";
 
-import sequelize, { applyDateHook } from ".";
-import { ContentType } from "./contentType.model";
+import sequelize, { applyDateHook } from "./index.js";
+import { ContentType } from "./contentType.model.js";
 
 export class Culture extends Model<InferAttributes<Culture>, InferCreationAttributes<Culture>> {
   declare contentId: number;

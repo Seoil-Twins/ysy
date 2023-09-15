@@ -1,7 +1,7 @@
 import { DataTypes, Model, literal } from "sequelize";
 import { CreationOptional, InferAttributes, InferCreationAttributes } from "sequelize/types/model";
 
-import sequelize, { applyDateHook } from ".";
+import sequelize, { applyDateHook } from "./index.js";
 
 export class VenuesImage extends Model<InferAttributes<VenuesImage>, InferCreationAttributes<VenuesImage>> {
   declare venuesImageId: CreationOptional<number>;

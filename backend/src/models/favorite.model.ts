@@ -1,8 +1,8 @@
 import { DataTypes, Model, literal } from "sequelize";
-import sequelize from ".";
+import sequelize from "./index.js";
 
 import { CreationOptional, InferAttributes, InferCreationAttributes } from "sequelize/types/model";
-import { User } from "./user.model";
+import { User } from "./user.model.js";
 
 export class Favorite extends Model<InferAttributes<Favorite>, InferCreationAttributes<Favorite>> {
   declare favoriteId: CreationOptional<number>;

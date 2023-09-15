@@ -1,16 +1,14 @@
 import dayjs from "dayjs";
 import { InferAttributes, InferCreationAttributes, Optional, Transaction } from "sequelize";
 
-import UploadError from "../errors/upload.error";
+import logger from "../logger/logger.js";
+import { File, UploadImageInfo, uploadFileWithGCP, uploadFilesWithGCP } from "../utils/gcp.util.js";
 
-import logger from "../logger/logger";
-import { DeleteImageInfo, File, UploadImageInfo, uploadFileWithGCP, uploadFilesWithGCP } from "../utils/gcp.util";
+import { InquiryImage } from "../models/inquiryImage.model.js";
 
-import { InquiryImage } from "../models/inquiryImage.model";
+import { Service } from "./service.js";
 
-import { Service } from "./service";
-
-import { UNKNOWN_NAME } from "../constants/file.constant";
+import { UNKNOWN_NAME } from "../constants/file.constant.js";
 import { NullishPropertiesOf } from "sequelize/types/utils";
 
 class InquiryImageService extends Service {

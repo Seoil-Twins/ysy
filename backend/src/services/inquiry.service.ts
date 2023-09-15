@@ -1,15 +1,15 @@
 import { OrderItem, Transaction } from "sequelize";
 
-import { API_ROOT } from "..";
+import { API_ROOT } from "../index.js";
 
-import { Inquiry } from "../models/inquiry.model";
-import { InquiryImage } from "../models/inquiryImage.model";
-import { Solution } from "../models/solution.model";
-import { SolutionImage } from "../models/solutionImage.model";
+import { Inquiry } from "../models/inquiry.model.js";
+import { InquiryImage } from "../models/inquiryImage.model.js";
+import { Solution } from "../models/solution.model.js";
+import { SolutionImage } from "../models/solutionImage.model.js";
 
-import { Service } from "./service";
-import { CreateInquiry, PageOptions, ResponseInquiry } from "../types/inquiry.type";
-import { createSortOptions } from "../utils/sort.util";
+import { Service } from "./service.js";
+import { CreateInquiry, PageOptions, ResponseInquiry } from "../types/inquiry.type.js";
+import { createSortOptions } from "../utils/sort.util.js";
 
 class InquiryService extends Service {
   private FOLDER_NAME = "users";

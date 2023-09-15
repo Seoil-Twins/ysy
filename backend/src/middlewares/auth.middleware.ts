@@ -1,10 +1,11 @@
 import { Request, Response, NextFunction } from "express";
-import { TokenExpiredError, JsonWebTokenError, JwtPayload } from "jsonwebtoken";
+import pkg, { JwtPayload } from "jsonwebtoken";
+import UnauthorizedError from "../errors/unauthorized.error.js";
 
-import UnauthorizedError from "../errors/unauthorized.error";
+import logger from "../logger/logger.js";
+import jwt from "../utils/jwt.util.js";
 
-import logger from "../logger/logger";
-import jwt from "../utils/jwt.util";
+const { TokenExpiredError, JsonWebTokenError } = pkg;
 
 const checkToken = (req: Request, _res: Response, next: NextFunction) => {
   // 해당 URL은 검증을 하지 않아도 됨.

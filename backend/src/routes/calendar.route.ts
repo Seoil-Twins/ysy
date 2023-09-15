@@ -1,22 +1,22 @@
 import express, { Router, Request, Response, NextFunction } from "express";
 import joi, { ValidationResult } from "joi";
 
-import CalendarController from "../controller/calendar.controller";
-import CalendarService from "../services/calendar.service";
-import CoupleService from "../services/couple.service";
+import CalendarController from "../controller/calendar.controller.js";
+import CalendarService from "../services/calendar.service.js";
+import CoupleService from "../services/couple.service.js";
 
-import logger from "../logger/logger";
-import validator from "../utils/validator.util";
-import { STATUS_CODE } from "../constants/statusCode.constant";
+import logger from "../logger/logger.js";
+import validator from "../utils/validator.util.js";
+import { STATUS_CODE } from "../constants/statusCode.constant.js";
 
-import BadRequestError from "../errors/badRequest.error";
-import ForbiddenError from "../errors/forbidden.error";
-import UnauthorizedError from "../errors/unauthorized.error";
-import UnsupportedMediaTypeError from "../errors/unsupportedMediaType.error";
+import BadRequestError from "../errors/badRequest.error.js";
+import ForbiddenError from "../errors/forbidden.error.js";
+import UnauthorizedError from "../errors/unauthorized.error.js";
+import UnsupportedMediaTypeError from "../errors/unsupportedMediaType.error.js";
 
-import { Calendar } from "../models/calendar.model";
-import { CreateCalendar, UpdateCalendar } from "../types/calendar.type";
-import { ContentType } from "../utils/router.util";
+import { Calendar } from "../models/calendar.model.js";
+import { CreateCalendar, UpdateCalendar } from "../types/calendar.type.js";
+import { ContentType } from "../utils/router.util.js";
 
 const router: Router = express.Router();
 const calendarService: CalendarService = new CalendarService();

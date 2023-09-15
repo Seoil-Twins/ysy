@@ -1,5 +1,5 @@
-import { Couple } from "../models/couple.model";
-import { User } from "../models/user.model";
+import { Couple } from "../models/couple.model.js";
+import { User } from "../models/user.model.js";
 
 export interface CreateCouple {
   otherCode: number;

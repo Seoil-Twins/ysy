@@ -1,15 +1,15 @@
 import dayjs from "dayjs";
 
-import NotFoundError from "../errors/notFound.error";
+import NotFoundError from "../errors/notFound.error.js";
 
-import { Couple } from "../models/couple.model";
-import { Calendar } from "../models/calendar.model";
-import { CreateCalendar, UpdateCalendar } from "../types/calendar.type";
+import { Couple } from "../models/couple.model.js";
+import { Calendar } from "../models/calendar.model.js";
+import { CreateCalendar, UpdateCalendar } from "../types/calendar.type.js";
 
-import logger from "../logger/logger";
+import logger from "../logger/logger.js";
 
-import CalendarService from "../services/calendar.service";
-import CoupleService from "../services/couple.service";
+import CalendarService from "../services/calendar.service.js";
+import CoupleService from "../services/couple.service.js";
 
 class CalendarController {
   private calendarService: CalendarService;

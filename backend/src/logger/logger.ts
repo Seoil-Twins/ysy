@@ -1,5 +1,9 @@
 import winston from "winston";
 import winstonDaily from "winston-daily-rotate-file";
+import { dirname } from "path";
+import { fileURLToPath } from "url";
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
 const { combine, timestamp, label, printf, colorize, splat } = winston.format;
 const logDir = `${__dirname}/logs`;

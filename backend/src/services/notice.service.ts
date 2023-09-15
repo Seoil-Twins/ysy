@@ -1,11 +1,11 @@
 import { OrderItem, Transaction } from "sequelize";
 
-import { Notice } from "../models/notice.model";
-import { NoticeImage } from "../models/noticeImage.model";
+import { Notice } from "../models/notice.model.js";
+import { NoticeImage } from "../models/noticeImage.model.js";
 
-import { Service } from "./service";
-import { PageOptions, ResponseNotice } from "../types/noitce.type";
-import { createSortOptions } from "../utils/sort.util";
+import { Service } from "./service.js";
+import { PageOptions, ResponseNotice } from "../types/noitce.type.js";
+import { createSortOptions } from "../utils/sort.util.js";
 
 class NoticeSerivce extends Service {
   getURL(...args: any[]): string {

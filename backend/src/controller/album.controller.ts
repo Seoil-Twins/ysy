@@ -1,20 +1,20 @@
 import { Transaction } from "sequelize";
 
-import { UNKNOWN_NAME } from "../constants/file.constant";
+import { UNKNOWN_NAME } from "../constants/file.constant.js";
 
-import ForbiddenError from "../errors/forbidden.error";
-import NotFoundError from "../errors/notFound.error";
-import UploadError from "../errors/upload.error";
+import ForbiddenError from "../errors/forbidden.error.js";
+import NotFoundError from "../errors/notFound.error.js";
+import UploadError from "../errors/upload.error.js";
 
-import sequelize from "../models";
-import { Album } from "../models/album.model";
-import { AlbumImage } from "../models/albumImage.model";
+import sequelize from "../models/index.js";
+import { Album } from "../models/album.model.js";
+import { AlbumImage } from "../models/albumImage.model.js";
 
-import { PageOptions, ResponseAlbum, ResponseAlbumFolder } from "../types/album.type";
+import { PageOptions, ResponseAlbum, ResponseAlbumFolder } from "../types/album.type.js";
 
-import logger from "../logger/logger";
-import AlbumService from "../services/album.service";
-import AlbumImageService from "../services/albumImage.service";
+import logger from "../logger/logger.js";
+import AlbumService from "../services/album.service.js";
+import AlbumImageService from "../services/albumImage.service.js";
 
 import {
   DeleteImageInfo,
@@ -25,7 +25,7 @@ import {
   moveFilesWithGCP,
   uploadFileWithGCP,
   uploadFilesWithGCP
-} from "../utils/gcp.util";
+} from "../utils/gcp.util.js";
 
 class AlbumController {
   private ERROR_LOCATION_PREFIX = "album";

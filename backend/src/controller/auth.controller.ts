@@ -1,13 +1,13 @@
-import { User } from "../models/user.model";
-import { Login, ResponseToken } from "../types/auth.type";
-import { UserRole } from "../models/userRole.model";
+import { User } from "../models/user.model.js";
+import { Login, ResponseToken } from "../types/auth.type.js";
+import { UserRole } from "../models/userRole.model.js";
 
-import UnauthorizedError from "../errors/unauthorized.error";
-import NotFoundError from "../errors/notFound.error";
+import UnauthorizedError from "../errors/unauthorized.error.js";
+import NotFoundError from "../errors/notFound.error.js";
 
-import UserService from "../services/user.service";
-import UserRoleService from "../services/userRole.service";
-import AuthService from "../services/auth.service";
+import UserService from "../services/user.service.js";
+import UserRoleService from "../services/userRole.service.js";
+import AuthService from "../services/auth.service.js";
 
 class AuthController {
   private authService: AuthService;

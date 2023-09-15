@@ -1,27 +1,27 @@
 import express, { Router, Request, Response, NextFunction } from "express";
 import joi, { ValidationResult } from "joi";
 
-import { Couple } from "../models/couple.model";
+import { Couple } from "../models/couple.model.js";
 
-import logger from "../logger/logger";
-import validator from "../utils/validator.util";
-import { ContentType } from "../utils/router.util";
-import { isDefaultFile, multerUpload } from "../utils/multer";
-import { File } from "../utils/gcp.util";
+import logger from "../logger/logger.js";
+import validator from "../utils/validator.util.js";
+import { ContentType } from "../utils/router.util.js";
+import { isDefaultFile, multerUpload } from "../utils/multer.js";
+import { File } from "../utils/gcp.util.js";
 
-import { STATUS_CODE } from "../constants/statusCode.constant";
+import { STATUS_CODE } from "../constants/statusCode.constant.js";
 
-import ForbiddenError from "../errors/forbidden.error";
-import BadRequestError from "../errors/badRequest.error";
-import UnauthorizedError from "../errors/unauthorized.error";
+import ForbiddenError from "../errors/forbidden.error.js";
+import BadRequestError from "../errors/badRequest.error.js";
+import UnauthorizedError from "../errors/unauthorized.error.js";
 
-import { ResponseToken } from "../types/auth.type";
-import { CreateCouple, UpdateCouple } from "../types/couple.type";
+import { ResponseToken } from "../types/auth.type.js";
+import { CreateCouple, UpdateCouple } from "../types/couple.type.js";
 
-import CoupleController from "../controller/couple.controller";
-import CoupleService from "../services/couple.service";
-import UserService from "../services/user.service";
-import UserRoleService from "../services/userRole.service";
+import CoupleController from "../controller/couple.controller.js";
+import CoupleService from "../services/couple.service.js";
+import UserService from "../services/user.service.js";
+import UserRoleService from "../services/userRole.service.js";
 
 const router: Router = express.Router();
 const coupleSerivce = new CoupleService();

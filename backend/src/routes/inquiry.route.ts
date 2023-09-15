@@ -1,20 +1,20 @@
 import express, { Router, Request, Response, NextFunction } from "express";
 import joi, { ValidationResult } from "joi";
 
-import InquireController from "../controller/inquiry.controller";
-import InquireService from "../services/inquiry.service";
-import InquireImageService from "../services/inquiryImage.service";
+import InquireController from "../controller/inquiry.controller.js";
+import InquireService from "../services/inquiry.service.js";
+import InquireImageService from "../services/inquiryImage.service.js";
 
-import validator from "../utils/validator.util";
-import { STATUS_CODE } from "../constants/statusCode.constant";
+import validator from "../utils/validator.util.js";
+import { STATUS_CODE } from "../constants/statusCode.constant.js";
 
-import { CreateInquiry, ResponseInquiry, PageOptions } from "../types/inquiry.type";
+import { CreateInquiry, ResponseInquiry, PageOptions } from "../types/inquiry.type.js";
 
-import BadRequestError from "../errors/badRequest.error";
-import ForbiddenError from "../errors/forbidden.error";
-import { multerUpload } from "../utils/multer";
-import { ContentType } from "../utils/router.util";
-import { File } from "../utils/gcp.util";
+import BadRequestError from "../errors/badRequest.error.js";
+import ForbiddenError from "../errors/forbidden.error.js";
+import { multerUpload } from "../utils/multer.js";
+import { ContentType } from "../utils/router.util.js";
+import { File } from "../utils/gcp.util.js";
 
 const router: Router = express.Router();
 const inquireService: InquireService = new InquireService();

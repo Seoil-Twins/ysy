@@ -2,20 +2,20 @@ import dayjs from "dayjs";
 import randomString from "randomstring";
 import { FindAttributeOptions, InferAttributes, Op, Transaction, WhereOptions } from "sequelize";
 
-import { UNKNOWN_NAME } from "../constants/file.constant";
+import { UNKNOWN_NAME } from "../constants/file.constant.js";
 
-import { API_ROOT } from "..";
+import { API_ROOT } from "../index.js";
 
-import { Service } from "./service";
+import { Service } from "./service.js";
 
-import logger from "../logger/logger";
-import { User } from "../models/user.model";
-import { ResponseUser, CreateUser } from "../types/user.type";
-import { Couple } from "../models/couple.model";
+import logger from "../logger/logger.js";
+import { User } from "../models/user.model.js";
+import { ResponseUser, CreateUser } from "../types/user.type.js";
+import { Couple } from "../models/couple.model.js";
 
-import NotFoundError from "../errors/notFound.error";
+import NotFoundError from "../errors/notFound.error.js";
 
-import { File, uploadFileWithGCP } from "../utils/gcp.util";
+import { File, uploadFileWithGCP } from "../utils/gcp.util.js";
 
 class UserService extends Service {
   private readonly FOLDER_NAME: string = "users";

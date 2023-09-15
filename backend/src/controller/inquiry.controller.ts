@@ -1,17 +1,17 @@
 import { Transaction } from "sequelize";
 
-import UploadError from "../errors/upload.error";
+import UploadError from "../errors/upload.error.js";
 
-import sequelize from "../models";
-import { Inquiry } from "../models/inquiry.model";
+import sequelize from "../models/index.js";
+import { Inquiry } from "../models/inquiry.model.js";
 
-import logger from "../logger/logger";
-import { DeleteImageInfo, File, deleteFilesWithGCP } from "../utils/gcp.util";
+import logger from "../logger/logger.js";
+import { DeleteImageInfo, File, deleteFilesWithGCP } from "../utils/gcp.util.js";
 
-import { CreateInquiry, PageOptions, ResponseInquiry } from "../types/inquiry.type";
+import { CreateInquiry, PageOptions, ResponseInquiry } from "../types/inquiry.type.js";
 
-import InquiryService from "../services/inquiry.service";
-import InquiryImageService from "../services/inquiryImage.service";
+import InquiryService from "../services/inquiry.service.js";
+import InquiryImageService from "../services/inquiryImage.service.js";
 
 class InquiryController {
   private inquiryService: InquiryService;

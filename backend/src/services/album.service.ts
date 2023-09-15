@@ -1,20 +1,20 @@
 import dayjs from "dayjs";
 import { FindOptions, InferAttributes, OrderItem, Transaction, WhereOptions } from "sequelize";
 
-import { UNKNOWN_NAME } from "../constants/file.constant";
+import { UNKNOWN_NAME } from "../constants/file.constant.js";
 
-import { API_ROOT } from "..";
+import { API_ROOT } from "../index.js";
 
-import sequelize from "../models";
-import { AlbumImage } from "../models/albumImage.model";
-import { Album } from "../models/album.model";
-import { Couple } from "../models/couple.model";
-import { PageOptions, ResponseAlbumFolder } from "../types/album.type";
+import sequelize from "../models/index.js";
+import { AlbumImage } from "../models/albumImage.model.js";
+import { Album } from "../models/album.model.js";
+import { Couple } from "../models/couple.model.js";
+import { PageOptions, ResponseAlbumFolder } from "../types/album.type.js";
 
-import { File, uploadFileWithGCP } from "../utils/gcp.util";
-import { createSortOptions } from "../utils/sort.util";
+import { File, uploadFileWithGCP } from "../utils/gcp.util.js";
+import { createSortOptions } from "../utils/sort.util.js";
 
-import { Service } from "./service";
+import { Service } from "./service.js";
 
 class AlbumService extends Service {
   private FOLDER_NAME = "couples";

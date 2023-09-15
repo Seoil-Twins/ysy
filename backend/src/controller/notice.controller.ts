@@ -1,6 +1,6 @@
-import NoticeSerivce from "../services/notice.service";
+import NoticeSerivce from "../services/notice.service.js";
 
-import { PageOptions, ResponseNotice } from "../types/noitce.type";
+import { PageOptions, ResponseNotice } from "../types/noitce.type.js";
 
 class NoticeController {
   private noticeService: NoticeSerivce;

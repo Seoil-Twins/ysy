@@ -1,11 +1,11 @@
 import express, { Router, Request, Response, NextFunction } from "express";
 
-import NoticeController from "../controller/notice.controller";
-import NoticeSerivce from "../services/notice.service";
+import NoticeController from "../controller/notice.controller.js";
+import NoticeSerivce from "../services/notice.service.js";
 
-import { STATUS_CODE } from "../constants/statusCode.constant";
+import { STATUS_CODE } from "../constants/statusCode.constant.js";
 
-import { PageOptions, ResponseNotice } from "../types/noitce.type";
+import { PageOptions, ResponseNotice } from "../types/noitce.type.js";
 
 const router: Router = express.Router();
 const noticeService: NoticeSerivce = new NoticeSerivce();

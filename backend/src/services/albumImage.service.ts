@@ -2,19 +2,19 @@ import dayjs from "dayjs";
 import { InferCreationAttributes, Optional, OrderItem, Transaction, WhereOptions } from "sequelize";
 import { NullishPropertiesOf } from "sequelize/types/utils";
 
-import { UNKNOWN_NAME } from "../constants/file.constant";
+import { UNKNOWN_NAME } from "../constants/file.constant.js";
 
-import logger from "../logger/logger";
-import { createSortOptions } from "../utils/sort.util";
-import { DeleteImageInfo, File, UploadImageInfo, uploadFileWithGCP, uploadFilesWithGCP } from "../utils/gcp.util";
+import logger from "../logger/logger.js";
+import { createSortOptions } from "../utils/sort.util.js";
+import { File, UploadImageInfo, uploadFileWithGCP, uploadFilesWithGCP } from "../utils/gcp.util.js";
 
-import { PageOptions } from "../types/album.type";
+import { PageOptions } from "../types/album.type.js";
 
-import { AlbumImage } from "../models/albumImage.model";
+import { AlbumImage } from "../models/albumImage.model.js";
 
-import { Service } from "./service";
+import { Service } from "./service.js";
 
-import UploadError from "../errors/upload.error";
+import UploadError from "../errors/upload.error.js";
 
 class AlbumImageService extends Service {
   private FOLDER_NAME = "couples";

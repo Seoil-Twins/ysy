@@ -1,10 +1,10 @@
 import { DataTypes, Model, literal, HasManyGetAssociationsMixin, NonAttribute } from "sequelize";
 import { CreationOptional, InferAttributes, InferCreationAttributes } from "sequelize/types/model";
 
-import sequelize, { applyDateHook } from ".";
-import { Album } from "./album.model";
-import { User } from "./user.model";
-import { Calendar } from "./calendar.model";
+import sequelize, { applyDateHook } from "./index.js";
+import { Album } from "./album.model.js";
+import { User } from "./user.model.js";
+import { Calendar } from "./calendar.model.js";
 
 export class Couple extends Model<InferAttributes<Couple>, InferCreationAttributes<Couple>> {
   /** If you use include user, You can use users field. */

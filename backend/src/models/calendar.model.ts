@@ -1,8 +1,8 @@
 import { DataTypes, Model, literal, NonAttribute } from "sequelize";
 import { CreationOptional, InferAttributes, InferCreationAttributes } from "sequelize/types/model";
 
-import sequelize, { applyDateHook } from ".";
-import { Couple } from "./couple.model";
+import sequelize, { applyDateHook } from "./index.js";
+import { Couple } from "./couple.model.js";
 
 export class Calendar extends Model<InferAttributes<Calendar>, InferCreationAttributes<Calendar>> {
   /** If you use include couple, You can use couple field. */

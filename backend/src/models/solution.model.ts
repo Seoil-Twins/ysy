@@ -1,10 +1,10 @@
 import { DataTypes, Model, literal, NonAttribute, HasManyGetAssociationsMixin } from "sequelize";
 import { CreationOptional, InferAttributes, InferCreationAttributes } from "sequelize/types/model";
 
-import sequelize, { applyDateHook } from ".";
-import { Inquiry } from "./inquiry.model";
-import { SolutionImage } from "./solutionImage.model";
-import { User } from "./user.model";
+import sequelize, { applyDateHook } from "./index.js";
+import { Inquiry } from "./inquiry.model.js";
+import { SolutionImage } from "./solutionImage.model.js";
+import { User } from "./user.model.js";
 
 export class Solution extends Model<InferAttributes<Solution>, InferCreationAttributes<Solution>> {
   /** If you use include inquire, You can use inquire field. */

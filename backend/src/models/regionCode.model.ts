@@ -1,7 +1,7 @@
 import { DataTypes, Model } from "sequelize";
 import { CreationOptional, InferAttributes, InferCreationAttributes } from "sequelize/types/model";
 
-import sequelize from ".";
+import sequelize from "./index.js";
 
 export class RegionCode extends Model<InferAttributes<RegionCode>, InferCreationAttributes<RegionCode>> {
   declare regionId: CreationOptional<number>;

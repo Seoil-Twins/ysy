@@ -1,11 +1,11 @@
 import dotenv from "dotenv";
 import { ApiError, Storage } from "@google-cloud/storage";
 
-import logger from "../logger/logger";
+import logger from "../logger/logger.js";
 
-import { ErrorImage } from "../models/errorImage.model";
-import UploadError from "../errors/upload.error";
-import { UNKNOWN_NAME } from "../constants/file.constant";
+import { ErrorImage } from "../models/errorImage.model.js";
+import UploadError from "../errors/upload.error.js";
+import { UNKNOWN_NAME } from "../constants/file.constant.js";
 
 dotenv.config();
 

@@ -1,4 +1,4 @@
-import { Inquiry } from "../models/inquiry.model";
+import { Inquiry } from "../models/inquiry.model.js";
 
 export const isSortItem = (item: any): item is SortItem => {
   return ["r", "o", "sr", "so"].includes(item);

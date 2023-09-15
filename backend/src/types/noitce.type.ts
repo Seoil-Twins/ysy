@@ -1,4 +1,4 @@
-import { Notice } from "../models/notice.model";
+import { Notice } from "../models/notice.model.js";
 
 export const isSortItem = (item: any): item is SortItem => {
   return ["r", "o"].includes(item);

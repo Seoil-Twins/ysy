@@ -1,29 +1,29 @@
 import express, { Router } from "express";
 
-import userRouter from "./user.route";
-import authRouter from "./auth.route";
-import coupleRouter from "./couple.route";
-import albumRouter from "./album.route";
-import calendarRouter from "./calendar.route";
-import inquireRouter from "./inquiry.route";
-import noticeRouter from "./notice.route";
+import userRouter from "./user.route.js";
+import authRouter from "./auth.route.js";
+import coupleRouter from "./couple.route.js";
+import albumRouter from "./album.route.js";
+import calendarRouter from "./calendar.route.js";
+import inquireRouter from "./inquiry.route.js";
+import noticeRouter from "./notice.route.js";
 
-import userAdminRouter from "./user.admin.route";
-import coupleAdminRouter from "./couple.admin.route";
-import albumAdminRouter from "./album.admin.route";
-import calendarAdminRouter from "./calendar.admin.route";
-import InquireAdminRouter from "./inquire.admin.route";
-import InquireImageAdminRouter from "./inquireImage.admin.route";
-import SolutionAdminRouter from "./solution.admin.route";
-import SolutionImageAdminRouter from "./solutionImage.admin.route";
-import restaurantAdminRouter from "./restaurant.admin";
-import cultureAdminRouter from "./culture.admin";
-import shoppingAdminRouter from "./shopping.admin";
-import sportsAdminRouter from "./sports.admin";
-import touristSpotAdminRouter from "./touristSpot.admin";
+import userAdminRouter from "./user.admin.route.js";
+import coupleAdminRouter from "./couple.admin.route.js";
+import albumAdminRouter from "./album.admin.route.js";
+import calendarAdminRouter from "./calendar.admin.route.js";
+import InquireAdminRouter from "./inquire.admin.route.js";
+import InquireImageAdminRouter from "./inquireImage.admin.route.js";
+import SolutionAdminRouter from "./solution.admin.route.js";
+import SolutionImageAdminRouter from "./solutionImage.admin.route.js";
+import restaurantAdminRouter from "./restaurant.admin.js";
+import cultureAdminRouter from "./culture.admin.js";
+import shoppingAdminRouter from "./shopping.admin.js";
+import sportsAdminRouter from "./sports.admin.js";
+import touristSpotAdminRouter from "./touristSpot.admin.js";
 
-import authMiddleware from "../middlewares/auth.middleware";
-import checkContentType from "../middlewares/contentType.middleware";
+import authMiddleware from "../middlewares/auth.middleware.js";
+import checkContentType from "../middlewares/contentType.middleware.js";
 
 const router: Router = express.Router();
 

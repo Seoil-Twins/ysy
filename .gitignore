@@ -125,3 +125,5 @@ gradle/wrapper/gradle-wrapper.jar
 .idea/workspace.xml
 
 /backend/gcp.json
+/backend/.adminjs
+/backend/.adminjs/*

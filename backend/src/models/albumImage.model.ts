@@ -1,8 +1,8 @@
 import { DataTypes, Model, literal } from "sequelize";
 import { CreationOptional, InferAttributes, InferCreationAttributes } from "sequelize/types/model";
 
-import sequelize, { applyDateHook } from ".";
-import { Album } from "./album.model";
+import sequelize, { applyDateHook } from "./index.js";
+import { Album } from "./album.model.js";
 
 export class AlbumImage extends Model<InferAttributes<AlbumImage>, InferCreationAttributes<AlbumImage>> {
   declare albumImageId: CreationOptional<number>;
