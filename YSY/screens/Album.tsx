@@ -28,59 +28,10 @@ import { AlbumTypes } from '../navigation/AlbumTypes';
 
 import RenderAlbumHeader from '../components/RenderAlbumHeader';
 import RenderAlbum from '../components/RenderAlbum';
-import axios from 'axios';
-import { useQuery } from 'react-query';
+import { QueryClient, useQuery } from 'react-query';
 import { userAPI } from '../apis/userAPI';
 
 const screenWidth = wp('100%');
-function MyComponent() {
-  const ROOT_API_URL = 'http://10.0.2.2:3000';
-
-  const headers = {
-    'Content-Type': 'application/json', // 예시: JSON 형식의 데이터를 보낼 때
-    Authorization:
-      'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjQsImN1cElkIjpudWxsLCJyb2xlSWQiOjQsImlhdCI6MTY5NDUwMzM5MywiZXhwIjoxNjk3MDk1MzkzLCJpc3MiOiJ5c3l1c2VyIn0.6YEGd9PMlB43CHTjvOsRWVc11gr0ryiIzuEpMGJZNhk', // 예시: 인증 토큰을 보낼 때
-  };
-
-  const callAPI = async () => {
-    const response = await axios
-      .get(`${ROOT_API_URL}${'/user/me'}`, {
-        headers: headers, // 설정한 헤더를 여기에 전달합니다.
-      })
-      .then(response => {
-        // 성공적으로 데이터를 받아왔을 때 처리
-        console.log(response.data);
-      })
-      .catch(error => {
-        // 오류 처리
-        console.error(error);
-      });
-
-    // xhr.setRequestHeader('Authorization', '');
-    // xhr.setRequestHeader('content-type', 'application/json');
-    return response;
-  };
-
-  const { data, error, isLoading } = useQuery('userme', callAPI);
-
-  const callQuery = () => {
-    // 데이터 확인은 이 함수 내에서 수행
-    if (!isLoading) {
-      if (error) {
-        console.error(error);
-      } else {
-        console.log(data);
-      }
-    }
-  };
-
-  const openSortModal = () => {
-    callQuery(); // callQuery 함수 호출
-  };
-
-  // ...
-  openSortModal();
-}
 
 export const Album = () => {
   const [isAddModalVisible, setIsAddModalVisible] = useState(false);
@@ -92,7 +43,6 @@ export const Album = () => {
   const [isMergeNameVisible, setIsMergeNameVisible] = useState(false);
 
   const [selectedAlbums, setSelectedAlbums] = useState<string[]>([]);
-  const [selectedImages, setSelectedImages] = useState<string[]>([]);
   const [albumImages, setAlbumImages] = useState<string[]>([]);
   const [dummyFolder, setDummyFolder] = useState<string[]>([
     'https://fastly.picsum.photos/id/179/200/200.jpg?hmac=I0g6Uht7h-y3NHqWA4e2Nzrnex7m-RceP1y732tc4Lw',
@@ -106,6 +56,8 @@ export const Album = () => {
   ]);
 
   const navigation = useNavigation<StackNavigationProp<AlbumTypes>>();
+
+  const queryClient = new QueryClient();
 
   const isAlbum = useAppSelector(
     (state: RootState) => state.albumStatus.isAlbum,
@@ -201,19 +153,8 @@ export const Album = () => {
     return true; // true를 반환하면 앱이 종료되지 않습니다.
   };
 
-  // useEffect(() => {
-  //   const backAction = () => {
-  //     dispatch(albumSelectionOff());
-  //     return true; // true를 반환하면 앱이 종료되지 않습니다.
-  //   };
-
-  //   const backHandler = BackHandler.addEventListener(
-  //     'hardwareBackPress',
-  //     backAction,
-  //   );
-
-  //   return () => backHandler.remove();
-  // }, []);
+  const data = useQuery('userme', userAPI.getUserMe());
+  console.log('useQuery 1 : ' + JSON.stringify(data));
 
   useFocusEffect(
     React.useCallback(() => {
@@ -222,35 +163,9 @@ export const Album = () => {
         // 화면 이동 시 핸들러 언마운트
         BackHandler.removeEventListener('hardwareBackPress', backAction);
       };
+      // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []),
   );
-
-  const ROOT_API_URL = 'http://10.0.2.2:3000';
-
-  const headers = {
-    'Content-Type': 'application/json', // 예시: JSON 형식의 데이터를 보낼 때
-    Authorization:
-      'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjQsImN1cElkIjpudWxsLCJyb2xlSWQiOjQsImlhdCI6MTY5NDUwMzM5MywiZXhwIjoxNjk3MDk1MzkzLCJpc3MiOiJ5c3l1c2VyIn0.6YEGd9PMlB43CHTjvOsRWVc11gr0ryiIzuEpMGJZNhk', // 예시: 인증 토큰을 보낼 때
-  };
-
-  const callAPI = async () => {
-    const response = await axios
-      .get(`${ROOT_API_URL}${'/user/me'}`, {
-        headers: headers, // 설정한 헤더를 여기에 전달합니다.
-      })
-      .then(response => {
-        // 성공적으로 데이터를 받아왔을 때 처리
-        console.log(response.data);
-      })
-      .catch(error => {
-        // 오류 처리
-        console.error(error);
-      });
-
-    // xhr.setRequestHeader('Authorization', '');
-    // xhr.setRequestHeader('content-type', 'application/json');
-    return response;
-  };
 
   useEffect(() => {
     if (isFunc.includes('Album')) {
@@ -281,6 +196,7 @@ export const Album = () => {
         setIsDeleteVisible(false);
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isFunc]);
 
   const handleSelectAll = () => {
@@ -329,19 +245,10 @@ export const Album = () => {
     }
   };
 
-  // function callQuery() {
-  //   const { data } = useQuery('userme', callAPI);
-  //   console.log(data);
-
-  //   return (
-  //     <View style={{ flex: 1 }}>
-  //       <Text>asd</Text>
-  //     </View>
-  //   );
-  // }
   const openSortModal = () => {
     setIsSortModalVisible(true);
-    userAPI.getUserMe();
+    // queryClient.invalidateQueries('userme');
+    // TestCallQuery(userAPI.getUserMe());
   };
 
   const closeSortModal = () => {
@@ -374,7 +281,9 @@ export const Album = () => {
   };
 
   const createNewAlbumDetail = (
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     seletedAlbumNames: string[],
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     newAlbumName: string,
   ) => {
     // selectedAlbumNames와 NewAlbumName을 통해 제물들의 이미지들을 하나로 모은 테이블을 생성한는 sql을 날림.

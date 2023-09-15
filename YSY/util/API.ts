@@ -1,5 +1,4 @@
-import axios, { AxiosResponse } from 'axios';
-import { useQuery } from 'react-query';
+import axios from 'axios';
 
 const API_BASE_URL = 'http://10.0.2.2:3000';
 
@@ -20,14 +19,12 @@ export const API = {
       const response = await apiClient
         .get(url, { params: data })
         .then(res => {
-          console.log(res.data);
           return res.data;
         })
         .catch(error => {
           // 오류 처리
           console.error(error);
         });
-
       return response;
     } catch (error) {
       return error;
