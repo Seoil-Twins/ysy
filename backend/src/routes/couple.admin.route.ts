@@ -18,7 +18,7 @@ import {
   IUpdateWithAdmin,
   Couple
 } from "../models/couple.model";
-import CoupleAdminController from "../controller/couple.admin.controller";
+import CoupleAdminController from "../controllers/couple.admin.controller";
 
 import logger from "../logger/logger";
 import validator from "../utils/validator.util";

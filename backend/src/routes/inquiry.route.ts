@@ -1,7 +1,7 @@
 import express, { Router, Request, Response, NextFunction } from "express";
 import joi, { ValidationResult } from "joi";
 
-import InquireController from "../controller/inquiry.controller.js";
+import InquireController from "../controllers/inquiry.controller.js";
 import InquireService from "../services/inquiry.service.js";
 import InquireImageService from "../services/inquiryImage.service.js";
 

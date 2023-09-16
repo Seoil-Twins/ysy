@@ -1,7 +1,7 @@
 import express, { Router, Request, Response, NextFunction } from "express";
 import joi, { ValidationResult } from "joi";
 
-import CalendarController from "../controller/calendar.controller.js";
+import CalendarController from "../controllers/calendar.controller.js";
 import CalendarService from "../services/calendar.service.js";
 import CoupleService from "../services/couple.service.js";
 

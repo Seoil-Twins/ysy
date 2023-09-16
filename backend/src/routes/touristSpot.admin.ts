@@ -17,7 +17,7 @@ import logger from "../logger/logger";
 import { canView } from "../utils/checkRole.util";
 
 import TouristSpotAdminService from "../services/touristSpot.admin.service";
-import TouristSpotAdminController from "../controller/touristSpot.admin.controller";
+import TouristSpotAdminController from "../controllers/touristSpot.admin.controller";
 
 import BadRequestError from "../errors/badRequest.error";
 

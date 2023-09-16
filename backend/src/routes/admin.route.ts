@@ -25,7 +25,7 @@ import { Shopping } from "../models/shopping.model.js";
 import { VenuesImage } from "../models/venuesImage.model.js";
 
 import { checkPassword } from "../utils/password.util.js";
-import RegionCodeController from "../controller/regionCode.controller.js";
+import RegionCodeController from "../controllers/regionCode.controller.js";
 import RegionCodeService from "../services/regionCode.service.js";
 
 const regionCodeService: RegionCodeService = new RegionCodeService();

@@ -1,19 +1,19 @@
 import { File } from "formidable";
 import { Transaction } from "sequelize";
 
-import sequelize from "../models";
-import { Inquire } from "../models/inquiry.model";
-import { FilterOptions, InquireImage, InquireImageResponseWithCount, PageOptions, SearchOptions } from "../models/inquiryImage.model";
+import sequelize from "../models/index.js";
+import { Inquire } from "../models/inquiry.model.js";
+import { FilterOptions, InquireImage, InquireImageResponseWithCount, PageOptions, SearchOptions } from "../models/inquiryImage.model.js";
 
-import InquireService from "../services/inquiry.service";
-import InquireImageAdminService from "../services/inquireImage.admin.service";
-import InquireImageService from "../services/inquiryImage.service";
+import InquireService from "../services/inquiry.service.js";
+import InquireImageAdminService from "../services/inquireImage.admin.service.js";
+import InquireImageService from "../services/inquiryImage.service.js";
 
-import UploadError from "../errors/upload.error";
-import BadRequestError from "../errors/badRequest.error";
-import NotFoundError from "../errors/notFound.error";
+import UploadError from "../errors/upload.error.js";
+import BadRequestError from "../errors/badRequest.error.js";
+import NotFoundError from "../errors/notFound.error.js";
 
-import logger from "../logger/logger";
+import logger from "../logger/logger.js";
 import { deleteFile, deleteFiles } from "../utils/firebase.util";
 
 class InquireImageAdminController {

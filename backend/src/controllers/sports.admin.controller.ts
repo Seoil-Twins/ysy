@@ -3,18 +3,18 @@ import { URLSearchParams } from "url";
 
 import { Transaction } from "sequelize";
 
-import { TOURAPI_CODE } from "../constants/statusCode.constant";
+import { TOURAPI_CODE } from "../constants/statusCode.constant.js";
 
-import sequelize from "../models";
-import { Sports, PageOptions, SearchOptions, IUpdateWithAdmin } from "../models/sports.model";
+import sequelize from "../models/index.js";
+import { Sports, PageOptions, SearchOptions, IUpdateWithAdmin } from "../models/sports.model.js";
 
-import SportsAdminService from "../services/sports.admin.service";
+import SportsAdminService from "../services/sports.admin.service.js";
 
-import BadRequestError from "../errors/badRequest.error";
-import NotFoundError from "../errors/notFound.error";
+import BadRequestError from "../errors/badRequest.error.js";
+import NotFoundError from "../errors/notFound.error.js";
 
-import logger from "../logger/logger";
-import { Wanted } from "../models/favorite.model";
+import logger from "../logger/logger.js";
+import { Wanted } from "../models/favorite.model.js";
 
 const url = "https://apis.data.go.kr/B551011/KorService1/areaBasedList1";
 const SERVICEKEY = new String(process.env.TOURAPI_API_KEY);

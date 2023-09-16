@@ -7,7 +7,7 @@ import express, { Router, Request, Response, NextFunction } from "express";
 import SolutionAdminService from "../services/solution.admin.service";
 import SolutionImageAdminService from "../services/solutionImage.admin.service";
 import InquireAdminService from "../services/inquire.admin.service";
-import SolutionAdminController from "../controller/solution.admin.controller";
+import SolutionAdminController from "../controllers/solution.admin.controller";
 
 import { STATUS_CODE } from "../constants/statusCode.constant";
 

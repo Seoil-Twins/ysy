@@ -16,7 +16,7 @@ import { STATUS_CODE } from "../constants/statusCode.constant.js";
 import BadRequestError from "../errors/badRequest.error.js";
 import ForbiddenError from "../errors/forbidden.error.js";
 
-import UserController from "../controller/user.controller.js";
+import UserController from "../controllers/user.controller.js";
 import UserService from "../services/user.service.js";
 import UserRoleService from "../services/userRole.service.js";
 

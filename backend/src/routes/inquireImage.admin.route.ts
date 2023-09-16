@@ -13,7 +13,7 @@ import { FilterOptions, InquireImageResponseWithCount, PageOptions, SearchOption
 import BadRequestError from "../errors/badRequest.error";
 import InternalServerError from "../errors/internalServer.error";
 import InquireImageAdminService from "../services/inquireImage.admin.service";
-import InquireImageAdminController from "../controller/inquireImage.admin.controller";
+import InquireImageAdminController from "../controllers/inquireImage.admin.controller";
 
 const router: Router = express.Router();
 const inquireService: InquireService = new InquireService();

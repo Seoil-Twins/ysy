@@ -1,18 +1,18 @@
 import { File } from "formidable";
 import { Transaction } from "sequelize";
 
-import NotFoundError from "../errors/notFound.error";
+import NotFoundError from "../errors/notFound.error.js";
 
-import sequelize from "../models";
-import { Album, IAlbumResponseWithCount, SearchOptions, PageOptions, FilterOptions, ICreateWithAdmin, IUpdateWithAdmin } from "../models/album.model";
-import { AlbumImage } from "../models/albumImage.model";
+import sequelize from "../models/index.js";
+import { Album, IAlbumResponseWithCount, SearchOptions, PageOptions, FilterOptions, ICreateWithAdmin, IUpdateWithAdmin } from "../models/album.model.js";
+import { AlbumImage } from "../models/albumImage.model.js";
 
-import logger from "../logger/logger";
+import logger from "../logger/logger.js";
 import { deleteFile, deleteFiles, deleteFolder } from "../utils/firebase.util";
 
-import AlbumAdminService from "../services/album.admin.service";
-import AlbumService from "../services/album.service";
-import AlbumImageService from "../services/albumImage.service";
+import AlbumAdminService from "../services/album.admin.service.js";
+import AlbumService from "../services/album.service.js";
+import AlbumImageService from "../services/albumImage.service.js";
 
 class AlbumAdminController {
   private albumService: AlbumService;

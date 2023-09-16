@@ -2,22 +2,22 @@ import { File } from "formidable";
 import { Transaction } from "sequelize";
 import randomstring from "randomstring";
 
-import logger from "../logger/logger";
+import logger from "../logger/logger.js";
 import { deleteFile, deleteFiles, deleteFolder } from "../utils/firebase.util";
 
-import UserService from "../services/user.service";
-import CoupleService from "../services/couple.service";
-import CoupleAdminService from "../services/couple.admin.service";
-import AlbumService from "../services/album.service";
+import UserService from "../services/user.service.js";
+import CoupleService from "../services/couple.service.js";
+import CoupleAdminService from "../services/couple.admin.service.js";
+import AlbumService from "../services/album.service.js";
 
-import sequelize from "../models";
-import { User } from "../models/user.model";
-import { Couple, FilterOptions, ICoupleResponseWithCount, IRequestCreate, IUpdateWithAdmin, PageOptions, SearchOptions } from "../models/couple.model";
-import { Album } from "../models/album.model";
+import sequelize from "../models/index.js";
+import { User } from "../models/user.model.js";
+import { Couple, FilterOptions, ICoupleResponseWithCount, IRequestCreate, IUpdateWithAdmin, PageOptions, SearchOptions } from "../models/couple.model.js";
+import { Album } from "../models/album.model.js";
 
-import NotFoundError from "../errors/notFound.error";
-import BadRequestError from "../errors/badRequest.error";
-import ConflictError from "../errors/conflict.error";
+import NotFoundError from "../errors/notFound.error.js";
+import BadRequestError from "../errors/badRequest.error.js";
+import ConflictError from "../errors/conflict.error.js";
 
 export class CoupleAdminController {
   private userService: UserService;

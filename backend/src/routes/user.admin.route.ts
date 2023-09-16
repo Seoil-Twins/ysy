@@ -22,7 +22,7 @@ import { canModifyWithEditor, canView } from "../utils/checkRole.util";
 import BadRequestError from "../errors/badRequest.error";
 import InternalServerError from "../errors/internalServer.error";
 
-import UserAdminController from "../controller/user.admin.controller";
+import UserAdminController from "../controllers/user.admin.controller";
 import UserService from "../services/user.service";
 import UserAdminService from "../services/user.admin.service";
 import UserRoleService from "../services/userRole.service";

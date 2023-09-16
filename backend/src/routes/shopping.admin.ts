@@ -16,7 +16,7 @@ import { STATUS_CODE } from "../constants/statusCode.constant";
 import { canView } from "../utils/checkRole.util";
 
 import ShoppingAdminService from "../services/shopping.admin.service";
-import ShoppingAdminController from "../controller/shopping.admin.controller";
+import ShoppingAdminController from "../controllers/shopping.admin.controller";
 
 import BadRequestError from "../errors/badRequest.error";
 

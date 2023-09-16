@@ -5,7 +5,7 @@ import logger from "../logger/logger.js";
 import validator from "../utils/validator.util.js";
 import { STATUS_CODE } from "../constants/statusCode.constant.js";
 
-import AuthController from "../controller/auth.controller.js";
+import AuthController from "../controllers/auth.controller.js";
 
 import BadRequestError from "../errors/badRequest.error.js";
 import UnauthorizedError from "../errors/unauthorized.error.js";

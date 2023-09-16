@@ -11,7 +11,7 @@ import {
 } from "../models/sports.model";
 import { Wanted } from "../models/favorite.model";
 
-import SportsAdminController from "../controller/sports.admin.controller";
+import SportsAdminController from "../controllers/sports.admin.controller";
 import SportsAdminService from "../services/sports.admin.service";
 
 import logger from "../logger/logger";

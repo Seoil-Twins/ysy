@@ -18,7 +18,7 @@ import UnauthorizedError from "../errors/unauthorized.error.js";
 import { ResponseToken } from "../types/auth.type.js";
 import { CreateCouple, UpdateCouple } from "../types/couple.type.js";
 
-import CoupleController from "../controller/couple.controller.js";
+import CoupleController from "../controllers/couple.controller.js";
 import CoupleService from "../services/couple.service.js";
 import UserService from "../services/user.service.js";
 import UserRoleService from "../services/userRole.service.js";

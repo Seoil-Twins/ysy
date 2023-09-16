@@ -1,20 +1,20 @@
 import { File } from "formidable";
 import { Transaction } from "sequelize";
 
-import InquireAdminService from "../services/inquire.admin.service";
-import InquireService from "../services/inquiry.service";
-import InquireImageService from "../services/inquiryImage.service";
+import InquireAdminService from "../services/inquire.admin.service.js";
+import InquireService from "../services/inquiry.service.js";
+import InquireImageService from "../services/inquiryImage.service.js";
 
-import sequelize from "../models";
-import { InquireImage } from "../models/inquiryImage.model";
-import { FilterOptions, ICreate, IInquireResponseWithCount, Inquire, PageOptions, SearchOptions } from "../models/inquiry.model";
+import sequelize from "../models/index.js";
+import { InquireImage } from "../models/inquiryImage.model.js";
+import { FilterOptions, ICreate, IInquireResponseWithCount, Inquire, PageOptions, SearchOptions } from "../models/inquiry.model.js";
 
-import logger from "../logger/logger";
+import logger from "../logger/logger.js";
 import { deleteFiles, deleteFolder } from "../utils/firebase.util";
 
-import NotFoundError from "../errors/notFound.error";
-import BadRequestError from "../errors/badRequest.error";
-import SolutionImageAdminService from "../services/solutionImage.admin.service";
+import NotFoundError from "../errors/notFound.error.js";
+import BadRequestError from "../errors/badRequest.error.js";
+import SolutionImageAdminService from "../services/solutionImage.admin.service.js";
 
 class InquireAdminController {
   private inquireService: InquireService;

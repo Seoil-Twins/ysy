@@ -3,18 +3,18 @@ import { URLSearchParams } from "url";
 
 import { Transaction } from "sequelize";
 
-import { TOURAPI_CODE } from "../constants/statusCode.constant";
+import { TOURAPI_CODE } from "../constants/statusCode.constant.js";
 
-import sequelize from "../models";
-import { TouristSpot, PageOptions, SearchOptions, IUpdateWithAdmin } from "../models/touristSpot.model";
-import { Wanted } from "../models/favorite.model";
+import sequelize from "../models/index.js";
+import { TouristSpot, PageOptions, SearchOptions, IUpdateWithAdmin } from "../models/touristSpot.model.js";
+import { Wanted } from "../models/favorite.model.js";
 
-import TouristSpotAdminService from "../services/touristSpot.admin.service";
+import TouristSpotAdminService from "../services/touristSpot.admin.service.js";
 
-import BadRequestError from "../errors/badRequest.error";
-import NotFoundError from "../errors/notFound.error";
+import BadRequestError from "../errors/badRequest.error.js";
+import NotFoundError from "../errors/notFound.error.js";
 
-import logger from "../logger/logger";
+import logger from "../logger/logger.js";
 
 const url = process.env.TOURAPI_URL;
 const SERVICEKEY = new String(process.env.TOURAPI_API_KEY);

@@ -1,7 +1,7 @@
 import express, { Router, Request, Response, NextFunction } from "express";
 import joi, { ValidationResult } from "joi";
 
-import AlbumController from "../controller/album.controller.js";
+import AlbumController from "../controllers/album.controller.js";
 import AlbumService from "../services/album.service.js";
 import AlbumImageService from "../services/albumImage.service.js";
 

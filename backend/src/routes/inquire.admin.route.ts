@@ -4,8 +4,8 @@ import express, { Router, Request, Response, NextFunction } from "express";
 import joi, { ValidationResult } from "joi";
 import formidable from "formidable";
 
-import InquireController from "../controller/inquiry.controller";
-import InquireAdminController from "../controller/inquire.admin.controller";
+import InquireController from "../controllers/inquiry.controller";
+import InquireAdminController from "../controllers/inquire.admin.controller";
 import InquireService from "../services/inquiry.service";
 import InquireAdminService from "../services/inquire.admin.service";
 import InquireImageService from "../services/inquiryImage.service";
