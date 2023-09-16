@@ -35,7 +35,9 @@
   "dependencies": {
     "@adminjs/express": "^6.0.0",
     "@adminjs/sequelize": "^4.0.0",
+    "@adminjs/themes": "^1.0.0",
     "@google-cloud/storage": "^7.1.0",
+    "@types/xml2js": "^0.4.12",
     "adminjs": "^7.2.1",
     "axios": "^1.5.0",
     "bcrypt": "^5.1.0",
@@ -59,6 +61,7 @@
     "redis": "^4.5.1",
     "sequelize": "^6.28.0",
     "winston": "^3.8.2",
-    "winston-daily-rotate-file": "^4.7.1"
+    "winston-daily-rotate-file": "^4.7.1",
+    "xml2js": "^0.6.2"
   }
 }

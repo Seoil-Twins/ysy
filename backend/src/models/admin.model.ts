@@ -21,6 +21,7 @@ Admin.init(
     userId: {
       field: "user_id",
       type: DataTypes.INTEGER.UNSIGNED,
+      unique: true,
       allowNull: false,
       references: {
         model: User,

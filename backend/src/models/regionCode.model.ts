@@ -5,8 +5,8 @@ import sequelize from "./index.js";
 
 export class RegionCode extends Model<InferAttributes<RegionCode>, InferCreationAttributes<RegionCode>> {
   declare regionId: CreationOptional<number>;
-  declare mainCode: number;
-  declare subCode: number;
+  declare mainCode: string;
+  declare subCode: string;
   declare name: string;
 }
 

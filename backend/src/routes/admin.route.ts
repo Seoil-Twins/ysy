@@ -1,6 +1,7 @@
-import AdminJS, { AdminJSOptions, CurrentAdmin } from "adminjs";
+import AdminJS, { ActionContext, ActionRequest, AdminJSOptions, CurrentAdmin } from "adminjs";
 import AdminJSExpress from "@adminjs/express";
 import * as AdminJSSequelize from "@adminjs/sequelize";
+import { dark, light } from "@adminjs/themes";
 
 import { User } from "../models/user.model.js";
 import { Couple } from "../models/couple.model.js";
@@ -13,7 +14,22 @@ import { ErrorImage } from "../models/errorImage.model.js";
 import { UserRole } from "../models/userRole.model.js";
 import { Role } from "../models/role.model.js";
 import { Admin } from "../models/admin.model.js";
+import { AlbumImage } from "../models/albumImage.model.js";
+import { InquiryImage } from "../models/inquiryImage.model.js";
+import { ContentType } from "../models/contentType.model.js";
+import { RegionCode } from "../models/regionCode.model.js";
+import { Restaurant } from "../models/restaurant.model.js";
+import { TouristSpot } from "../models/touristSpot.model.js";
+import { Culture } from "../models/culture.model.js";
+import { Shopping } from "../models/shopping.model.js";
+import { VenuesImage } from "../models/venuesImage.model.js";
+
 import { checkPassword } from "../utils/password.util.js";
+import RegionCodeController from "../controller/regionCode.controller.js";
+import RegionCodeService from "../services/regionCode.service.js";
+
+const regionCodeService: RegionCodeService = new RegionCodeService();
+const regionCodeController: RegionCodeController = new RegionCodeController(regionCodeService);
 
 // Connect MySQL
 AdminJS.registerAdapter({
@@ -39,6 +55,8 @@ const adminOptions: AdminJSOptions = {
   branding: {
     companyName: "YSY Admin"
   },
+  defaultTheme: dark.id,
+  availableThemes: [dark, light],
   resources: [
     {
       resource: Role,
@@ -98,11 +116,19 @@ const adminOptions: AdminJSOptions = {
       options: actionOptions
     },
     {
+      resource: AlbumImage,
+      options: actionOptions
+    },
+    {
       resource: Calendar,
       options: actionOptions
     },
     {
       resource: Inquiry,
+      options: actionOptions
+    },
+    {
+      resource: InquiryImage,
       options: actionOptions
     },
     {
@@ -115,6 +141,71 @@ const adminOptions: AdminJSOptions = {
     },
     {
       resource: ErrorImage,
+      options: actionOptions
+    },
+    {
+      resource: ContentType,
+      options: actionOptions
+    },
+    {
+      resource: RegionCode,
+      options: {
+        ...actionOptions,
+        sort: {
+          sortBy: "mainCode",
+          direction: "asc"
+        },
+        actions: {
+          new: {
+            isVisible: false
+          },
+          edit: {
+            isVisible: false
+          },
+          RefreshRegionCode: {
+            actionType: "resource",
+            component: false,
+            handler: async (_req: ActionRequest, _res: any, _context: ActionContext) => {
+              try {
+                await regionCodeController.addRegionCode();
+
+                return {
+                  notice: {
+                    message: "Data refreshed successfully!\nPlease Press F5 key.",
+                    type: "success"
+                  }
+                };
+              } catch (error) {
+                return {
+                  notice: {
+                    message: "Error refreshing data : ${error}",
+                    type: "error"
+                  }
+                };
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      resource: Restaurant,
+      options: actionOptions
+    },
+    {
+      resource: TouristSpot,
+      options: actionOptions
+    },
+    {
+      resource: Culture,
+      options: actionOptions
+    },
+    {
+      resource: Shopping,
+      options: actionOptions
+    },
+    {
+      resource: VenuesImage,
       options: actionOptions
     }
   ]
@@ -171,8 +262,8 @@ export const adminRouter = AdminJSExpress.buildAuthenticatedRouter(
   admin,
   {
     authenticate,
-    cookieName: process.env.COOKIE_NAME,
-    cookiePassword: String(process.env.COOKIE_PASSWORD)
+    cookieName: process.env.ADMIN_COOKIE_NAME,
+    cookiePassword: String(process.env.ADMIN_COOKIE_PASSWORD)
   },
   null,
   {
