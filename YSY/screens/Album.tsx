@@ -30,6 +30,7 @@ import RenderAlbumHeader from '../components/RenderAlbumHeader';
 import RenderAlbum from '../components/RenderAlbum';
 import { QueryClient, useQuery } from 'react-query';
 import { userAPI } from '../apis/userAPI';
+import { albumAPI } from '../apis/albumAPI';
 
 const screenWidth = wp('100%');
 
@@ -44,16 +45,8 @@ export const Album = () => {
 
   const [selectedAlbums, setSelectedAlbums] = useState<string[]>([]);
   const [albumImages, setAlbumImages] = useState<string[]>([]);
-  const [dummyFolder, setDummyFolder] = useState<string[]>([
-    'https://fastly.picsum.photos/id/179/200/200.jpg?hmac=I0g6Uht7h-y3NHqWA4e2Nzrnex7m-RceP1y732tc4Lw',
-    'https://fastly.picsum.photos/id/803/200/300.jpg?hmac=v-3AsAcUOG4kCDsLMlWF9_3Xa2DTODGyKLggZNvReno',
-    'https://fastly.picsum.photos/id/999/200/300.jpg?hmac=XqjgMZW5yK4MjHpQJFs_TiRodRNf9UVKjJiGnDJV8GI',
-    'https://fastly.picsum.photos/id/600/200/300.jpg?hmac=Ub3Deb_eQNe0Un7OyE33D79dnextn3M179L0nRkv1eg',
-    'https://fastly.picsum.photos/id/193/200/300.jpg?hmac=b5ZG1TfdndbrnQ8UJbIu-ykB2PRWv0QpHwehH0pqMgE',
-    'https://fastly.picsum.photos/id/341/200/300.jpg?hmac=tZpxFpS1LmFfC4e_ChqA5I8JfUfJuwH3oZvmQ58SzHc',
-    'https://fastly.picsum.photos/id/387/200/300.jpg?hmac=JlKyfJE4yZ_jxmWXH5sNYl7JdDfP04DOk-hye4p_wtk',
-    'https://fastly.picsum.photos/id/863/200/300.jpg?hmac=4kin1N4a7dzocUZXCwLWHewLobhw1Q6_e_9E3Iy3n0I',
-  ]);
+  const [dummyFolder, setDummyFolder] = useState<string[]>([]);
+  const [foldersData, setFoldersData] = useState<string[]>([]);
 
   const navigation = useNavigation<StackNavigationProp<AlbumTypes>>();
 
@@ -63,7 +56,7 @@ export const Album = () => {
     (state: RootState) => state.albumStatus.isAlbum,
   );
   const isFunc = useAppSelector((state: RootState) => state.albumStatus.isFunc);
-  const dummyImages = [
+  let dummyImages = [
     'https://fastly.picsum.photos/id/179/200/200.jpg?hmac=I0g6Uht7h-y3NHqWA4e2Nzrnex7m-RceP1y732tc4Lw',
     'https://fastly.picsum.photos/id/803/200/300.jpg?hmac=v-3AsAcUOG4kCDsLMlWF9_3Xa2DTODGyKLggZNvReno',
     'https://fastly.picsum.photos/id/999/200/300.jpg?hmac=XqjgMZW5yK4MjHpQJFs_TiRodRNf9UVKjJiGnDJV8GI',
@@ -147,14 +140,47 @@ export const Album = () => {
     //... (앨범에 해당하는 이미지 URL 추가)
   ];
 
+  // const getMe = async () => {
+  //   const data = JSON.stringify(await userAPI.getUserMe()); // login 정보 가져오기
+  //   const parsedData = JSON.parse(data);
+  //   console.log(parsedData);
+  //   return parsedData;
+  // };
+
+  const getAlbumFolders = async () => {
+    const userData = JSON.stringify(await userAPI.getUserMe()); // login 정보 가져오기
+    const userParsedData = JSON.parse(userData);
+    const data = JSON.stringify(
+      await albumAPI.getAlbumFolder(userParsedData.cupId),
+    ); // login 정보 가져오기
+    const parsedData = JSON.parse(data);
+    setFoldersData(parsedData);
+    const sortedAlbums = parsedData.albums.sort((a, b) => {
+      // 문자열로 된 날짜를 JavaScript Date 객체로 변환하여 비교합니다
+      const dateA = new Date(a.createdTime);
+      const dateB = new Date(b.createdTime);
+
+      return dateA - dateB;
+      // return dateB - dateA;
+    });
+    const folderList = sortedAlbums.map(
+      (album: { thumbnail: string }) => album.thumbnail,
+    );
+    setDummyFolder(folderList);
+  };
+
+  useEffect(() => {
+    getAlbumFolders(); // f
+  }, []);
+
   // const flatListKey = activeTab === 'AlbumModal' ? 'AlbumModal' : 'Default';
   const backAction = () => {
     dispatch(albumSelectionOff());
     return true; // true를 반환하면 앱이 종료되지 않습니다.
   };
 
-  const data = useQuery('userme', userAPI.getUserMe());
-  console.log('useQuery 1 : ' + JSON.stringify(data));
+  // const data = useQuery('userme', userAPI.getUserMe());
+  // console.log('useQuery 1 : ' + JSON.stringify(data));
 
   useFocusEffect(
     React.useCallback(() => {
@@ -313,6 +339,51 @@ export const Album = () => {
 
   const handleSortMethodSelect = (sortMethod: string) => {
     setSelectedSortMethod(sortMethod);
+    if (sortMethod == '최신순') {
+      const sortedAlbums = foldersData.albums.sort((a, b) => {
+        const dateA = new Date(a.createdTime);
+        const dateB = new Date(b.createdTime);
+
+        return dateB - dateA;
+      });
+      const folderList = sortedAlbums.map(
+        (album: { thumbnail: string }) => album.thumbnail,
+      );
+      setDummyFolder(folderList);
+      console.log(sortedAlbums);
+    }
+    if (sortMethod == '오래된순') {
+      const sortedAlbums = foldersData.albums.sort((a, b) => {
+        const dateA = new Date(a.createdTime);
+        const dateB = new Date(b.createdTime);
+
+        return dateA - dateB;
+      });
+      const folderList = sortedAlbums.map(
+        (album: { thumbnail: string }) => album.thumbnail,
+      );
+      setDummyFolder(folderList);
+      console.log(sortedAlbums);
+    }
+    if (sortMethod == '제목순') {
+      const sortedAlbums = foldersData.albums.sort((a, b) => {
+        const titleA = a.title.toLowerCase(); // 대소문자 구분 없이 정렬하려면 소문자로 변환
+        const titleB = b.title.toLowerCase();
+
+        if (titleA < titleB) {
+          return -1; // a가 b보다 작으면 -1 반환 (a를 b보다 앞에 배치)
+        } else if (titleA > titleB) {
+          return 1; // a가 b보다 크면 1 반환 (a를 b보다 뒤에 배치)
+        } else {
+          return 0; // 같은 경우 0 반환 (순서 변경 없음)
+        }
+      });
+      const folderList = sortedAlbums.map(
+        (album: { thumbnail: string }) => album.thumbnail,
+      );
+      setDummyFolder(folderList);
+      console.log(sortedAlbums);
+    }
     closeSortModal();
   };
 
