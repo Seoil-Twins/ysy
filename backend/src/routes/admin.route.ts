@@ -178,7 +178,7 @@ const adminOptions: AdminJSOptions = {
               } catch (error) {
                 return {
                   notice: {
-                    message: "Error refreshing data : ${error}",
+                    message: `Error refreshing data : ${error}`,
                     type: "error"
                   }
                 };

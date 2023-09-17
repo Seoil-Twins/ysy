@@ -5,7 +5,7 @@ import sequelize, { applyDateHook } from "./index.js";
 import { ContentType } from "./contentType.model.js";
 
 export class Restaurant extends Model<InferAttributes<Restaurant>, InferCreationAttributes<Restaurant>> {
-  declare contentId: number;
+  declare contentId: string;
   declare contentTypeId: string;
   declare areaCode: string;
   declare sigunguCode: string;
@@ -16,7 +16,7 @@ export class Restaurant extends Model<InferAttributes<Restaurant>, InferCreation
   declare mapY: string;
   declare mapLevel: string;
   declare views: number;
-  declare thumbnail: CreationOptional<string>;
+  declare thumbnail: CreationOptional<string | null>;
   declare telephone: CreationOptional<string>;
   declare useTime: CreationOptional<string>;
   declare restDate: CreationOptional<string>;
@@ -57,24 +57,24 @@ Restaurant.init(
       allowNull: false
     },
     title: {
-      type: DataTypes.STRING,
+      type: DataTypes.STRING(100),
       allowNull: false
     },
     description: {
-      type: DataTypes.STRING
+      type: DataTypes.TEXT
     },
     address: {
-      type: DataTypes.STRING,
+      type: DataTypes.STRING(100),
       allowNull: false
     },
     mapX: {
       field: "map_x",
-      type: DataTypes.STRING,
+      type: DataTypes.STRING(20),
       allowNull: false
     },
     mapY: {
       field: "map_y",
-      type: DataTypes.STRING,
+      type: DataTypes.STRING(20),
       allowNull: false
     },
     mapLevel: {
@@ -87,35 +87,35 @@ Restaurant.init(
       allowNull: false
     },
     thumbnail: {
-      type: DataTypes.STRING
+      type: DataTypes.STRING(200)
     },
     telephone: {
-      type: DataTypes.STRING
+      type: DataTypes.STRING(100)
     },
     useTime: {
       field: "use_time",
-      type: DataTypes.STRING
+      type: DataTypes.STRING(200)
     },
     restDate: {
       field: "rest_date",
-      type: DataTypes.STRING
+      type: DataTypes.STRING(100)
     },
     homepage: {
-      type: DataTypes.STRING
+      type: DataTypes.STRING(200)
     },
     parking: {
-      type: DataTypes.STRING
+      type: DataTypes.STRING(50)
     },
     kidsFacility: {
       field: "kids_facility",
-      type: DataTypes.STRING
+      type: DataTypes.STRING(50)
     },
     smoking: {
-      type: DataTypes.STRING
+      type: DataTypes.STRING(50)
     },
     signatureDish: {
       field: "signature_dish",
-      type: DataTypes.STRING
+      type: DataTypes.STRING(100)
     },
     registrationTime: {
       field: "registration_time",

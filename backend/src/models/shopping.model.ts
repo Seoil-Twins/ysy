@@ -57,24 +57,24 @@ Shopping.init(
       allowNull: false
     },
     title: {
-      type: DataTypes.STRING,
+      type: DataTypes.STRING(100),
       allowNull: false
     },
     description: {
-      type: DataTypes.STRING
+      type: DataTypes.TEXT
     },
     address: {
-      type: DataTypes.STRING,
+      type: DataTypes.STRING(100),
       allowNull: false
     },
     mapX: {
       field: "map_x",
-      type: DataTypes.STRING,
+      type: DataTypes.STRING(20),
       allowNull: false
     },
     mapY: {
       field: "map_y",
-      type: DataTypes.STRING,
+      type: DataTypes.STRING(20),
       allowNull: false
     },
     mapLevel: {
@@ -87,35 +87,35 @@ Shopping.init(
       allowNull: false
     },
     thumbnail: {
-      type: DataTypes.STRING
+      type: DataTypes.STRING(200)
     },
     telephone: {
-      type: DataTypes.STRING
+      type: DataTypes.STRING(100)
     },
     useTime: {
       field: "use_time",
-      type: DataTypes.STRING
+      type: DataTypes.STRING(200)
     },
     restDate: {
       field: "rest_date",
-      type: DataTypes.STRING
+      type: DataTypes.STRING(100)
     },
     homepage: {
-      type: DataTypes.STRING
+      type: DataTypes.STRING(200)
     },
     parking: {
-      type: DataTypes.STRING
+      type: DataTypes.STRING(50)
     },
     babyCarriage: {
       field: "baby_carriage",
-      type: DataTypes.STRING
+      type: DataTypes.STRING(50)
     },
     pet: {
-      type: DataTypes.STRING
+      type: DataTypes.STRING(50)
     },
     saleItem: {
       field: "sale_item",
-      type: DataTypes.STRING
+      type: DataTypes.STRING(50)
     },
     registrationTime: {
       field: "registration_time",
