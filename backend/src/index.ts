@@ -92,4 +92,4 @@ process.on("uncaughtException", (error) => {
 
 export const API_ROOT = process.env.API_ROOT || `http://localhost:${port}`;
 
-job.fetchAreaCode.invoke();
+// job.fetchRestaurant.invoke();

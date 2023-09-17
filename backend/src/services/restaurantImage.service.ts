@@ -2,9 +2,9 @@ import { InferAttributes, InferCreationAttributes, Optional, Transaction } from 
 import { NullishPropertiesOf } from "sequelize/lib/utils";
 
 import { Service } from "./service.js";
-import { VenuesImage } from "../models/venuesImage.model.js";
+import { RestaurantImage } from "../models/restaurantImage.model.js";
 
-class VenuesImageService extends Service {
+class RestaurantImageService extends Service {
   getURL(...args: any[]): string {
     throw new Error("Method not implemented.");
   }
@@ -17,9 +17,9 @@ class VenuesImageService extends Service {
     throw new Error("Method not implemented.");
   }
 
-  async upserts(transaction: Transaction | null, data: Partial<VenuesImage>[]): Promise<VenuesImage[]> {
-    const images: VenuesImage[] = await VenuesImage.bulkCreate(
-      data as Optional<InferAttributes<VenuesImage>, NullishPropertiesOf<InferCreationAttributes<VenuesImage>>>[],
+  async upserts(transaction: Transaction | null, data: Partial<RestaurantImage>[]): Promise<RestaurantImage[]> {
+    const images: RestaurantImage[] = await RestaurantImage.bulkCreate(
+      data as Optional<InferAttributes<RestaurantImage>, NullishPropertiesOf<InferCreationAttributes<RestaurantImage>>>[],
       {
         updateOnDuplicate: ["path"],
         transaction
@@ -38,4 +38,4 @@ class VenuesImageService extends Service {
   }
 }
 
-export default VenuesImageService;
+export default RestaurantImageService;

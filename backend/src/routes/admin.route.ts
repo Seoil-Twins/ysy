@@ -21,8 +21,13 @@ import { RegionCode } from "../models/regionCode.model.js";
 import { Restaurant } from "../models/restaurant.model.js";
 import { TouristSpot } from "../models/touristSpot.model.js";
 import { Culture } from "../models/culture.model.js";
+import { Sports } from "../models/sports.model.js";
 import { Shopping } from "../models/shopping.model.js";
-import { VenuesImage } from "../models/venuesImage.model.js";
+import { RestaurantImage } from "../models/restaurantImage.model.js";
+import { TouristSpotImage } from "../models/touristSpotImage.model.js";
+import { CultureImage } from "../models/cultureImage.model.js";
+import { SportsImage } from "../models/sportsImage.model.js";
+import { ShoppingImage } from "../models/shoppingImage.model.js";
 
 import { checkPassword } from "../utils/password.util.js";
 import RegionCodeController from "../controllers/regionCode.controller.js";
@@ -193,7 +198,15 @@ const adminOptions: AdminJSOptions = {
       options: actionOptions
     },
     {
+      resource: RestaurantImage,
+      options: actionOptions
+    },
+    {
       resource: TouristSpot,
+      options: actionOptions
+    },
+    {
+      resource: TouristSpotImage,
       options: actionOptions
     },
     {
@@ -201,11 +214,23 @@ const adminOptions: AdminJSOptions = {
       options: actionOptions
     },
     {
+      resource: CultureImage,
+      options: actionOptions
+    },
+    {
+      resource: Sports,
+      options: actionOptions
+    },
+    {
+      resource: SportsImage,
+      options: actionOptions
+    },
+    {
       resource: Shopping,
       options: actionOptions
     },
     {
-      resource: VenuesImage,
+      resource: ShoppingImage,
       options: actionOptions
     }
   ]

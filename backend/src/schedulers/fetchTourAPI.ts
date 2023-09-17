@@ -2,7 +2,7 @@ import schedule from "node-schedule";
 import logger from "../logger/logger.js";
 import RestaurantController from "../controllers/restaurant.controller.js";
 import RestaurantService from "../services/restaurant.service.js";
-import VenuesImageService from "../services/venuesImage.service.js";
+import RestaurantImageService from "../services/restaurantImage.service.js";
 
 const rule = new schedule.RecurrenceRule();
 // rule.date = 1;
@@ -12,8 +12,8 @@ rule.second = 0;
 rule.tz = "Asia/Seoul";
 
 const restaurantService: RestaurantService = new RestaurantService();
-const venuesImageService: VenuesImageService = new VenuesImageService();
-const restaurantController: RestaurantController = new RestaurantController(restaurantService, venuesImageService);
+const restaurantImageService: RestaurantImageService = new RestaurantImageService();
+const restaurantController: RestaurantController = new RestaurantController(restaurantService, restaurantImageService);
 
 const fetchRestaurant = async () => {
   try {
@@ -24,7 +24,7 @@ const fetchRestaurant = async () => {
 };
 
 const schedules = {
-  fetchAreaCode: schedule.scheduleJob(rule, fetchRestaurant)
+  fetchRestaurant: schedule.scheduleJob(rule, fetchRestaurant)
 };
 
 export default schedules;

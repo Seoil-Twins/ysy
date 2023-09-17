@@ -18,7 +18,11 @@ import { Sports } from "./sports.model.js";
 import { TouristSpot } from "./touristSpot.model.js";
 import { User } from "./user.model.js";
 import { UserRole } from "./userRole.model.js";
-import { VenuesImage } from "./venuesImage.model.js";
+import { RestaurantImage } from "./restaurantImage.model.js";
+import { TouristSpotImage } from "./touristSpotImage.model.js";
+import { CultureImage } from "./cultureImage.model.js";
+import { SportsImage } from "./sportsImage.model.js";
+import { ShoppingImage } from "./shoppingImage.model.js";
 import { Admin } from "./admin.model.js";
 
 /**
@@ -279,55 +283,59 @@ export default {
       onUpdate: "CASCADE"
     });
 
-    // ------------------------------------------ VenuesImage to Restaurant, TouristSpot, Culture, Sports, Shopping ---------------------------------------- //
-    Restaurant.hasMany(VenuesImage, {
+    // ------------------------------------------ Restaurant to Restaurant Image ---------------------------------------- //
+    Restaurant.hasMany(RestaurantImage, {
       foreignKey: "contentId",
       as: "images"
     });
 
-    TouristSpot.hasMany(VenuesImage, {
-      foreignKey: "contentId",
-      as: "images"
-    });
-
-    Culture.hasMany(VenuesImage, {
-      foreignKey: "contentId",
-      as: "images"
-    });
-
-    Sports.hasMany(VenuesImage, {
-      foreignKey: "contentId",
-      as: "images"
-    });
-
-    Shopping.hasMany(VenuesImage, {
-      foreignKey: "contentId",
-      as: "images"
-    });
-
-    VenuesImage.belongsTo(Restaurant, {
+    RestaurantImage.belongsTo(Restaurant, {
       foreignKey: "contentId",
       as: "restaurantImages"
     });
 
-    VenuesImage.belongsTo(TouristSpot, {
+    // ------------------------------------------ TouristSpot to TouristSpot Image ---------------------------------------- //
+    TouristSpot.hasMany(TouristSpotImage, {
+      foreignKey: "contentId",
+      as: "images"
+    });
+
+    TouristSpotImage.belongsTo(TouristSpot, {
       foreignKey: "contentId",
       as: "touristSpotImages"
     });
 
-    VenuesImage.belongsTo(Culture, {
+    // ------------------------------------------ Culture to Culture Image ---------------------------------------- //
+    Culture.hasMany(CultureImage, {
+      foreignKey: "contentId",
+      as: "images"
+    });
+
+    CultureImage.belongsTo(Culture, {
       foreignKey: "contentId",
       as: "cultureImages"
     });
 
-    VenuesImage.belongsTo(Shopping, {
+    // ------------------------------------------ Sports to Sports Image ---------------------------------------- //
+    Sports.hasMany(SportsImage, {
       foreignKey: "contentId",
-      as: "shoppingImages"
+      as: "images"
     });
 
-    VenuesImage.belongsTo(Sports, {
+    SportsImage.belongsTo(Sports, {
       foreignKey: "contentId",
       as: "sportsImages"
+    });
+
+    // ------------------------------------------ Shopping to Shopping Image ---------------------------------------- //
+    Shopping.hasMany(ShoppingImage, {
+      foreignKey: "contentId",
+      as: "images"
+    });
+
+    ShoppingImage.belongsTo(Shopping, {
+      foreignKey: "contentId",
+      as: "shoppingImages"
     });
 
     // ------------------------------------------ User to Favorite ---------------------------------------- //
