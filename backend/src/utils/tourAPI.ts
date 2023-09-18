@@ -237,10 +237,10 @@ export const fetchAreaBased = async (customParams?: any): Promise<ResponsePlace[
   return results ? results : [];
 };
 
-export const fetchDetailImage = async (contentId: string, isRestaurant: boolean): Promise<ResponseDetailImage | undefined> => {
+export const fetchDetailImage = async (contentId: string): Promise<ResponseDetailImage | undefined> => {
   const params = {
     contentId,
-    imageYN: isRestaurant ? "N" : "Y",
+    imageYN: "Y",
     subImageYN: "Y"
   };
 

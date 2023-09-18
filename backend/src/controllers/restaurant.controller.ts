@@ -61,7 +61,7 @@ class RestaurantController {
           ResponseDetailCommon | undefined,
           ResponseDetailIntroWithRestaurant | undefined
         ] = await Promise.all([
-          fetchDetailImage(response.contentid, true),
+          fetchDetailImage(response.contentid),
           fetchDetailCommon(response.contentid),
           fetchDetailIntroWithRestaurant(response.contentid, response.contenttypeid)
         ]);
