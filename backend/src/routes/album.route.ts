@@ -88,6 +88,7 @@ router.post("/:cup_id", async (req: Request, res: Response, next: NextFunction) 
   try {
     const { value, error }: ValidationResult = validator(req.body, titleSchema);
 
+    req.cupId = req.params.cup_id; // 꼭! 지워야함! 테스트를 위한 코드
     if (error) throw new BadRequestError(error.message);
     else if (req.cupId !== req.params.cup_id) throw new ForbiddenError("You don't same token couple ID and path parameter couple ID");
 
