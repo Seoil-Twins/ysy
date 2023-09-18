@@ -1,7 +1,7 @@
 import { DataTypes, Model } from "sequelize";
 import { InferAttributes, InferCreationAttributes } from "sequelize/types/model";
 
-import sequelize from ".";
+import sequelize from "./index.js";
 
 export class Role extends Model<InferAttributes<Role>, InferCreationAttributes<Role>> {
   declare roleId: number;

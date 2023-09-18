@@ -1,4 +1,10 @@
-import { Notice } from "../models/notice.model";
+import { Notice } from "../models/notice.model.js";
+
+export const isSortItem = (item: any): item is SortItem => {
+  return ["r", "o"].includes(item);
+};
+
+export type SortItem = "r" | "o";
 
 export interface CreateNoticeWithAdmin {
   title: string;
@@ -15,7 +21,7 @@ export interface ResponseNotice {
 export interface PageOptions {
   count: number;
   page: number;
-  sort: string | "r" | "o";
+  sort: SortItem;
 }
 
 export interface FilterOptions {

@@ -1,24 +1,29 @@
-import { AlbumImage } from "./albumImage.model";
-import { Album } from "./album.model";
-import { Calendar } from "./calendar.model";
-import { ContentType } from "./contentType.model";
-import { Couple } from "./couple.model";
-import { Culture } from "./culture.model";
-import { Favorite } from "./favorite.model";
-import { Inquiry } from "./inquiry.model";
-import { InquiryImage } from "./inquiryImage.model";
-import { Notice } from "./notice.model";
-import { NoticeImage } from "./noticeImage.model";
-import { Restaurant } from "./restaurant.model";
-import { Role } from "./role.model";
-import { Shopping } from "./shopping.model";
-import { Solution } from "./solution.model";
-import { SolutionImage } from "./solutionImage.model";
-import { Sports } from "./sports.model";
-import { TouristSpot } from "./touristSpot.model";
-import { User } from "./user.model";
-import { UserRole } from "./userRole.model";
-import { VenuesImage } from "./venuesImage.model";
+import { AlbumImage } from "./albumImage.model.js";
+import { Album } from "./album.model.js";
+import { Calendar } from "./calendar.model.js";
+import { ContentType } from "./contentType.model.js";
+import { Couple } from "./couple.model.js";
+import { Culture } from "./culture.model.js";
+import { Favorite } from "./favorite.model.js";
+import { Inquiry } from "./inquiry.model.js";
+import { InquiryImage } from "./inquiryImage.model.js";
+import { Notice } from "./notice.model.js";
+import { NoticeImage } from "./noticeImage.model.js";
+import { Restaurant } from "./restaurant.model.js";
+import { Role } from "./role.model.js";
+import { Shopping } from "./shopping.model.js";
+import { Solution } from "./solution.model.js";
+import { SolutionImage } from "./solutionImage.model.js";
+import { Sports } from "./sports.model.js";
+import { TouristSpot } from "./touristSpot.model.js";
+import { User } from "./user.model.js";
+import { UserRole } from "./userRole.model.js";
+import { RestaurantImage } from "./restaurantImage.model.js";
+import { TouristSpotImage } from "./touristSpotImage.model.js";
+import { CultureImage } from "./cultureImage.model.js";
+import { SportsImage } from "./sportsImage.model.js";
+import { ShoppingImage } from "./shoppingImage.model.js";
+import { Admin } from "./admin.model.js";
 
 /**
  *  hasMany => 1 : N
@@ -54,6 +59,19 @@ export default {
       foreignKey: "roleId",
       as: "role",
       onDelete: "SET NULL",
+      onUpdate: "CASCADE"
+    });
+
+    // ------------------------------------------ Admin : User ---------------------------------------- //
+    User.hasOne(Admin, {
+      foreignKey: "userId",
+      as: "admin"
+    });
+
+    Admin.hasOne(User, {
+      foreignKey: "userId",
+      as: "user",
+      onDelete: "CASCADE",
       onUpdate: "CASCADE"
     });
 
@@ -124,12 +142,12 @@ export default {
 
     // ------------------------------------------ InquiryImage to Inquiry ---------------------------------------- //
     Inquiry.hasMany(InquiryImage, {
-      foreignKey: "InquiryId",
-      as: "InquiryImages"
+      foreignKey: "inquiryId",
+      as: "inquiryImages"
     });
 
     InquiryImage.belongsTo(Inquiry, {
-      foreignKey: "InquiryId",
+      foreignKey: "inquiryId",
       as: "Inquiry",
       onDelete: "CASCADE",
       onUpdate: "CASCADE"
@@ -137,12 +155,12 @@ export default {
 
     // ------------------------------------------ Solution : Inquiry ---------------------------------------- //
     Inquiry.hasOne(Solution, {
-      foreignKey: "InquiryId",
+      foreignKey: "inquiryId",
       as: "solution"
     });
 
     Solution.hasOne(Inquiry, {
-      foreignKey: "InquiryId",
+      foreignKey: "inquiryId",
       as: "Inquiry",
       onDelete: "CASCADE",
       onUpdate: "CASCADE"
@@ -265,55 +283,59 @@ export default {
       onUpdate: "CASCADE"
     });
 
-    // ------------------------------------------ VenuesImage to Restaurant, TouristSpot, Culture, Sports, Shopping ---------------------------------------- //
-    Restaurant.hasMany(VenuesImage, {
+    // ------------------------------------------ Restaurant to Restaurant Image ---------------------------------------- //
+    Restaurant.hasMany(RestaurantImage, {
       foreignKey: "contentId",
       as: "images"
     });
 
-    TouristSpot.hasMany(VenuesImage, {
-      foreignKey: "contentId",
-      as: "images"
-    });
-
-    Culture.hasMany(VenuesImage, {
-      foreignKey: "contentId",
-      as: "images"
-    });
-
-    Sports.hasMany(VenuesImage, {
-      foreignKey: "contentId",
-      as: "images"
-    });
-
-    Shopping.hasMany(VenuesImage, {
-      foreignKey: "contentId",
-      as: "images"
-    });
-
-    VenuesImage.belongsTo(Restaurant, {
+    RestaurantImage.belongsTo(Restaurant, {
       foreignKey: "contentId",
       as: "restaurantImages"
     });
 
-    VenuesImage.belongsTo(TouristSpot, {
+    // ------------------------------------------ TouristSpot to TouristSpot Image ---------------------------------------- //
+    TouristSpot.hasMany(TouristSpotImage, {
+      foreignKey: "contentId",
+      as: "images"
+    });
+
+    TouristSpotImage.belongsTo(TouristSpot, {
       foreignKey: "contentId",
       as: "touristSpotImages"
     });
 
-    VenuesImage.belongsTo(Culture, {
+    // ------------------------------------------ Culture to Culture Image ---------------------------------------- //
+    Culture.hasMany(CultureImage, {
+      foreignKey: "contentId",
+      as: "images"
+    });
+
+    CultureImage.belongsTo(Culture, {
       foreignKey: "contentId",
       as: "cultureImages"
     });
 
-    VenuesImage.belongsTo(Shopping, {
+    // ------------------------------------------ Sports to Sports Image ---------------------------------------- //
+    Sports.hasMany(SportsImage, {
       foreignKey: "contentId",
-      as: "shoppingImages"
+      as: "images"
     });
 
-    VenuesImage.belongsTo(Sports, {
+    SportsImage.belongsTo(Sports, {
       foreignKey: "contentId",
       as: "sportsImages"
+    });
+
+    // ------------------------------------------ Shopping to Shopping Image ---------------------------------------- //
+    Shopping.hasMany(ShoppingImage, {
+      foreignKey: "contentId",
+      as: "images"
+    });
+
+    ShoppingImage.belongsTo(Shopping, {
+      foreignKey: "contentId",
+      as: "shoppingImages"
     });
 
     // ------------------------------------------ User to Favorite ---------------------------------------- //
@@ -325,6 +347,13 @@ export default {
     Favorite.belongsTo(User, {
       foreignKey: "userId",
       as: "user",
+      onDelete: "CASCADE",
+      onUpdate: "CASCADE"
+    });
+
+    Favorite.belongsTo(ContentType, {
+      foreignKey: "contentTypeId",
+      as: "contentType",
       onDelete: "CASCADE",
       onUpdate: "CASCADE"
     });

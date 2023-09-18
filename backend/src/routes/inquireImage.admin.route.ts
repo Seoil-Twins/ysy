@@ -2,8 +2,8 @@ import dayjs from "dayjs";
 import express, { Router, Request, Response, NextFunction } from "express";
 import formidable, { File } from "formidable";
 
-import InquireService from "../services/inquire.service";
-import InquireImageService from "../services/inquireImage.service";
+import InquireService from "../services/inquiry.service";
+import InquireImageService from "../services/inquiryImage.service";
 
 import { canModifyWithEditor, canView } from "../utils/checkRole.util";
 import { STATUS_CODE } from "../constants/statusCode.constant";
@@ -13,7 +13,7 @@ import { FilterOptions, InquireImageResponseWithCount, PageOptions, SearchOption
 import BadRequestError from "../errors/badRequest.error";
 import InternalServerError from "../errors/internalServer.error";
 import InquireImageAdminService from "../services/inquireImage.admin.service";
-import InquireImageAdminController from "../controller/inquireImage.admin.controller";
+import InquireImageAdminController from "../controllers/inquireImage.admin.controller";
 
 const router: Router = express.Router();
 const inquireService: InquireService = new InquireService();

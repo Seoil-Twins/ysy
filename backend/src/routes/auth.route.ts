@@ -1,20 +1,20 @@
 import express, { Router, Request, Response, NextFunction } from "express";
 import joi, { ValidationResult } from "joi";
 
-import logger from "../logger/logger";
-import validator from "../utils/validator.util";
-import { STATUS_CODE } from "../constants/statusCode.constant";
+import logger from "../logger/logger.js";
+import validator from "../utils/validator.util.js";
+import { STATUS_CODE } from "../constants/statusCode.constant.js";
 
-import AuthController from "../controller/auth.controller";
+import AuthController from "../controllers/auth.controller.js";
 
-import BadRequestError from "../errors/badRequest.error";
-import UnauthorizedError from "../errors/unauthorized.error";
+import BadRequestError from "../errors/badRequest.error.js";
+import UnauthorizedError from "../errors/unauthorized.error.js";
 
-import AuthService from "../services/auth.service";
-import UserService from "../services/user.service";
-import UserRoleService from "../services/userRole.service";
+import AuthService from "../services/auth.service.js";
+import UserService from "../services/user.service.js";
+import UserRoleService from "../services/userRole.service.js";
 
-import { Login, ResponseToken } from "../types/auth.type";
+import { Login, ResponseToken } from "../types/auth.type.js";
 
 const router: Router = express.Router();
 const authService = new AuthService();
@@ -24,7 +24,8 @@ const authController = new AuthController(authService, userService, userRoleServ
 
 const loginSchema: joi.Schema = joi.object({
   email: joi.string().trim().email().required(),
-  snsId: joi.string().trim().required()
+  snsId: joi.string().trim().required(),
+  snsKind: joi.string().length(4).required()
 });
 
 router.post("/login", async (req: Request, res: Response, next: NextFunction) => {
@@ -35,7 +36,8 @@ router.post("/login", async (req: Request, res: Response, next: NextFunction) =>
 
     const data: Login = {
       email: req.body.email,
-      snsId: req.body.snsId
+      snsId: req.body.snsId,
+      snsKind: req.body.snsKind
     };
 
     const result: ResponseToken = await authController.login(data);

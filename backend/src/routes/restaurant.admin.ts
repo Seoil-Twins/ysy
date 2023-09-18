@@ -10,7 +10,7 @@ import {
 } from "../models/restaurant.model";
 import { Wanted } from "../models/favorite.model";
 
-import RestaurantAdminController from "../controller/restaurant.admin.controller";
+import RestaurantAdminController from "../controllers/restaurant.admin.controller";
 import RestaurantAdminService from "../services/restaurant.admin.service";
 
 import logger from "../logger/logger";

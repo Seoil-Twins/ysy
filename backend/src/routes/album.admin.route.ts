@@ -6,7 +6,7 @@ import formidable, { File } from "formidable";
 import AlbumService from "../services/album.service";
 import AlbumAdminService from "../services/album.admin.service";
 import AlbumImageService from "../services/albumImage.service";
-import AlbumAdminController from "../controller/album.admin.controller";
+import AlbumAdminController from "../controllers/album.admin.controller";
 
 import { IAlbumResponseWithCount, PageOptions, SearchOptions, FilterOptions, ICreateWithAdmin, IUpdateWithAdmin, Album } from "../models/album.model";
 

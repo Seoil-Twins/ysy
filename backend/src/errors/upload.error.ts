@@ -1,6 +1,6 @@
-import AbstractError from "./abstract.error";
-import { STATUS_CODE, ERROR_CODE } from "../constants/statusCode.constant";
-import { DeleteImageInfo } from "../utils/gcp.util";
+import AbstractError from "./abstract.error.js";
+import { STATUS_CODE, ERROR_CODE } from "../constants/statusCode.constant.js";
+import { DeleteImageInfo } from "../utils/gcp.util.js";
 
 class UploadError extends AbstractError {
   errors: DeleteImageInfo[] = [];

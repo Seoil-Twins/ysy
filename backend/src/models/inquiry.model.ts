@@ -1,11 +1,10 @@
-import { DataTypes, Model, literal, NonAttribute } from "sequelize";
-import { HasManyGetAssociationsMixin } from "sequelize/types/associations";
+import { DataTypes, Model, literal, NonAttribute, HasManyGetAssociationsMixin } from "sequelize";
 import { CreationOptional, InferAttributes, InferCreationAttributes } from "sequelize/types/model";
 
-import sequelize, { applyDateHook } from ".";
-import { InquiryImage } from "./inquiryImage.model";
-import { Solution } from "./solution.model";
-import { User } from "./user.model";
+import sequelize, { applyDateHook } from "./index.js";
+import { InquiryImage } from "./inquiryImage.model.js";
+import { Solution } from "./solution.model.js";
+import { User } from "./user.model.js";
 
 export class Inquiry extends Model<InferAttributes<Inquiry>, InferCreationAttributes<Inquiry>> {
   /** If you use include inquireImage, You can use inquireImages field. */
@@ -55,7 +54,7 @@ Inquiry.init(
   },
   {
     sequelize: sequelize,
-    tableName: "inquire",
+    tableName: "inquiry",
     timestamps: false
   }
 );

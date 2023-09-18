@@ -1,9 +1,9 @@
 import { DataTypes, Model, literal, NonAttribute, HasManyGetAssociationsMixin } from "sequelize";
 import { CreationOptional, InferAttributes, InferCreationAttributes } from "sequelize/types/model";
 
-import sequelize, { applyDateHook } from ".";
-import { AlbumImage } from "./albumImage.model";
-import { Couple } from "./couple.model";
+import sequelize, { applyDateHook } from "./index.js";
+import { AlbumImage } from "./albumImage.model.js";
+import { Couple } from "./couple.model.js";
 
 export class Album extends Model<InferAttributes<Album>, InferCreationAttributes<Album>> {
   /** If you use include inquireImage, You can use inquireImages field. */

@@ -1,21 +1,21 @@
 import { Op, Transaction } from "sequelize";
 
-import { UNKNOWN_NAME } from "../constants/file.constant";
+import { UNKNOWN_NAME } from "../constants/file.constant.js";
 
-import logger from "../logger/logger";
+import logger from "../logger/logger.js";
 
-import sequelize from "../models";
-import { User } from "../models/user.model";
-import { CreateUser, UpdateUser, ResponseUser, UpdateUserNotification } from "../types/user.type";
+import sequelize from "../models/index.js";
+import { User } from "../models/user.model.js";
+import { CreateUser, UpdateUser, ResponseUser, UpdateUserNotification } from "../types/user.type.js";
 
-import UserService from "../services/user.service";
-import UserRoleService from "../services/userRole.service";
+import UserService from "../services/user.service.js";
+import UserRoleService from "../services/userRole.service.js";
 
-import NotFoundError from "../errors/notFound.error";
-import UnauthorizedError from "../errors/unauthorized.error";
-import ForbiddenError from "../errors/forbidden.error";
-import ConflictError from "../errors/conflict.error";
-import { File, UploadImageInfo, deleteFileWithGCP, getFileBufferWithGCP, uploadFileWithGCP } from "../utils/gcp.util";
+import NotFoundError from "../errors/notFound.error.js";
+import UnauthorizedError from "../errors/unauthorized.error.js";
+import ForbiddenError from "../errors/forbidden.error.js";
+import ConflictError from "../errors/conflict.error.js";
+import { File, UploadImageInfo, deleteFileWithGCP, getFileBufferWithGCP, uploadFileWithGCP } from "../utils/gcp.util.js";
 
 class UserController {
   private ERROR_LOCATION_PREFIX = "user";
@@ -99,7 +99,8 @@ class UserController {
         prevFile = {
           filename: prevProfilePath,
           buffer: prevBuffer,
-          mimetype: prevProfileType
+          mimetype: prevProfileType,
+          size: prevProfileSize
         };
       }
 
@@ -143,7 +144,8 @@ class UserController {
           await uploadFileWithGCP({
             filename: prevFile.filename,
             buffer: prevFile.buffer,
-            mimetype: prevFile.mimetype
+            mimetype: prevFile.mimetype,
+            size: prevFile.size
           });
 
           logger.error(`After updating the gcp, a db error occurred and the gcp profile is reuploaded => ${updateUser.profile}`);

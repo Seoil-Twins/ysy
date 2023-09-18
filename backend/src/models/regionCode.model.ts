@@ -1,12 +1,12 @@
 import { DataTypes, Model } from "sequelize";
 import { CreationOptional, InferAttributes, InferCreationAttributes } from "sequelize/types/model";
 
-import sequelize from ".";
+import sequelize from "./index.js";
 
 export class RegionCode extends Model<InferAttributes<RegionCode>, InferCreationAttributes<RegionCode>> {
   declare regionId: CreationOptional<number>;
-  declare mainCode: number;
-  declare subCode: number;
+  declare mainCode: string;
+  declare subCode: string;
   declare name: string;
 }
 
@@ -15,17 +15,16 @@ RegionCode.init(
     regionId: {
       field: "region_id",
       type: DataTypes.INTEGER.UNSIGNED,
-      autoIncrement: true,
       primaryKey: true
     },
     mainCode: {
       field: "main_code",
-      type: DataTypes.SMALLINT,
+      type: DataTypes.CHAR(2),
       allowNull: false
     },
     subCode: {
       field: "sub_code",
-      type: DataTypes.SMALLINT,
+      type: DataTypes.CHAR(2),
       allowNull: false
     },
     name: {
@@ -35,7 +34,7 @@ RegionCode.init(
   },
   {
     sequelize: sequelize,
-    tableName: "content_type",
+    tableName: "region_code",
     timestamps: false,
     indexes: [
       {

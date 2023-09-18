@@ -15,7 +15,7 @@ import { canView } from "../utils/checkRole.util";
 import { STATUS_CODE } from "../constants/statusCode.constant";
 
 import CultureAdminService from "../services/culture.admin.service";
-import CultureAdminController from "../controller/culture.admin.controller";
+import CultureAdminController from "../controllers/culture.admin.controller";
 
 import BadRequestError from "../errors/badRequest.error";
 

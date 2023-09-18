@@ -1,4 +1,4 @@
-import { Solution } from "../models/solution.model";
+import { Solution } from "../models/solution.model.js";
 
 export interface CreateSolutionWithAdmin {
   title: string;

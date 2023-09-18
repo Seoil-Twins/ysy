@@ -1,29 +1,29 @@
 import randomString from "randomstring";
 import { Transaction } from "sequelize";
 
-import sequelize from "../models";
-import { User } from "../models/user.model";
-import { ResponseToken } from "../types/auth.type";
-import { Couple } from "../models/couple.model";
-import { CreateCouple, UpdateCouple } from "../types/couple.type";
+import sequelize from "../models/index.js";
+import { User } from "../models/user.model.js";
+import { ResponseToken } from "../types/auth.type.js";
+import { Couple } from "../models/couple.model.js";
+import { CreateCouple, UpdateCouple } from "../types/couple.type.js";
 
-import { UNKNOWN_NAME } from "../constants/file.constant";
+import { UNKNOWN_NAME } from "../constants/file.constant.js";
 
-import NotFoundError from "../errors/notFound.error";
-import UnauthorizedError from "../errors/unauthorized.error";
-import ForbiddenError from "../errors/forbidden.error";
-import BadRequestError from "../errors/badRequest.error";
-import ConflictError from "../errors/conflict.error";
+import NotFoundError from "../errors/notFound.error.js";
+import UnauthorizedError from "../errors/unauthorized.error.js";
+import ForbiddenError from "../errors/forbidden.error.js";
+import BadRequestError from "../errors/badRequest.error.js";
+import ConflictError from "../errors/conflict.error.js";
 
-import logger from "../logger/logger";
-import jwt from "../utils/jwt.util";
-import { File, UploadImageInfo, deleteFileWithGCP, getFileBufferWithGCP, uploadFileWithGCP } from "../utils/gcp.util";
+import logger from "../logger/logger.js";
+import jwt from "../utils/jwt.util.js";
+import { File, UploadImageInfo, deleteFileWithGCP, getFileBufferWithGCP, uploadFileWithGCP } from "../utils/gcp.util.js";
 
-import { UserRole } from "../models/userRole.model";
+import { UserRole } from "../models/userRole.model.js";
 
-import UserService from "../services/user.service";
-import UserRoleService from "../services/userRole.service";
-import CoupleService from "../services/couple.service";
+import UserService from "../services/user.service.js";
+import UserRoleService from "../services/userRole.service.js";
+import CoupleService from "../services/couple.service.js";
 
 class CoupleController {
   private ERROR_LOCATION_PREFIX = "couple";
@@ -131,7 +131,8 @@ class CoupleController {
         prevFile = {
           filename: prevThumbnailPath,
           buffer: prevBuffer,
-          mimetype: prevThumbnailType
+          mimetype: prevThumbnailType,
+          size: prevThumbnailSize
         };
       }
 
@@ -174,13 +175,18 @@ class CoupleController {
         });
 
         if (prevFile) {
-          await uploadFileWithGCP({
-            filename: prevFile.filename,
-            buffer: prevFile.buffer,
-            mimetype: prevFile.mimetype
-          });
+          try {
+            await uploadFileWithGCP({
+              filename: prevFile.filename,
+              buffer: prevFile.buffer,
+              mimetype: prevFile.mimetype,
+              size: prevFile.size
+            });
 
-          logger.error(`After updating the gcp, a db error occurred and the gcp thumbnail is reuploaded => ${updatedCouple.thumbnail}`);
+            logger.error(`After updating the gcp, a db error occurred and the gcp thumbnail is reuploaded => ${updatedCouple.thumbnail}`);
+          } catch (error) {
+            logger.error(`Previous thumbnail upload error : ${JSON.stringify(error)}`);
+          }
         }
 
         logger.error(`After updating the gcp, a db error occurred and the gcp thumbnail is deleted => ${updatedCouple.thumbnail}`);

@@ -1,4 +1,4 @@
-import { SolutionImage } from "../models/solutionImage.model";
+import { SolutionImage } from "../models/solutionImage.model.js";
 
 export interface ResponseSolutionImageWithAdmin {
   images: SolutionImage[];

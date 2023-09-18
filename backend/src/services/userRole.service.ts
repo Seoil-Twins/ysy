@@ -1,9 +1,9 @@
 import { Transaction } from "sequelize";
 
-import { Service } from "./service";
+import { Service } from "./service.js";
 
-import { Role } from "../models/role.model";
-import { UserRole } from "../models/userRole.model";
+import { Role } from "../models/role.model.js";
+import { UserRole } from "../models/userRole.model.js";
 
 class UserRoleService extends Service {
   getURL(...args: any[]): string {

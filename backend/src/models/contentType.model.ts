@@ -1,7 +1,7 @@
 import { DataTypes, Model } from "sequelize";
 import { InferAttributes, InferCreationAttributes } from "sequelize/types/model";
 
-import sequelize from ".";
+import sequelize from "./index.js";
 
 export class ContentType extends Model<InferAttributes<ContentType>, InferCreationAttributes<ContentType>> {
   declare contentTypeId: string;

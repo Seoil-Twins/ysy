@@ -1,4 +1,4 @@
-import { InquiryImage } from "../models/inquiryImage.model";
+import { InquiryImage } from "../models/inquiryImage.model.js";
 
 export interface InquiryImageResponseWithCount {
   images: InquiryImage[];

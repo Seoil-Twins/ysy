@@ -1,19 +1,20 @@
 import { DataTypes, Model, literal } from "sequelize";
 import { CreationOptional, InferAttributes, InferCreationAttributes } from "sequelize/types/model";
 
-import sequelize, { applyDateHook } from ".";
+import sequelize, { applyDateHook } from "./index.js";
+import { Culture } from "./culture.model.js";
 
-export class VenuesImage extends Model<InferAttributes<VenuesImage>, InferCreationAttributes<VenuesImage>> {
-  declare venuesImageId: CreationOptional<number>;
+export class CultureImage extends Model<InferAttributes<CultureImage>, InferCreationAttributes<CultureImage>> {
+  declare cultureImageId: CreationOptional<number>;
   declare contentId: string;
   declare path: string;
   declare createdTime: CreationOptional<Date>;
 }
 
-VenuesImage.init(
+CultureImage.init(
   {
-    venuesImageId: {
-      field: "venues_image_id",
+    cultureImageId: {
+      field: "culture_image_id",
       type: DataTypes.INTEGER.UNSIGNED,
       autoIncrement: true,
       primaryKey: true
@@ -21,7 +22,11 @@ VenuesImage.init(
     contentId: {
       field: "content_id",
       type: DataTypes.STRING,
-      allowNull: false
+      allowNull: false,
+      references: {
+        model: Culture,
+        key: "contentId"
+      }
     },
     path: {
       type: DataTypes.STRING(200),
@@ -35,9 +40,9 @@ VenuesImage.init(
   },
   {
     sequelize: sequelize,
-    tableName: "solution_image",
+    tableName: "culture_image",
     timestamps: false
   }
 );
 
-applyDateHook(VenuesImage);
+applyDateHook(CultureImage);

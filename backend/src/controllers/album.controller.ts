@@ -1,20 +1,20 @@
 import { Transaction } from "sequelize";
 
-import { UNKNOWN_NAME } from "../constants/file.constant";
+import { UNKNOWN_NAME } from "../constants/file.constant.js";
 
-import ForbiddenError from "../errors/forbidden.error";
-import NotFoundError from "../errors/notFound.error";
-import UploadError from "../errors/upload.error";
+import ForbiddenError from "../errors/forbidden.error.js";
+import NotFoundError from "../errors/notFound.error.js";
+import UploadError from "../errors/upload.error.js";
 
-import sequelize from "../models";
-import { Album } from "../models/album.model";
-import { AlbumImage } from "../models/albumImage.model";
+import sequelize from "../models/index.js";
+import { Album } from "../models/album.model.js";
+import { AlbumImage } from "../models/albumImage.model.js";
 
-import { PageOptions, ResponseAlbum, ResponseAlbumFolder } from "../types/album.type";
+import { PageOptions, ResponseAlbum, ResponseAlbumFolder } from "../types/album.type.js";
 
-import logger from "../logger/logger";
-import AlbumService from "../services/album.service";
-import AlbumImageService from "../services/albumImage.service";
+import logger from "../logger/logger.js";
+import AlbumService from "../services/album.service.js";
+import AlbumImageService from "../services/albumImage.service.js";
 
 import {
   DeleteImageInfo,
@@ -25,7 +25,7 @@ import {
   moveFilesWithGCP,
   uploadFileWithGCP,
   uploadFilesWithGCP
-} from "../utils/gcp.util";
+} from "../utils/gcp.util.js";
 
 class AlbumController {
   private ERROR_LOCATION_PREFIX = "album";
@@ -38,8 +38,21 @@ class AlbumController {
   }
 
   async getAlbumsFolder(cupId: string, options: PageOptions): Promise<ResponseAlbumFolder> {
-    const { albums, total }: { albums: Album[]; total: number } = await this.albumService.selectAllForFolder(cupId, options);
-    const response: ResponseAlbumFolder = { albums, total };
+    const response: ResponseAlbumFolder = await this.albumService.selectAllForFolder(cupId, options);
+
+    if (response.total > 0) {
+      for (const album of response.albums) {
+        if (album.thumbnail) continue;
+
+        const image: AlbumImage | null = await this.albumImageService.select(album.albumId);
+
+        if (image) {
+          album.thumbnail = image.path;
+          album.thumbnailSize = image.size;
+          album.thumbnailType = image.type;
+        }
+      }
+    }
 
     return response;
   }
@@ -87,7 +100,13 @@ class AlbumController {
       if (transaction) await transaction.rollback();
 
       if (error instanceof UploadError) {
-        deleteFilesWithGCP(error.errors);
+        const rollbackFiles: DeleteImageInfo[] = error.errors.map((info: DeleteImageInfo) => {
+          return {
+            ...info,
+            location: "album/addImages"
+          };
+        });
+        deleteFilesWithGCP(rollbackFiles);
       }
 
       logger.error(`Album Create Error ${JSON.stringify(error)}`);
@@ -184,16 +203,21 @@ class AlbumController {
         deleteFilesWithGCP(finded);
       }
 
-      if (prevThumbnails && movedPaths.length > 0) {
-        uploadFilesWithGCP(
-          prevThumbnails.map((thumbnail) => {
-            return {
-              buffer: thumbnail.buffer,
-              filename: thumbnail.path,
-              mimetype: thumbnail.mimetype
-            };
-          })
-        );
+      try {
+        if (prevThumbnails && movedPaths.length > 0) {
+          uploadFilesWithGCP(
+            prevThumbnails.map((thumbnail) => {
+              return {
+                buffer: thumbnail.buffer,
+                filename: thumbnail.path,
+                mimetype: thumbnail.mimetype,
+                size: thumbnail.size
+              };
+            })
+          );
+        }
+      } catch (error) {
+        logger.error(`Previous thumbnail upload error : ${JSON.stringify(error)}`);
       }
 
       logger.error(`Merge Album Error : ${JSON.stringify(error)}`);
@@ -237,7 +261,8 @@ class AlbumController {
         prevFile = {
           filename: prevAlbumPath,
           buffer: prevBuffer,
-          mimetype: prevAlbumType
+          mimetype: prevAlbumType,
+          size: prevAlbumSize
         };
       }
 
@@ -277,12 +302,17 @@ class AlbumController {
           type: updatedAlbum.thumbnailType ? updatedAlbum.thumbnailType : UNKNOWN_NAME
         });
 
-        if (prevFile) {
-          await uploadFileWithGCP({
-            filename: prevFile.filename,
-            buffer: prevFile.buffer,
-            mimetype: prevFile.mimetype
-          });
+        try {
+          if (prevFile) {
+            await uploadFileWithGCP({
+              filename: prevFile.filename,
+              buffer: prevFile.buffer,
+              mimetype: prevFile.mimetype,
+              size: prevFile.size
+            });
+          }
+        } catch (error) {
+          logger.error(`Previous thumbnail upload error : ${JSON.stringify(error)}`);
         }
 
         logger.error(`After updating the gcp, a db error occurred and the gcp thumbnail is deleted => ${updatedAlbum.thumbnail}`);
@@ -346,7 +376,7 @@ class AlbumController {
     else if (albumFolder.cupId !== cupId) throw new ForbiddenError("The ID of the album folder and the body ID don't match.");
 
     const images: AlbumImage[] = await this.albumImageService.selectAll({ albumImageId: imageIds });
-    if (!images.length || images.length <= 0) throw new NotFoundError("Not found images");
+    if (!images.length || images.length <= 0) return;
 
     const imagesOfParam: DeleteImageInfo[] = images.map((image: AlbumImage) => {
       return {
@@ -363,8 +393,8 @@ class AlbumController {
       await this.albumImageService.delete(transaction, imageIds);
       await transaction.commit();
     } catch (error) {
-      logger.error(`Delete album error => ${JSON.stringify(error)}`);
       if (transaction) await transaction.rollback();
+      logger.error(`Delete album error => ${JSON.stringify(error)}`);
 
       throw error;
     }

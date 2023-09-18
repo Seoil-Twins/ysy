@@ -1,21 +1,21 @@
 import { File } from "formidable";
 import { Transaction } from "sequelize";
 
-import sequelize from "../models";
-import { Inquire } from "../models/inquiry.model";
-import { Solution } from "../models/solution.model";
-import { FilterOptions, PageOptions, SearchOptions, SolutionImage, SolutionImageResponseWithCount } from "../models/solutionImage.model";
+import sequelize from "../models/index.js";
+import { Inquire } from "../models/inquiry.model.js";
+import { Solution } from "../models/solution.model.js";
+import { FilterOptions, PageOptions, SearchOptions, SolutionImage, SolutionImageResponseWithCount } from "../models/solutionImage.model.js";
 
-import SolutionAdminService from "../services/solution.admin.service";
-import SolutionImageAdminService from "../services/solutionImage.admin.service";
-import InquireAdminService from "../services/inquire.admin.service";
+import SolutionAdminService from "../services/solution.admin.service.js";
+import SolutionImageAdminService from "../services/solutionImage.admin.service.js";
+import InquireAdminService from "../services/inquire.admin.service.js";
 
-import logger from "../logger/logger";
+import logger from "../logger/logger.js";
 import { deleteFile, deleteFiles } from "../utils/firebase.util";
 
-import UploadError from "../errors/upload.error";
-import BadRequestError from "../errors/badRequest.error";
-import NotFoundError from "../errors/notFound.error";
+import UploadError from "../errors/upload.error.js";
+import BadRequestError from "../errors/badRequest.error.js";
+import NotFoundError from "../errors/notFound.error.js";
 
 class SolutionImageAdminController {
   private solutionAdminService: SolutionAdminService;

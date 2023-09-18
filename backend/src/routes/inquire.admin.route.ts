@@ -4,11 +4,11 @@ import express, { Router, Request, Response, NextFunction } from "express";
 import joi, { ValidationResult } from "joi";
 import formidable from "formidable";
 
-import InquireController from "../controller/inquire.controller";
-import InquireAdminController from "../controller/inquire.admin.controller";
-import InquireService from "../services/inquire.service";
+import InquireController from "../controllers/inquiry.controller";
+import InquireAdminController from "../controllers/inquire.admin.controller";
+import InquireService from "../services/inquiry.service";
 import InquireAdminService from "../services/inquire.admin.service";
-import InquireImageService from "../services/inquireImage.service";
+import InquireImageService from "../services/inquiryImage.service";
 
 import validator from "../utils/validator.util";
 import { canModifyWithEditor, canView } from "../utils/checkRole.util";

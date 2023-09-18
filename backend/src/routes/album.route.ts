@@ -1,29 +1,30 @@
 import express, { Router, Request, Response, NextFunction } from "express";
 import joi, { ValidationResult } from "joi";
 
-import AlbumController from "../controller/album.controller";
-import AlbumService from "../services/album.service";
-import AlbumImageService from "../services/albumImage.service";
+import AlbumController from "../controllers/album.controller.js";
+import AlbumService from "../services/album.service.js";
+import AlbumImageService from "../services/albumImage.service.js";
 
-import logger from "../logger/logger";
-import validator from "../utils/validator.util";
-import { ContentType } from "../utils/router.util";
-import { isDefaultFile, multerUpload } from "../utils/multer";
+import logger from "../logger/logger.js";
+import validator from "../utils/validator.util.js";
+import { ContentType } from "../utils/router.util.js";
+import { isDefaultFile, multerUpload } from "../utils/multer.js";
 
-import { STATUS_CODE } from "../constants/statusCode.constant";
+import { STATUS_CODE } from "../constants/statusCode.constant.js";
 
-import BadRequestError from "../errors/badRequest.error";
-import ForbiddenError from "../errors/forbidden.error";
-import UnsupportedMediaTypeError from "../errors/unsupportedMediaType.error";
+import BadRequestError from "../errors/badRequest.error.js";
+import ForbiddenError from "../errors/forbidden.error.js";
+import UnsupportedMediaTypeError from "../errors/unsupportedMediaType.error.js";
 
-import { Album } from "../models/album.model";
+import { Album } from "../models/album.model.js";
 
-import { ResponseAlbumFolder, ResponseAlbum, PageOptions, SortItem, isSortItem } from "../types/album.type";
+import { ResponseAlbumFolder, ResponseAlbum, PageOptions, SortItem, isSortItem } from "../types/album.type.js";
 
 const router: Router = express.Router();
 const albumService = new AlbumService();
 const albumImageService = new AlbumImageService();
 const albumController = new AlbumController(albumService, albumImageService);
+const MAX_IMAGE_COUNT = 100;
 
 const titleSchema: joi.Schema = joi.object({
   title: joi.string().required()
@@ -64,7 +65,7 @@ router.get("/:cup_id/:album_id", async (req: Request, res: Response, next: NextF
     const albumId: number = Number(req.params.album_id);
     const page: number = !isNaN(Number(req.query.page)) ? Number(req.query.page) : 1;
     const count: number = !isNaN(Number(req.query.count)) ? Number(req.query.count) : 50;
-    const sort: SortItem = isSortItem(req.query.sort) ? req.query.sort : "r";
+    const sort: SortItem = "r";
 
     if (req.cupId !== req.params.cup_id) throw new ForbiddenError("You don't same token couple ID and path parameter couple ID");
     else if (isNaN(albumId)) throw new BadRequestError("Album ID must be a number type");
@@ -101,7 +102,7 @@ router.post("/:cup_id", async (req: Request, res: Response, next: NextFunction) 
 });
 
 // 앨범 사진 추가
-router.post("/:cup_id/:album_id", multerUpload.array("images"), async (req: Request, res: Response, next: NextFunction) => {
+router.post("/:cup_id/:album_id", multerUpload.array("images", MAX_IMAGE_COUNT), async (req: Request, res: Response, next: NextFunction) => {
   const contentType: ContentType = req.contentType;
 
   const createFunc = async (images: Express.Multer.File[]) => {

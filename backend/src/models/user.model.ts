@@ -1,17 +1,20 @@
 import { DataTypes, Model, literal, NonAttribute, InferAttributes, InferCreationAttributes, CreationOptional } from "sequelize";
 
-import sequelize, { applyDateHook } from ".";
-import { Couple } from "./couple.model";
-import { Inquiry } from "./inquiry.model";
-import { UserRole } from "./userRole.model";
+import sequelize, { applyDateHook } from "./index.js";
+import { Couple } from "./couple.model.js";
+import { Inquiry } from "./inquiry.model.js";
+import { UserRole } from "./userRole.model.js";
+import { Admin } from "./admin.model.js";
 
 export class User extends Model<InferAttributes<User>, InferCreationAttributes<User>> {
   /** If you use include couple, You can use couple field. */
   declare couple?: NonAttribute<Couple>;
-  /** If you use include inquire, You can use inquire field. */
+  /** If you use include inquiry, You can use inquire field. */
   declare inquires?: NonAttribute<Inquiry[]>;
-  /** If you use include inquire, You can use inquire field. */
+  /** If you use include userRole, You can use inquire field. */
   declare userRole?: NonAttribute<UserRole>;
+  /** If you use include admin, You can use inquire field. */
+  declare admin?: NonAttribute<Admin>;
 
   declare userId: CreationOptional<number>;
   declare cupId: CreationOptional<string | null>;

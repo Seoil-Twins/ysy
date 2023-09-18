@@ -1,8 +1,8 @@
 import { DataTypes, Model, literal } from "sequelize";
 import { CreationOptional, InferAttributes, InferCreationAttributes } from "sequelize/types/model";
 
-import sequelize, { applyDateHook } from ".";
-import { Solution } from "./solution.model";
+import sequelize, { applyDateHook } from "./index.js";
+import { Solution } from "./solution.model.js";
 
 export class SolutionImage extends Model<InferAttributes<SolutionImage>, InferCreationAttributes<SolutionImage>> {
   declare solutionImageId: CreationOptional<number>;

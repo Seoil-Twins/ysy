@@ -13,7 +13,7 @@ import InternalServerError from "../errors/internalServer.error";
 import SolutionAdminService from "../services/solution.admin.service";
 import SolutionImageAdminService from "../services/solutionImage.admin.service";
 import InquireAdminService from "../services/inquire.admin.service";
-import SolutionImageAdminController from "../controller/solutionImage.admin.controller";
+import SolutionImageAdminController from "../controllers/solutionImage.admin.controller";
 
 const router: Router = express.Router();
 const solutionService: SolutionAdminService = new SolutionAdminService();

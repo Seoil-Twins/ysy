@@ -1,9 +1,9 @@
 import { DataTypes, Model, NonAttribute } from "sequelize";
 import { CreationOptional, InferAttributes, InferCreationAttributes } from "sequelize/types/model";
 
-import sequelize from ".";
-import { Role } from "./role.model";
-import { User } from "./user.model";
+import sequelize from "./index.js";
+import { Role } from "./role.model.js";
+import { User } from "./user.model.js";
 
 export class UserRole extends Model<InferAttributes<UserRole>, InferCreationAttributes<UserRole>> {
   declare role: NonAttribute<Role>;

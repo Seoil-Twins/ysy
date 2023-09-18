@@ -1,8 +1,8 @@
 import { NextFunction, Request, Response } from "express";
 
-import UnsupportedMediaTypeError from "../errors/unsupportedMediaType.error";
+import UnsupportedMediaTypeError from "../errors/unsupportedMediaType.error.js";
 
-import { checkFormdataType } from "../utils/router.util";
+import { checkFormdataType } from "../utils/router.util.js";
 
 const checkContentType = (req: Request, _res: Response, next: NextFunction) => {
   if (req.method === "POST" || req.method === "PATCH") {

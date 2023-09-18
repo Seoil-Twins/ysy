@@ -1,9 +1,11 @@
-import { Transaction } from "sequelize";
+import { OrderItem, Transaction } from "sequelize";
 
-import { Notice } from "../models/notice.model";
-import { NoticeImage } from "../models/noticeImage.model";
+import { Notice } from "../models/notice.model.js";
+import { NoticeImage } from "../models/noticeImage.model.js";
 
-import { Service } from "./service";
+import { Service } from "./service.js";
+import { PageOptions, ResponseNotice } from "../types/noitce.type.js";
+import { createSortOptions } from "../utils/sort.util.js";
 
 class NoticeSerivce extends Service {
   getURL(...args: any[]): string {
@@ -14,20 +16,20 @@ class NoticeSerivce extends Service {
     throw new Error("Method not implemented.");
   }
 
-  async selectAll(offset: number, count: number): Promise<Notice[]> {
-    const notices: Notice[] = await Notice.findAll({
-      include: [
-        {
-          model: NoticeImage,
-          as: "noticeImages",
-          attributes: { exclude: ["noticeId"] }
-        }
-      ],
+  async selectAll(pageOptions: PageOptions): Promise<ResponseNotice> {
+    const sortOptions: OrderItem = createSortOptions(pageOptions.sort);
+    const offset: number = (pageOptions.page - 1) * pageOptions.count;
+
+    const { rows, count }: { rows: Notice[]; count: number } = await Notice.findAndCountAll({
       offset: offset,
-      limit: count
+      limit: pageOptions.count,
+      order: [sortOptions]
     });
 
-    return notices;
+    return {
+      notices: rows,
+      total: count
+    };
   }
 
   create(transaction: Transaction | null = null, ...args: any[]): Promise<any> {

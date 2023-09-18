@@ -8,18 +8,22 @@
 import express, { Application, Request, Response, NextFunction } from "express";
 import dotenv from "dotenv";
 import dayjs, { PluginFunc } from "dayjs";
-import utc from "dayjs/plugin/utc";
-import isSameOrBefore from "dayjs/plugin/isSameOrBefore";
+import utc from "dayjs/plugin/utc.js";
+import isSameOrBefore from "dayjs/plugin/isSameOrBefore.js";
+import { admin, adminRouter } from "./routes/admin.route.js";
+import boolParser from "express-query-boolean";
 
-import routes from "./routes/index";
+import routes from "./routes/index.js";
 
-import errorHandlerMiddleware from "./middlewares/errorHandler.middleware";
-import morganMiddleware from "./middlewares/morgan.middleware";
+import errorHandlerMiddleware from "./middlewares/errorHandler.middleware.js";
+import morganMiddleware from "./middlewares/morgan.middleware.js";
 
-import association from "./models/association.config";
+import association from "./models/association.config.js";
 
-import logger from "./logger/logger";
-import { ContentType } from "./utils/router.util";
+import logger from "./logger/logger.js";
+import { ContentType } from "./utils/router.util.js";
+
+import job from "./schedulers/fetchTourAPI.js";
 
 dotenv.config();
 association.config();
@@ -60,8 +64,8 @@ dayjs.extend(formattedPlugin);
 
 const app: Application = express();
 const port = 3000;
-const boolParser = require("express-query-boolean");
 
+app.use(admin.options.rootPath, adminRouter);
 app.use(express.json());
 app.use(boolParser());
 app.use(express.urlencoded({ extended: false }));
@@ -87,3 +91,5 @@ process.on("uncaughtException", (error) => {
 });
 
 export const API_ROOT = process.env.API_ROOT || `http://localhost:${port}`;
+
+// job.fetchRestaurant.invoke();

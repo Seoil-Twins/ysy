@@ -1,11 +1,11 @@
 import dotenv from "dotenv";
 import { ApiError, Storage } from "@google-cloud/storage";
 
-import logger from "../logger/logger";
+import logger from "../logger/logger.js";
 
-import { ErrorImage } from "../models/errorImage.model";
-import UploadError from "../errors/upload.error";
-import { UNKNOWN_NAME } from "../constants/file.constant";
+import { ErrorImage } from "../models/errorImage.model.js";
+import UploadError from "../errors/upload.error.js";
+import { UNKNOWN_NAME } from "../constants/file.constant.js";
 
 dotenv.config();
 
@@ -25,7 +25,15 @@ export type File = Express.Multer.File;
 export interface UploadImageInfo {
   filename: string;
   buffer: Buffer;
+  size: number;
   mimetype: string;
+}
+
+export interface UploadResults {
+  path: string;
+  size: number;
+  mimetype: string;
+  isUpload: boolean;
 }
 
 export interface DeleteImageInfo {
@@ -71,32 +79,56 @@ export const uploadFileWithGCP = async (file: UploadImageInfo): Promise<void> =>
 
 /**
  * 다중 이미지를 업로드 합니다.
- * 모두 성공한다면 true를 반환하고, 1개라도 실패하면 false를 반환합니다.
- * 한 개라도 실패하였다면 deleteFiles를 호출해 이미지를 삭제해야합니다.
+ * 모두 성공 했다면 성공한 이미지를 반환하고,
+ * 하나라도 실패했다면 UploadError.errors 안에 성공한 이미지들을 반환합니다.
  * @param files {@link UploadImageInfo UploadImageInfo[]}
- * @returns Promise\<boolean\>
+ * @returns Promise\<{@link UploadResults UploadResults[]}\>
  */
-export const uploadFilesWithGCP = async (files: UploadImageInfo[]): Promise<boolean> => {
-  const promises: any[] = [];
+export const uploadFilesWithGCP = async (files: UploadImageInfo[]): Promise<UploadResults[]> => {
+  const uploadResults: UploadResults[] = [];
 
-  try {
-    for (const file of files) {
+  const uploadPromises = files.map(async (file, idx) => {
+    try {
       const blob = bucket.file(file.filename);
-      promises.push(blob.save(file.buffer, { contentType: file.mimetype }));
+      await blob.save(file.buffer, { contentType: file.mimetype });
+
+      uploadResults.push({
+        path: file.filename,
+        size: file.size,
+        mimetype: file.mimetype,
+        isUpload: true
+      });
+    } catch (error) {
+      logger.warn(`Multiple Image Upload Failed : ${JSON.stringify(error)}`);
+
+      uploadResults.push({
+        path: file.filename,
+        size: file.size,
+        mimetype: file.mimetype,
+        isUpload: false
+      });
     }
+  });
 
-    const results = await Promise.allSettled(promises);
-    const failedResults = results.filter((result) => result.status === "rejected");
+  await Promise.all(uploadPromises);
 
-    if (failedResults.length > 0) {
-      return false;
-    }
+  const successFiles = uploadResults.filter((file) => file.isUpload);
+  const failedFiles = uploadResults.filter((file) => !file.isUpload);
 
-    return true;
-  } catch (error) {
-    logger.warn(`Multiple Image Upload Failed : ${JSON.stringify(error)}`);
-    return false;
+  if (failedFiles.length > 0) {
+    const rollbackFiles: DeleteImageInfo[] = successFiles.map((file) => {
+      return {
+        location: "",
+        path: file.path,
+        size: file.size,
+        type: file.mimetype
+      };
+    });
+
+    throw new UploadError(rollbackFiles, "File Upload Error");
   }
+
+  return successFiles;
 };
 
 export const moveFilesWithGCP = async (rootPath: string, filePaths: string[]): Promise<string[]> => {

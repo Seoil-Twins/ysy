@@ -2,28 +2,24 @@ import dayjs from "dayjs";
 import { InferCreationAttributes, Optional, OrderItem, Transaction, WhereOptions } from "sequelize";
 import { NullishPropertiesOf } from "sequelize/types/utils";
 
-import { UNKNOWN_NAME } from "../constants/file.constant";
+import { UNKNOWN_NAME } from "../constants/file.constant.js";
 
-import logger from "../logger/logger";
-import { createSortOptions } from "../utils/sort.util";
-import { DeleteImageInfo, File, UploadImageInfo, uploadFileWithGCP, uploadFilesWithGCP } from "../utils/gcp.util";
+import logger from "../logger/logger.js";
+import { createSortOptions } from "../utils/sort.util.js";
+import { File, UploadImageInfo, uploadFileWithGCP, uploadFilesWithGCP } from "../utils/gcp.util.js";
 
-import { PageOptions } from "../types/album.type";
+import { PageOptions } from "../types/album.type.js";
 
-import { AlbumImage } from "../models/albumImage.model";
+import { AlbumImage } from "../models/albumImage.model.js";
 
-import { Service } from "./service";
+import { Service } from "./service.js";
 
-import UploadError from "../errors/upload.error";
+import UploadError from "../errors/upload.error.js";
 
 class AlbumImageService extends Service {
   private FOLDER_NAME = "couples";
 
   getURL(...args: any[]): string {
-    throw new Error("Method not implemented.");
-  }
-
-  async select(_transaction: Transaction | null): Promise<any> {
     throw new Error("Method not implemented.");
   }
 
@@ -38,8 +34,13 @@ class AlbumImageService extends Service {
     return `${this.FOLDER_NAME}/${cupId}/${albumId}/${dayjs().valueOf()}_${filename}`;
   }
 
-  private createFolderURL(cupId: string, albumId: number) {
-    return `${this.FOLDER_NAME}/${cupId}/${albumId}/`;
+  async select(albumId: number): Promise<AlbumImage | null> {
+    const image: AlbumImage | null = await AlbumImage.findOne({
+      where: { albumId },
+      order: [["createdTime", "DESC"]]
+    });
+
+    return image;
   }
 
   /**
@@ -98,7 +99,8 @@ class AlbumImageService extends Service {
     await uploadFileWithGCP({
       filename: path,
       buffer: image.buffer,
-      mimetype: image.mimetype
+      mimetype: image.mimetype,
+      size: image.size
     });
     logger.debug(`Create album image => ${path}`);
 
@@ -126,35 +128,20 @@ class AlbumImageService extends Service {
         albumId,
         path,
         size: image.size,
-        type: image.mimetype
+        type: image.mimetype ? image.mimetype : UNKNOWN_NAME
       });
 
       imageInfos.push({
+        filename: path,
         buffer: image.buffer,
         mimetype: image.mimetype,
-        filename: path
+        size: image.size
       });
     });
 
     createdImages = await AlbumImage.bulkCreate(dbInfos, { transaction });
 
-    const isSuccess: boolean = await uploadFilesWithGCP(imageInfos);
-
-    if (!isSuccess) {
-      const deleteFiles: DeleteImageInfo[] = [];
-
-      createdImages.forEach((image: AlbumImage) => {
-        deleteFiles.push({
-          location: "albumImage/createMultiple",
-          path: image.path,
-          size: image.size,
-          type: image.type
-        });
-      });
-
-      throw new UploadError(deleteFiles, "Album Upload Error");
-    }
-
+    await uploadFilesWithGCP(imageInfos);
     return createdImages;
   }
 

@@ -1,5 +1,5 @@
-import AbstractError from "./abstract.error";
-import { STATUS_CODE, ERROR_CODE } from "../constants/statusCode.constant";
+import AbstractError from "./abstract.error.js";
+import { STATUS_CODE, ERROR_CODE } from "../constants/statusCode.constant.js";
 
 class UnsupportedMediaTypeError extends AbstractError {
   constructor(...args: any) {

@@ -1,18 +1,22 @@
 import express, { Router, Request, Response, NextFunction } from "express";
 import joi, { ValidationResult } from "joi";
 
-import CalendarController from "../controller/calendar.controller";
-import CalendarService from "../services/calendar.service";
-import CoupleService from "../services/couple.service";
+import CalendarController from "../controllers/calendar.controller.js";
+import CalendarService from "../services/calendar.service.js";
+import CoupleService from "../services/couple.service.js";
 
-import logger from "../logger/logger";
-import validator from "../utils/validator.util";
-import { STATUS_CODE } from "../constants/statusCode.constant";
+import logger from "../logger/logger.js";
+import validator from "../utils/validator.util.js";
+import { STATUS_CODE } from "../constants/statusCode.constant.js";
 
-import BadRequestError from "../errors/badRequest.error";
-import ForbiddenError from "../errors/forbidden.error";
+import BadRequestError from "../errors/badRequest.error.js";
+import ForbiddenError from "../errors/forbidden.error.js";
+import UnauthorizedError from "../errors/unauthorized.error.js";
+import UnsupportedMediaTypeError from "../errors/unsupportedMediaType.error.js";
 
-import { Calendar, ICreate, IResponse, IUpdate } from "../models/calendar.model";
+import { Calendar } from "../models/calendar.model.js";
+import { CreateCalendar, UpdateCalendar } from "../types/calendar.type.js";
+import { ContentType } from "../utils/router.util.js";
 
 const router: Router = express.Router();
 const calendarService: CalendarService = new CalendarService();
@@ -42,14 +46,15 @@ const updateSchema: joi.Schema = joi
   .with("toDate", "fromDate");
 
 router.get("/:cup_id/:year", async (req: Request, res: Response, next: NextFunction) => {
-  const reqCupId: string = req.params.cup_id;
+  const reqCupId: string | null = req.cupId;
   const year: number = Number(req.params.year);
 
   try {
-    if (req.body.cupId !== req.params.cup_id) throw new ForbiddenError("You don't same token couple ID and path parameter couple ID");
+    if (reqCupId !== req.params.cup_id) throw new ForbiddenError("You don't same token couple ID and path parameter couple ID");
+    else if (!reqCupId) throw new UnauthorizedError("Invalid Token");
     else if (isNaN(year) || req.params.year.length !== 4) throw new BadRequestError("Year must be a number type and 4 length");
 
-    const results: IResponse = await calendarController.getCalendars(reqCupId, year);
+    const results: Calendar[] = await calendarController.getCalendars(reqCupId, year);
 
     logger.debug(`Response Data ${JSON.stringify(results)}`);
     res.status(STATUS_CODE.OK).json(results);
@@ -59,14 +64,19 @@ router.get("/:cup_id/:year", async (req: Request, res: Response, next: NextFunct
 });
 
 router.post("/:cup_id", async (req: Request, res: Response, next: NextFunction) => {
+  const contentType: ContentType = req.contentType;
   const { value, error }: ValidationResult = validator(req.body, postSchema);
 
   try {
-    if (error) throw new BadRequestError(error.message);
-    else if (req.body.cupId !== req.params.cup_id) throw new ForbiddenError("You don't same token couple ID and path parameter couple ID");
+    const cupId: string | null = req.cupId;
 
-    const data: ICreate = {
-      cupId: value.cupId,
+    if (contentType === "form-data") throw new UnsupportedMediaTypeError("This API must have a content-type of 'application/json' unconditionally.");
+    else if (error) throw new BadRequestError(error.message);
+    else if (!cupId) throw new UnauthorizedError("Invalid Token");
+    else if (cupId !== req.params.cup_id) throw new ForbiddenError("You don't same token couple ID and path parameter couple ID");
+
+    const data: CreateCalendar = {
+      cupId,
       title: value.title,
       description: value.description,
       fromDate: value.fromDate,
@@ -82,15 +92,20 @@ router.post("/:cup_id", async (req: Request, res: Response, next: NextFunction) 
 });
 
 router.patch("/:cup_id/:calendar_id", async (req: Request, res: Response, next: NextFunction) => {
-  const { value, error }: ValidationResult = validator(req.body, updateSchema);
+  const contentType: ContentType = req.contentType;
   const calendarId: number = Number(req.params.calendar_id);
+  const { value, error }: ValidationResult = validator(req.body, updateSchema);
 
   try {
-    if (error) throw new BadRequestError(error.message);
-    else if (req.body.cupId !== req.params.cup_id) throw new ForbiddenError("You don't same token couple ID and path parameter couple ID");
+    const cupId: string | null = req.cupId;
+
+    if (contentType === "form-data") throw new UnsupportedMediaTypeError("This API must have a content-type of 'application/json' unconditionally.");
+    else if (error) throw new BadRequestError(error.message);
+    else if (cupId !== req.params.cup_id) throw new ForbiddenError("You don't same token couple ID and path parameter couple ID");
+    else if (!cupId) throw new UnauthorizedError("Invalid Token");
     else if (isNaN(calendarId)) throw new BadRequestError("Calendar ID must be a number type");
 
-    const data: IUpdate = {
+    const data: UpdateCalendar = {
       title: value.title ? value.title : undefined,
       description: value.description ? value.description : undefined,
       fromDate: value.fromDate ? value.fromDate : undefined,
@@ -108,7 +123,9 @@ router.delete("/:cup_id/:calendar_id", async (req: Request, res: Response, next:
   const calendarId: number = Number(req.params.calendar_id);
 
   try {
-    if (req.body.cupId !== req.params.cup_id) throw new ForbiddenError("You don't same token couple ID and path parameter couple ID");
+    const cupId: string | null = req.cupId;
+    if (cupId !== req.params.cup_id) throw new ForbiddenError("You don't same token couple ID and path parameter couple ID");
+    else if (!cupId) throw new UnauthorizedError("Invalid Token");
     else if (isNaN(calendarId)) throw new BadRequestError("Calendar ID must be a number type");
 
     await calendarController.deleteCalendar(calendarId);

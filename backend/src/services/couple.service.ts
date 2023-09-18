@@ -1,17 +1,17 @@
 import dayjs from "dayjs";
 import { FindAttributeOptions, InferAttributes, Transaction } from "sequelize";
 
-import { UNKNOWN_NAME } from "../constants/file.constant";
+import { UNKNOWN_NAME } from "../constants/file.constant.js";
 
-import { API_ROOT } from "..";
+import { API_ROOT } from "../index.js";
 
-import { Couple } from "../models/couple.model";
-import { User } from "../models/user.model";
-import { CreateCouple, UpdateCouple } from "../types/couple.type";
+import { Couple } from "../models/couple.model.js";
+import { User } from "../models/user.model.js";
+import { CreateCouple, UpdateCouple } from "../types/couple.type.js";
 
-import { Service } from "./service";
+import { Service } from "./service.js";
 
-import { File, uploadFileWithGCP } from "../utils/gcp.util";
+import { File, uploadFileWithGCP } from "../utils/gcp.util.js";
 
 class CoupleService extends Service {
   private readonly FOLDER_NAME = "couples";
@@ -99,7 +99,8 @@ class CoupleService extends Service {
       await uploadFileWithGCP({
         filename: path,
         mimetype: thumbnail.mimetype,
-        buffer: thumbnail.buffer
+        buffer: thumbnail.buffer,
+        size: thumbnail.size
       });
     return createdCouple;
   }
@@ -149,9 +150,10 @@ class CoupleService extends Service {
     );
 
     await uploadFileWithGCP({
-      buffer: thumbnail.buffer,
       filename: path,
-      mimetype: thumbnail.mimetype
+      buffer: thumbnail.buffer,
+      mimetype: thumbnail.mimetype,
+      size: thumbnail.size
     });
     return couple;
   }

@@ -1,8 +1,9 @@
 import morgan from "morgan";
 import dotenv from "dotenv";
-import logger from "../logger/logger";
 import { Request, Response } from "express";
 import moment from "moment-timezone";
+
+import logger from "../logger/logger.js";
 
 dotenv.config();
 

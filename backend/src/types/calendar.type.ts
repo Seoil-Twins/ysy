@@ -1,6 +1,7 @@
-import { Calendar } from "../models/calendar.model";
+import { Calendar } from "../models/calendar.model.js";
 
 export interface CreateCalendar {
+  cupId: string;
   title: string;
   description: string;
   fromDate: Date;
@@ -9,10 +10,6 @@ export interface CreateCalendar {
 }
 
 export interface UpdateCalendar extends Partial<CreateCalendar> {}
-
-export interface ResponseCalendar {
-  calendars: Calendar[];
-}
 
 export interface ResponseCalendarWithAdmin {
   calendars: Calendar[];

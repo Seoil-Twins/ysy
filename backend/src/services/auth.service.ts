@@ -1,15 +1,15 @@
 import dayjs from "dayjs";
 import { JwtPayload } from "jsonwebtoken";
 
-import UnauthorizedError from "../errors/unauthorized.error";
+import UnauthorizedError from "../errors/unauthorized.error.js";
 
-import { Login, ResponseToken } from "../types/auth.type";
+import { Login, ResponseToken } from "../types/auth.type.js";
 
-import jwt from "../utils/jwt.util";
-import { del, get } from "../utils/redis.util";
+import jwt from "../utils/jwt.util.js";
+import { del, get } from "../utils/redis.util.js";
 
-import { UserRole } from "../models/userRole.model";
-import { User } from "../models/user.model";
+import { UserRole } from "../models/userRole.model.js";
+import { User } from "../models/user.model.js";
 
 class AuthService {
   /**

@@ -1,9 +1,9 @@
 import { DataTypes, Model, literal, NonAttribute } from "sequelize";
 import { CreationOptional, InferAttributes, InferCreationAttributes } from "sequelize/types/model";
 
-import sequelize, { applyDateHook } from ".";
-import { NoticeImage } from "./noticeImage.model";
-import { User } from "./user.model";
+import sequelize, { applyDateHook } from "./index.js";
+import { NoticeImage } from "./noticeImage.model.js";
+import { User } from "./user.model.js";
 
 export class Notice extends Model<InferAttributes<Notice>, InferCreationAttributes<Notice>> {
   /** If you use include inquireImage, You can use inquireImages field. */

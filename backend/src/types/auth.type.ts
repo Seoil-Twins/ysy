@@ -1,6 +1,7 @@
 export interface Login {
   email: string;
   snsId: string;
+  snsKind: string;
 }
 
 export interface ResponseToken {

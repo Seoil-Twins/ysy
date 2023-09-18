@@ -1,9 +1,9 @@
 import { ErrorRequestHandler, Request, Response, NextFunction } from "express";
 
-import AbstractError from "../errors/abstract.error";
-import logger from "../logger/logger";
+import AbstractError from "../errors/abstract.error.js";
+import logger from "../logger/logger.js";
 
-import { ERROR_CODE, STATUS_CODE } from "../constants/statusCode.constant";
+import { ERROR_CODE, STATUS_CODE } from "../constants/statusCode.constant.js";
 
 const globalErrorHandler: ErrorRequestHandler = (e: any, req: Request, res: Response, next: NextFunction) => {
   logger.debug(`${e}`);

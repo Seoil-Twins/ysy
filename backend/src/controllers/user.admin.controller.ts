@@ -3,29 +3,29 @@ import { Op, Transaction } from "sequelize";
 import { File } from "formidable";
 import { boolean } from "boolean";
 
-import logger from "../logger/logger";
+import logger from "../logger/logger.js";
 import { deleteFile, deleteFiles, deleteFolder } from "../utils/firebase.util";
-import { createDigest } from "../utils/password.util";
+import { createDigest } from "../utils/password.util.js";
 
-import sequelize from "../models";
-import { User, IUserResponseWithCount, PageOptions, SearchOptions, FilterOptions, IUpdateWithAdmin, ICreateWithAdmin } from "../models/user.model";
-import { UserRole } from "../models/userRole.model";
-import { Album } from "../models/album.model";
-import { Calendar } from "../models/calendar.model";
-import { InquireImage } from "../models/inquiryImage.model";
+import sequelize from "../models/index.js";
+import { User, IUserResponseWithCount, PageOptions, SearchOptions, FilterOptions, IUpdateWithAdmin, ICreateWithAdmin } from "../models/user.model.js";
+import { UserRole } from "../models/userRole.model.js";
+import { Album } from "../models/album.model.js";
+import { Calendar } from "../models/calendar.model.js";
+import { InquireImage } from "../models/inquiryImage.model.js";
 
-import NotFoundError from "../errors/notFound.error";
-import ConflictError from "../errors/conflict.error";
+import NotFoundError from "../errors/notFound.error.js";
+import ConflictError from "../errors/conflict.error.js";
 
-import UserAdminService from "../services/user.admin.service";
-import UserService from "../services/user.service";
-import UserRoleService from "../services/userRole.service";
-import InquireService from "../services/inquire.service";
-import AlbumService from "../services/album.service";
-import CalendarService from "../services/calendar.service";
-import CoupleAdminService from "../services/couple.admin.service";
-import InquireImageService from "../services/inquireImage.service";
-import SolutionImageAdminService from "../services/solutionImage.admin.service";
+import UserAdminService from "../services/user.admin.service.js";
+import UserService from "../services/user.service.js";
+import UserRoleService from "../services/userRole.service.js";
+import InquireService from "../services/inquiry.service.js";
+import AlbumService from "../services/album.service.js";
+import CalendarService from "../services/calendar.service.js";
+import CoupleAdminService from "../services/couple.admin.service.js";
+import InquireImageService from "../services/inquiryImage.service.js";
+import SolutionImageAdminService from "../services/solutionImage.admin.service.js";
 
 class UserAdminController {
   private userService: UserService;

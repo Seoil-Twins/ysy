@@ -5,8 +5,8 @@ import express, { Router, Request, Response, NextFunction } from "express";
 import CoupleService from "../services/couple.service";
 import CalendarService from "../services/calendar.service";
 import CalendarAdminService from "../services/calendar.admin.service";
-import CalendarController from "../controller/calendar.controller";
-import CalendarAdminController from "../controller/calendar.admin.controller";
+import CalendarController from "../controllers/calendar.controller";
+import CalendarAdminController from "../controllers/calendar.admin.controller";
 
 import { Calendar, FilterOptions, ICalendarResponseWithCount, ICreate, IUpdate, SearchOptions } from "../models/calendar.model";
 import { PageOptions } from "../models/album.model";
