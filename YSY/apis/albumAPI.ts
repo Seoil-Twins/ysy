@@ -10,7 +10,7 @@ export const albumAPI = {
       return data;
     } catch (error) {
       console.log(error);
-      return error;
+      throw error;
     }
   },
   postNewAlbum: async (cup_id: string, postData: string[]) => {
@@ -20,7 +20,7 @@ export const albumAPI = {
       return data;
     } catch (error) {
       console.log(error);
-      return error;
+      throw error;
     }
   },
 };

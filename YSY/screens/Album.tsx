@@ -34,6 +34,15 @@ import { albumAPI } from '../apis/albumAPI';
 
 const screenWidth = wp('100%');
 
+const handleAddAlbum = async (newAlbumTitle: string) => {
+  const userData = JSON.stringify(await userAPI.getUserMe()); // login 정보 가져오기
+
+  const userParsedData = JSON.parse(userData);
+  const postData = { title: newAlbumTitle };
+
+  console.log(albumAPI.postNewAlbum(userParsedData.cupId, postData));
+};
+
 export const Album = () => {
   const [isAddModalVisible, setIsAddModalVisible] = useState(false);
   const [isSortModalVisible, setIsSortModalVisible] = useState(false);
@@ -89,6 +98,7 @@ export const Album = () => {
       item.count = getAlbumImageCount(item.albumId);
     }
     setFoldersData(parsedData);
+    console.log(parsedData);
     const sortedAlbums = parsedData.albums.sort((a, b) => {
       // 문자열로 된 날짜를 JavaScript Date 객체로 변환하여 비교합니다
       const dateA = new Date(a.createdTime);
@@ -114,6 +124,8 @@ export const Album = () => {
   };
 
   // const data = useQuery('userme', userAPI.getUserMe());
+  // 내 전화번호 변경 -> 화면에 재렌더링
+  // queryClient.invalidateQueries('userme');
   // console.log('useQuery 1 : ' + JSON.stringify(data));
 
   useFocusEffect(
@@ -272,7 +284,7 @@ export const Album = () => {
 
   const handleSortMethodSelect = (sortMethod: string) => {
     setSelectedSortMethod(sortMethod);
-    if (sortMethod == '최신순') {
+    if (sortMethod === '최신순') {
       const sortedAlbums = foldersData.albums.sort((a, b) => {
         const dateA = new Date(a.createdTime);
         const dateB = new Date(b.createdTime);
@@ -284,7 +296,7 @@ export const Album = () => {
       );
       setDummyFolder(folderList);
     }
-    if (sortMethod == '오래된순') {
+    if (sortMethod === '오래된순') {
       const sortedAlbums = foldersData.albums.sort((a, b) => {
         const dateA = new Date(a.createdTime);
         const dateB = new Date(b.createdTime);
@@ -296,7 +308,7 @@ export const Album = () => {
       );
       setDummyFolder(folderList);
     }
-    if (sortMethod == '제목순') {
+    if (sortMethod === '제목순') {
       const sortedAlbums = foldersData.albums.sort((a, b) => {
         const titleA = a.title.toLowerCase(); // 대소문자 구분 없이 정렬하려면 소문자로 변환
         const titleB = b.title.toLowerCase();
@@ -315,7 +327,10 @@ export const Album = () => {
       setDummyFolder(folderList);
     }
 
-    if (sortMethod == '사진많은순') {
+    if (sortMethod === '사진많은순') {
+      if (!Array.isArray(foldersData.albums)) {
+        return;
+      }
       const sortedAlbums = foldersData.albums.sort((a, b) => {
         const countA = a.count; // 대소문자 구분 없이 정렬하려면 소문자로 변환
         const countB = b.count;
@@ -328,7 +343,7 @@ export const Album = () => {
       setDummyFolder(folderList);
     }
 
-    if (sortMethod == '사진적은순') {
+    if (sortMethod === '사진적은순') {
       const sortedAlbums = foldersData.albums.sort((a, b) => {
         const countA = a.count; // 대소문자 구분 없이 정렬하려면 소문자로 변환
         const countB = b.count;
@@ -341,16 +356,6 @@ export const Album = () => {
       setDummyFolder(folderList);
     }
     closeSortModal();
-  };
-
-  const handleAddAlbum = async () => {
-    const userData = JSON.stringify(await userAPI.getUserMe()); // login 정보 가져오기
-
-    const userParsedData = JSON.parse(userData);
-    const postData = { title: 'testTitle' };
-
-    console.log(albumAPI.postNewAlbum(userParsedData.cupId, postData));
-    setIsAddModalVisible(false);
   };
 
   return (
@@ -424,7 +429,10 @@ export const Album = () => {
                 <Text>|</Text>
                 <Text
                   style={styles.modalButtonOk}
-                  onPress={() => handleAddAlbum()}>
+                  onPress={() => {
+                    handleAddAlbum(newAlbumTitle);
+                    setIsAddModalVisible(false);
+                  }}>
                   추가
                 </Text>
               </View>
