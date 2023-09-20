@@ -52,7 +52,7 @@ export interface ResponseDetailCommon {
   modifiedtime: string;
   tel: string;
   telname: string;
-  homepage: string;
+  homepage?: string;
   booktour: string;
   addr1: string;
   addr2: string;
@@ -173,6 +173,29 @@ const REGIONCODE_API_URL = `${ROOT_API_URL}/areaCode1`,
   DETAIL_COMMON_API_URL = `${ROOT_API_URL}/detailCommon1`,
   DETAIL_INTRO_API_URL = `${ROOT_API_URL}/detailIntro1`;
 
+const getHrefURL = (url: string): string => {
+  const regexPattern = /href="([^"]*)"/;
+
+  const match = url.match(regexPattern);
+
+  if (match && match.length > 1) {
+    const hrefValue = match[1];
+    return hrefValue;
+  } else {
+    return url;
+  }
+};
+
+const convertHomepage = (data: ResponseDetailCommon) => {
+  if (data.homepage) {
+    data.homepage = getHrefURL(data.homepage);
+  } else {
+    data.homepage = undefined;
+  }
+
+  return data;
+};
+
 const fetchTourAPI = async (url: string, customParams: any): Promise<any> => {
   try {
     const config = {
@@ -257,7 +280,7 @@ export const fetchDetailCommon = async (contentId: string): Promise<ResponseDeta
   };
 
   const results: ResponseDetailCommon[] | undefined = await fetchTourAPI(DETAIL_COMMON_API_URL, params);
-  return results && results.length > 0 ? results[0] : undefined;
+  return results && results.length > 0 ? convertHomepage(results[0]) : undefined;
 };
 
 export const fetchDetailIntroWithRestaurant = async (contentId: string, contentTypeId: string): Promise<ResponseDetailIntroWithRestaurant | undefined> => {

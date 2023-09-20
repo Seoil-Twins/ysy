@@ -5,56 +5,56 @@ import { NullishPropertiesOf } from "sequelize/lib/utils";
 import InternalServerError from "../errors/internalServer.error.js";
 
 import sequelize from "../models/index.js";
-import { Restaurant } from "../models/restaurant.model.js";
-import { RestaurantImage } from "../models/restaurantImage.model.js";
 import { ContentType } from "../models/contentType.model.js";
+import { Shopping } from "../models/shopping.model.js";
+import { ShoppingImage } from "../models/shoppingImage.model.js";
 
 import {
   ResponsePlace,
   fetchDetailCommon,
   fetchDetailImage,
   fetchAreaBased,
-  fetchDetailIntroWithRestaurant,
-  ResponseDetailIntroWithRestaurant,
   ResponseDetailCommon,
   ResponseDetailImage,
-  replaceEmptyStringToNull
+  replaceEmptyStringToNull,
+  ResponseDetailIntroWithShopping,
+  fetchDetailIntroWithShopping
 } from "../utils/tourAPI.js";
 
-import RestaurantImageService from "../services/restaurantImage.service.js";
-import RestaurantService from "../services/restaurant.service.js";
 import ContentTypeService from "../services/contentType.service.js";
+import ShoppingService from "../services/shopping.service.js";
+import ShoppingImageService from "../services/shoppingImage.service.js";
 
-class RestaurantController {
+class ShoppingController {
   private contentTypeSerivce: ContentTypeService;
-  private restaurantService: RestaurantService;
-  private restaurantImageService: RestaurantImageService;
+  private shoppingService: ShoppingService;
+  private shoppingImageService: ShoppingImageService;
 
-  constructor(contentTypeSerivce: ContentTypeService, restaurantService: RestaurantService, restaurantImageService: RestaurantImageService) {
+  constructor(contentTypeSerivce: ContentTypeService, shoppingService: ShoppingService, shoppingImageService: ShoppingImageService) {
     this.contentTypeSerivce = contentTypeSerivce;
-    this.restaurantService = restaurantService;
-    this.restaurantImageService = restaurantImageService;
+    this.shoppingService = shoppingService;
+    this.shoppingImageService = shoppingImageService;
   }
 
-  async addRestaurants(): Promise<void> {
+  async addShopping(): Promise<void> {
     let transaction: Transaction | undefined = undefined;
 
     try {
       transaction = await sequelize.transaction();
-      const contentType: ContentType | null = await this.contentTypeSerivce.select({ name: "음식점" });
+      const contentType: ContentType | null = await this.contentTypeSerivce.select({ name: "쇼핑" });
       if (!contentType) {
         throw new InternalServerError("Not found ContentTypeID");
       }
 
-      const restaurantDatas: Partial<InferAttributes<Restaurant>>[] = [];
-      const imageDatas: Optional<InferAttributes<RestaurantImage>, NullishPropertiesOf<InferCreationAttributes<RestaurantImage>>>[] = [];
-      const restaurantsWithAPI: ResponsePlace[] = await fetchAreaBased({
-        contentTypeId: 39
+      const shoppingDatas: Partial<InferAttributes<Shopping>>[] = [];
+      const imageDatas: Optional<InferAttributes<ShoppingImage>, NullishPropertiesOf<InferCreationAttributes<ShoppingImage>>>[] = [];
+      const shoppingWithAPI: ResponsePlace[] = await fetchAreaBased({
+        contentTypeId: contentType.contentTypeId
       });
 
-      for (const response of restaurantsWithAPI) {
+      for (const response of shoppingWithAPI) {
         const createdTime = dayjs(response.createdtime, { format: "YYYYMMDDHHmmss" }).toDate();
-        const data: Partial<InferAttributes<Restaurant>> = {
+        const data: Partial<InferAttributes<Shopping>> = {
           contentId: response.contentid,
           contentTypeId: response.contenttypeid,
           title: response.title,
@@ -70,11 +70,11 @@ class RestaurantController {
         const [imageInfo, commonInfo, introInfo]: [
           ResponseDetailImage | undefined,
           ResponseDetailCommon | undefined,
-          ResponseDetailIntroWithRestaurant | undefined
+          ResponseDetailIntroWithShopping | undefined
         ] = await Promise.all([
           fetchDetailImage(response.contentid),
           fetchDetailCommon(response.contentid),
-          fetchDetailIntroWithRestaurant(response.contentid, response.contenttypeid)
+          fetchDetailIntroWithShopping(response.contentid, response.contenttypeid)
         ]);
 
         replaceEmptyStringToNull(imageInfo);
@@ -93,26 +93,20 @@ class RestaurantController {
           data.homepage = commonInfo.homepage;
         }
         if (introInfo) {
-          if (introInfo.kidsfacility === "0") {
-            introInfo.kidsfacility = "없음";
-          } else if (introInfo.kidsfacility === "1") {
-            introInfo.kidsfacility = "있음";
-          }
-
-          data.kidsFacility = introInfo.kidsfacility;
-          data.parking = introInfo.parkingfood;
-          data.restDate = introInfo.restdatefood;
-          data.signatureDish = introInfo.firstmenu;
-          data.smoking = introInfo.smoking;
-          data.telephone = introInfo.infocenterfood;
-          data.useTime = introInfo.opentimefood;
+          data.parking = introInfo.parkingshopping;
+          data.restDate = introInfo.restdateshopping;
+          data.telephone = introInfo.infocentershopping;
+          data.useTime = introInfo.opentime;
+          data.pet = introInfo.chkpetshopping;
+          data.babyCarriage = introInfo.chkbabycarriageshopping;
+          data.saleItem = introInfo.saleitem;
         }
 
-        restaurantDatas.push(data);
+        shoppingDatas.push(data);
       }
 
-      await this.restaurantService.upserts(transaction, restaurantDatas);
-      await this.restaurantImageService.upserts(transaction, imageDatas);
+      await this.shoppingService.upserts(transaction, shoppingDatas);
+      await this.shoppingImageService.upserts(transaction, imageDatas);
       await transaction.commit();
     } catch (error) {
       if (transaction) await transaction.rollback();
@@ -122,4 +116,4 @@ class RestaurantController {
   }
 }
 
-export default RestaurantController;
+export default ShoppingController;

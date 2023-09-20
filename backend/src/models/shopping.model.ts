@@ -5,7 +5,7 @@ import sequelize, { applyDateHook } from "./index.js";
 import { ContentType } from "./contentType.model.js";
 
 export class Shopping extends Model<InferAttributes<Shopping>, InferCreationAttributes<Shopping>> {
-  declare contentId: number;
+  declare contentId: string;
   declare contentTypeId: string;
   declare areaCode: string;
   declare sigunguCode: string;
@@ -16,7 +16,7 @@ export class Shopping extends Model<InferAttributes<Shopping>, InferCreationAttr
   declare mapY: string;
   declare mapLevel: string;
   declare views: number;
-  declare thumbnail: CreationOptional<string>;
+  declare thumbnail: CreationOptional<string | null>;
   declare telephone: CreationOptional<string>;
   declare useTime: CreationOptional<string>;
   declare restDate: CreationOptional<string>;
@@ -115,7 +115,7 @@ Shopping.init(
     },
     saleItem: {
       field: "sale_item",
-      type: DataTypes.STRING(50)
+      type: DataTypes.STRING(200)
     },
     registrationTime: {
       field: "registration_time",

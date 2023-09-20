@@ -5,8 +5,8 @@ import { NullishPropertiesOf } from "sequelize/lib/utils";
 import InternalServerError from "../errors/internalServer.error.js";
 
 import sequelize from "../models/index.js";
-import { Restaurant } from "../models/restaurant.model.js";
-import { RestaurantImage } from "../models/restaurantImage.model.js";
+import { TouristSpot } from "../models/touristSpot.model.js";
+import { TouristSpotImage } from "../models/touristSpotImage.model.js";
 import { ContentType } from "../models/contentType.model.js";
 
 import {
@@ -14,47 +14,47 @@ import {
   fetchDetailCommon,
   fetchDetailImage,
   fetchAreaBased,
-  fetchDetailIntroWithRestaurant,
-  ResponseDetailIntroWithRestaurant,
   ResponseDetailCommon,
   ResponseDetailImage,
-  replaceEmptyStringToNull
+  replaceEmptyStringToNull,
+  ResponseDetailIntroWithTouristSpot,
+  fetchDetailIntroWithTouristSpot
 } from "../utils/tourAPI.js";
 
-import RestaurantImageService from "../services/restaurantImage.service.js";
-import RestaurantService from "../services/restaurant.service.js";
+import TouristSpotService from "../services/touristSpot.service.js";
+import TouristSpotImageService from "../services/touristSpotImage.service.js";
 import ContentTypeService from "../services/contentType.service.js";
 
-class RestaurantController {
+class TouristSpotController {
   private contentTypeSerivce: ContentTypeService;
-  private restaurantService: RestaurantService;
-  private restaurantImageService: RestaurantImageService;
+  private touristSpotService: TouristSpotService;
+  private touristSpotImageService: TouristSpotImageService;
 
-  constructor(contentTypeSerivce: ContentTypeService, restaurantService: RestaurantService, restaurantImageService: RestaurantImageService) {
+  constructor(contentTypeSerivce: ContentTypeService, touristSpotService: TouristSpotService, touristSpotImageService: TouristSpotImageService) {
     this.contentTypeSerivce = contentTypeSerivce;
-    this.restaurantService = restaurantService;
-    this.restaurantImageService = restaurantImageService;
+    this.touristSpotService = touristSpotService;
+    this.touristSpotImageService = touristSpotImageService;
   }
 
-  async addRestaurants(): Promise<void> {
+  async addTouristSpot(): Promise<void> {
     let transaction: Transaction | undefined = undefined;
 
     try {
       transaction = await sequelize.transaction();
-      const contentType: ContentType | null = await this.contentTypeSerivce.select({ name: "음식점" });
+      const contentType: ContentType | null = await this.contentTypeSerivce.select({ name: "관광지" });
       if (!contentType) {
         throw new InternalServerError("Not found ContentTypeID");
       }
 
-      const restaurantDatas: Partial<InferAttributes<Restaurant>>[] = [];
-      const imageDatas: Optional<InferAttributes<RestaurantImage>, NullishPropertiesOf<InferCreationAttributes<RestaurantImage>>>[] = [];
-      const restaurantsWithAPI: ResponsePlace[] = await fetchAreaBased({
-        contentTypeId: 39
+      const touristSpotDatas: Partial<InferAttributes<TouristSpot>>[] = [];
+      const imageDatas: Optional<InferAttributes<TouristSpotImage>, NullishPropertiesOf<InferCreationAttributes<TouristSpotImage>>>[] = [];
+      const touristSpotWithAPI: ResponsePlace[] = await fetchAreaBased({
+        contentTypeId: contentType.contentTypeId
       });
 
-      for (const response of restaurantsWithAPI) {
+      for (const response of touristSpotWithAPI) {
         const createdTime = dayjs(response.createdtime, { format: "YYYYMMDDHHmmss" }).toDate();
-        const data: Partial<InferAttributes<Restaurant>> = {
+        const data: Partial<InferAttributes<TouristSpot>> = {
           contentId: response.contentid,
           contentTypeId: response.contenttypeid,
           title: response.title,
@@ -70,11 +70,11 @@ class RestaurantController {
         const [imageInfo, commonInfo, introInfo]: [
           ResponseDetailImage | undefined,
           ResponseDetailCommon | undefined,
-          ResponseDetailIntroWithRestaurant | undefined
+          ResponseDetailIntroWithTouristSpot | undefined
         ] = await Promise.all([
           fetchDetailImage(response.contentid),
           fetchDetailCommon(response.contentid),
-          fetchDetailIntroWithRestaurant(response.contentid, response.contenttypeid)
+          fetchDetailIntroWithTouristSpot(response.contentid, response.contenttypeid)
         ]);
 
         replaceEmptyStringToNull(imageInfo);
@@ -93,26 +93,20 @@ class RestaurantController {
           data.homepage = commonInfo.homepage;
         }
         if (introInfo) {
-          if (introInfo.kidsfacility === "0") {
-            introInfo.kidsfacility = "없음";
-          } else if (introInfo.kidsfacility === "1") {
-            introInfo.kidsfacility = "있음";
-          }
-
-          data.kidsFacility = introInfo.kidsfacility;
-          data.parking = introInfo.parkingfood;
-          data.restDate = introInfo.restdatefood;
-          data.signatureDish = introInfo.firstmenu;
-          data.smoking = introInfo.smoking;
-          data.telephone = introInfo.infocenterfood;
-          data.useTime = introInfo.opentimefood;
+          data.parking = introInfo.parking;
+          data.restDate = introInfo.restdate;
+          data.telephone = introInfo.infocenter;
+          data.useTime = introInfo.usetime;
+          data.babyCarriage = introInfo.chkbabycarriage;
+          data.pet = introInfo.chkpet;
+          data.useSeason = introInfo.useseason;
         }
 
-        restaurantDatas.push(data);
+        touristSpotDatas.push(data);
       }
 
-      await this.restaurantService.upserts(transaction, restaurantDatas);
-      await this.restaurantImageService.upserts(transaction, imageDatas);
+      await this.touristSpotService.upserts(transaction, touristSpotDatas);
+      await this.touristSpotImageService.upserts(transaction, imageDatas);
       await transaction.commit();
     } catch (error) {
       if (transaction) await transaction.rollback();
@@ -122,4 +116,4 @@ class RestaurantController {
   }
 }
 
-export default RestaurantController;
+export default TouristSpotController;

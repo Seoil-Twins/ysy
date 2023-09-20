@@ -5,7 +5,7 @@ import sequelize, { applyDateHook } from "./index.js";
 import { ContentType } from "./contentType.model.js";
 
 export class Culture extends Model<InferAttributes<Culture>, InferCreationAttributes<Culture>> {
-  declare contentId: number;
+  declare contentId: string;
   declare contentTypeId: string;
   declare areaCode: string;
   declare sigunguCode: string;
@@ -16,7 +16,7 @@ export class Culture extends Model<InferAttributes<Culture>, InferCreationAttrib
   declare mapY: string;
   declare mapLevel: string;
   declare views: number;
-  declare thumbnail: CreationOptional<string>;
+  declare thumbnail: CreationOptional<string | null>;
   declare telephone: CreationOptional<string>;
   declare useTime: CreationOptional<string>;
   declare restDate: CreationOptional<string>;
@@ -89,9 +89,7 @@ Culture.init(
     thumbnail: {
       type: DataTypes.STRING(200)
     },
-    telephone: {
-      type: DataTypes.STRING(100)
-    },
+    telephone: { type: DataTypes.STRING(150) },
     useTime: {
       field: "use_time",
       type: DataTypes.STRING(200)
@@ -104,7 +102,7 @@ Culture.init(
       type: DataTypes.STRING(200)
     },
     parking: {
-      type: DataTypes.STRING(50)
+      type: DataTypes.STRING(100)
     },
     babyCarriage: {
       field: "baby_carriage",
@@ -115,7 +113,7 @@ Culture.init(
     },
     useFee: {
       field: "use_fee",
-      type: DataTypes.STRING(50)
+      type: DataTypes.STRING(200)
     },
     registrationTime: {
       field: "registration_time",

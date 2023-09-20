@@ -5,56 +5,56 @@ import { NullishPropertiesOf } from "sequelize/lib/utils";
 import InternalServerError from "../errors/internalServer.error.js";
 
 import sequelize from "../models/index.js";
-import { Restaurant } from "../models/restaurant.model.js";
-import { RestaurantImage } from "../models/restaurantImage.model.js";
 import { ContentType } from "../models/contentType.model.js";
+import { CultureImage } from "../models/cultureImage.model.js";
+import { Culture } from "../models/culture.model.js";
 
 import {
   ResponsePlace,
   fetchDetailCommon,
   fetchDetailImage,
   fetchAreaBased,
-  fetchDetailIntroWithRestaurant,
-  ResponseDetailIntroWithRestaurant,
   ResponseDetailCommon,
   ResponseDetailImage,
-  replaceEmptyStringToNull
+  replaceEmptyStringToNull,
+  ResponseDetailIntroWithCulture,
+  fetchDetailIntroWithCulture
 } from "../utils/tourAPI.js";
 
-import RestaurantImageService from "../services/restaurantImage.service.js";
-import RestaurantService from "../services/restaurant.service.js";
 import ContentTypeService from "../services/contentType.service.js";
+import CultureService from "../services/culture.service.js";
+import CultureImageService from "../services/cultureImage.service.js";
 
-class RestaurantController {
+class CultureController {
   private contentTypeSerivce: ContentTypeService;
-  private restaurantService: RestaurantService;
-  private restaurantImageService: RestaurantImageService;
+  private cultureService: CultureService;
+  private cultureImageService: CultureImageService;
 
-  constructor(contentTypeSerivce: ContentTypeService, restaurantService: RestaurantService, restaurantImageService: RestaurantImageService) {
+  constructor(contentTypeSerivce: ContentTypeService, cultureService: CultureService, cultureImageService: CultureImageService) {
     this.contentTypeSerivce = contentTypeSerivce;
-    this.restaurantService = restaurantService;
-    this.restaurantImageService = restaurantImageService;
+    this.cultureService = cultureService;
+    this.cultureImageService = cultureImageService;
   }
 
-  async addRestaurants(): Promise<void> {
+  async addCulture(): Promise<void> {
     let transaction: Transaction | undefined = undefined;
 
     try {
       transaction = await sequelize.transaction();
-      const contentType: ContentType | null = await this.contentTypeSerivce.select({ name: "음식점" });
+      const contentType: ContentType | null = await this.contentTypeSerivce.select({ name: "문화시설" });
       if (!contentType) {
         throw new InternalServerError("Not found ContentTypeID");
       }
 
-      const restaurantDatas: Partial<InferAttributes<Restaurant>>[] = [];
-      const imageDatas: Optional<InferAttributes<RestaurantImage>, NullishPropertiesOf<InferCreationAttributes<RestaurantImage>>>[] = [];
-      const restaurantsWithAPI: ResponsePlace[] = await fetchAreaBased({
-        contentTypeId: 39
+      const cultureDatas: Partial<InferAttributes<Culture>>[] = [];
+      const imageDatas: Optional<InferAttributes<CultureImage>, NullishPropertiesOf<InferCreationAttributes<CultureImage>>>[] = [];
+      const cultureWithAPI: ResponsePlace[] = await fetchAreaBased({
+        contentTypeId: contentType.contentTypeId
       });
 
-      for (const response of restaurantsWithAPI) {
+      for (const response of cultureWithAPI) {
         const createdTime = dayjs(response.createdtime, { format: "YYYYMMDDHHmmss" }).toDate();
-        const data: Partial<InferAttributes<Restaurant>> = {
+        const data: Partial<InferAttributes<Culture>> = {
           contentId: response.contentid,
           contentTypeId: response.contenttypeid,
           title: response.title,
@@ -70,11 +70,11 @@ class RestaurantController {
         const [imageInfo, commonInfo, introInfo]: [
           ResponseDetailImage | undefined,
           ResponseDetailCommon | undefined,
-          ResponseDetailIntroWithRestaurant | undefined
+          ResponseDetailIntroWithCulture | undefined
         ] = await Promise.all([
           fetchDetailImage(response.contentid),
           fetchDetailCommon(response.contentid),
-          fetchDetailIntroWithRestaurant(response.contentid, response.contenttypeid)
+          fetchDetailIntroWithCulture(response.contentid, response.contenttypeid)
         ]);
 
         replaceEmptyStringToNull(imageInfo);
@@ -93,26 +93,20 @@ class RestaurantController {
           data.homepage = commonInfo.homepage;
         }
         if (introInfo) {
-          if (introInfo.kidsfacility === "0") {
-            introInfo.kidsfacility = "없음";
-          } else if (introInfo.kidsfacility === "1") {
-            introInfo.kidsfacility = "있음";
-          }
-
-          data.kidsFacility = introInfo.kidsfacility;
-          data.parking = introInfo.parkingfood;
-          data.restDate = introInfo.restdatefood;
-          data.signatureDish = introInfo.firstmenu;
-          data.smoking = introInfo.smoking;
-          data.telephone = introInfo.infocenterfood;
-          data.useTime = introInfo.opentimefood;
+          data.parking = introInfo.parkingculture;
+          data.restDate = introInfo.restdateculture;
+          data.telephone = introInfo.infocenterculture;
+          data.useTime = introInfo.usetimeculture;
+          data.useFee = introInfo.usefee;
+          data.pet = introInfo.chkpetculture;
+          data.babyCarriage = introInfo.chkbabycarriageculture;
         }
 
-        restaurantDatas.push(data);
+        cultureDatas.push(data);
       }
 
-      await this.restaurantService.upserts(transaction, restaurantDatas);
-      await this.restaurantImageService.upserts(transaction, imageDatas);
+      await this.cultureService.upserts(transaction, cultureDatas);
+      await this.cultureImageService.upserts(transaction, imageDatas);
       await transaction.commit();
     } catch (error) {
       if (transaction) await transaction.rollback();
@@ -122,4 +116,4 @@ class RestaurantController {
   }
 }
 
-export default RestaurantController;
+export default CultureController;
