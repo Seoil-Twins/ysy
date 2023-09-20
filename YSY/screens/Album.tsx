@@ -40,7 +40,11 @@ const handleAddAlbum = async (newAlbumTitle: string) => {
   const userParsedData = JSON.parse(userData);
   const postData = { title: newAlbumTitle };
 
-  console.log(albumAPI.postNewAlbum(userParsedData.cupId, postData));
+  try {
+    console.log(albumAPI.postNewAlbum(userParsedData.cupId, postData));
+  } catch (error) {
+    console.log(error);
+  }
 };
 
 export const Album = () => {
@@ -74,43 +78,24 @@ export const Album = () => {
   //   return parsedData;
   // };
 
-  const getAlbumImageCount = (albumId: number) => {
-    // firebase에서 바로 제공해주나?
-    // 임시 코드
-    if (albumId === 1) {
-      return 30;
-    } else if (albumId === 2) {
-      return 20;
-    } else if (albumId === 3) {
-      return 130;
+  const getAlbumFolders = async (sort?: string) => {
+    try {
+      const userData = JSON.stringify(await userAPI.getUserMe()); // login 정보 가져오기
+      const userParsedData = JSON.parse(userData);
+      const data = JSON.stringify(
+        await albumAPI.getAlbumFolder(userParsedData.cupId, sort),
+      );
+      const parsedData = JSON.parse(data);
+
+      setFoldersData(parsedData);
+      console.log(parsedData);
+      const folderList = parsedData.albums.map(
+        (album: { thumbnail: string }) => album.thumbnail,
+      );
+      setDummyFolder(folderList);
+    } catch (error) {
+      console.log(error);
     }
-  };
-
-  const getAlbumFolders = async () => {
-    const userData = JSON.stringify(await userAPI.getUserMe()); // login 정보 가져오기
-    const userParsedData = JSON.parse(userData);
-    const data = JSON.stringify(
-      await albumAPI.getAlbumFolder(userParsedData.cupId),
-    ); // login 정보 가져오기
-    const parsedData = JSON.parse(data);
-
-    for (const item of parsedData.albums) {
-      item.count = getAlbumImageCount(item.albumId);
-    }
-    setFoldersData(parsedData);
-    console.log(parsedData);
-    const sortedAlbums = parsedData.albums.sort((a, b) => {
-      // 문자열로 된 날짜를 JavaScript Date 객체로 변환하여 비교합니다
-      const dateA = new Date(a.createdTime);
-      const dateB = new Date(b.createdTime);
-
-      return dateA - dateB;
-      // return dateB - dateA;
-    });
-    const folderList = sortedAlbums.map(
-      (album: { thumbnail: string }) => album.thumbnail,
-    );
-    setDummyFolder(folderList);
   };
 
   useEffect(() => {
@@ -285,77 +270,22 @@ export const Album = () => {
   const handleSortMethodSelect = (sortMethod: string) => {
     setSelectedSortMethod(sortMethod);
     if (sortMethod === '최신순') {
-      const sortedAlbums = foldersData.albums.sort((a, b) => {
-        const dateA = new Date(a.createdTime);
-        const dateB = new Date(b.createdTime);
-
-        return dateB - dateA;
-      });
-      const folderList = sortedAlbums.map(
-        (album: { thumbnail: string }) => album.thumbnail,
-      );
-      setDummyFolder(folderList);
+      getAlbumFolders('r');
     }
     if (sortMethod === '오래된순') {
-      const sortedAlbums = foldersData.albums.sort((a, b) => {
-        const dateA = new Date(a.createdTime);
-        const dateB = new Date(b.createdTime);
-
-        return dateA - dateB;
-      });
-      const folderList = sortedAlbums.map(
-        (album: { thumbnail: string }) => album.thumbnail,
-      );
-      setDummyFolder(folderList);
+      getAlbumFolders('o');
     }
     if (sortMethod === '제목순') {
-      const sortedAlbums = foldersData.albums.sort((a, b) => {
-        const titleA = a.title.toLowerCase(); // 대소문자 구분 없이 정렬하려면 소문자로 변환
-        const titleB = b.title.toLowerCase();
-
-        if (titleA < titleB) {
-          return -1; // a가 b보다 작으면 -1 반환 (a를 b보다 앞에 배치)
-        } else if (titleA > titleB) {
-          return 1; // a가 b보다 크면 1 반환 (a를 b보다 뒤에 배치)
-        } else {
-          return 0; // 같은 경우 0 반환 (순서 변경 없음)
-        }
-      });
-      const folderList = sortedAlbums.map(
-        (album: { thumbnail: string }) => album.thumbnail,
-      );
-      setDummyFolder(folderList);
+      getAlbumFolders('t');
     }
 
     if (sortMethod === '사진많은순') {
-      if (!Array.isArray(foldersData.albums)) {
-        return;
-      }
-      const sortedAlbums = foldersData.albums.sort((a, b) => {
-        const countA = a.count; // 대소문자 구분 없이 정렬하려면 소문자로 변환
-        const countB = b.count;
-
-        return countB - countA;
-      });
-      const folderList = sortedAlbums.map(
-        (album: { thumbnail: string }) => album.thumbnail,
-      );
-      setDummyFolder(folderList);
+      getAlbumFolders('im');
     }
 
     if (sortMethod === '사진적은순') {
-      const sortedAlbums = foldersData.albums.sort((a, b) => {
-        const countA = a.count; // 대소문자 구분 없이 정렬하려면 소문자로 변환
-        const countB = b.count;
-
-        return countA - countB;
-      });
-      const folderList = sortedAlbums.map(
-        (album: { thumbnail: string }) => album.thumbnail,
-      );
-      setDummyFolder(folderList);
+      getAlbumFolders('il');
     }
-    closeSortModal();
   };
 
   return (
