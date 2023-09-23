@@ -61,7 +61,8 @@ TouristSpot.init(
       allowNull: false
     },
     description: {
-      type: DataTypes.TEXT
+      type: DataTypes.TEXT,
+      allowNull: false
     },
     address: {
       type: DataTypes.STRING(100),
@@ -98,7 +99,7 @@ TouristSpot.init(
     },
     restDate: {
       field: "rest_date",
-      type: DataTypes.STRING(100)
+      type: DataTypes.STRING(200)
     },
     homepage: {
       type: DataTypes.STRING(200)

@@ -219,7 +219,7 @@ const fetchTourAPI = async (url: string, customParams: any): Promise<any> => {
             logger.error(`Tour API Error because invalid API Key. Please change tour API key ${JSON.stringify(response.data)}`);
             throw new InternalServerError(`Tour API Error because invalid API Key. Please change tour API key`);
           } else {
-            logger.error(`Tour API Error ${JSON.stringify(response.data)}`);
+            logger.error(`Tour API Error in global error ${JSON.stringify(response.data)}`);
             return undefined;
           }
         }
@@ -256,8 +256,14 @@ export const fetchAreaBased = async (customParams?: any): Promise<ResponsePlace[
     numOfRows: 100
   };
 
-  const results: ResponsePlace[] | undefined = await fetchTourAPI(AREABASED_API_URL, params);
-  return results ? results : [];
+  const response: ResponsePlace[] | undefined = await fetchTourAPI(AREABASED_API_URL, params);
+
+  if (response) {
+    const results: ResponsePlace[] = response.filter((result: ResponsePlace) => result.areacode.trim() !== "" && result.sigungucode.trim() !== "");
+    return results;
+  } else {
+    return [];
+  }
 };
 
 export const fetchDetailImage = async (contentId: string): Promise<ResponseDetailImage | undefined> => {
@@ -279,8 +285,17 @@ export const fetchDetailCommon = async (contentId: string): Promise<ResponseDeta
     overviewYN: "Y"
   };
 
-  const results: ResponseDetailCommon[] | undefined = await fetchTourAPI(DETAIL_COMMON_API_URL, params);
-  return results && results.length > 0 ? convertHomepage(results[0]) : undefined;
+  const response: ResponseDetailCommon[] | undefined = await fetchTourAPI(DETAIL_COMMON_API_URL, params);
+
+  if (response && response.length > 0) {
+    const results: ResponseDetailCommon[] = response.filter(
+      (item: ResponseDetailCommon) => item.overview.trim() !== "" && (item.addr1.trim() !== "" || item.addr1 === null)
+    );
+    const result: ResponseDetailCommon | undefined = convertHomepage(results[0]);
+    return result;
+  } else {
+    return undefined;
+  }
 };
 
 export const fetchDetailIntroWithRestaurant = async (contentId: string, contentTypeId: string): Promise<ResponseDetailIntroWithRestaurant | undefined> => {

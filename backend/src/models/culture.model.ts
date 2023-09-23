@@ -61,7 +61,8 @@ Culture.init(
       allowNull: false
     },
     description: {
-      type: DataTypes.TEXT
+      type: DataTypes.TEXT,
+      allowNull: false
     },
     address: {
       type: DataTypes.STRING(100),
@@ -113,7 +114,7 @@ Culture.init(
     },
     useFee: {
       field: "use_fee",
-      type: DataTypes.STRING(200)
+      type: DataTypes.STRING(300)
     },
     registrationTime: {
       field: "registration_time",
