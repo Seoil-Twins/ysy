@@ -204,6 +204,7 @@ const fetchTourAPI = async (url: string, customParams: any): Promise<any> => {
         ...customParams
       }
     };
+    console.log(url);
     const response: AxiosResponse<any, any> = await axios.get(url, config);
 
     if (response.status === 200) {
@@ -285,7 +286,9 @@ export const fetchDetailCommon = async (contentId: string): Promise<ResponseDeta
     overviewYN: "Y"
   };
 
+  console.log("common before");
   const response: ResponseDetailCommon[] | undefined = await fetchTourAPI(DETAIL_COMMON_API_URL, params);
+  console.log("common after");
 
   if (response && response.length > 0) {
     const results: ResponseDetailCommon[] = response.filter(

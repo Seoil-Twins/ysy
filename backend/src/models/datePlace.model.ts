@@ -1,10 +1,14 @@
 import { DataTypes, Model, literal } from "sequelize";
-import { CreationOptional, InferAttributes, InferCreationAttributes } from "sequelize/types/model";
+import { CreationOptional, InferAttributes, InferCreationAttributes, NonAttribute } from "sequelize/types/model";
 
 import sequelize, { applyDateHook } from "./index.js";
 import { ContentType } from "./contentType.model.js";
+import { User } from "./user.model.js";
 
-export class Restaurant extends Model<InferAttributes<Restaurant>, InferCreationAttributes<Restaurant>> {
+export class DatePlace extends Model<InferAttributes<DatePlace>, InferCreationAttributes<DatePlace>> {
+  /** If you use include couple, You can use couple field. */
+  declare users?: NonAttribute<User>;
+
   declare contentId: string;
   declare contentTypeId: string;
   declare areaCode: string;
@@ -25,11 +29,17 @@ export class Restaurant extends Model<InferAttributes<Restaurant>, InferCreation
   declare kidsFacility: CreationOptional<string>;
   declare smoking: CreationOptional<string>;
   declare signatureDish: CreationOptional<string>;
+  declare babyCarriage: CreationOptional<string>;
+  declare pet: CreationOptional<string>;
+  declare useSeason: CreationOptional<string>;
+  declare useFee: CreationOptional<string>;
+  declare availableAge: CreationOptional<string>;
+  declare saleItem: CreationOptional<string>;
   declare registrationTime: Date;
   declare createdTime: CreationOptional<Date>;
 }
 
-Restaurant.init(
+DatePlace.init(
   {
     contentId: {
       field: "content_id",
@@ -118,6 +128,29 @@ Restaurant.init(
       field: "signature_dish",
       type: DataTypes.STRING(100)
     },
+    babyCarriage: {
+      field: "baby_carriage",
+      type: DataTypes.STRING(50)
+    },
+    pet: {
+      type: DataTypes.STRING(50)
+    },
+    useSeason: {
+      field: "use_season",
+      type: DataTypes.STRING(200)
+    },
+    useFee: {
+      field: "use_fee",
+      type: DataTypes.STRING(300)
+    },
+    availableAge: {
+      field: "available_age",
+      type: DataTypes.STRING(200)
+    },
+    saleItem: {
+      field: "sale_item",
+      type: DataTypes.STRING(200)
+    },
     registrationTime: {
       field: "registration_time",
       type: "TIMESTAMP",
@@ -132,9 +165,9 @@ Restaurant.init(
   },
   {
     sequelize: sequelize,
-    tableName: "restaurant",
+    tableName: "date_place",
     timestamps: false
   }
 );
 
-applyDateHook(Restaurant);
+applyDateHook(DatePlace);

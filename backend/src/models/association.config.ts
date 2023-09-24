@@ -3,26 +3,18 @@ import { Album } from "./album.model.js";
 import { Calendar } from "./calendar.model.js";
 import { ContentType } from "./contentType.model.js";
 import { Couple } from "./couple.model.js";
-import { Culture } from "./culture.model.js";
 import { Favorite } from "./favorite.model.js";
 import { Inquiry } from "./inquiry.model.js";
 import { InquiryImage } from "./inquiryImage.model.js";
 import { Notice } from "./notice.model.js";
 import { NoticeImage } from "./noticeImage.model.js";
-import { Restaurant } from "./restaurant.model.js";
 import { Role } from "./role.model.js";
-import { Shopping } from "./shopping.model.js";
 import { Solution } from "./solution.model.js";
 import { SolutionImage } from "./solutionImage.model.js";
-import { Sports } from "./sports.model.js";
-import { TouristSpot } from "./touristSpot.model.js";
 import { User } from "./user.model.js";
 import { UserRole } from "./userRole.model.js";
-import { RestaurantImage } from "./restaurantImage.model.js";
-import { TouristSpotImage } from "./touristSpotImage.model.js";
-import { CultureImage } from "./cultureImage.model.js";
-import { SportsImage } from "./sportsImage.model.js";
-import { ShoppingImage } from "./shoppingImage.model.js";
+import { DatePlace } from "./datePlace.model.js";
+import { DatePlaceImage } from "./datePlaceImage.model.js";
 import { Admin } from "./admin.model.js";
 
 /**
@@ -218,200 +210,41 @@ export default {
       onUpdate: "CASCADE"
     });
 
-    // ------------------------------------------ ContentType to Restaurant ---------------------------------------- //
-    Restaurant.hasMany(ContentType, {
+    // ------------------------------------------ ContentType to DatePlace ---------------------------------------- //
+    DatePlace.hasMany(ContentType, {
       foreignKey: "contentTypeId",
       as: "contentType"
     });
 
-    ContentType.belongsTo(Restaurant, {
+    ContentType.belongsTo(DatePlace, {
       foreignKey: "contentTypeId",
-      as: "restaurant",
+      as: "datePlace",
       onDelete: "CASCADE",
       onUpdate: "CASCADE"
     });
 
-    // ------------------------------------------ ContentType to TouristSpot ---------------------------------------- //
-    TouristSpot.hasMany(ContentType, {
-      foreignKey: "contentTypeId",
-      as: "contentType"
-    });
-
-    ContentType.belongsTo(TouristSpot, {
-      foreignKey: "contentTypeId",
-      as: "touristSpot",
-      onDelete: "CASCADE",
-      onUpdate: "CASCADE"
-    });
-
-    // ------------------------------------------ ContentType to Culture ---------------------------------------- //
-    Culture.hasMany(ContentType, {
-      foreignKey: "contentTypeId",
-      as: "contentType"
-    });
-
-    ContentType.belongsTo(Culture, {
-      foreignKey: "contentTypeId",
-      as: "culture",
-      onDelete: "CASCADE",
-      onUpdate: "CASCADE"
-    });
-
-    // ------------------------------------------ ContentType to Sports ---------------------------------------- //
-    Sports.hasMany(ContentType, {
-      foreignKey: "contentTypeId",
-      as: "contentType"
-    });
-
-    ContentType.belongsTo(Sports, {
-      foreignKey: "contentTypeId",
-      as: "sports",
-      onDelete: "CASCADE",
-      onUpdate: "CASCADE"
-    });
-
-    // ------------------------------------------ ContentType to Shopping ---------------------------------------- //
-    Shopping.hasMany(ContentType, {
-      foreignKey: "contentTypeId",
-      as: "contentType"
-    });
-
-    ContentType.belongsTo(Shopping, {
-      foreignKey: "contentTypeId",
-      as: "shopping",
-      onDelete: "CASCADE",
-      onUpdate: "CASCADE"
-    });
-
-    // ------------------------------------------ Restaurant to Restaurant Image ---------------------------------------- //
-    Restaurant.hasMany(RestaurantImage, {
+    // ------------------------------------------ DatePlace to DatePlace Image ---------------------------------------- //
+    DatePlace.hasMany(DatePlaceImage, {
       foreignKey: "contentId",
-      as: "images"
+      as: "datePlaceImages"
     });
 
-    RestaurantImage.belongsTo(Restaurant, {
+    DatePlaceImage.belongsTo(DatePlace, {
       foreignKey: "contentId",
-      as: "restaurantImages"
+      as: "datePlace"
     });
 
-    // ------------------------------------------ TouristSpot to TouristSpot Image ---------------------------------------- //
-    TouristSpot.hasMany(TouristSpotImage, {
-      foreignKey: "contentId",
-      as: "images"
-    });
-
-    TouristSpotImage.belongsTo(TouristSpot, {
-      foreignKey: "contentId",
-      as: "touristSpotImages"
-    });
-
-    // ------------------------------------------ Culture to Culture Image ---------------------------------------- //
-    Culture.hasMany(CultureImage, {
-      foreignKey: "contentId",
-      as: "images"
-    });
-
-    CultureImage.belongsTo(Culture, {
-      foreignKey: "contentId",
-      as: "cultureImages"
-    });
-
-    // ------------------------------------------ Sports to Sports Image ---------------------------------------- //
-    Sports.hasMany(SportsImage, {
-      foreignKey: "contentId",
-      as: "images"
-    });
-
-    SportsImage.belongsTo(Sports, {
-      foreignKey: "contentId",
-      as: "sportsImages"
-    });
-
-    // ------------------------------------------ Shopping to Shopping Image ---------------------------------------- //
-    Shopping.hasMany(ShoppingImage, {
-      foreignKey: "contentId",
-      as: "images"
-    });
-
-    ShoppingImage.belongsTo(Shopping, {
-      foreignKey: "contentId",
-      as: "shoppingImages"
-    });
-
-    // ------------------------------------------ User to Favorite ---------------------------------------- //
-    User.hasMany(Favorite, {
+    // ------------------------------------------ User, DatePlace,  Favorite ---------------------------------------- //
+    User.belongsToMany(DatePlace, {
+      through: Favorite,
       foreignKey: "userId",
       as: "favorites"
     });
 
-    Favorite.belongsTo(User, {
-      foreignKey: "userId",
-      as: "user",
-      onDelete: "CASCADE",
-      onUpdate: "CASCADE"
-    });
-
-    Favorite.belongsTo(ContentType, {
-      foreignKey: "contentTypeId",
-      as: "contentType",
-      onDelete: "CASCADE",
-      onUpdate: "CASCADE"
-    });
-
-    // ------------------------------------------ Favorite to Restaurant, TouristSpot, Culture, Sports, Shopping ---------------------------------------- //
-    Restaurant.hasMany(Favorite, {
+    DatePlace.belongsToMany(User, {
+      through: Favorite,
       foreignKey: "contentId",
-      as: "id"
-    });
-
-    TouristSpot.hasMany(Favorite, {
-      foreignKey: "contentId",
-      as: "id"
-    });
-
-    Culture.hasMany(Favorite, {
-      foreignKey: "contentId",
-      as: "id"
-    });
-
-    Sports.hasMany(Favorite, {
-      foreignKey: "contentId",
-      as: "id"
-    });
-
-    Shopping.hasMany(Favorite, {
-      foreignKey: "contentId",
-      as: "id"
-    });
-
-    Favorite.belongsTo(Restaurant, {
-      foreignKey: "contentId",
-      onDelete: "CASCADE",
-      onUpdate: "CASCADE"
-    });
-
-    Favorite.belongsTo(TouristSpot, {
-      foreignKey: "contentId",
-      onDelete: "CASCADE",
-      onUpdate: "CASCADE"
-    });
-
-    Favorite.belongsTo(Culture, {
-      foreignKey: "contentId",
-      onDelete: "CASCADE",
-      onUpdate: "CASCADE"
-    });
-
-    Favorite.belongsTo(Sports, {
-      foreignKey: "contentId",
-      onDelete: "CASCADE",
-      onUpdate: "CASCADE"
-    });
-
-    Favorite.belongsTo(Shopping, {
-      foreignKey: "contentId",
-      onDelete: "CASCADE",
-      onUpdate: "CASCADE"
+      as: "users"
     });
   }
 };
