@@ -2,6 +2,7 @@ import dayjs from "dayjs";
 import { InferAttributes, InferCreationAttributes, Optional, Transaction } from "sequelize";
 import { NullishPropertiesOf } from "sequelize/lib/utils";
 
+import NotFoundError from "../errors/notFound.error.js";
 import InternalServerError from "../errors/internalServer.error.js";
 
 import sequelize from "../models/index.js";
@@ -34,7 +35,7 @@ import ContentTypeService from "../services/contentType.service.js";
 import DatePlaceService from "../services/datePlace.service.js";
 import DatePlaceImageService from "../services/datePlaceImage.service.js";
 
-import { FilterOptions, PageOptions, ResponseDatePlace, SearchOptions } from "../types/datePlace.type.js";
+import { FilterOptions, PageOptions, ResponseDatePlace, ResponseItem, SearchOptions } from "../types/datePlace.type.js";
 
 class DatePlaceController {
   private pageNo = 2;
@@ -56,8 +57,20 @@ class DatePlaceController {
     this.pageNo += 1;
   }
 
+  async getDatePlace(userId: number, contentId: string): Promise<ResponseItem> {
+    const response: ResponseItem | null = await this.datePlaceService.selectOne(userId, contentId);
+    if (!response) throw new NotFoundError(`Not found date place with using contentId = ${contentId}`);
+
+    return response;
+  }
+
   async getDatePlaces(userId: number, pageOptions: PageOptions, searchOptions: SearchOptions, filterOptions?: FilterOptions): Promise<ResponseDatePlace> {
     const response: ResponseDatePlace = await this.datePlaceService.select(userId, pageOptions, searchOptions, filterOptions);
+    return response;
+  }
+
+  async getDatePlacesWithKeyword(userId: number, keyword: string, pageOptions: PageOptions): Promise<ResponseDatePlace> {
+    const response: ResponseDatePlace = await this.datePlaceService.selectWithKeyword(userId, keyword, pageOptions);
     return response;
   }
 
