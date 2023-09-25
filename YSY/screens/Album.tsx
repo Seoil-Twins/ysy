@@ -56,6 +56,7 @@ export const Album = () => {
   const [isDeleteVisible, setIsDeleteVisible] = useState(false);
   const [isMergeNameVisible, setIsMergeNameVisible] = useState(false);
   const [newAlbumTitle, setNewAlbumTitle] = useState('default');
+  const [mergeAlbumTitle, setMergeAlbumTitle] = useState('default');
 
   const [selectedAlbums, setSelectedAlbums] = useState<string[]>([]);
   const [albumImages, setAlbumImages] = useState<string[]>([]);
@@ -229,30 +230,43 @@ export const Album = () => {
     setIsMergeNameVisible(true);
   };
 
-  const handleMerge = async (newAlbumName: string) => {
-    renewMergeAlbum(selectedAlbums, newAlbumName);
+  const handleMerge = async () => {
+    renewMergeAlbum(selectedAlbums);
     console.log('after' + dummyFolder);
     setIsMergeNameVisible(false);
     setIsMergeVisible(false);
   };
 
-  const createNewAlbumDetail = (
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    seletedAlbumNames: string[],
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    newAlbumName: string,
-  ) => {
+  const createNewAlbumDetail = async (seletedAlbumNames: string[]) => {
     // selectedAlbumNames와 NewAlbumName을 통해 제물들의 이미지들을 하나로 모은 테이블을 생성한는 sql을 날림.
+    // selectedAlbum의 첫번째 인자가 머지의 주축이 되어야한다. 즉, 첫 번째 폴더의 이름을 mergeAlbumTitle로 바꾸고,
+    // 타 앨범의 album_id를 첫번째 인자의 id로 바꾸어버리면 될 거 같다.
+    const album_id = seletedAlbumNames[0];
+    const target_ids = seletedAlbumNames.slice(1);
+
+    const data = {
+      albumId: album_id,
+      targerIds: target_ids,
+      title: mergeAlbumTitle,
+    };
+    try {
+      const userData = JSON.stringify(await userAPI.getUserMe()); // login 정보 가져오기
+
+      const userParsedData = JSON.parse(userData);
+
+      const res = albumAPI.patchMergeAlbum(userParsedData.cupId, data);
+
+      console.log(res);
+    } catch (error) {
+      console.log(error);
+    }
   };
 
-  const renewMergeAlbum = async (
-    albumNames: string[],
-    newAlbumName: string,
-  ) => {
+  const renewMergeAlbum = async (albumNames: string[]) => {
     const newData = await dummyFolder.filter(
       item => !albumNames.includes(item),
     ); // 데이터 삭제로직
-    createNewAlbumDetail(albumNames, newAlbumName);
+    createNewAlbumDetail(albumNames);
     newData.push(
       'https://fastly.picsum.photos/id/855/500/500.jpg?hmac=TOLIBgvj-ag8FMNpBsnbDWdmC-6i_R9jFJh0qSSBUK8',
     );
@@ -571,8 +585,10 @@ export const Album = () => {
               <Text>새로운 앨범명</Text>
               <TextInput
                 style={styles.input}
-                onChangeText={() => {}}
-                defaultValue={'새로운 앨범'}
+                onChangeText={text => {
+                  setMergeAlbumTitle(text);
+                }}
+                defaultValue={'default'}
               />
               <View style={styles.buttonContainer}>
                 <Text
@@ -585,7 +601,7 @@ export const Album = () => {
                 <Text>|</Text>
                 <Text
                   style={styles.modalButtonOk}
-                  onPress={() => handleMerge('새로운 이름')}>
+                  onPress={() => handleMerge()}>
                   생성
                 </Text>
               </View>

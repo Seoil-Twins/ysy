@@ -47,6 +47,12 @@ export const API = {
       return error;
     }
   },
+  patch: async (url: string, data?: any) => {
+    const response = await apiClient.patch(url, { params: data }).then(res => {
+      return res.data;
+    });
+    return response;
+  },
 };
 
 /*
