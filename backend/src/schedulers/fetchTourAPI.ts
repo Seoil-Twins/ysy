@@ -2,7 +2,6 @@ import schedule from "node-schedule";
 import logger from "../logger/logger.js";
 
 import ContentTypeService from "../services/contentType.service.js";
-import FavoriteService from "../services/favorite.service.js";
 import DatePlaceService from "../services/datePlace.service.js";
 import DatePlaceImageService from "../services/datePlaceImage.service.js";
 

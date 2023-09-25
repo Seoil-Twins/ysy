@@ -37,7 +37,7 @@ import DatePlaceImageService from "../services/datePlaceImage.service.js";
 import { FilterOptions, PageOptions, ResponseDatePlace, SearchOptions } from "../types/datePlace.type.js";
 
 class DatePlaceController {
-  private pageNo = 1;
+  private pageNo = 2;
   private contentTypeSerivce: ContentTypeService;
   private datePlaceService: DatePlaceService;
   private datePlaceImageService: DatePlaceImageService;
@@ -73,6 +73,7 @@ class DatePlaceController {
 
       const restaurantDatas: Partial<InferAttributes<DatePlace>>[] = [];
       const imageDatas: Optional<InferAttributes<DatePlaceImage>, NullishPropertiesOf<InferCreationAttributes<DatePlaceImage>>>[] = [];
+
       const restaurantsWithAPI: ResponsePlace[] = await fetchAreaBased({
         contentTypeId: contentType.contentTypeId,
         pageNo: this.pageNo
@@ -117,6 +118,8 @@ class DatePlaceController {
           data.address = `${commonInfo.addr1} ${commonInfo.addr2}`.trim();
           data.description = commonInfo.overview;
           data.homepage = commonInfo.homepage;
+        } else {
+          continue;
         }
         if (introInfo) {
           if (introInfo.kidsfacility === "0") {
@@ -203,6 +206,8 @@ class DatePlaceController {
           data.address = `${commonInfo.addr1} ${commonInfo.addr2}`.trim();
           data.description = commonInfo.overview;
           data.homepage = commonInfo.homepage;
+        } else {
+          continue;
         }
         if (introInfo) {
           data.parking = introInfo.parking;
@@ -245,7 +250,7 @@ class DatePlaceController {
         pageNo: this.pageNo
       });
 
-      console.log(cultureWithAPI.length);
+      console.log(cultureWithAPI);
 
       for (const response of cultureWithAPI) {
         count += 1;
@@ -289,6 +294,8 @@ class DatePlaceController {
           data.address = `${commonInfo.addr1} ${commonInfo.addr2}`.trim();
           data.description = commonInfo.overview;
           data.homepage = commonInfo.homepage;
+        } else {
+          continue;
         }
         if (introInfo) {
           data.parking = introInfo.parkingculture;
@@ -369,6 +376,8 @@ class DatePlaceController {
           data.address = `${commonInfo.addr1} ${commonInfo.addr2}`.trim();
           data.description = commonInfo.overview;
           data.homepage = commonInfo.homepage;
+        } else {
+          continue;
         }
         if (introInfo) {
           data.parking = introInfo.parkingleports;
@@ -450,6 +459,8 @@ class DatePlaceController {
           data.address = `${commonInfo.addr1} ${commonInfo.addr2}`.trim();
           data.description = commonInfo.overview;
           data.homepage = commonInfo.homepage;
+        } else {
+          continue;
         }
         if (introInfo) {
           data.parking = introInfo.parkingshopping;

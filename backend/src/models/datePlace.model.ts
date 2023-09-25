@@ -105,7 +105,7 @@ DatePlace.init(
     },
     useTime: {
       field: "use_time",
-      type: DataTypes.STRING(200)
+      type: DataTypes.STRING(300)
     },
     restDate: {
       field: "rest_date",

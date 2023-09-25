@@ -204,7 +204,7 @@ const fetchTourAPI = async (url: string, customParams: any): Promise<any> => {
         ...customParams
       }
     };
-    console.log(url);
+
     const response: AxiosResponse<any, any> = await axios.get(url, config);
 
     if (response.status === 200) {
@@ -260,7 +260,9 @@ export const fetchAreaBased = async (customParams?: any): Promise<ResponsePlace[
   const response: ResponsePlace[] | undefined = await fetchTourAPI(AREABASED_API_URL, params);
 
   if (response) {
-    const results: ResponsePlace[] = response.filter((result: ResponsePlace) => result.areacode.trim() !== "" && result.sigungucode.trim() !== "");
+    const results: ResponsePlace[] = response.filter(
+      (result: ResponsePlace) => result.areacode.trim() !== "" && result.areacode && result.sigungucode.trim() !== "" && result.sigungucode
+    );
     return results;
   } else {
     return [];
@@ -275,7 +277,7 @@ export const fetchDetailImage = async (contentId: string): Promise<ResponseDetai
   };
 
   const results: ResponseDetailImage[] | undefined = await fetchTourAPI(DETAIL_IMAGE_API_URL, params);
-  return results && results.length > 0 ? results[0] : undefined;
+  return results && results.length > 0 && results[0].originimgurl ? results[0] : undefined;
 };
 
 export const fetchDetailCommon = async (contentId: string): Promise<ResponseDetailCommon | undefined> => {
@@ -285,16 +287,16 @@ export const fetchDetailCommon = async (contentId: string): Promise<ResponseDeta
     addrinfoYN: "Y",
     overviewYN: "Y"
   };
-
-  console.log("common before");
   const response: ResponseDetailCommon[] | undefined = await fetchTourAPI(DETAIL_COMMON_API_URL, params);
-  console.log("common after");
 
   if (response && response.length > 0) {
-    const results: ResponseDetailCommon[] = response.filter(
-      (item: ResponseDetailCommon) => item.overview.trim() !== "" && (item.addr1.trim() !== "" || item.addr1 === null)
-    );
-    const result: ResponseDetailCommon | undefined = convertHomepage(results[0]);
+    const isEmpty = response[0].overview && response[0].overview.trim() !== "" && (response[0].addr1.trim() !== "" || response[0].addr1 === null);
+
+    if (isEmpty) {
+      return undefined;
+    }
+
+    const result: ResponseDetailCommon | undefined = convertHomepage(response[0]);
     return result;
   } else {
     return undefined;
