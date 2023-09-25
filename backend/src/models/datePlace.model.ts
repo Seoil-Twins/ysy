@@ -3,11 +3,13 @@ import { CreationOptional, InferAttributes, InferCreationAttributes, NonAttribut
 
 import sequelize, { applyDateHook } from "./index.js";
 import { ContentType } from "./contentType.model.js";
-import { User } from "./user.model.js";
+import { DatePlaceView } from "./datePlaceView.model.js";
+import { Favorite } from "./favorite.model.js";
 
 export class DatePlace extends Model<InferAttributes<DatePlace>, InferCreationAttributes<DatePlace>> {
   /** If you use include couple, You can use couple field. */
-  declare users?: NonAttribute<User>;
+  declare favorites?: NonAttribute<Favorite>;
+  declare datePlaceViews?: NonAttribute<DatePlaceView>;
 
   declare contentId: string;
   declare contentTypeId: string;

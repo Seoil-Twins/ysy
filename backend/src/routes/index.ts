@@ -8,6 +8,7 @@ import calendarRouter from "./calendar.route.js";
 import inquireRouter from "./inquiry.route.js";
 import noticeRouter from "./notice.route.js";
 import datePlaceRouter from "./datePlace.route.js";
+import datePlaceViewRouter from "./datePlaceView.route.js";
 
 import userAdminRouter from "./user.admin.route.js";
 import coupleAdminRouter from "./couple.admin.route.js";
@@ -32,6 +33,7 @@ router.use("/calendar", checkContentType, authMiddleware, calendarRouter);
 router.use("/inquiry", checkContentType, authMiddleware, inquireRouter);
 router.use("/notice", authMiddleware, noticeRouter);
 router.use("/date-place", authMiddleware, datePlaceRouter);
+router.use("/date-place/views", authMiddleware, datePlaceViewRouter);
 
 // router.use("/admin/user", authMiddleware, userAdminRouter);
 // router.use("/admin/couple", authMiddleware, coupleAdminRouter);

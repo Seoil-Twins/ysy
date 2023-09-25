@@ -4,6 +4,7 @@ import sequelize from "./index.js";
 import { CreationOptional, InferAttributes, InferCreationAttributes, NonAttribute } from "sequelize/types/model";
 import { User } from "./user.model.js";
 import { ContentType } from "./contentType.model.js";
+import { DatePlace } from "./datePlace.model.js";
 
 export class Favorite extends Model<InferAttributes<Favorite>, InferCreationAttributes<Favorite>> {
   /** If you use include ContentType, You can use couple field. */
@@ -19,7 +20,7 @@ export class Favorite extends Model<InferAttributes<Favorite>, InferCreationAttr
 Favorite.init(
   {
     favoriteId: {
-      field: "want_id",
+      field: "favorite_id",
       type: DataTypes.INTEGER.UNSIGNED,
       primaryKey: true,
       autoIncrement: true
@@ -36,7 +37,11 @@ Favorite.init(
     contentId: {
       field: "content_id",
       type: DataTypes.STRING,
-      allowNull: false
+      allowNull: false,
+      references: {
+        model: DatePlace,
+        key: "contentId"
+      }
     },
     contentTypeId: {
       field: "content_type_id",

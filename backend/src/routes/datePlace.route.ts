@@ -12,6 +12,7 @@ import DatePlaceImageService from "../services/datePlaceImage.service.js";
 import DatePlaceController from "../controllers/datePlace.controller.js";
 
 import BadRequestError from "../errors/badRequest.error.js";
+import { DatePlace } from "../models/datePlace.model.js";
 
 const router: Router = express.Router();
 const DEFAULT_COUNT = 20;

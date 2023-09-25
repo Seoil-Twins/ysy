@@ -65,7 +65,7 @@ class DatePlaceController {
   }
 
   async getDatePlaces(userId: number, pageOptions: PageOptions, searchOptions: SearchOptions, filterOptions?: FilterOptions): Promise<ResponseDatePlace> {
-    const response: ResponseDatePlace = await this.datePlaceService.select(userId, pageOptions, searchOptions, filterOptions);
+    const response: ResponseDatePlace = await this.datePlaceService.selectForResponse(userId, pageOptions, searchOptions, filterOptions);
     return response;
   }
 

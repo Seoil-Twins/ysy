@@ -1,4 +1,4 @@
-import { InferAttributes, InferCreationAttributes, Op, Optional, OrderItem, Transaction, WhereOptions } from "sequelize";
+import { Includeable, InferAttributes, InferCreationAttributes, Op, Optional, OrderItem, Transaction, WhereOptions } from "sequelize";
 import { NullishPropertiesOf } from "sequelize/lib/utils";
 
 import { Service } from "./service.js";
@@ -8,6 +8,8 @@ import { FilterOptions, PageOptions, ResponseDatePlace, ResponseItem, SearchOpti
 import { DatePlace } from "../models/datePlace.model.js";
 import { User } from "../models/user.model.js";
 import { DatePlaceImage } from "../models/datePlaceImage.model.js";
+import { DatePlaceView } from "../models/datePlaceView.model.js";
+import { Favorite } from "../models/favorite.model.js";
 
 type CreateType = Optional<InferAttributes<DatePlace>, NullishPropertiesOf<InferCreationAttributes<DatePlace>>>[];
 
@@ -37,18 +39,47 @@ class DatePlaceService extends Service {
     return result;
   }
 
-  private deleteUserProperty(items: DatePlace[]): ResponseItem[] {
+  private createIncludes(userId: number): Includeable[] {
+    const includes: Includeable[] = [
+      {
+        model: Favorite,
+        as: "favorites",
+        where: { userId },
+        required: false
+      },
+      {
+        model: DatePlaceView,
+        as: "datePlaceViews",
+        where: { userId },
+        required: false
+      }
+    ];
+
+    return includes;
+  }
+
+  private deleteProperty(items: DatePlace[]): ResponseItem[] {
     const results: ResponseItem[] = items.map((item: DatePlace) => {
       const result = {
         ...item.dataValues,
-        isFavorite: Array.isArray(item.users) && item.users.length > 0 ? true : false
+        isFavorite: Array.isArray(item.favorites) && item.favorites.length > 0 ? true : false,
+        isView: Array.isArray(item.datePlaceViews) && item.datePlaceViews.length > 0 ? true : false
       } as ResponseItem;
 
-      delete result["users"];
+      delete result["favorites"];
+      delete result["datePlaceViews"];
       return result;
     });
 
     return results;
+  }
+
+  async select(where: WhereOptions<DatePlace>): Promise<DatePlace | null> {
+    const datePlace: DatePlace | null = await DatePlace.findOne({
+      where
+    });
+
+    return datePlace;
   }
 
   /**
@@ -60,7 +91,7 @@ class DatePlaceService extends Service {
    * @param filterOptions {@link FilterOptions}
    * @returns Promise\<{@link ResponseDatePlace}\>
    */
-  async select(userId: number, pageOptions: PageOptions, searchOptions: SearchOptions, filterOptions?: FilterOptions): Promise<ResponseDatePlace> {
+  async selectForResponse(userId: number, pageOptions: PageOptions, searchOptions: SearchOptions, filterOptions?: FilterOptions): Promise<ResponseDatePlace> {
     const offset: number = (pageOptions.page - 1) * pageOptions.count;
     const sortOptions: OrderItem | undefined = this.createSortOptions(pageOptions.sort);
 
@@ -80,18 +111,10 @@ class DatePlaceService extends Service {
       order: [sortOptions],
       limit: pageOptions.count,
       offset,
-      include: {
-        model: User,
-        as: "users",
-        where: { userId },
-        required: false,
-        through: {
-          attributes: []
-        }
-      }
+      include: this.createIncludes(userId)
     });
 
-    const results: ResponseItem[] = this.deleteUserProperty(rows);
+    const results: ResponseItem[] = this.deleteProperty(rows);
     return { results, total: count };
   }
 
@@ -118,18 +141,10 @@ class DatePlaceService extends Service {
       order: [sortOptions],
       limit: pageOptions.count,
       offset,
-      include: {
-        model: User,
-        as: "users",
-        where: { userId },
-        required: false,
-        through: {
-          attributes: []
-        }
-      }
+      include: this.createIncludes(userId)
     });
 
-    const results: ResponseItem[] = this.deleteUserProperty(rows);
+    const results: ResponseItem[] = this.deleteProperty(rows);
     return { results, total: count };
   }
 
@@ -148,15 +163,7 @@ class DatePlaceService extends Service {
     const result: DatePlace | null = await DatePlace.findOne({
       where,
       include: [
-        {
-          model: User,
-          as: "users",
-          where: { userId },
-          required: false,
-          through: {
-            attributes: []
-          }
-        },
+        ...this.createIncludes(userId),
         {
           model: DatePlaceImage,
           as: "datePlaceImages",
@@ -168,7 +175,7 @@ class DatePlaceService extends Service {
     });
 
     if (result) {
-      const results: ResponseItem[] = this.deleteUserProperty([result]);
+      const results: ResponseItem[] = this.deleteProperty([result]);
       return results[0];
     } else {
       return result;
@@ -179,8 +186,9 @@ class DatePlaceService extends Service {
     throw new Error("Method not implemented.");
   }
 
-  update(transaction: Transaction | null, ...args: any[]): Promise<any> {
-    throw new Error("Method not implemented.");
+  async update(transaction: Transaction | null, place: DatePlace, data: Partial<InferAttributes<DatePlace>>): Promise<DatePlace> {
+    const updatedDatePlace: DatePlace = await place.update(data, { transaction });
+    return updatedDatePlace;
   }
 
   /**

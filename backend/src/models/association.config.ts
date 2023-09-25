@@ -16,6 +16,7 @@ import { UserRole } from "./userRole.model.js";
 import { DatePlace } from "./datePlace.model.js";
 import { DatePlaceImage } from "./datePlaceImage.model.js";
 import { Admin } from "./admin.model.js";
+import { DatePlaceView } from "./datePlaceView.model.js";
 
 /**
  *  hasMany => 1 : N
@@ -234,17 +235,46 @@ export default {
       as: "datePlace"
     });
 
-    // ------------------------------------------ User, DatePlace,  Favorite ---------------------------------------- //
-    User.belongsToMany(DatePlace, {
-      through: Favorite,
-      foreignKey: "userId",
+    // ------------------------------------------ User to DatePlace ---------------------------------------- //
+    DatePlace.hasMany(Favorite, {
+      foreignKey: "contentId",
       as: "favorites"
     });
 
-    DatePlace.belongsToMany(User, {
-      through: Favorite,
+    User.hasMany(Favorite, {
+      foreignKey: "userId",
+      as: "userFavorites"
+    });
+
+    Favorite.belongsTo(DatePlace, {
       foreignKey: "contentId",
-      as: "users"
+      as: "datePlace"
+    });
+
+    Favorite.belongsTo(User, {
+      foreignKey: "userId",
+      as: "user"
+    });
+
+    // ------------------------------------------ User, DatePlace, to DatePlaceView ---------------------------------------- //
+    DatePlace.hasMany(DatePlaceView, {
+      foreignKey: "contentId",
+      as: "datePlaceViews"
+    });
+
+    User.hasMany(DatePlaceView, {
+      foreignKey: "userId",
+      as: "userViews"
+    });
+
+    DatePlaceView.belongsTo(DatePlace, {
+      foreignKey: "contentId",
+      as: "datePlace"
+    });
+
+    DatePlaceView.belongsTo(User, {
+      foreignKey: "userId",
+      as: "user"
     });
   }
 };

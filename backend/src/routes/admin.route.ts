@@ -20,6 +20,8 @@ import { ContentType } from "../models/contentType.model.js";
 import { RegionCode } from "../models/regionCode.model.js";
 import { DatePlace } from "../models/datePlace.model.js";
 import { DatePlaceImage } from "../models/datePlaceImage.model.js";
+import { DatePlaceView } from "../models/datePlaceView.model.js";
+import { Favorite } from "../models/favorite.model.js";
 
 import { checkPassword } from "../utils/password.util.js";
 import RegionCodeController from "../controllers/regionCode.controller.js";
@@ -191,6 +193,14 @@ const adminOptions: AdminJSOptions = {
     },
     {
       resource: DatePlaceImage,
+      options: actionOptions
+    },
+    {
+      resource: DatePlaceView,
+      options: actionOptions
+    },
+    {
+      resource: Favorite,
       options: actionOptions
     }
   ]

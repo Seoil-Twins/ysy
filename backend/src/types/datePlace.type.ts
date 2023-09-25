@@ -2,6 +2,7 @@ import { DatePlace } from "../models/datePlace.model.js";
 
 export type ResponseItem = DatePlace & {
   isFavorite: boolean;
+  isView: boolean;
 };
 
 export interface ResponseDatePlace {
