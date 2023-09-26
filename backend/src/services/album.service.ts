@@ -86,7 +86,6 @@ class AlbumService extends Service {
       sortOptions = ["total", "DESC"];
     } else {
       sortOptions = createSortOptions(pageOptions.sort);
-      console.log(sortOptions);
     }
 
     const offset: number = (pageOptions.page - 1) * pageOptions.count;

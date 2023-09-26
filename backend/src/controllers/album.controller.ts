@@ -169,7 +169,6 @@ class AlbumController {
 
       deleteFilesWithGCP(
         copyAlbumImages.map((image: AlbumImage) => {
-          console.log("targetImage : ", image.path);
           return {
             location: "album/mergeAlbum",
             path: image.path,
