@@ -14,7 +14,7 @@ export class Favorite extends Model<InferAttributes<Favorite>, InferCreationAttr
   declare userId: number;
   declare contentId: string;
   declare contentTypeId: string;
-  declare createdTime: string;
+  declare createdTime: CreationOptional<string>;
 }
 
 Favorite.init(

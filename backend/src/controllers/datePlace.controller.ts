@@ -121,12 +121,6 @@ class DatePlaceController {
         replaceEmptyStringToNull(commonInfo);
         replaceEmptyStringToNull(introInfo);
 
-        if (imageInfo) {
-          imageDatas.push({
-            contentId: response.contentid,
-            path: imageInfo.originimgurl
-          });
-        }
         if (commonInfo) {
           data.address = `${commonInfo.addr1} ${commonInfo.addr2}`.trim();
           data.description = commonInfo.overview;
@@ -148,6 +142,12 @@ class DatePlaceController {
           data.smoking = introInfo.smoking;
           data.telephone = introInfo.infocenterfood;
           data.useTime = introInfo.opentimefood;
+        }
+        if (imageInfo) {
+          imageDatas.push({
+            contentId: response.contentid,
+            path: imageInfo.originimgurl
+          });
         }
 
         restaurantDatas.push(data);
@@ -209,12 +209,6 @@ class DatePlaceController {
         replaceEmptyStringToNull(commonInfo);
         replaceEmptyStringToNull(introInfo);
 
-        if (imageInfo) {
-          imageDatas.push({
-            contentId: response.contentid,
-            path: imageInfo.originimgurl
-          });
-        }
         if (commonInfo) {
           data.address = `${commonInfo.addr1} ${commonInfo.addr2}`.trim();
           data.description = commonInfo.overview;
@@ -230,6 +224,12 @@ class DatePlaceController {
           data.babyCarriage = introInfo.chkbabycarriage;
           data.pet = introInfo.chkpet;
           data.useSeason = introInfo.useseason;
+        }
+        if (imageInfo) {
+          imageDatas.push({
+            contentId: response.contentid,
+            path: imageInfo.originimgurl
+          });
         }
 
         touristSpotDatas.push(data);
@@ -263,12 +263,7 @@ class DatePlaceController {
         pageNo: this.pageNo
       });
 
-      console.log(cultureWithAPI);
-
       for (const response of cultureWithAPI) {
-        count += 1;
-        console.log("coount", count);
-
         const createdTime = dayjs(response.createdtime, { format: "YYYYMMDDHHmmss" }).toDate();
         const data: Partial<InferAttributes<DatePlace>> = {
           contentId: response.contentid,
@@ -297,12 +292,6 @@ class DatePlaceController {
         replaceEmptyStringToNull(commonInfo);
         replaceEmptyStringToNull(introInfo);
 
-        if (imageInfo) {
-          imageDatas.push({
-            contentId: response.contentid,
-            path: imageInfo.originimgurl
-          });
-        }
         if (commonInfo) {
           data.address = `${commonInfo.addr1} ${commonInfo.addr2}`.trim();
           data.description = commonInfo.overview;
@@ -318,6 +307,12 @@ class DatePlaceController {
           data.useFee = introInfo.usefee;
           data.pet = introInfo.chkpetculture;
           data.babyCarriage = introInfo.chkbabycarriageculture;
+        }
+        if (imageInfo) {
+          imageDatas.push({
+            contentId: response.contentid,
+            path: imageInfo.originimgurl
+          });
         }
 
         cultureDatas.push(data);
@@ -379,12 +374,6 @@ class DatePlaceController {
         replaceEmptyStringToNull(commonInfo);
         replaceEmptyStringToNull(introInfo);
 
-        if (imageInfo) {
-          imageDatas.push({
-            contentId: response.contentid,
-            path: imageInfo.originimgurl
-          });
-        }
         if (commonInfo) {
           data.address = `${commonInfo.addr1} ${commonInfo.addr2}`.trim();
           data.description = commonInfo.overview;
@@ -401,6 +390,12 @@ class DatePlaceController {
           data.babyCarriage = introInfo.chkbabycarriageleports;
           data.useFee = introInfo.usefeeleports;
           data.availableAge = introInfo.expagerangeleports;
+        }
+        if (imageInfo) {
+          imageDatas.push({
+            contentId: response.contentid,
+            path: imageInfo.originimgurl
+          });
         }
 
         sportsDatas.push(data);
@@ -462,12 +457,6 @@ class DatePlaceController {
         replaceEmptyStringToNull(commonInfo);
         replaceEmptyStringToNull(introInfo);
 
-        if (imageInfo) {
-          imageDatas.push({
-            contentId: response.contentid,
-            path: imageInfo.originimgurl
-          });
-        }
         if (commonInfo) {
           data.address = `${commonInfo.addr1} ${commonInfo.addr2}`.trim();
           data.description = commonInfo.overview;
@@ -483,6 +472,12 @@ class DatePlaceController {
           data.pet = introInfo.chkpetshopping;
           data.babyCarriage = introInfo.chkbabycarriageshopping;
           data.saleItem = introInfo.saleitem;
+        }
+        if (imageInfo) {
+          imageDatas.push({
+            contentId: response.contentid,
+            path: imageInfo.originimgurl
+          });
         }
 
         shoppingDatas.push(data);

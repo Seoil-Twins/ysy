@@ -6,7 +6,6 @@ import { Service } from "./service.js";
 import { FilterOptions, PageOptions, ResponseDatePlace, ResponseItem, SearchOptions } from "../types/datePlace.type.js";
 
 import { DatePlace } from "../models/datePlace.model.js";
-import { User } from "../models/user.model.js";
 import { DatePlaceImage } from "../models/datePlaceImage.model.js";
 import { DatePlaceView } from "../models/datePlaceView.model.js";
 import { Favorite } from "../models/favorite.model.js";

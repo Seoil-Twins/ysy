@@ -1,4 +1,4 @@
-import { DataTypes, Model } from "sequelize";
+import { DataTypes, Model, literal } from "sequelize";
 import { CreationOptional, InferAttributes, InferCreationAttributes } from "sequelize/types/model";
 
 import sequelize from "./index.js";
@@ -10,6 +10,7 @@ export class DatePlaceView extends Model<InferAttributes<DatePlaceView>, InferCr
   declare datePlaceViewId: CreationOptional<number>;
   declare userId: number;
   declare contentId: string;
+  declare createdTime: CreationOptional<Date>;
 }
 
 DatePlaceView.init(
@@ -37,6 +38,11 @@ DatePlaceView.init(
         model: DatePlace,
         key: "contentId"
       }
+    },
+    createdTime: {
+      field: "created_time",
+      type: "TIMESTAMP",
+      defaultValue: literal("CURRENT_TIMESTAMP")
     }
   },
   {

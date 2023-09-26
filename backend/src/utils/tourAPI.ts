@@ -290,9 +290,9 @@ export const fetchDetailCommon = async (contentId: string): Promise<ResponseDeta
   const response: ResponseDetailCommon[] | undefined = await fetchTourAPI(DETAIL_COMMON_API_URL, params);
 
   if (response && response.length > 0) {
-    const isEmpty = response[0].overview && response[0].overview.trim() !== "" && (response[0].addr1.trim() !== "" || response[0].addr1 === null);
+    const isNotEmpty = response[0].overview && response[0].overview.trim() !== "" && (response[0].addr1.trim() !== "" || response[0].addr1 === null);
 
-    if (isEmpty) {
+    if (!isNotEmpty) {
       return undefined;
     }
 

@@ -103,7 +103,7 @@ DatePlace.init(
       type: DataTypes.STRING(200)
     },
     telephone: {
-      type: DataTypes.STRING(100)
+      type: DataTypes.STRING(300)
     },
     useTime: {
       field: "use_time",
@@ -111,47 +111,47 @@ DatePlace.init(
     },
     restDate: {
       field: "rest_date",
-      type: DataTypes.STRING(200)
+      type: DataTypes.STRING(300)
     },
     homepage: {
       type: DataTypes.STRING(200)
     },
     parking: {
-      type: DataTypes.STRING(50)
+      type: DataTypes.STRING(300)
     },
     kidsFacility: {
       field: "kids_facility",
-      type: DataTypes.STRING(50)
+      type: DataTypes.STRING(100)
     },
     smoking: {
-      type: DataTypes.STRING(50)
+      type: DataTypes.STRING(100)
     },
     signatureDish: {
       field: "signature_dish",
-      type: DataTypes.STRING(100)
+      type: DataTypes.STRING(200)
     },
     babyCarriage: {
       field: "baby_carriage",
-      type: DataTypes.STRING(50)
+      type: DataTypes.STRING(100)
     },
     pet: {
-      type: DataTypes.STRING(50)
+      type: DataTypes.STRING(100)
     },
     useSeason: {
       field: "use_season",
-      type: DataTypes.STRING(200)
+      type: DataTypes.STRING(400)
     },
     useFee: {
       field: "use_fee",
-      type: DataTypes.STRING(300)
+      type: DataTypes.TEXT
     },
     availableAge: {
       field: "available_age",
-      type: DataTypes.STRING(200)
+      type: DataTypes.STRING(400)
     },
     saleItem: {
       field: "sale_item",
-      type: DataTypes.STRING(200)
+      type: DataTypes.STRING(400)
     },
     registrationTime: {
       field: "registration_time",
