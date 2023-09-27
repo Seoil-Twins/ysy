@@ -16,7 +16,7 @@ export const albumAPI = {
   patchMergeAlbum: async (cup_id: string, data?: string[]) => {
     //const mergeData = { sort: sort };
     console.log(data);
-    const resData = await API.get(`/album/merge/${cup_id}`, data);
+    const resData = await API.patch(`/album/merge/${cup_id}`, data);
     //   console.log('aasdasdas' + JSON.stringify(data));
     return resData;
   },

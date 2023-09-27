@@ -59,6 +59,7 @@ export const Album = () => {
   const [mergeAlbumTitle, setMergeAlbumTitle] = useState('default');
 
   const [selectedAlbums, setSelectedAlbums] = useState<string[]>([]);
+  const [selectedAlbumIds, setSelectedAlbumIds] = useState<string[]>([]);
   const [albumImages, setAlbumImages] = useState<string[]>([]);
   const [dummyFolder, setDummyFolder] = useState<string[]>([]);
   const [foldersData, setFoldersData] = useState<string[]>([]);
@@ -180,6 +181,7 @@ export const Album = () => {
           return [...prevSelectedAlbums, albumName];
         }
       });
+      setSelectedAlbumIds();
     } else {
       // 다중 선택 모드가 아닐 때는 단일 앨범을 선택하는 로직
       if (albumImages.length <= 0) {
@@ -232,7 +234,6 @@ export const Album = () => {
 
   const handleMerge = async () => {
     renewMergeAlbum(selectedAlbums);
-    console.log('after' + dummyFolder);
     setIsMergeNameVisible(false);
     setIsMergeVisible(false);
   };
@@ -243,6 +244,7 @@ export const Album = () => {
     // 타 앨범의 album_id를 첫번째 인자의 id로 바꾸어버리면 될 거 같다.
     const album_id = seletedAlbumNames[0];
     const target_ids = seletedAlbumNames.slice(1);
+    console.log('target' + target_ids);
 
     const data = {
       albumId: album_id,
@@ -253,11 +255,12 @@ export const Album = () => {
       const userData = JSON.stringify(await userAPI.getUserMe()); // login 정보 가져오기
 
       const userParsedData = JSON.parse(userData);
-
+      console.log('11111111111111111111');
       const res = albumAPI.patchMergeAlbum(userParsedData.cupId, data);
-
+      console.log('22222222222222222222');
       console.log(res);
     } catch (error) {
+      console.log('patch error');
       console.log(error);
     }
   };
