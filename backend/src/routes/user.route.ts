@@ -8,7 +8,7 @@ import { CreateUser, UpdateUser, ResponseUser, UpdateUserNotification } from "..
 import logger from "../logger/logger.js";
 import validator from "../utils/validator.util.js";
 import { ContentType } from "../utils/router.util.js";
-import { isDefaultFile, multerUpload } from "../utils/multer.js";
+import { MulterUpdateFile, MulterUploadFile, multerUpload, updateFileFunc, uploadFileFunc } from "../utils/multer.js";
 import { File } from "../utils/gcp.util.js";
 
 import { STATUS_CODE } from "../constants/statusCode.constant.js";
@@ -53,6 +53,9 @@ const updateNofiSchema: joi.Schema = joi.object({
   calendarNofi: joi.boolean()
 });
 
+const fileParamName = "profile";
+const upload = multerUpload.single(fileParamName);
+
 // 내 정보 가져오기
 router.get("/me", async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -66,10 +69,10 @@ router.get("/me", async (req: Request, res: Response, next: NextFunction) => {
 });
 
 // 유저 생성
-router.post("/", multerUpload.single("profile"), async (req: Request, res: Response, next: NextFunction) => {
+router.post("/", async (req: Request, res: Response, next: NextFunction) => {
   const contentType: ContentType | undefined = req.contentType;
 
-  const createFunc = async (req: Request, profile?: File) => {
+  const createFunc = async (profile?: File) => {
     try {
       const { value, error }: ValidationResult = validator(req.body, signupSchema);
 
@@ -94,24 +97,23 @@ router.post("/", multerUpload.single("profile"), async (req: Request, res: Respo
     }
   };
 
-  try {
-    if (contentType === "form-data") {
-      if (!req.file) throw new BadRequestError("You must request profile");
+  upload(req, res, (err) => {
+    const info: MulterUploadFile = {
+      contentType,
+      req,
+      err,
+      next
+    };
 
-      createFunc(req, req.file);
-    } else if (contentType === "json") {
-      createFunc(req, undefined);
-    }
-  } catch (error) {
-    next(error);
-  }
+    uploadFileFunc(info, createFunc);
+  });
 });
 
 // 유저 수정
-router.patch("/:user_id", multerUpload.single("profile"), async (req: Request, res: Response, next: NextFunction) => {
+router.patch("/:user_id", async (req: Request, res: Response, next: NextFunction) => {
   const contentType: ContentType | undefined = req.contentType;
 
-  const updateFunc = async (req: Request, profile?: File | null) => {
+  const updateFunc = async (profile?: File | null) => {
     try {
       const { value, error }: ValidationResult = validator(req.body, updateSchema);
 
@@ -130,23 +132,17 @@ router.patch("/:user_id", multerUpload.single("profile"), async (req: Request, r
     }
   };
 
-  try {
-    if (contentType === "form-data") {
-      if (!req.file) throw new BadRequestError("You must request only one profile.");
+  upload(req, res, (err) => {
+    const info: MulterUpdateFile = {
+      contentType,
+      req,
+      err,
+      fieldname: fileParamName,
+      next
+    };
 
-      updateFunc(req, req.file);
-    } else if (contentType === "json") {
-      let profile: null | undefined = undefined;
-
-      if (isDefaultFile(req.body.profile)) {
-        profile = null;
-      }
-
-      updateFunc(req, profile);
-    }
-  } catch (error) {
-    next(error);
-  }
+    updateFileFunc(info, updateFunc);
+  });
 });
 
 // 유저 알림 수정

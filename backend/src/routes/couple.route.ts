@@ -6,7 +6,7 @@ import { Couple } from "../models/couple.model.js";
 import logger from "../logger/logger.js";
 import validator from "../utils/validator.util.js";
 import { ContentType } from "../utils/router.util.js";
-import { isDefaultFile, multerUpload } from "../utils/multer.js";
+import { MulterUpdateFile, MulterUploadFile, multerUpload, updateFileFunc, uploadFileFunc } from "../utils/multer.js";
 import { File } from "../utils/gcp.util.js";
 
 import { STATUS_CODE } from "../constants/statusCode.constant.js";
@@ -38,6 +38,9 @@ const updateSchema: joi.Schema = joi.object({
   cupDay: joi.date()
 });
 
+const fileParamName = "thumbnail";
+const upload = multerUpload.single(fileParamName);
+
 // 커플 정보 가져오기
 router.get("/:cup_id", async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -56,10 +59,10 @@ router.get("/:cup_id", async (req: Request, res: Response, next: NextFunction) =
 });
 
 // 커플 생성
-router.post("/", multerUpload.single("thumbnail"), async (req: Request, res: Response, next: NextFunction) => {
+router.post("/", async (req: Request, res: Response, next: NextFunction) => {
   const contentType: ContentType | undefined = req.contentType;
 
-  const createFunc = async (req: Request, thumbnail?: File) => {
+  const createFunc = async (thumbnail?: File) => {
     try {
       const { value, error }: ValidationResult = validator(req.body, createSchema);
       if (error) throw new BadRequestError(error.message);
@@ -78,24 +81,23 @@ router.post("/", multerUpload.single("thumbnail"), async (req: Request, res: Res
     }
   };
 
-  try {
-    if (contentType === "form-data") {
-      if (!req.file) throw new BadRequestError("You must request images");
+  upload(req, res, (err) => {
+    const info: MulterUploadFile = {
+      contentType,
+      req,
+      err,
+      next
+    };
 
-      createFunc(req, req.file);
-    } else if (contentType === "json") {
-      createFunc(req, undefined);
-    }
-  } catch (error) {
-    next(error);
-  }
+    uploadFileFunc(info, createFunc);
+  });
 });
 
 // 커플 정보 수정
-router.patch("/:cup_id", multerUpload.single("thumbnail"), async (req: Request, res: Response, next: NextFunction) => {
+router.patch("/:cup_id", async (req: Request, res: Response, next: NextFunction) => {
   const contentType: ContentType = req.contentType;
 
-  const updateFunc = async (req: Request, thumbnail?: File | null) => {
+  const updateFunc = async (thumbnail?: File | null) => {
     try {
       const { value, error }: ValidationResult = validator(req.body, updateSchema);
       if (error) throw new BadRequestError(error.message);
@@ -113,23 +115,17 @@ router.patch("/:cup_id", multerUpload.single("thumbnail"), async (req: Request, 
     }
   };
 
-  try {
-    if (contentType === "form-data") {
-      if (!req.file) throw new BadRequestError("You must request only one thumbnail.");
+  upload(req, res, (err) => {
+    const info: MulterUpdateFile = {
+      contentType,
+      req,
+      err,
+      fieldname: fileParamName,
+      next
+    };
 
-      updateFunc(req, req.file);
-    } else if (contentType === "json") {
-      let thumbnail: null | undefined = undefined;
-
-      if (isDefaultFile(req.body.thumbnail)) {
-        thumbnail = null;
-      }
-
-      updateFunc(req, thumbnail);
-    }
-  } catch (error) {
-    next(error);
-  }
+    updateFileFunc(info, updateFunc);
+  });
 });
 
 // 커플 끊기

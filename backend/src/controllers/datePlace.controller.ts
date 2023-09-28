@@ -38,7 +38,7 @@ import DatePlaceImageService from "../services/datePlaceImage.service.js";
 import { FilterOptions, PageOptions, ResponseDatePlace, ResponseItem, SearchOptions } from "../types/datePlace.type.js";
 
 class DatePlaceController {
-  private pageNo = 2;
+  private pageNo = 4;
   private contentTypeSerivce: ContentTypeService;
   private datePlaceService: DatePlaceService;
   private datePlaceImageService: DatePlaceImageService;
@@ -247,7 +247,6 @@ class DatePlaceController {
 
   async addCulture(): Promise<void> {
     let transaction: Transaction | undefined = undefined;
-    let count = 0;
 
     try {
       transaction = await sequelize.transaction();

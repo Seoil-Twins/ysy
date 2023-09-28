@@ -18,6 +18,7 @@ import AlbumImageService from "../services/albumImage.service.js";
 
 import {
   DeleteImageInfo,
+  File,
   UploadImageInfo,
   deleteFileWithGCP,
   deleteFilesWithGCP,
@@ -80,7 +81,7 @@ class AlbumController {
     return url;
   }
 
-  async addImages(cupId: string, albumId: number, images: Express.Multer.File[]): Promise<string> {
+  async addImages(cupId: string, albumId: number, images: File[]): Promise<string> {
     const albumFolder: Album | null = await this.albumService.select(albumId);
     if (!albumFolder) throw new NotFoundError("Not found album using query parameter album ID");
     else if (albumFolder.cupId !== cupId) throw new ForbiddenError("The ID of the album folder and the body ID don't match.");
@@ -241,7 +242,7 @@ class AlbumController {
     }
   }
 
-  async updateThumbnail(albumId: number, cupId: string, thumbnail: Express.Multer.File | null): Promise<Album> {
+  async updateThumbnail(albumId: number, cupId: string, thumbnail?: File | null): Promise<Album> {
     let updatedAlbum: Album | null = null;
     let transaction: Transaction | undefined = undefined;
     let prevFile: UploadImageInfo | null = null;
@@ -249,6 +250,10 @@ class AlbumController {
     const albumFolder: Album | null = await this.albumService.select(albumId);
     if (!albumFolder) throw new NotFoundError("Not found album using query parameter album ID");
     else if (albumFolder.cupId !== cupId) throw new ForbiddenError("The ID of the album folder and the body ID don't match.");
+
+    if (thumbnail === undefined) {
+      return albumFolder;
+    }
 
     try {
       const prevAlbumPath: string | null = albumFolder.thumbnail;

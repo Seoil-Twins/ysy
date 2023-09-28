@@ -114,7 +114,7 @@ DatePlace.init(
       type: DataTypes.STRING(300)
     },
     homepage: {
-      type: DataTypes.STRING(200)
+      type: DataTypes.STRING(300)
     },
     parking: {
       type: DataTypes.STRING(300)

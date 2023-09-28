@@ -1,5 +1,8 @@
 import express, { Router } from "express";
 
+import authMiddleware from "../middlewares/auth.middleware.js";
+import checkContentType from "../middlewares/contentType.middleware.js";
+
 import userRouter from "./user.route.js";
 import authRouter from "./auth.route.js";
 import coupleRouter from "./couple.route.js";
@@ -20,9 +23,6 @@ import InquireAdminRouter from "./inquire.admin.route.js";
 import InquireImageAdminRouter from "./inquireImage.admin.route.js";
 import SolutionAdminRouter from "./solution.admin.route.js";
 import SolutionImageAdminRouter from "./solutionImage.admin.route.js";
-
-import authMiddleware from "../middlewares/auth.middleware.js";
-import checkContentType from "../middlewares/contentType.middleware.js";
 
 const router: Router = express.Router();
 
