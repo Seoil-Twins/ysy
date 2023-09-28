@@ -59,7 +59,7 @@ export const Album = () => {
   const [mergeAlbumTitle, setMergeAlbumTitle] = useState('default');
 
   const [selectedAlbums, setSelectedAlbums] = useState<string[]>([]);
-  const [selectedAlbumIds, setSelectedAlbumIds] = useState<string[]>([]);
+  const [selectedAlbumIds, setSelectedAlbumIds] = useState<number[]>([]);
   const [albumImages, setAlbumImages] = useState<string[]>([]);
   const [dummyFolder, setDummyFolder] = useState<string[]>([]);
   const [foldersData, setFoldersData] = useState<string[]>([]);
@@ -92,7 +92,10 @@ export const Album = () => {
       setFoldersData(parsedData);
       console.log(parsedData);
       const folderList = parsedData.albums.map(
-        (album: { thumbnail: string }) => album.thumbnail,
+        (album: { albumId: number; thumbnail: string }) => ({
+          albumId: album.albumId,
+          thumbnail: album.thumbnail,
+        }),
       );
       setDummyFolder(folderList);
     } catch (error) {
@@ -170,24 +173,35 @@ export const Album = () => {
     }
   };
 
-  const handleAlbumPress = (albumName: string) => {
+  const handleAlbumPress = (item: string) => {
     if (isAlbum) {
       setSelectedAlbums(prevSelectedAlbums => {
-        if (prevSelectedAlbums.includes(albumName)) {
+        if (prevSelectedAlbums.includes(item.thumbnail)) {
           // 이미 선택된 앨범인 경우 선택 해제
-          return prevSelectedAlbums.filter(item => item !== albumName);
+          return prevSelectedAlbums.filter(
+            tartget => tartget !== item.thumbnail,
+          );
         } else {
           // 선택되지 않은 앨범인 경우 선택 추가
-          return [...prevSelectedAlbums, albumName];
+          return [...prevSelectedAlbums, item.thumbnail];
         }
       });
-      setSelectedAlbumIds();
+      setSelectedAlbumIds(prevSelectedAlbums => {
+        if (prevSelectedAlbums.includes(item.albumId)) {
+          // 이미 선택된 앨범인 경우 선택 해제
+          return prevSelectedAlbums.filter(tartget => tartget !== item.albumId);
+        } else {
+          // 선택되지 않은 앨범인 경우 선택 추가
+          return [...prevSelectedAlbums, item.albumId];
+        }
+      });
+      console.log(selectedAlbumIds);
+      console.log(selectedAlbumIds);
     } else {
       // 다중 선택 모드가 아닐 때는 단일 앨범을 선택하는 로직
       if (albumImages.length <= 0) {
         navigation.navigate('AlbumDetail', { albumName: 'asdasd' });
         dispatch(albumFunc('Image'));
-        setSelectedAlbums([albumName]);
         // loadMoreData();
       } else {
         setAlbumImages([]);
@@ -238,27 +252,25 @@ export const Album = () => {
     setIsMergeVisible(false);
   };
 
-  const createNewAlbumDetail = async (seletedAlbumNames: string[]) => {
+  const createNewAlbumDetail = async (seletedAlbumNames: number[]) => {
     // selectedAlbumNames와 NewAlbumName을 통해 제물들의 이미지들을 하나로 모은 테이블을 생성한는 sql을 날림.
     // selectedAlbum의 첫번째 인자가 머지의 주축이 되어야한다. 즉, 첫 번째 폴더의 이름을 mergeAlbumTitle로 바꾸고,
     // 타 앨범의 album_id를 첫번째 인자의 id로 바꾸어버리면 될 거 같다.
     const album_id = seletedAlbumNames[0];
     const target_ids = seletedAlbumNames.slice(1);
-    console.log('target' + target_ids);
 
     const data = {
       albumId: album_id,
-      targerIds: target_ids,
+      targetIds: target_ids,
       title: mergeAlbumTitle,
     };
     try {
       const userData = JSON.stringify(await userAPI.getUserMe()); // login 정보 가져오기
 
       const userParsedData = JSON.parse(userData);
-      console.log('11111111111111111111');
-      const res = albumAPI.patchMergeAlbum(userParsedData.cupId, data);
-      console.log('22222222222222222222');
-      console.log(res);
+      const res = await albumAPI.patchMergeAlbum(userParsedData.cupId, data);
+
+      getAlbumFolders('r');
     } catch (error) {
       console.log('patch error');
       console.log(error);
@@ -266,16 +278,14 @@ export const Album = () => {
   };
 
   const renewMergeAlbum = async (albumNames: string[]) => {
+    console.log('앙1');
     const newData = await dummyFolder.filter(
-      item => !albumNames.includes(item),
+      item => !albumNames.includes(item.thumbnail),
     ); // 데이터 삭제로직
-    createNewAlbumDetail(albumNames);
-    newData.push(
-      'https://fastly.picsum.photos/id/855/500/500.jpg?hmac=TOLIBgvj-ag8FMNpBsnbDWdmC-6i_R9jFJh0qSSBUK8',
-    );
+    console.log(newData);
+    await createNewAlbumDetail(selectedAlbumIds);
     setSelectedAlbums([]);
-
-    setDummyFolder(newData);
+    setSelectedAlbumIds([]);
   };
 
   const closeDeleteModal = () => {

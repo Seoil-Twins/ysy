@@ -24,7 +24,7 @@ const RenderImage: React.FC<RenderImageProps> = ({
   handleAlbumPress,
   handleLongPress,
 }) => {
-  const isSelected = selectedAlbums.includes(item);
+  const isSelected = selectedAlbums.includes(item.thumbnail);
   const isAlbum = useAppSelector(
     (state: RootState) => state.albumStatus.isAlbum,
   );
@@ -36,7 +36,7 @@ const RenderImage: React.FC<RenderImageProps> = ({
         onPress={() => handleAlbumPress(item)}
         onLongPress={() => handleLongPress()}>
         <Image
-          source={{ uri: item }}
+          source={{ uri: item.thumbnail }}
           style={{ width: screenWidth, height: screenHeight * 0.3 }}
         />
         <View style={{ position: 'absolute', bottom: 0, left: 0 }}>

@@ -13,10 +13,10 @@ export const albumAPI = {
     const data = await API.post(`/album/${cup_id}`, postData);
     return data;
   },
-  patchMergeAlbum: async (cup_id: string, data?: string[]) => {
+  patchMergeAlbum: async (cupId: string, data?: string[]) => {
     //const mergeData = { sort: sort };
     console.log(data);
-    const resData = await API.patch(`/album/merge/${cup_id}`, data);
+    const resData = await API.patch(`/album/merge/${cupId}`, data);
     //   console.log('aasdasdas' + JSON.stringify(data));
     return resData;
   },

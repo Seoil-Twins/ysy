@@ -136,9 +136,8 @@ router.post("/:cup_id/:album_id", multerUpload.array("images", MAX_IMAGE_COUNT),
 });
 
 // 앨범 합치기
-router.patch("/merge/:cup_id", async (req: Request, res: Response, next: NextFunction) => {
+router.patch("/merge/:cupId", async (req: Request, res: Response, next: NextFunction) => {
   const contentType: ContentType = req.contentType;
-
   try {
     if (contentType === "form-data") throw new UnsupportedMediaTypeError("This API must have a content-type of 'json' unconditionally.");
 
@@ -148,7 +147,7 @@ router.patch("/merge/:cup_id", async (req: Request, res: Response, next: NextFun
     const albumId: number = value.albumId;
     const targerIds: number[] = value.targetIds;
 
-    const url: string = await albumController.mergeAlbum(req.cupId!, albumId, targerIds, value.title);
+    const url: string = await albumController.mergeAlbum(req.params.cupId!, albumId, targerIds, value.title);
     return res.header({ Location: url }).status(STATUS_CODE.NO_CONTENT).json({});
   } catch (error) {
     next(error);
