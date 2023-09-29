@@ -12,7 +12,7 @@ import { Couple } from "../models/couple.model.js";
 import { PageOptions, ResponseAlbumFolder } from "../types/album.type.js";
 
 import { File, uploadFileWithGCP } from "../utils/gcp.util.js";
-import { createSortOptions } from "../utils/sort.util.js";
+import { createSortOptions } from "../utils/pagination.util.js";
 
 import { Service } from "./service.js";
 

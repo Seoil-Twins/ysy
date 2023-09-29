@@ -33,7 +33,6 @@ Solution.init(
       field: "inquiry_id",
       type: DataTypes.INTEGER.UNSIGNED,
       unique: true,
-      allowNull: false,
       references: {
         model: Inquiry,
         key: "inquiryId"

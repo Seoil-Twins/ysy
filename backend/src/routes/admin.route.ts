@@ -1,4 +1,4 @@
-import AdminJS, { ActionContext, ActionRequest, AdminJSOptions, CurrentAdmin } from "adminjs";
+import AdminJS, { ActionContext, ActionRequest, ActionResponse, AdminJSOptions, CurrentAdmin } from "adminjs";
 import AdminJSExpress from "@adminjs/express";
 import * as AdminJSSequelize from "@adminjs/sequelize";
 import { dark, light } from "@adminjs/themes";
@@ -48,6 +48,26 @@ const actionOptions = {
   edit: { isAccessible: canModifyEditor },
   delete: { isAccessible: canModifyEditor },
   new: { isAccessible: canModifyEditor }
+};
+
+const convertSizeFilter = (request: ActionRequest, context: ActionContext) => {
+  console.log(context.resource);
+
+  // const records = originalResponse.records;
+  // const filteredRecords = records.map((item: any) => {
+  //   const newParams = {
+  //     ...item.params,
+  //     size: `${Math.floor((item.params.size / 1024 / 1024) * 100) / 100}MB`
+  //   };
+
+  //   item.params = newParams;
+  //   return item;
+  // });
+
+  // console.log(filteredRecords);
+
+  // originalResponse.records = filteredRecords;
+  return request;
 };
 
 const adminOptions: AdminJSOptions = {
@@ -116,7 +136,14 @@ const adminOptions: AdminJSOptions = {
     },
     {
       resource: AlbumImage,
-      options: actionOptions
+      options: {
+        ...actionOptions,
+        actions: {
+          list: {
+            before: [convertSizeFilter]
+          }
+        }
+      }
     },
     {
       resource: Calendar,

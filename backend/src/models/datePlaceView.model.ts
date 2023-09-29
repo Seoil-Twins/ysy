@@ -24,7 +24,6 @@ DatePlaceView.init(
     userId: {
       field: "user_id",
       type: DataTypes.INTEGER.UNSIGNED,
-      allowNull: false,
       references: {
         model: User,
         key: "userId"

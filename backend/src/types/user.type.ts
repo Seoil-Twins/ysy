@@ -1,5 +1,8 @@
 import { User } from "../models/user.model.js";
 
+export type SortItem = "na" | "nd" | "r" | "o" | "dr" | "do";
+export const isSortItem = (item: any): item is SortItem => ["na", "nd", "r", "o", "dr", "do"].includes(item);
+
 export interface CreateUser {
   snsId: string;
   snsKind: string;
@@ -15,17 +18,19 @@ export interface CreateUserWithAdmin {
   snsKind: string;
   email: string;
   name: string;
-  code?: string;
+  code: string;
   birthday: Date;
   phone: string;
-  profile?: string | null;
   primaryNofi: boolean;
   dateNofi: boolean;
   eventNofi: boolean;
   coupleNofi: boolean;
   albumNofi: boolean;
   calendarNofi: boolean;
+  deleted: boolean;
+  deletedTime?: Date | null;
   role: number;
+  password?: string;
 }
 
 export interface UpdateUser {
@@ -42,23 +47,7 @@ export interface UpdateUserNotification {
   calendarNofi?: boolean;
 }
 
-export interface UpdateUserWithAdmin {
-  email?: string;
-  name?: string;
-  code?: string;
-  birthday?: Date;
-  phone?: string;
-  profile?: string | null;
-  primaryNofi?: boolean;
-  dateNofi?: boolean;
-  eventNofi?: boolean;
-  coupleNofi?: boolean;
-  albumNofi?: boolean;
-  calendarNofi?: boolean;
-  deleted?: boolean;
-  deletedTime?: Date;
-  role?: number;
-}
+export type UpdateUserWithAdmin = Partial<CreateUserWithAdmin>;
 
 export interface ResponseUser {
   userId: number;
@@ -85,41 +74,13 @@ export interface ResponseUsersWithAdmin {
   total: number;
 }
 
-export interface ResponseUserWithAdmin {
-  userId: number;
-  cupId: string | null;
-  snsId: string;
-  snsKind: string;
-  email: string;
-  name: string;
-  code: string;
-  birthday: Date;
-  phone: string;
-  profile: string | null;
-  primaryNofi: boolean;
-  dateNofi: boolean;
-  eventNofi: boolean;
-  coupleNofi: boolean;
-  albumNofi: boolean;
-  calendarNofi: boolean;
-  createdTime: Date;
-  delete: boolean;
-  deletedTime: Date;
-  couple: User | undefined;
-}
-
-export interface PageOptions {
-  count: number;
-  page: number;
-  sort: string | "na" | "nd" | "r" | "o" | "dr" | "do";
-}
-
 export interface SearchOptions {
   name?: string;
-  snsId?: string;
+  snsKind?: string;
 }
 
 export interface FilterOptions {
+  isProfile: boolean;
   isCouple: boolean;
   isDeleted: boolean;
 }

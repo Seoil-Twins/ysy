@@ -17,6 +17,7 @@ import { DatePlace } from "./datePlace.model.js";
 import { DatePlaceImage } from "./datePlaceImage.model.js";
 import { Admin } from "./admin.model.js";
 import { DatePlaceView } from "./datePlaceView.model.js";
+import { RegionCode } from "./regionCode.model.js";
 
 /**
  *  hasMany => 1 : N
@@ -32,14 +33,14 @@ export default {
     // ------------------------------------------ UserRole : User ---------------------------------------- //
     User.hasOne(UserRole, {
       foreignKey: "userId",
-      as: "userRole",
-      onDelete: "CASCADE",
-      onUpdate: "CASCADE"
+      as: "userRole"
     });
 
     UserRole.hasOne(User, {
       foreignKey: "userId",
-      as: "users"
+      as: "users",
+      onDelete: "CASCADE",
+      onUpdate: "CASCADE"
     });
 
     // ------------------------------------------ UserRole to Role ---------------------------------------- //
@@ -129,7 +130,7 @@ export default {
     Inquiry.belongsTo(User, {
       foreignKey: "userId",
       as: "user",
-      onDelete: "CASCADE",
+      onDelete: "SET NULL",
       onUpdate: "CASCADE"
     });
 
@@ -155,7 +156,7 @@ export default {
     Solution.hasOne(Inquiry, {
       foreignKey: "inquiryId",
       as: "Inquiry",
-      onDelete: "CASCADE",
+      onDelete: "SET NULL",
       onUpdate: "CASCADE"
     });
 
@@ -168,7 +169,7 @@ export default {
     Solution.belongsTo(User, {
       foreignKey: "uploaderId",
       as: "uploader",
-      onDelete: "CASCADE",
+      onDelete: "SET NULL",
       onUpdate: "CASCADE"
     });
 
@@ -207,21 +208,21 @@ export default {
     Notice.belongsTo(User, {
       foreignKey: "uploaderId",
       as: "uploader",
-      onDelete: "CASCADE",
+      onDelete: "SET NULL",
       onUpdate: "CASCADE"
     });
 
     // ------------------------------------------ ContentType to DatePlace ---------------------------------------- //
     DatePlace.hasMany(ContentType, {
       foreignKey: "contentTypeId",
-      as: "contentType"
+      as: "contentType",
+      onDelete: "SET NULL",
+      onUpdate: "CASCADE"
     });
 
     ContentType.belongsTo(DatePlace, {
       foreignKey: "contentTypeId",
-      as: "datePlace",
-      onDelete: "CASCADE",
-      onUpdate: "CASCADE"
+      as: "datePlace"
     });
 
     // ------------------------------------------ DatePlace to DatePlace Image ---------------------------------------- //
@@ -232,7 +233,20 @@ export default {
 
     DatePlaceImage.belongsTo(DatePlace, {
       foreignKey: "contentId",
-      as: "datePlace"
+      as: "datePlace",
+      onDelete: "CASCADE",
+      onUpdate: "CASCADE"
+    });
+
+    // ------------------------------------------ ContentType to DatePlace ---------------------------------------- //
+    ContentType.hasMany(Favorite, {
+      foreignKey: "contentId"
+    });
+
+    Favorite.belongsTo(ContentType, {
+      foreignKey: "contentId",
+      onDelete: "CASCADE",
+      onUpdate: "CASCADE"
     });
 
     // ------------------------------------------ User to DatePlace ---------------------------------------- //
@@ -248,12 +262,16 @@ export default {
 
     Favorite.belongsTo(DatePlace, {
       foreignKey: "contentId",
-      as: "datePlace"
+      as: "datePlace",
+      onDelete: "CASCADE",
+      onUpdate: "CASCADE"
     });
 
     Favorite.belongsTo(User, {
       foreignKey: "userId",
-      as: "user"
+      as: "user",
+      onDelete: "CASCADE",
+      onUpdate: "CASCADE"
     });
 
     // ------------------------------------------ User, DatePlace, to DatePlaceView ---------------------------------------- //
@@ -269,12 +287,16 @@ export default {
 
     DatePlaceView.belongsTo(DatePlace, {
       foreignKey: "contentId",
-      as: "datePlace"
+      as: "datePlace",
+      onDelete: "CASCADE",
+      onUpdate: "CASCADE"
     });
 
     DatePlaceView.belongsTo(User, {
       foreignKey: "userId",
-      as: "user"
+      as: "user",
+      onDelete: "SET NULL",
+      onUpdate: "CASCADE"
     });
   }
 };

@@ -5,7 +5,7 @@ import { NoticeImage } from "../models/noticeImage.model.js";
 
 import { Service } from "./service.js";
 import { PageOptions, ResponseNotice } from "../types/noitce.type.js";
-import { createSortOptions } from "../utils/sort.util.js";
+import { createSortOptions } from "../utils/pagination.util.js";
 
 class NoticeSerivce extends Service {
   getURL(...args: any[]): string {

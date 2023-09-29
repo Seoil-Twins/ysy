@@ -65,7 +65,7 @@ dayjs.extend(formattedPlugin);
 const app: Application = express();
 const port = 3000;
 
-app.use(admin.options.rootPath, adminRouter);
+// app.use(admin.options.rootPath, adminRouter);
 app.use(express.json());
 app.use(boolParser());
 app.use(express.urlencoded({ extended: false }));

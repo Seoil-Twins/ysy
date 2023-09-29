@@ -9,7 +9,7 @@ import { SolutionImage } from "../models/solutionImage.model.js";
 
 import { Service } from "./service.js";
 import { CreateInquiry, PageOptions, ResponseInquiry } from "../types/inquiry.type.js";
-import { createSortOptions } from "../utils/sort.util.js";
+import { createSortOptions } from "../utils/pagination.util.js";
 
 class InquiryService extends Service {
   private FOLDER_NAME = "users";

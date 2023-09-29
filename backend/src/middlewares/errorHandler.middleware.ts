@@ -18,12 +18,23 @@ const globalErrorHandler: ErrorRequestHandler = (e: any, req: Request, res: Resp
     });
   } else {
     logger.error(`Server Error : ${JSON.stringify(e)} ${e.stack}`);
-    res.status(STATUS_CODE.INTERNAL_SERVER_ERROR).json({
-      type: "Internal Server Error",
-      message: "Unknown Error",
-      statusCode: STATUS_CODE.INTERNAL_SERVER_ERROR,
-      errorCode: ERROR_CODE.INTERNAL_SERVER_ERROR
-    });
+
+    if (e.status && e.status === 400) {
+      const { status, body } = e;
+      res.status(status || STATUS_CODE.INTERNAL_SERVER_ERROR).json({
+        type: e.name,
+        message: body,
+        statusCode: e.status,
+        errorCode: e.status
+      });
+    } else {
+      res.status(STATUS_CODE.INTERNAL_SERVER_ERROR).json({
+        type: "Internal Server Error",
+        message: "Unknown Error",
+        statusCode: STATUS_CODE.INTERNAL_SERVER_ERROR,
+        errorCode: ERROR_CODE.INTERNAL_SERVER_ERROR
+      });
+    }
   }
 };
 

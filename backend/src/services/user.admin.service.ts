@@ -1,75 +1,47 @@
 import dayjs from "dayjs";
 import { boolean } from "boolean";
-import { File } from "formidable";
 import { Op, OrderItem, Transaction, WhereOptions } from "sequelize";
 
-import { API_ROOT } from "..";
-import { Service } from "./service";
+import { API_ROOT } from "../index.js";
+import { Service } from "./service.js";
 
-import { isDefaultFile, uploadFile } from "../utils/firebase.util";
+import { Couple } from "../models/couple.model.js";
+import { User } from "../models/user.model.js";
+import { CreateUserWithAdmin, FilterOptions, SearchOptions, SortItem } from "../types/user.type.js";
 
-import { Couple } from "../models/couple.model";
-import { Inquire } from "../models/inquiry.model";
-import { Solution } from "../models/solution.model";
-import { FilterOptions, ICreateWithAdmin, IUpdateWithAdmin, PageOptions, SearchOptions, User } from "../models/user.model";
-import { InquireImage } from "../models/inquiryImage.model";
-import { SolutionImage } from "../models/solutionImage.model";
+import { PageOptions, createSortOptions } from "../utils/pagination.util.js";
+import { File, uploadFileWithGCP } from "../utils/gcp.util.js";
+import { UNKNOWN_NAME } from "../constants/file.constant.js";
+import { UserRole } from "../models/userRole.model.js";
+import { Album } from "../models/album.model.js";
+import { AlbumImage } from "../models/albumImage.model.js";
+import { Calendar } from "../models/calendar.model.js";
 
 class UserAdminService extends Service {
-  private FOLDER_NAME = "users";
+  private readonly FOLDER_NAME: string = "users";
 
-  createProfile(userId: number, file: File): string | null {
-    let path: string | null = "";
-    const reqFileName = file.originalFilename!;
-    const isDefault = isDefaultFile(reqFileName);
-
-    /**
-     * Frontend에선 static으로 default.jpg,png,svg 셋 중 하나 갖고있다가
-     * 사용자가 profile을 내리면 그걸로 넣고 요청
-     */
-    if (isDefault) path = null;
-    else path = `${this.FOLDER_NAME}/${userId}/profile/${dayjs().valueOf()}.${reqFileName}`;
+  /**
+   * 프로필 사진 경로를 생성합니다.
+   *
+   * @param userId 유저 ID
+   * @param file 사진 객체
+   * @returns string | null - 프로필 사진 경로 또는 없음
+   */
+  createProfile(userId: number, file: File): string {
+    const reqFileName = file.originalname;
+    const path: string = `${this.FOLDER_NAME}/${userId}/profile/${dayjs().valueOf()}.${reqFileName}`;
 
     return path;
-  }
-
-  private createSort(sort: string): OrderItem {
-    let result: OrderItem = ["name", "ASC"];
-
-    switch (sort) {
-      case "na":
-        result = ["name", "ASC"];
-        break;
-      case "nd":
-        result = ["name", "DESC"];
-        break;
-      case "r":
-        result = ["createdTime", "DESC"];
-        break;
-      case "o":
-        result = ["createdTime", "ASC"];
-        break;
-      case "dr":
-        result = ["deletedTime", "DESC"];
-        break;
-      case "do":
-        result = ["deletedTime", "ASC"];
-        break;
-      default:
-        result = ["name", "ASC"];
-        break;
-    }
-
-    return result;
   }
 
   private createWhere(searchOptions: SearchOptions, filterOptions: FilterOptions): WhereOptions {
     let result: WhereOptions = {};
 
     if (searchOptions.name && searchOptions.name !== "undefined") result["name"] = { [Op.like]: `%${searchOptions.name}%` };
-    if (searchOptions.snsId && searchOptions.snsId !== "undefined") result["snsId"] = searchOptions.snsId;
+    if (searchOptions.snsKind && searchOptions.snsKind !== "undefined") result["snsKind"] = searchOptions.snsKind;
     if (filterOptions.isCouple) result["cupId"] = { [Op.not]: null };
     if (filterOptions.isDeleted) result["deleted"] = true;
+    if (filterOptions.isProfile) result["profile"] = { [Op.not]: null };
 
     return result;
   }
@@ -78,9 +50,9 @@ class UserAdminService extends Service {
     return `${API_ROOT}/admin/user?page=1&count=1&sort=r`;
   }
 
-  async select(pageOptions: PageOptions, searchOptions: SearchOptions, filterOptions: FilterOptions): Promise<[User[], number]> {
+  async select(pageOptions: PageOptions<SortItem>, searchOptions: SearchOptions, filterOptions: FilterOptions): Promise<[User[], number]> {
     const offset = (pageOptions.page - 1) * pageOptions.count;
-    const sort: OrderItem = this.createSort(pageOptions.sort);
+    const sort: OrderItem = createSortOptions(pageOptions.sort);
     const where: WhereOptions = this.createWhere(searchOptions, filterOptions);
 
     const { rows, count }: { rows: User[]; count: number } = await User.findAndCountAll({
@@ -93,29 +65,53 @@ class UserAdminService extends Service {
     return [rows, count];
   }
 
+  async selectWithUserRole(userId: number): Promise<User | null> {
+    const user: User | null = await User.findOne({
+      where: {
+        userId
+      },
+      include: {
+        model: UserRole,
+        as: "userRole"
+      }
+    });
+
+    return user;
+  }
+
+  async selectWithCouple(userId: number): Promise<User | null> {
+    const user: User | null = await User.findOne({
+      where: { userId: userId },
+      include: [
+        {
+          model: Couple,
+          as: "couple"
+        }
+      ]
+    });
+
+    return user;
+  }
+
   async selectAllWithAdditional(userIds: number[]): Promise<User[]> {
     const users: User[] = await User.findAll({
       where: { userId: userIds },
       include: [
         {
           model: Couple,
-          as: "couple"
-        },
-        {
-          model: Inquire,
-          as: "inquires",
+          as: "couple",
           include: [
             {
-              model: InquireImage,
-              as: "inquireImages"
+              model: Calendar,
+              as: "calendars"
             },
             {
-              model: Solution,
-              as: "solution",
+              model: Album,
+              as: "albums",
               include: [
                 {
-                  model: SolutionImage,
-                  as: "solutionImages"
+                  model: AlbumImage,
+                  as: "albumImages"
                 }
               ]
             }
@@ -127,36 +123,47 @@ class UserAdminService extends Service {
     return users;
   }
 
-  async create(transaction: Transaction | null = null, data: ICreateWithAdmin): Promise<User> {
-    const createdUser: User = await User.create(
-      {
-        snsId: data.snsId,
-        name: data.name,
-        email: data.email,
-        code: data.code!,
-        password: data.password,
-        phone: data.phone,
-        birthday: data.birthday,
-        primaryNofi: boolean(data.primaryNofi),
-        eventNofi: boolean(data.eventNofi),
-        dateNofi: boolean(data.dateNofi)
-      },
-      { transaction }
-    );
+  async create(transaction: Transaction | null = null, data: CreateUserWithAdmin, profile?: File): Promise<User> {
+    let createdUser: User = await User.create(data, { transaction });
+
+    if (profile) {
+      const path = this.createProfile(createdUser.userId, profile);
+
+      createdUser = await createdUser.update(
+        {
+          profile: path,
+          profileSize: profile.size,
+          profileType: profile.mimetype ? profile.mimetype : UNKNOWN_NAME
+        },
+        { transaction }
+      );
+
+      await uploadFileWithGCP({
+        filename: path,
+        buffer: profile.buffer,
+        mimetype: profile.mimetype,
+        size: profile.size
+      });
+    }
 
     return createdUser;
   }
 
-  async update(transaction: Transaction | null = null, user: User, data: IUpdateWithAdmin, file?: File): Promise<User> {
-    if (file) data.profile = this.createProfile(user.userId, file);
-    const updatedUser: User = await user.update(data, { transaction });
-
-    if (file && data.profile) await uploadFile(data.profile, file.filepath);
-    return updatedUser;
+  update(transaction: Transaction | null, ...args: any[]): Promise<any> {
+    throw new Error("Method not implemented.");
   }
 
-  async delete(transaction: Transaction | null = null, user: User): Promise<void> {
-    await user.destroy({ transaction });
+  delete(transaction: Transaction | null, ...args: any[]): Promise<any> {
+    throw new Error("Method not implemented.");
+  }
+
+  async deleteAll(transaction: Transaction | null, userIds: number[]): Promise<void> {
+    await User.destroy({
+      where: {
+        userId: userIds
+      },
+      transaction
+    });
   }
 }
 

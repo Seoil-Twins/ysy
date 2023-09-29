@@ -5,7 +5,7 @@ import { NullishPropertiesOf } from "sequelize/types/utils";
 import { UNKNOWN_NAME } from "../constants/file.constant.js";
 
 import logger from "../logger/logger.js";
-import { createSortOptions } from "../utils/sort.util.js";
+import { createSortOptions } from "../utils/pagination.util.js";
 import { File, UploadImageInfo, uploadFileWithGCP, uploadFilesWithGCP } from "../utils/gcp.util.js";
 
 import { PageOptions } from "../types/album.type.js";

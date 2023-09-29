@@ -16,13 +16,13 @@ import favoriteRouter from "./favorite.route.js";
 import regionCodeRouter from "./region.route.js";
 
 import userAdminRouter from "./user.admin.route.js";
-import coupleAdminRouter from "./couple.admin.route.js";
-import albumAdminRouter from "./album.admin.route.js";
-import calendarAdminRouter from "./calendar.admin.route.js";
-import InquireAdminRouter from "./inquire.admin.route.js";
-import InquireImageAdminRouter from "./inquireImage.admin.route.js";
-import SolutionAdminRouter from "./solution.admin.route.js";
-import SolutionImageAdminRouter from "./solutionImage.admin.route.js";
+// import coupleAdminRouter from "./couple.admin.route.js";
+// import albumAdminRouter from "./album.admin.route.js";
+// import calendarAdminRouter from "./calendar.admin.route.js";
+// import InquireAdminRouter from "./inquire.admin.route.js";
+// import InquireImageAdminRouter from "./inquireImage.admin.route.js";
+// import SolutionAdminRouter from "./solution.admin.route.js";
+// import SolutionImageAdminRouter from "./solutionImage.admin.route.js";
 
 const router: Router = express.Router();
 
@@ -39,7 +39,7 @@ router.use("/date-place/views", authMiddleware, datePlaceViewRouter);
 router.use("/favorite", checkContentType, authMiddleware, favoriteRouter);
 router.use("/region-code", authMiddleware, regionCodeRouter);
 
-// router.use("/admin/user", authMiddleware, userAdminRouter);
+router.use("/admin/user", checkContentType, authMiddleware, userAdminRouter);
 // router.use("/admin/couple", authMiddleware, coupleAdminRouter);
 // router.use("/admin/album", authMiddleware, albumAdminRouter);
 // router.use("/admin/calendar", authMiddleware, calendarAdminRouter);
