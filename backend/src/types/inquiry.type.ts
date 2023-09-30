@@ -1,10 +1,9 @@
 import { Inquiry } from "../models/inquiry.model.js";
+import { CommonSortItem, commonSortItems } from "./sort.type.js";
 
-export const isSortItem = (item: any): item is SortItem => {
-  return ["r", "o", "sr", "so"].includes(item);
-};
-
-export type SortItem = "r" | "o" | "sr" | "so";
+export type SortItem = "r";
+export type SortItemWithAdmin = CommonSortItem | "sr" | "so";
+export const isSortItem = (item: any): item is SortItem => commonSortItems.includes(item) || ["sr", "so"].includes(item);
 
 export interface CreateInquiry {
   userId: number;

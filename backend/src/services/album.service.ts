@@ -9,12 +9,13 @@ import sequelize from "../models/index.js";
 import { AlbumImage } from "../models/albumImage.model.js";
 import { Album } from "../models/album.model.js";
 import { Couple } from "../models/couple.model.js";
-import { PageOptions, ResponseAlbumFolder } from "../types/album.type.js";
+import { PageOptions, ResponseAlbumFolder, SortItem } from "../types/album.type.js";
 
 import { File, uploadFileWithGCP } from "../utils/gcp.util.js";
 import { createSortOptions } from "../utils/pagination.util.js";
 
 import { Service } from "./service.js";
+import { albumSortOptions } from "../types/sort.type.js";
 
 class AlbumService extends Service {
   private FOLDER_NAME = "couples";
@@ -78,17 +79,8 @@ class AlbumService extends Service {
    * @returns Promise\<{ albums: {@link Album}[], total: number \}>
    */
   async selectAllForFolder(cupId: string, pageOptions: PageOptions): Promise<ResponseAlbumFolder> {
-    let sortOptions: OrderItem | undefined = ["createdTime", "DESC"];
-
-    if (pageOptions.sort === "il") {
-      sortOptions = ["total", "ASC"];
-    } else if (pageOptions.sort === "im") {
-      sortOptions = ["total", "DESC"];
-    } else {
-      sortOptions = createSortOptions(pageOptions.sort);
-    }
-
     const offset: number = (pageOptions.page - 1) * pageOptions.count;
+    const sortOptions: OrderItem = createSortOptions<SortItem>(pageOptions.sort, albumSortOptions);
 
     const total = await Album.count({ where: { cupId } });
     const albums: Album[] = await Album.findAll({

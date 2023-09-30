@@ -1,7 +1,8 @@
 import { User } from "../models/user.model.js";
+import { CommonSortItem, commonSortItems } from "./sort.type.js";
 
-export type SortItem = "na" | "nd" | "r" | "o" | "dr" | "do";
-export const isSortItem = (item: any): item is SortItem => ["na", "nd", "r", "o", "dr", "do"].includes(item);
+export type SortItem = CommonSortItem | "na" | "nd" | "dr" | "do";
+export const isSortItem = (item: any): item is SortItem => commonSortItems.includes(item) || ["na", "nd", "dr", "do"].includes(item);
 
 export interface CreateUser {
   snsId: string;

@@ -1,4 +1,5 @@
 import { OrderItem } from "sequelize";
+import { CommonSortItem, SortOption } from "../types/sort.type.js";
 
 export interface CreatePageOption<T> {
   count?: number;
@@ -28,50 +29,7 @@ export const createPageOption = <T>(data: CreatePageOption<T>): PageOptions<T> =
   return result;
 };
 
-export const createSortOptions = (sort: string): OrderItem => {
-  let result: OrderItem = ["createdTime", "DESC"];
-
-  switch (sort) {
-    case "r":
-      result = ["createdTime", "DESC"];
-      break;
-    case "o":
-      result = ["createdTime", "ASC"];
-      break;
-    case "f":
-      result = ["views", "DESC"];
-      break;
-    case "t":
-      result = ["title", "ASC"];
-      break;
-    case "cd":
-      result = ["cupId", "DESC"];
-      break;
-    case "ca":
-      result = ["cupId", "ASC"];
-      break;
-    case "il":
-      result = ["total", "ASC"];
-      break;
-    case "im":
-      result = ["total", "DESC"];
-      break;
-    case "na":
-      result = ["name", "ASC"];
-      break;
-    case "nd":
-      result = ["name", "DESC"];
-      break;
-    case "do":
-      result = ["deletedTime", "ASC"];
-      break;
-    case "dr":
-      result = ["deletedTime", "DESC"];
-      break;
-    default:
-      result = ["createdTime", "DESC"];
-      break;
-  }
-
-  return result;
+export const createSortOptions = <T extends string>(sortItem: T, options: SortOption<T | CommonSortItem>): OrderItem => {
+  const option = options[sortItem];
+  return option || options.r;
 };

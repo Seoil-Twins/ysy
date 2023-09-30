@@ -1,5 +1,4 @@
 import dayjs from "dayjs";
-import { boolean } from "boolean";
 import { Op, OrderItem, Transaction, WhereOptions } from "sequelize";
 
 import { API_ROOT } from "../index.js";
@@ -16,6 +15,7 @@ import { UserRole } from "../models/userRole.model.js";
 import { Album } from "../models/album.model.js";
 import { AlbumImage } from "../models/albumImage.model.js";
 import { Calendar } from "../models/calendar.model.js";
+import { userSortOptions } from "../types/sort.type.js";
 
 class UserAdminService extends Service {
   private readonly FOLDER_NAME: string = "users";
@@ -52,7 +52,7 @@ class UserAdminService extends Service {
 
   async select(pageOptions: PageOptions<SortItem>, searchOptions: SearchOptions, filterOptions: FilterOptions): Promise<[User[], number]> {
     const offset = (pageOptions.page - 1) * pageOptions.count;
-    const sort: OrderItem = createSortOptions(pageOptions.sort);
+    const sort: OrderItem = createSortOptions<SortItem>(pageOptions.sort, userSortOptions);
     const where: WhereOptions = this.createWhere(searchOptions, filterOptions);
 
     const { rows, count }: { rows: User[]; count: number } = await User.findAndCountAll({
