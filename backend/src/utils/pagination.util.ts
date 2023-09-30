@@ -15,7 +15,7 @@ export interface PageOptions<T> {
   sort: T;
 }
 
-export const createPageOption = <T>(data: CreatePageOption<T>): PageOptions<T> => {
+export const createPageOptions = <T>(data: CreatePageOption<T>): PageOptions<T> => {
   const page: number = !isNaN(Number(data.page)) ? Number(data.page) : 1;
   const count: number = !isNaN(Number(data.count)) ? Number(data.count) : 10;
   const sort: T = data.isSortItem(data.sort) ? data.sort : data.defaultValue;

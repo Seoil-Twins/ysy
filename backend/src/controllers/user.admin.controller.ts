@@ -4,13 +4,16 @@ import { Op, Transaction } from "sequelize";
 import logger from "../logger/logger.js";
 import { createDigest } from "../utils/password.util.js";
 import { PageOptions } from "../utils/pagination.util.js";
+import { DeleteImageInfo, File, UploadImageInfo, deleteFileWithGCP, deleteFilesWithGCP, getFileBufferWithGCP, uploadFileWithGCP } from "../utils/gcp.util.js";
 
 import sequelize from "../models/index.js";
 import { User } from "../models/user.model.js";
-import { SearchOptions, FilterOptions, SortItem, ResponseUsersWithAdmin, UpdateUserWithAdmin, CreateUserWithAdmin } from "../types/user.type.js";
-
+import { Admin } from "../models/admin.model.js";
 import { Album } from "../models/album.model.js";
-import { Calendar } from "../models/calendar.model.js";
+
+import { UNKNOWN_NAME } from "../constants/file.constant.js";
+
+import { SearchOptions, FilterOptions, SortItem, ResponseUsersWithAdmin, UpdateUserWithAdmin, CreateUserWithAdmin } from "../types/user.type.js";
 
 import NotFoundError from "../errors/notFound.error.js";
 import ConflictError from "../errors/conflict.error.js";
@@ -19,15 +22,10 @@ import UserAdminService from "../services/user.admin.service.js";
 import UserService from "../services/user.service.js";
 import UserRoleService from "../services/userRole.service.js";
 import CoupleAdminService from "../services/couple.admin.service.js";
-import { DeleteImageInfo, File, UploadImageInfo, deleteFileWithGCP, deleteFilesWithGCP, getFileBufferWithGCP, uploadFileWithGCP } from "../utils/gcp.util.js";
 import AdminService from "../services/admin.service.js";
-import { UNKNOWN_NAME } from "../constants/file.constant.js";
-import ForbiddenError from "../errors/forbidden.error.js";
-import { Admin } from "../models/admin.model.js";
-import { Couple } from "../models/couple.model.js";
 
 class UserAdminController {
-  private ERROR_LOCATION_PREFIX = "user";
+  private ERROR_LOCATION_PREFIX = "adminUser";
   private userService: UserService;
   private userAdminService: UserAdminService;
   private userRoleService: UserRoleService;
@@ -105,6 +103,7 @@ class UserAdminController {
 
   /**
      * 기존 Create보다 더 많은 정보를 생성할 수 있습니다.
+     * 
      * ```typescript
      * const data: ICreateWithAdmin = {
      *      snsId: "1001",
@@ -119,8 +118,8 @@ class UserAdminController {
             dateNofi: false,
             role: 1
      * };
-     * await updateUserWithAdmin(data);
-     * await updateUserWithAdmin(data, file);   // create profile
+     * await createUser(data);
+     * await createUser(data, file);                     // create profile
      * ```
      * @param data A {@link CreateUserWithAdmin}
      * @param file A {@link File} | undefined
@@ -181,11 +180,11 @@ class UserAdminController {
 
   /**
    * 기존 Update보다 더 많은 정보를 수정할 수 있습니다.
-   * ```typescript
-   * const userId = 24;
-   *
-   * // Object value not required. (Allow undefined)
-   * const data: UpdateUserWithAdmin = {
+   * 
+   *```typescript
+   const userId = 24;
+   
+   const data: UpdateUserWithAdmin = {
       snsId: "10101001",
       snsKind: "1001",
       code: "AAAAAA",               // 영어 대소문자 및 숫자로 이루어진 6글자
@@ -200,16 +199,16 @@ class UserAdminController {
       // 8~15글자 및 특수문자를 포함해야 합니다. 또한, 해당 유저의 권한이 viewer가 아니어야합니다.
       password: "password123!",
       deleted: false                // 실제 DB에서 삭제되지 않습니다.
-    * };
-    *
-    * await updateUserWithAdmin(userId, data);
-    * await updateUserWithAdmin(userId, data, file);   // update or create profile
-    *
-    * ```
-    * @param userId User Id
-    * @param data A {@link UpdateUserWithAdmin}
-    * @param file A {@link File}
-    */
+    };
+      ```
+   *
+   * await updateUser(userId, data);
+   * await updateUser(userId, data, file);   // update or create profile
+   * @param userId 유저 아이디
+   * @param data {@link UpdateUserWithAdmin}
+   * @param profile {@link File} | undefined | null
+   * @returns Promise\<{@link User}\>
+   */
   async updateUser(userId: number, data: UpdateUserWithAdmin, profile?: File | null): Promise<User> {
     let transaction: Transaction | null = null;
     let updateUser: User | null = null;
@@ -328,11 +327,11 @@ class UserAdminController {
     }
   }
 
-  // /**
-  //  * Admin API 전용이며, 1개 이상의 유저를 DB 데이터에서 삭제합니다.
-  //  * User에 관한 Couple, Album, Calendar, Inquire의 모든 정보가 삭제됩니다.
-  //  * @param userIds User Id List
-  //  */
+  /**
+   * 1개 이상의 유저를 DB 데이터에서 삭제합니다.
+   * User에 관한 Couple, Album, Album Image, Calendar, Inquiry의 모든 정보가 삭제됩니다.
+   * @param userIds User Id List
+   */
   async deleteUsers(userIds: number[]): Promise<void> {
     const deleteFiles: DeleteImageInfo[] = [];
     const deleteCoupleIds: string[] = [];
@@ -350,7 +349,6 @@ class UserAdminController {
 
       for (const user of userHasCouple) {
         const albums: Album[] | undefined = user.couple!.albums;
-        const calendars: Calendar[] | undefined = user.couple?.calendars;
 
         if (albums && albums.length > 0) {
           for (const album of albums) {
@@ -374,13 +372,6 @@ class UserAdminController {
               }
             }
           }
-        }
-
-        if (calendars && calendars.length > 0) {
-          const calendarIds: number[] = [];
-          calendars.forEach((calendar: Calendar) => {
-            calendarIds.push(calendar.calendarId);
-          });
         }
 
         if (user.couple!.thumbnail) {
@@ -414,6 +405,8 @@ class UserAdminController {
 
       deleteFilesWithGCP(deleteFiles);
     } catch (error) {
+      logger.error(`User deletes error in user admin api => ${JSON.stringify(error)}`);
+
       if (transaction) await transaction.rollback();
       throw error;
     }

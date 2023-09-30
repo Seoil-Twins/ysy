@@ -10,22 +10,19 @@ import logger from "../logger/logger.js";
 import validator from "../utils/validator.util.js";
 import { STATUS_CODE } from "../constants/statusCode.constant.js";
 import { canModifyWithEditor, canView } from "../utils/checkRole.util.js";
-import { CreatePageOption, PageOptions, createPageOption } from "../utils/pagination.util.js";
+import { CreatePageOption, createPageOptions, PageOptions } from "../utils/pagination.util.js";
+import { ContentType, convertBoolean } from "../utils/router.util.js";
+import { File } from "../utils/gcp.util.js";
+import { MulterUpdateFile, MulterUploadFile, multerUpload, updateFileFunc, uploadFileFunc } from "../utils/multer.js";
 
 import BadRequestError from "../errors/badRequest.error.js";
-import InternalServerError from "../errors/internalServer.error.js";
 
-import UserAdminController from "../controllers/user.admin.controller.js";
 import UserService from "../services/user.service.js";
 import UserAdminService from "../services/user.admin.service.js";
 import UserRoleService from "../services/userRole.service.js";
 import CoupleAdminService from "../services/couple.admin.service.js";
-import AlbumService from "../services/album.service.js";
-import CalendarService from "../services/calendar.service.js";
-import { ContentType } from "../utils/router.util.js";
-import { File } from "../utils/gcp.util.js";
-import { MulterUpdateFile, MulterUploadFile, multerUpload, updateFileFunc, uploadFileFunc } from "../utils/multer.js";
 import AdminService from "../services/admin.service.js";
+import UserAdminController from "../controllers/user.admin.controller.js";
 
 const router: Router = express.Router();
 const userService: UserService = new UserService();
@@ -88,21 +85,21 @@ const updateSchema: joi.Schema = joi.object({
     then: joi.string().trim().min(8),
     otherwise: joi.forbidden()
   }),
-  deleted: joi.bool().default(false)
+  deleted: joi.bool()
 });
 
 const fileParamName = "profile";
 const upload = multerUpload.single(fileParamName);
 
 router.get("/", canView, async (req: Request, res: Response, next: NextFunction) => {
-  const createPageOptions: CreatePageOption<SortItem> = {
+  const createdPageOptions: CreatePageOption<SortItem> = {
     count: Number(req.query.count),
     page: Number(req.query.page),
     sort: String(req.query.sort),
     defaultValue: "r",
     isSortItem: isSortItem
   };
-  const pageOptions: PageOptions<SortItem> = createPageOption<SortItem>(createPageOptions);
+  const pageOptions: PageOptions<SortItem> = createPageOptions<SortItem>(createdPageOptions);
   const searchOptions: SearchOptions = {
     name: String(req.query.name) || undefined,
     snsKind: String(req.query.sns_kind) || undefined
@@ -138,7 +135,7 @@ router.get("/:user_id", canView, async (req: Request, res: Response, next: NextF
 });
 
 router.post("/", canModifyWithEditor, async (req: Request, res: Response, next: NextFunction) => {
-  const contentType: ContentType | undefined = req.contentType;
+  const contentType: ContentType = req.contentType;
 
   const createFunc = async (profile?: File) => {
     try {
@@ -154,15 +151,15 @@ router.post("/", canModifyWithEditor, async (req: Request, res: Response, next: 
         email: value.email,
         phone: value.phone,
         birthday: value.birthday,
-        primaryNofi: boolean(value.primaryNofi),
-        eventNofi: boolean(value.eventNofi),
-        dateNofi: boolean(value.dateNofi),
-        coupleNofi: boolean(value.coupleNofi),
-        albumNofi: boolean(value.albumNofi),
-        calendarNofi: boolean(value.calendarNofi),
+        primaryNofi: convertBoolean(value.primaryNofi) || false,
+        eventNofi: convertBoolean(value.eventNofi) || false,
+        dateNofi: convertBoolean(value.dateNofi) || false,
+        coupleNofi: convertBoolean(value.coupleNofi) || false,
+        albumNofi: convertBoolean(value.albumNofi) || false,
+        calendarNofi: convertBoolean(value.calendarNofi) || false,
         role: value.role,
         password: value.password,
-        deleted: boolean(value.deleted)
+        deleted: convertBoolean(value.deleted) || false
       };
 
       const url: string = await userAdminController.createUser(data, profile);
@@ -185,7 +182,7 @@ router.post("/", canModifyWithEditor, async (req: Request, res: Response, next: 
 });
 
 router.patch("/:user_id", canModifyWithEditor, async (req: Request, res: Response, next: NextFunction) => {
-  const contentType: ContentType | undefined = req.contentType;
+  const contentType: ContentType = req.contentType;
 
   const updateFunc = async (profile?: File | null) => {
     try {
@@ -204,15 +201,15 @@ router.patch("/:user_id", canModifyWithEditor, async (req: Request, res: Respons
         email: value.email,
         phone: value.phone,
         birthday: value.birthday,
-        primaryNofi: value.primaryNofi !== undefined ? boolean(value.primaryNofi) : undefined,
-        eventNofi: value.eventNofi !== undefined ? boolean(value.eventNofi) : undefined,
-        dateNofi: value.dateNofi !== undefined ? boolean(value.dateNofi) : undefined,
-        coupleNofi: value.coupleNofi !== undefined ? boolean(value.coupleNofi) : undefined,
-        albumNofi: value.albumNofi !== undefined ? boolean(value.albumNofi) : undefined,
-        calendarNofi: value.calendarNofi !== undefined ? boolean(value.calendarNofi) : undefined,
+        primaryNofi: convertBoolean(value.primaryNofi),
+        eventNofi: convertBoolean(value.eventNofi),
+        dateNofi: convertBoolean(value.dateNofi),
+        coupleNofi: convertBoolean(value.coupleNofi),
+        albumNofi: convertBoolean(value.albumNofi),
+        calendarNofi: convertBoolean(value.calendarNofi),
         role: value.role,
         password: value.password,
-        deleted: value.deleted !== undefined ? boolean(value.deleted) : undefined
+        deleted: convertBoolean(value.deleted)
       };
 
       const updatedUser: User = await userAdminController.updateUser(userId, data, profile);

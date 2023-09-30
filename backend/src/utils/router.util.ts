@@ -1,3 +1,4 @@
+import { boolean } from "boolean";
 import { Request } from "express";
 
 export type ContentType = "form-data" | "json" | undefined;
@@ -12,4 +13,8 @@ export const checkFormdataType = (req: Request): ContentType => {
   } else {
     return undefined;
   }
+};
+
+export const convertBoolean = (value: any): boolean | undefined => {
+  return value !== undefined ? boolean(value) : undefined;
 };

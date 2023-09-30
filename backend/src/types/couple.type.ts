@@ -1,10 +1,22 @@
 import { Couple } from "../models/couple.model.js";
 import { User } from "../models/user.model.js";
 
+import { CommonSortItem, commonSortItems } from "./sort.type.js";
+
+export type SortItem = CommonSortItem | "do" | "dr" | "sb" | "ss";
+export const isSortItem = (item: any): item is SortItem => commonSortItems.includes(item) || ["do", "dr", "sb", "ss"].includes(item);
+
 export interface CreateCouple {
-  otherCode: number;
+  otherCode: string;
   cupDay: Date;
-  thumbnail?: string | null;
+}
+
+export interface CreateCoupleWithAdmin {
+  code: string;
+  otherCode: string;
+  cupDay: Date;
+  deleted?: boolean;
+  deletedTime?: Date;
 }
 
 export interface UpdateCouple {
@@ -15,7 +27,7 @@ export interface UpdateCoupleWithAdmin {
   cupDay?: Date;
   thumbnail?: string | null;
   deleted?: boolean;
-  deletedTime?: Date;
+  deletedTime?: Date | null;
 }
 
 export interface ResponseCouple {
@@ -26,33 +38,24 @@ export interface ResponseCouple {
   users: User[];
 }
 
-export interface ResponseCoupleWithAdmin {
+export interface ResponseCouplesWithAdmin {
   couples: Couple[];
   total: number;
 }
 
-export interface ResponseCouplesWithAdmin {
-  cupId: string;
-  cupDay: Date;
-  thumbnail: string | null;
-  createdTime: Date;
-  deleted: boolean;
-  deletedTime: Date;
-  users: User[];
-}
-
-export interface PageOptions {
+export interface PageOptions<T> {
   count: number;
   page: number;
-  sort: string | "r" | "o" | "dr" | "do";
+  sort: T;
 }
 
 export interface SearchOptions {
-  name?: string;
+  cupId?: string;
 }
 
 export interface FilterOptions {
   fromDate?: Date;
   toDate?: Date;
-  isDeleted: boolean;
+  isDeleted?: boolean;
+  isThumbnail?: boolean;
 }

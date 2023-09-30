@@ -71,7 +71,12 @@ class CoupleController {
         if (!user) isNot = false;
       }
 
-      createdCouple = await this.coupleService.create(transaction, cupId, data, thumbnail);
+      if (thumbnail) {
+        createdCouple = await this.coupleService.createWithThumbnail(transaction, cupId, data, thumbnail);
+      } else {
+        createdCouple = await this.coupleService.create(transaction, cupId, data);
+      }
+
       await this.userService.updateWithData(transaction, user1, { cupId });
       await this.userService.updateWithData(transaction, user2, { cupId });
 

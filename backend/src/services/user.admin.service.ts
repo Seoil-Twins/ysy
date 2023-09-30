@@ -4,18 +4,20 @@ import { Op, OrderItem, Transaction, WhereOptions } from "sequelize";
 import { API_ROOT } from "../index.js";
 import { Service } from "./service.js";
 
+import { UNKNOWN_NAME } from "../constants/file.constant.js";
+
 import { Couple } from "../models/couple.model.js";
 import { User } from "../models/user.model.js";
-import { CreateUserWithAdmin, FilterOptions, SearchOptions, SortItem } from "../types/user.type.js";
-
-import { PageOptions, createSortOptions } from "../utils/pagination.util.js";
-import { File, uploadFileWithGCP } from "../utils/gcp.util.js";
-import { UNKNOWN_NAME } from "../constants/file.constant.js";
 import { UserRole } from "../models/userRole.model.js";
 import { Album } from "../models/album.model.js";
 import { AlbumImage } from "../models/albumImage.model.js";
 import { Calendar } from "../models/calendar.model.js";
+
 import { userSortOptions } from "../types/sort.type.js";
+import { CreateUserWithAdmin, FilterOptions, SearchOptions, SortItem } from "../types/user.type.js";
+
+import { PageOptions, createSortOptions } from "../utils/pagination.util.js";
+import { File, uploadFileWithGCP } from "../utils/gcp.util.js";
 
 class UserAdminService extends Service {
   private readonly FOLDER_NAME: string = "users";
@@ -35,13 +37,23 @@ class UserAdminService extends Service {
   }
 
   private createWhere(searchOptions: SearchOptions, filterOptions: FilterOptions): WhereOptions {
-    let result: WhereOptions = {};
+    let result: WhereOptions<User> = {};
 
-    if (searchOptions.name && searchOptions.name !== "undefined") result["name"] = { [Op.like]: `%${searchOptions.name}%` };
-    if (searchOptions.snsKind && searchOptions.snsKind !== "undefined") result["snsKind"] = searchOptions.snsKind;
-    if (filterOptions.isCouple) result["cupId"] = { [Op.not]: null };
-    if (filterOptions.isDeleted) result["deleted"] = true;
-    if (filterOptions.isProfile) result["profile"] = { [Op.not]: null };
+    if (searchOptions.name && searchOptions.name !== "undefined") {
+      result["name"] = { [Op.like]: `%${searchOptions.name}%` };
+    }
+    if (searchOptions.snsKind && searchOptions.snsKind !== "undefined") {
+      result["snsKind"] = searchOptions.snsKind;
+    }
+    if (filterOptions.isCouple) {
+      result["cupId"] = { [Op.not]: null };
+    }
+    if (filterOptions.isProfile) {
+      result["profile"] = { [Op.not]: null };
+    }
+    if (filterOptions.isDeleted) {
+      result["deleted"] = true;
+    }
 
     return result;
   }
