@@ -17,7 +17,7 @@ import regionCodeRouter from "./region.route.js";
 
 import userAdminRouter from "./user.admin.route.js";
 import coupleAdminRouter from "./couple.admin.route.js";
-// import albumAdminRouter from "./album.admin.route.js";
+import albumAdminRouter from "./album.admin.route.js";
 // import calendarAdminRouter from "./calendar.admin.route.js";
 // import InquireAdminRouter from "./inquire.admin.route.js";
 // import InquireImageAdminRouter from "./inquireImage.admin.route.js";
@@ -41,7 +41,7 @@ router.use("/region-code", authMiddleware, regionCodeRouter);
 
 router.use("/admin/user", checkContentType, authMiddleware, userAdminRouter);
 router.use("/admin/couple", checkContentType, authMiddleware, coupleAdminRouter);
-// router.use("/admin/album", authMiddleware, albumAdminRouter);
+router.use("/admin/album", checkContentType, authMiddleware, albumAdminRouter);
 // router.use("/admin/calendar", authMiddleware, calendarAdminRouter);
 // router.use("/admin/inquire", authMiddleware, InquireAdminRouter);
 // router.use("/admin/inquire-image", authMiddleware, InquireImageAdminRouter);

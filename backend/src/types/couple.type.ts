@@ -43,12 +43,6 @@ export interface ResponseCouplesWithAdmin {
   total: number;
 }
 
-export interface PageOptions<T> {
-  count: number;
-  page: number;
-  sort: T;
-}
-
 export interface SearchOptions {
   cupId?: string;
 }

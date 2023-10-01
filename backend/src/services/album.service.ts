@@ -9,10 +9,10 @@ import sequelize from "../models/index.js";
 import { AlbumImage } from "../models/albumImage.model.js";
 import { Album } from "../models/album.model.js";
 import { Couple } from "../models/couple.model.js";
-import { PageOptions, ResponseAlbumFolder, SortItem } from "../types/album.type.js";
+import { ResponseAlbumFolder, SortItem } from "../types/album.type.js";
 
 import { File, uploadFileWithGCP } from "../utils/gcp.util.js";
-import { createSortOptions } from "../utils/pagination.util.js";
+import { PageOptions, createSortOptions } from "../utils/pagination.util.js";
 
 import { Service } from "./service.js";
 import { albumSortOptions } from "../types/sort.type.js";
@@ -78,7 +78,7 @@ class AlbumService extends Service {
    * @param pageOptions {@link PageOptions}
    * @returns Promise\<{ albums: {@link Album}[], total: number \}>
    */
-  async selectAllForFolder(cupId: string, pageOptions: PageOptions): Promise<ResponseAlbumFolder> {
+  async selectAllForFolder(cupId: string, pageOptions: PageOptions<SortItem>): Promise<ResponseAlbumFolder> {
     const offset: number = (pageOptions.page - 1) * pageOptions.count;
     const sortOptions: OrderItem = createSortOptions<SortItem>(pageOptions.sort, albumSortOptions);
 

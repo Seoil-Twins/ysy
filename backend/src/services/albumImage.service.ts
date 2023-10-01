@@ -5,10 +5,10 @@ import { NullishPropertiesOf } from "sequelize/types/utils";
 import { UNKNOWN_NAME } from "../constants/file.constant.js";
 
 import logger from "../logger/logger.js";
-import { createSortOptions } from "../utils/pagination.util.js";
+import { PageOptions, createSortOptions } from "../utils/pagination.util.js";
 import { File, UploadImageInfo, uploadFileWithGCP, uploadFilesWithGCP } from "../utils/gcp.util.js";
 
-import { PageOptions, SortItem } from "../types/album.type.js";
+import { SortItem } from "../types/album.type.js";
 
 import { AlbumImage } from "../models/albumImage.model.js";
 
@@ -59,7 +59,7 @@ class AlbumImageService extends Service {
    * @param pageOptions {@link PageOptions}
    * @returns Promise<{ images: {@link AlbumImage AlbumImage[]}, total: number }>
    */
-  async selectAllWithOptions(albumId: number, pageOptions: PageOptions): Promise<{ images: AlbumImage[]; total: number }> {
+  async selectAllWithOptions(albumId: number, pageOptions: PageOptions<SortItem>): Promise<{ images: AlbumImage[]; total: number }> {
     const offset: number = (pageOptions.page - 1) * pageOptions.count;
     const sortOptions: OrderItem = createSortOptions<SortItem>(pageOptions.sort, albumSortOptions);
 

@@ -1,5 +1,6 @@
 import { OrderItem } from "sequelize";
 import { CommonSortItem, SortOption } from "../types/sort.type.js";
+import dayjs from "dayjs";
 
 export interface CreatePageOption<T> {
   count?: number;
@@ -32,4 +33,18 @@ export const createPageOptions = <T>(data: CreatePageOption<T>): PageOptions<T> 
 export const createSortOptions = <T extends string>(sortItem: T, options: SortOption<T | CommonSortItem>): OrderItem => {
   const option = options[sortItem];
   return option || options.r;
+};
+
+export const convertStringtoDate = ({ strStartDate, strEndDate }: { strStartDate?: any; strEndDate?: any }) => {
+  if (!strStartDate || !strEndDate) {
+    return {
+      fromDate: undefined,
+      toDate: undefined
+    };
+  }
+
+  return {
+    fromDate: dayjs(String(strStartDate)).startOf("day").utc(true).toDate(),
+    toDate: dayjs(String(strEndDate)).endOf("day").utc(true).toDate()
+  };
 };

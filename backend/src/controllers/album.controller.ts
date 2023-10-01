@@ -10,7 +10,7 @@ import sequelize from "../models/index.js";
 import { Album } from "../models/album.model.js";
 import { AlbumImage } from "../models/albumImage.model.js";
 
-import { PageOptions, ResponseAlbum, ResponseAlbumFolder } from "../types/album.type.js";
+import { ResponseAlbum, ResponseAlbumFolder, SortItem } from "../types/album.type.js";
 
 import logger from "../logger/logger.js";
 import AlbumService from "../services/album.service.js";
@@ -27,6 +27,7 @@ import {
   uploadFileWithGCP,
   uploadFilesWithGCP
 } from "../utils/gcp.util.js";
+import { PageOptions } from "../utils/pagination.util.js";
 
 class AlbumController {
   private ERROR_LOCATION_PREFIX = "album";
@@ -38,7 +39,7 @@ class AlbumController {
     this.albumImageService = albumImageService;
   }
 
-  async getAlbumsFolder(cupId: string, options: PageOptions): Promise<ResponseAlbumFolder> {
+  async getAlbumsFolder(cupId: string, options: PageOptions<SortItem>): Promise<ResponseAlbumFolder> {
     const response: ResponseAlbumFolder = await this.albumService.selectAllForFolder(cupId, options);
 
     if (response.total > 0) {
@@ -58,7 +59,7 @@ class AlbumController {
     return response;
   }
 
-  async getAlbums(albumId: number, options: PageOptions): Promise<ResponseAlbum> {
+  async getAlbums(albumId: number, options: PageOptions<SortItem>): Promise<ResponseAlbum> {
     const album: Album | null = await this.albumService.select(albumId);
     if (!album) throw new NotFoundError("Not Found Albums");
 

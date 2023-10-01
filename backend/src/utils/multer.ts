@@ -25,6 +25,15 @@ export interface MulterUpdateFile {
   next: NextFunction;
 }
 
+export interface MulterFieldUploadFile {
+  singleFieldNames: string[];
+  multipleFieldNames: string[];
+  contentType: ContentType;
+  req: Request;
+  err: any;
+  next: NextFunction;
+}
+
 const fileFilter = (req: Request, file: Express.Multer.File, cb: FileFilterCallback) => {
   if (file.mimetype.lastIndexOf("image") > -1) {
     if (req.originalFileNames) {
@@ -115,6 +124,33 @@ export const uploadFilesFunc = (info: MulterUploadFile, callback: Function) => {
         throw new BadRequestError("The image is not uploaded properly. Please check if there are any damaged images.");
 
       callback(req.files as File[]);
+    } else {
+      callback(undefined);
+    }
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const uploadFieldsFunc = (info: MulterFieldUploadFile, callback: Function) => {
+  const { contentType, req, err, next } = info;
+
+  try {
+    errorHandling(err);
+    const files = req.files as { [fieldname: string]: File[] };
+    const singleImages: Record<string, File> = {};
+    const multipleImages: Record<string, File[]> = {};
+
+    if (contentType === "form-data") {
+      info.singleFieldNames.forEach((fieldname: string) => {
+        if (files[fieldname] && files[fieldname].length > 0) singleImages[fieldname] = files[fieldname][0];
+      });
+
+      info.multipleFieldNames.forEach((fieldname: string) => {
+        if (files[fieldname] && files[fieldname].length > 0) multipleImages[fieldname] = files[fieldname];
+      });
+
+      callback(singleImages, multipleImages);
     } else {
       callback(undefined);
     }

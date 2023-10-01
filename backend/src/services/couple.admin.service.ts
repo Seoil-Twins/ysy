@@ -11,9 +11,9 @@ import { Couple } from "../models/couple.model.js";
 import { AlbumImage } from "../models/albumImage.model.js";
 
 import { coupleSortOptions } from "../types/sort.type.js";
-import { FilterOptions, SearchOptions, PageOptions, ResponseCouplesWithAdmin, SortItem, CreateCoupleWithAdmin } from "../types/couple.type.js";
+import { FilterOptions, SearchOptions, ResponseCouplesWithAdmin, SortItem, CreateCoupleWithAdmin } from "../types/couple.type.js";
 
-import { createSortOptions } from "../utils/pagination.util.js";
+import { PageOptions, createSortOptions } from "../utils/pagination.util.js";
 import { File, uploadFileWithGCP } from "../utils/gcp.util.js";
 
 class CoupleAdminService extends Service {

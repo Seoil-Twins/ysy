@@ -19,7 +19,8 @@ import UnsupportedMediaTypeError from "../errors/unsupportedMediaType.error.js";
 
 import { Album } from "../models/album.model.js";
 
-import { ResponseAlbumFolder, ResponseAlbum, PageOptions, SortItem, isSortItem } from "../types/album.type.js";
+import { ResponseAlbumFolder, ResponseAlbum, SortItem, isSortItem } from "../types/album.type.js";
+import { PageOptions } from "../utils/pagination.util.js";
 
 const router: Router = express.Router();
 const albumService = new AlbumService();
@@ -50,7 +51,7 @@ router.get("/:cup_id", async (req: Request, res: Response, next: NextFunction) =
   try {
     if (req.cupId !== req.params.cup_id) throw new ForbiddenError("You don't same token couple ID and path parameter couple ID");
 
-    const pageOptions: PageOptions = {
+    const pageOptions: PageOptions<SortItem> = {
       page: page,
       count: count,
       sort: sort
@@ -75,7 +76,7 @@ router.get("/:cup_id/:album_id", async (req: Request, res: Response, next: NextF
     if (req.cupId !== req.params.cup_id) throw new ForbiddenError("You don't same token couple ID and path parameter couple ID");
     else if (isNaN(albumId)) throw new BadRequestError("Album ID must be a number type");
 
-    const pageOptions: PageOptions = {
+    const pageOptions: PageOptions<SortItem> = {
       page: page,
       count: count,
       sort: sort
@@ -94,7 +95,6 @@ router.post("/:cup_id", async (req: Request, res: Response, next: NextFunction) 
   try {
     const { value, error }: ValidationResult = validator(req.body, titleSchema);
 
-    req.cupId = req.params.cup_id; // 꼭! 지워야함! 테스트를 위한 코드
     if (error) throw new BadRequestError(error.message);
     else if (req.cupId !== req.params.cup_id) throw new ForbiddenError("You don't same token couple ID and path parameter couple ID");
 

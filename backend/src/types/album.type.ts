@@ -20,12 +20,6 @@ export interface ResponseAlbum {
   total: number;
 }
 
-export interface PageOptions {
-  count: number;
-  page: number;
-  sort: SortItem;
-}
-
 export interface SearchOptions {
   cupId?: string;
 }

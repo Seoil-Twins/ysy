@@ -13,15 +13,7 @@ import { User } from "../models/user.model.js";
 import { Couple } from "../models/couple.model.js";
 import { Album } from "../models/album.model.js";
 
-import {
-  FilterOptions,
-  SearchOptions,
-  PageOptions,
-  ResponseCouplesWithAdmin,
-  UpdateCoupleWithAdmin,
-  SortItem,
-  CreateCoupleWithAdmin
-} from "../types/couple.type.js";
+import { FilterOptions, SearchOptions, ResponseCouplesWithAdmin, UpdateCoupleWithAdmin, SortItem, CreateCoupleWithAdmin } from "../types/couple.type.js";
 
 import { UNKNOWN_NAME } from "../constants/file.constant.js";
 
@@ -30,6 +22,7 @@ import { DeleteImageInfo, File, UploadImageInfo, deleteFileWithGCP, deleteFilesW
 import NotFoundError from "../errors/notFound.error.js";
 import BadRequestError from "../errors/badRequest.error.js";
 import ConflictError from "../errors/conflict.error.js";
+import { PageOptions } from "../utils/pagination.util.js";
 
 export class CoupleAdminController {
   private ERROR_LOCATION_PREFIX = "adminCouple";
@@ -172,7 +165,6 @@ export class CoupleAdminController {
     let prevFile: UploadImageInfo | null = null;
 
     const couple: Couple | null = await this.coupleService.select(cupId);
-
     if (!couple) throw new NotFoundError(`Not found couple with using cupId => ${cupId}`);
 
     try {

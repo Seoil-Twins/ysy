@@ -17,7 +17,6 @@ import {
   UpdateCoupleWithAdmin,
   SortItem,
   isSortItem,
-  PageOptions,
   CreateCoupleWithAdmin
 } from "../types/couple.type.js";
 
@@ -26,7 +25,7 @@ import validator from "../utils/validator.util.js";
 import { File } from "../utils/gcp.util.js";
 import { ContentType, convertBoolean } from "../utils/router.util.js";
 import { canModifyWithEditor, canView } from "../utils/checkRole.util.js";
-import { CreatePageOption, createPageOptions } from "../utils/pagination.util.js";
+import { CreatePageOption, PageOptions, createPageOptions } from "../utils/pagination.util.js";
 import { MulterUpdateFile, MulterUploadFile, multerUpload, updateFileFunc, uploadFileFunc } from "../utils/multer.js";
 
 import { STATUS_CODE } from "../constants/statusCode.constant.js";
@@ -64,7 +63,7 @@ router.get("/", canView, async (req: Request, res: Response, next: NextFunction)
   };
   const pageOptions: PageOptions<SortItem> = createPageOptions<SortItem>(createdPageOptions);
   const searchOptions: SearchOptions = {
-    cupId: String(req.query.cup_id) || undefined
+    cupId: req.query.cup_id ? String(req.query.cup_id) : undefined
   };
   const filterOptions: FilterOptions = {
     fromDate: req.query.from_date ? new Date(dayjs(String(req.query.from_date)).valueOf()) : undefined,
