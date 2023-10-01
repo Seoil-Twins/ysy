@@ -140,7 +140,7 @@ router.post("/:cup_id/:album_id", async (req: Request, res: Response, next: Next
 });
 
 // 앨범 합치기
-router.patch("/merge/:cup_id", async (req: Request, res: Response, next: NextFunction) => {
+router.post("/merge", async (req: Request, res: Response, next: NextFunction) => {
   const contentType: ContentType = req.contentType;
 
   try {

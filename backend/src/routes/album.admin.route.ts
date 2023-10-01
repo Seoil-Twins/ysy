@@ -25,16 +25,25 @@ import { MulterFieldUploadFile, multerUpload, uploadFieldsFunc } from "../utils/
 import { File } from "../utils/gcp.util.js";
 import UnsupportedMediaTypeError from "../errors/unsupportedMediaType.error.js";
 import CoupleService from "../services/couple.service.js";
+import AlbumController from "../controllers/album.controller.js";
 
 const router: Router = express.Router();
-const albumSerivce: AlbumService = new AlbumService();
+const albumService: AlbumService = new AlbumService();
 const albumAdminService: AlbumAdminService = new AlbumAdminService();
 const albumImageService: AlbumImageService = new AlbumImageService();
 const coupleService: CoupleService = new CoupleService();
-const albumAdminController: AlbumAdminController = new AlbumAdminController(albumSerivce, albumAdminService, albumImageService, coupleService);
+
+const albumController = new AlbumController(albumService, albumImageService);
+const albumAdminController: AlbumAdminController = new AlbumAdminController(albumService, albumAdminService, albumImageService, coupleService);
 
 const createSchema: joi.Schema = joi.object({
   title: joi.string().required()
+});
+
+const mergeSchema: joi.Schema = joi.object({
+  title: joi.string().required(),
+  albumId: joi.number().required(),
+  targetIds: joi.array().items(joi.number()).required()
 });
 
 const updateSchema: joi.Schema = joi.object({
@@ -137,31 +146,26 @@ router.post("/:cup_id", canModifyWithEditor, async (req: Request, res: Response,
 
     uploadFieldsFunc(info, createFunc);
   });
+});
 
-  // form.parse(req, async (err, fields, files) => {
-  //   try {
-  //     req.body = Object.assign({}, req.body, fields);
-  //     req.body.cupId = req.params.cup_id ? String(req.params.cup_id) : undefined;
-  //     const { error }: ValidationResult = validator(req.body, createSchema);
+router.post("/merge/:cup_id", async (req: Request, res: Response, next: NextFunction) => {
+  const cupId: string = String(req.params.cup_id);
+  const contentType: ContentType = req.contentType;
 
-  //     if (err) throw new InternalServerError(`Image Server Error : ${JSON.stringify(err)}`);
-  //     else if (error) throw new BadRequestError(error.message);
-  //     else if (files.thumbnail instanceof Array<formidable.File>) throw new BadRequestError("You must request only one thumbnail");
+  try {
+    if (contentType === "form-data") throw new UnsupportedMediaTypeError("This API must have a content-type of 'json' unconditionally.");
 
-  //     const data: ICreateWithAdmin = {
-  //       cupId: req.body.cupId,
-  //       title: String(req.body.title)
-  //     };
-  //     const thumbnail: File | undefined = files.thumbnail;
-  //     const images: File | File[] | undefined = files.images;
+    const { value, error }: ValidationResult = validator(req.body, mergeSchema);
+    if (error) throw new BadRequestError(error);
 
-  //     const url: string = await albumAdminController.createAlbum(data, thumbnail, images);
+    const albumId: number = value.albumId;
+    const targerIds: number[] = value.targetIds;
 
-  //     res.header({ Location: url }).status(STATUS_CODE.CREATED).json({});
-  //   } catch (error) {
-  //     next(error);
-  //   }
-  // });
+    const url: string = await albumController.mergeAlbum(cupId, albumId, targerIds, value.title);
+    return res.header({ Location: url }).status(STATUS_CODE.NO_CONTENT).json({});
+  } catch (error) {
+    next(error);
+  }
 });
 
 // router.post("/:cup_id/:album_id", canModifyWithEditor, async (req: Request, res: Response, next: NextFunction) => {

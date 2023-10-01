@@ -123,6 +123,7 @@ class AlbumController {
     const prevThumbnails = [];
 
     const albumFolder: Album | null = await this.albumService.select(albumId);
+
     if (!albumFolder) throw new NotFoundError("Not found album using albumId");
     else if (albumFolder.cupId !== cupId) throw new ForbiddenError("The ID of the album folder and the body ID don't match.");
 
