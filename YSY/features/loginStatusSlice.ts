@@ -5,7 +5,7 @@ export interface LoginStatusState {
   isLogin: boolean;
 }
 
-const initialState: LoginStatusState = { isLogin: true };
+const initialState: LoginStatusState = { isLogin: false };
 
 export const loginStatusSlice = createSlice({
   name: 'loginStatus',

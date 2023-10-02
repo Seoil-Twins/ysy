@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axios, { AxiosRequestConfig } from 'axios';
 
 const API_BASE_URL = 'http://10.0.2.2:3000';
 
@@ -9,6 +9,13 @@ const headers = {
     'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjMsImN1cElkIjpudWxsLCJyb2xlSWQiOjQsImlhdCI6MTY5NDk2OTc2NSwiZXhwIjoxNjk3NTYxNzY1LCJpc3MiOiJ5c3l1c2VyIn0._Op578kn8MNoJLQjH4o0e7U0YuHeCkJGEpgwE-Mmic0', // Desktop
 };
 
+export interface File {
+  uri: string;
+  type: string;
+  size: number;
+  name: string;
+}
+
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
   headers: headers,
@@ -16,40 +23,49 @@ const apiClient = axios.create({
 
 export const API = {
   get: async (url: string, data?: any) => {
+    const response = await apiClient.get(url, { params: data }).then(res => {
+      return res.data;
+    });
+    return response;
+  },
+  post: async (url: string, data?: any) => {
+    const response = await apiClient.post(url, data).then(res => {
+      return res.data;
+    });
+    return response;
+  },
+  post_formdata: async (url: string, data?: any) => {
     try {
-      const response = await apiClient
-        .get(url, { params: data })
-        .then(res => {
-          return res.data;
-        })
-        .catch(error => {
-          // 오류 처리
-          console.error(error);
-        });
+      const formData = new FormData();
+
+      // data = [{ title: '제목', content: 'desc1', images: File[]  }];
+      formData.append('images', data);
+
+      // formData = {
+      //   'thumbnail' : '',
+      //   'type' : '',
+
+      // }
+
+      const response = await apiClient.postForm(url, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+
       return response;
     } catch (error) {
       console.log(error);
-      throw error;
-    }
-  },
-  post: async (url: string, data?: any) => {
-    try {
-      const response = await apiClient
-        .post(url, data)
-        .then(res => {
-          console.log(res);
-          return res.data;
-        })
-        .catch(error => {
-          // 오류 처리
-          console.error(error);
-        });
-      return response;
-    } catch (error) {
       return error;
     }
   },
-  post_formdata: async (url: string, data?: any) => {
+  patch: async (url: string, data?: any) => {
+    const response = await apiClient.patch(url, data).then(res => {
+      return res.data;
+    });
+    return response;
+  },
+  patch_formdata: async (url: string, data?: any) => {
     try {
       const formData = new FormData();
 
@@ -57,7 +73,7 @@ export const API = {
         formData.append(k, v);
       }
 
-      const response = await apiClient.get(url, {
+      const response = await apiClient.patch(url, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
@@ -68,6 +84,12 @@ export const API = {
     } catch (error) {
       return error;
     }
+  },
+  delete: async (url: string, config?: AxiosRequestConfig) => {
+    const response = await apiClient.delete(url, config).then(res => {
+      return res.data;
+    });
+    return response;
   },
 };
 
