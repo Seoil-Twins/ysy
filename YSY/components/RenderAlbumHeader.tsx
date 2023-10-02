@@ -9,7 +9,7 @@ import BCheckSvg from '../assets/icons/check.svg';
 import UCheckSvg from '../assets/icons/un-check.svg';
 
 type RenderAlbumHeaderProps = {
-  selectedAlbums: string[];
+  selectedAlbums: number[];
   handleSelectAll: () => void;
   openSortModal: () => void;
 };

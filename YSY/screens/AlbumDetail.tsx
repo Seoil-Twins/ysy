@@ -34,20 +34,28 @@ import RenderImageHeader from '../components/RenderImageHeader';
 import RenderImage from '../components/RenderImage';
 // import RNFS from 'react-native-fs';
 import { albumFunc } from '../features/albumSlice';
+import { albumAPI } from '../apis/albumAPI';
+import { assets } from '../react-native.config';
+import { File } from '../util/API';
 const screenWidth = wp('100%');
+let imageCount = 0;
 
 export const AlbumDetail = () => {
-  const { albumName } = useRoute<RouteProp<AlbumTypes, 'AlbumDetail'>>().params;
+  const { albumId, albumTitle, cupId } =
+    useRoute<RouteProp<AlbumTypes, 'AlbumDetail'>>().params;
 
   const [isLoading, setIsLoading] = useState(false);
   const [numColumns] = useState(4);
-  const [RepImage, setRepImage] = useState('');
+  const [RepImage, setRepImage] = useState(0);
+  const [totalImage, setTotalImage] = useState(0);
 
   const [albumImages, setAlbumImages] = useState<string[]>([]);
   const [selectedImages, setSelectedImages] = useState<string[]>([]);
+  const [selectedImageIds, setSelectedImageIds] = useState<number[]>([]);
+  const [changeTitle, setChangeTitle] = useState('');
   const [isRepImageSelMode, setIsRepImageSelMode] = useState(false);
-  const [tmpRepImage, setTmpRepImage] = useState('');
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [tmpRepImage, setTmpRepImage] = useState(0);
+
   const [selectedAddImage, setSelectedAddImage] = useState<string | undefined>(
     undefined,
   );
@@ -70,20 +78,13 @@ export const AlbumDetail = () => {
   const dispatch = useAppDispatch();
   const navigation = useNavigation();
 
-  const dummyImages2 = [
-    'https://fastly.picsum.photos/id/179/200/200.jpg?hmac=I0g6Uht7h-y3NHqWA4e2Nzrnex7m-RceP1y732tc4Lw',
-    'https://fastly.picsum.photos/id/803/200/300.jpg?hmac=v-3AsAcUOG4kCDsLMlWF9_3Xa2DTODGyKLggZNvReno',
-    'https://fastly.picsum.photos/id/999/200/300.jpg?hmac=XqjgMZW5yK4MjHpQJFs_TiRodRNf9UVKjJiGnDJV8GI',
-    'https://fastly.picsum.photos/id/600/200/300.jpg?hmac=Ub3Deb_eQNe0Un7OyE33D79dnextn3M179L0nRkv1eg',
-    'https://fastly.picsum.photos/id/193/200/300.jpg?hmac=b5ZG1TfdndbrnQ8UJbIu-ykB2PRWv0QpHwehH0pqMgE',
-    'https://fastly.picsum.photos/id/341/200/300.jpg?hmac=tZpxFpS1LmFfC4e_ChqA5I8JfUfJuwH3oZvmQ58SzHc',
-    'https://fastly.picsum.photos/id/387/200/300.jpg?hmac=JlKyfJE4yZ_jxmWXH5sNYl7JdDfP04DOk-hye4p_wtk',
-    'https://fastly.picsum.photos/id/863/200/300.jpg?hmac=4kin1N4a7dzocUZXCwLWHewLobhw1Q6_e_9E3Iy3n0I',
-  ];
-
   useEffect(() => {
-    const newData = loadImageFromDB(albumName, 40);
-    setAlbumImages(prevData => [...prevData, ...newData]);
+    const callNewData = async () => {
+      const res = await loadImageFromDB(albumId, 50);
+      return res;
+    };
+    imageCount = 0;
+    callNewData();
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -149,28 +150,58 @@ export const AlbumDetail = () => {
     }
   }, [isFunc, selectedImages.length]);
 
-  const loadImageFromDB = (albumName: string, slice: number) => {
-    // albumName을 이용한 Image 가져오는 코드 작성해야함
-    const ImageArray = dummyImages2.slice(
+  const loadImageFromDB = async (albumId: number, slice: number) => {
+    const data = JSON.stringify(
+      await albumAPI.getAlbumImages(cupId, albumId, {
+        page: imageCount / 40 + 1,
+        count: slice,
+      }),
+    );
+    imageCount += slice;
+    console.log(imageCount);
+    const parsedData = JSON.parse(data);
+    setTotalImage(parsedData.total);
+    const thumb = parsedData.images.map(
+      (image: { path: string }) => image.path,
+    );
+    // albumId을 이용한 Image 가져오는 코드 작성해야함
+    const ImageArray = thumb.slice(
       albumImages.length,
       albumImages.length + slice,
     );
+
+    const imageList = parsedData.images.map(
+      (image: {
+        albumImageId: number;
+        size: number;
+        type: string;
+        path: string;
+        createdTime: Date;
+      }) => ({
+        albumImageId: image.albumImageId,
+        size: image.size,
+        type: image.type,
+        path: image.path,
+        createdTime: image.createdTime,
+      }),
+    );
+    setAlbumImages(prevData => [...prevData, ...imageList]);
     return ImageArray;
   };
 
   const loadMoreData = () => {
     // 이미 로딩 중이거나 데이터가 모두 로딩되었을 경우 함수 실행 종료
-    if (isLoading || albumImages.length >= dummyImages2.length) {
+    if (isLoading || albumImages.length >= totalImage) {
       return;
     }
 
     // 데이터 로딩 시작
     setIsLoading(true);
-    console.log('로딩시이이이작');
+    console.log('로딩시이이이작' + imageCount);
     // 모의 API 호출 또는 기타 데이터 로딩 로직 구현
     // 이 예시에서는 setTimeout을 사용하여 1초 후에 새로운 데이터를 추가로 로딩합니다.
-    setTimeout(() => {
-      const newData = loadImageFromDB(albumName, 8);
+    setTimeout(async () => {
+      const newData = await loadImageFromDB(albumId, 40);
       setAlbumImages(prevData => [...prevData, ...newData]);
       setIsLoading(false);
     }, 1000);
@@ -180,14 +211,29 @@ export const AlbumDetail = () => {
     const options: ImageLibraryOptions = {
       mediaType: 'photo', // 이미지 타입 설정 (사진만 가져오려면 'photo'로 설정)
     };
-
-    launchImageLibrary(options, (response: ImagePickerResponse) => {
+    launchImageLibrary(options, async (response: ImagePickerResponse) => {
       if (response.didCancel) {
         console.log('User cancelled image picker');
       } else {
         // 이미지가 선택된 경우 이미지 URI를 저장
         if (response.assets) {
-          setSelectedAddImage(response.assets[0].uri);
+          await setSelectedAddImage(response.assets[0].uri);
+          // console.log(response.assets[0]);
+          const res = await fetch(response.assets[0].uri);
+          const blob = await res.blob();
+
+          if (!response.assets[0].uri || !response.assets[0].fileName) {
+            console.log('Image Data Not Found ! ');
+            return;
+          }
+          const newFile: File = {
+            uri: response.assets[0].uri,
+            type: blob.type,
+            size: blob.size,
+            name: response.assets[0].fileName,
+          };
+          const apiRes = await albumAPI.postNewImage(cupId, albumId, newFile);
+          console.log(apiRes);
         }
       }
     });
@@ -232,10 +278,28 @@ export const AlbumDetail = () => {
     setIsPressed(prevState => ({ ...prevState, [option]: false }));
   };
 
-  const handleRepImage = () => {
+  const handleRepImage = async () => {
     setIsRepImageSelMode(true);
+    try {
+      const data = JSON.stringify(
+        await albumAPI.patchRepImgAlbum(cupId, albumId, {
+          thumbnail: 'https://dummyimage.com/600x400/000/fff&text=Im+Dummy',
+        }),
+      );
+      console.log(data);
+    } catch (error) {
+      console.log(error);
+    }
     // dispatch(imageSelectionOn());
     setIsMoreModalVisible(false);
+  };
+
+  const handleTitle = async () => {
+    const data = JSON.stringify(
+      await albumAPI.patchTitleAlbum(cupId, albumId, { title: changeTitle }),
+    );
+    console.log(data);
+    setIsModNameVisible(false);
   };
 
   const openImageModal = () => {
@@ -246,20 +310,33 @@ export const AlbumDetail = () => {
     dispatch(imageSelectionOff());
   };
 
-  const handleImagePress = (imageName: string) => {
+  const handleImagePress = (item: any) => {
     if (isImage) {
       setSelectedImages(prevSelectedImages => {
-        if (prevSelectedImages.includes(imageName)) {
+        if (prevSelectedImages.includes(item.albumImageId)) {
           // 이미 선택된 앨범인 경우 선택 해제
-          return prevSelectedImages.filter(item => item !== imageName);
+          return prevSelectedImages.filter(
+            itesm => itesm !== item.albumImageId,
+          );
         } else {
           // 선택되지 않은 앨범인 경우 선택 추가
-          return [...prevSelectedImages, imageName];
+          return [...prevSelectedImages, item.albumImageId];
+        }
+      });
+      setSelectedImageIds(prevSelectedImageIds => {
+        if (prevSelectedImageIds.includes(item.albumImageId)) {
+          // 이미 선택된 앨범인 경우 선택 해제
+          return prevSelectedImageIds.filter(
+            tartget => tartget !== item.albumImageId,
+          );
+        } else {
+          // 선택되지 않은 앨범인 경우 선택 추가
+          return [...prevSelectedImageIds, item.albumImageId];
         }
       });
     } else {
       if (isRepImageSelMode) {
-        setTmpRepImage(imageName);
+        setTmpRepImage(item.albumImageId);
       }
     }
   };
@@ -296,6 +373,9 @@ export const AlbumDetail = () => {
   };
 
   const handleImageDelete = async () => {
+    const data = { imageIds: selectedImageIds };
+    const res = albumAPI.deleteImage(cupId, albumId, data);
+    console.log(res);
     const newData = await albumImages.filter(
       item => !selectedImages.includes(item),
     );
@@ -406,7 +486,7 @@ export const AlbumDetail = () => {
           data={albumImages} // 앨범에 해당하는 이미지 데이터를 사용합니다.
           renderItem={({ item }) => (
             <RenderImage
-              selectedImages={selectedImages}
+              selectedImages={selectedImageIds}
               tmpRepImage={tmpRepImage}
               isRepImageSelMode={isRepImageSelMode}
               handleImagePress={() => handleImagePress(item)}
@@ -496,8 +576,10 @@ export const AlbumDetail = () => {
               <Text>앨범명 변경</Text>
               <TextInput
                 style={styles.input}
-                onChangeText={() => {}}
-                defaultValue={albumName}
+                onChangeText={text => {
+                  setChangeTitle(text);
+                }}
+                defaultValue={albumTitle}
               />
               <View style={styles.buttonContainer}>
                 <Text
@@ -510,7 +592,7 @@ export const AlbumDetail = () => {
                 <Text>|</Text>
                 <Text
                   style={styles.modalButtonOk}
-                  onPress={() => setIsModNameVisible(false)}>
+                  onPress={() => handleTitle()}>
                   변경
                 </Text>
               </View>

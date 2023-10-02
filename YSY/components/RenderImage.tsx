@@ -12,9 +12,15 @@ import WCheckBigSvg from '../assets/icons/white_check_big.svg';
 const screenWidth = wp('100%');
 
 type RenderImageProps = {
-  selectedImages: string[];
-  tmpRepImage: string;
-  item: string;
+  selectedImages: number[];
+  tmpRepImage: number;
+  item: {
+    albumImageId: number;
+    size: number;
+    type: string;
+    path: string;
+    createdTime: Date;
+  };
   isRepImageSelMode: boolean;
   handleImagePress: (imageName: string) => void;
   handleImageLongPress: () => void;
@@ -28,12 +34,11 @@ const RenderImage: React.FC<RenderImageProps> = ({
   handleImagePress,
   handleImageLongPress,
 }) => {
-  const isSelected = selectedImages.includes(item);
-  const isTmpRepImage = tmpRepImage.includes(item);
+  const isSelected = selectedImages.includes(item.albumImageId);
+  const isTmpRepImage = tmpRepImage == item.albumImageId;
   const isImage = useAppSelector(
     (state: RootState) => state.imageStatus.isImage,
   );
-
   return (
     <View style={{ flex: 1, paddingTop: 1, alignItems: 'flex-start' }}>
       <TouchableOpacity
@@ -42,11 +47,11 @@ const RenderImage: React.FC<RenderImageProps> = ({
           paddingTop: 1,
           paddingRight: 1,
         }}
-        onPress={() => handleImagePress(item)}
+        onPress={() => handleImagePress(item.path)}
         onLongPress={() => handleImageLongPress()}>
         <View style={{ flexDirection: 'row' }}>
           <Image
-            source={{ uri: item }}
+            source={{ uri: item.path }}
             style={{ width: screenWidth / 4 - 2, height: 100 }}
           />
           {isTmpRepImage && (

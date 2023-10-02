@@ -40,7 +40,11 @@ const handleAddAlbum = async (newAlbumTitle: string) => {
   const userParsedData = JSON.parse(userData);
   const postData = { title: newAlbumTitle };
 
-  console.log(albumAPI.postNewAlbum(userParsedData.cupId, postData));
+  try {
+    console.log(albumAPI.postNewAlbum(userParsedData.cupId, postData));
+  } catch (error) {
+    console.log(error);
+  }
 };
 
 export const Album = () => {
@@ -52,8 +56,10 @@ export const Album = () => {
   const [isDeleteVisible, setIsDeleteVisible] = useState(false);
   const [isMergeNameVisible, setIsMergeNameVisible] = useState(false);
   const [newAlbumTitle, setNewAlbumTitle] = useState('default');
+  const [mergeAlbumTitle, setMergeAlbumTitle] = useState('default');
 
   const [selectedAlbums, setSelectedAlbums] = useState<string[]>([]);
+  const [selectedAlbumIds, setSelectedAlbumIds] = useState<number[]>([]);
   const [albumImages, setAlbumImages] = useState<string[]>([]);
   const [dummyFolder, setDummyFolder] = useState<string[]>([]);
   const [foldersData, setFoldersData] = useState<string[]>([]);
@@ -74,43 +80,39 @@ export const Album = () => {
   //   return parsedData;
   // };
 
-  const getAlbumImageCount = (albumId: number) => {
-    // firebase에서 바로 제공해주나?
-    // 임시 코드
-    if (albumId === 1) {
-      return 30;
-    } else if (albumId === 2) {
-      return 20;
-    } else if (albumId === 3) {
-      return 130;
+  const getAlbumFolders = async (sort?: string) => {
+    try {
+      const userData = JSON.stringify(await userAPI.getUserMe()); // login 정보 가져오기
+      const userParsedData = JSON.parse(userData);
+      const data = JSON.stringify(
+        await albumAPI.getAlbumFolder(userParsedData.cupId, sort),
+      );
+      const parsedData = JSON.parse(data);
+
+      const defaultThumbnail =
+        'https://dummyimage.com/600x400/000/fff&text=Im+Dummy'; // 적절한 기본 이미지 URL을 설정하세요.
+
+      setFoldersData(parsedData);
+      console.log(parsedData);
+      const folderList = parsedData.albums.map(
+        (album: {
+          albumId: number;
+          thumbnail: string;
+          title: string;
+          total: number;
+          createdTime: Date;
+        }) => ({
+          albumId: album.albumId,
+          thumbnail: album.thumbnail ? album.thumbnail : defaultThumbnail,
+          title: album.title,
+          total: album.total,
+          createdTime: album.createdTime,
+        }),
+      );
+      setDummyFolder(folderList);
+    } catch (error) {
+      console.log(error);
     }
-  };
-
-  const getAlbumFolders = async () => {
-    const userData = JSON.stringify(await userAPI.getUserMe()); // login 정보 가져오기
-    const userParsedData = JSON.parse(userData);
-    const data = JSON.stringify(
-      await albumAPI.getAlbumFolder(userParsedData.cupId),
-    ); // login 정보 가져오기
-    const parsedData = JSON.parse(data);
-
-    for (const item of parsedData.albums) {
-      item.count = getAlbumImageCount(item.albumId);
-    }
-    setFoldersData(parsedData);
-    console.log(parsedData);
-    const sortedAlbums = parsedData.albums.sort((a, b) => {
-      // 문자열로 된 날짜를 JavaScript Date 객체로 변환하여 비교합니다
-      const dateA = new Date(a.createdTime);
-      const dateB = new Date(b.createdTime);
-
-      return dateA - dateB;
-      // return dateB - dateA;
-    });
-    const folderList = sortedAlbums.map(
-      (album: { thumbnail: string }) => album.thumbnail,
-    );
-    setDummyFolder(folderList);
   };
 
   useEffect(() => {
@@ -142,7 +144,7 @@ export const Album = () => {
   useEffect(() => {
     if (isFunc.includes('Album')) {
       if (isFunc.includes('Download')) {
-        if (selectedAlbums.length <= 0) {
+        if (selectedAlbumIds.length <= 0) {
           return;
         }
         setIsDownloadVisible(true);
@@ -151,7 +153,7 @@ export const Album = () => {
       }
 
       if (isFunc.includes('Merge')) {
-        if (selectedAlbums.length <= 0) {
+        if (selectedAlbumIds.length <= 0) {
           return;
         }
         setIsMergeVisible(true);
@@ -160,7 +162,7 @@ export const Album = () => {
       }
 
       if (isFunc.includes('Delete')) {
-        if (selectedAlbums.length <= 0) {
+        if (selectedAlbumIds.length <= 0) {
           return;
         }
         setIsDeleteVisible(true);
@@ -173,33 +175,49 @@ export const Album = () => {
 
   const handleSelectAll = () => {
     if (isAlbum) {
-      if (selectedAlbums.length > 0) {
+      if (selectedAlbumIds.length > 0) {
         // 이미 선택된 앨범이 있는 경우 전체 해제 동작 수행
-        setSelectedAlbums([]);
+        setSelectedAlbumIds([]);
       } else {
         // 선택된 앨범이 없는 경우 전체 선택 동작 수행
-        setSelectedAlbums(dummyFolder);
+        const Ids = dummyFolder.map(folder => folder.albumId);
+        console.log(Ids);
+        setSelectedAlbumIds(Ids);
       }
     }
   };
 
-  const handleAlbumPress = (albumName: string) => {
+  const handleAlbumPress = async (item: {
+    albumId: number;
+    thumbnail: string;
+    title: string;
+    total: number;
+    createdTime: Date;
+  }) => {
     if (isAlbum) {
-      setSelectedAlbums(prevSelectedAlbums => {
-        if (prevSelectedAlbums.includes(albumName)) {
+      setSelectedAlbumIds(prevSelectedAlbums => {
+        if (prevSelectedAlbums.includes(item.albumId)) {
           // 이미 선택된 앨범인 경우 선택 해제
-          return prevSelectedAlbums.filter(item => item !== albumName);
+          return prevSelectedAlbums.filter(tartget => tartget !== item.albumId);
         } else {
           // 선택되지 않은 앨범인 경우 선택 추가
-          return [...prevSelectedAlbums, albumName];
+          return [...prevSelectedAlbums, item.albumId];
         }
       });
+      console.log(selectedAlbumIds);
+      console.log(selectedAlbumIds);
     } else {
       // 다중 선택 모드가 아닐 때는 단일 앨범을 선택하는 로직
       if (albumImages.length <= 0) {
-        navigation.navigate('AlbumDetail', { albumName: 'asdasd' });
+        const userData = JSON.stringify(await userAPI.getUserMe()); // login 정보 가져오기
+
+        const userParsedData = JSON.parse(userData);
+        navigation.navigate('AlbumDetail', {
+          albumId: item.albumId,
+          albumTitle: item.title,
+          cupId: userParsedData.cupId,
+        });
         dispatch(albumFunc('Image'));
-        setSelectedAlbums([albumName]);
         // loadMoreData();
       } else {
         setAlbumImages([]);
@@ -244,36 +262,60 @@ export const Album = () => {
     setIsMergeNameVisible(true);
   };
 
-  const handleMerge = async (newAlbumName: string) => {
-    renewMergeAlbum(selectedAlbums, newAlbumName);
-    console.log('after' + dummyFolder);
+  const handleMerge = async () => {
+    renewMergeAlbum();
     setIsMergeNameVisible(false);
     setIsMergeVisible(false);
   };
 
-  const createNewAlbumDetail = (
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    seletedAlbumNames: string[],
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    newAlbumName: string,
-  ) => {
+  const createNewAlbumDetail = async (seletedAlbumNames: number[]) => {
     // selectedAlbumNames와 NewAlbumName을 통해 제물들의 이미지들을 하나로 모은 테이블을 생성한는 sql을 날림.
+    // selectedAlbum의 첫번째 인자가 머지의 주축이 되어야한다. 즉, 첫 번째 폴더의 이름을 mergeAlbumTitle로 바꾸고,
+    // 타 앨범의 album_id를 첫번째 인자의 id로 바꾸어버리면 될 거 같다.
+    const album_id = seletedAlbumNames[0];
+    const target_ids = seletedAlbumNames.slice(1);
+
+    const data = {
+      albumId: album_id,
+      targetIds: target_ids,
+      title: mergeAlbumTitle,
+    };
+    try {
+      const userData = JSON.stringify(await userAPI.getUserMe()); // login 정보 가져오기
+
+      const userParsedData = JSON.parse(userData);
+      const res = await albumAPI.patchMergeAlbum(userParsedData.cupId, data);
+
+      getAlbumFolders('r');
+    } catch (error) {
+      console.log('patch error');
+      console.log(error);
+    }
   };
 
-  const renewMergeAlbum = async (
-    albumNames: string[],
-    newAlbumName: string,
-  ) => {
-    const newData = await dummyFolder.filter(
-      item => !albumNames.includes(item),
-    ); // 데이터 삭제로직
-    createNewAlbumDetail(albumNames, newAlbumName);
-    newData.push(
-      'https://fastly.picsum.photos/id/855/500/500.jpg?hmac=TOLIBgvj-ag8FMNpBsnbDWdmC-6i_R9jFJh0qSSBUK8',
-    );
+  const renewMergeAlbum = async () => {
+    await createNewAlbumDetail(selectedAlbumIds);
     setSelectedAlbums([]);
+    setSelectedAlbumIds([]);
+  };
 
-    setDummyFolder(newData);
+  const handleDelete = async () => {
+    try {
+      const userData = JSON.stringify(await userAPI.getUserMe()); // login 정보 가져오기
+
+      const userParsedData = JSON.parse(userData);
+      const res = await albumAPI.deleteAlbum(
+        userParsedData.cupId,
+        selectedAlbumIds,
+      );
+      setSelectedAlbums([]);
+      setSelectedAlbumIds([]);
+
+      return res;
+    } catch (error) {
+      console.log('patch error');
+      console.log(error);
+    }
   };
 
   const closeDeleteModal = () => {
@@ -285,77 +327,22 @@ export const Album = () => {
   const handleSortMethodSelect = (sortMethod: string) => {
     setSelectedSortMethod(sortMethod);
     if (sortMethod === '최신순') {
-      const sortedAlbums = foldersData.albums.sort((a, b) => {
-        const dateA = new Date(a.createdTime);
-        const dateB = new Date(b.createdTime);
-
-        return dateB - dateA;
-      });
-      const folderList = sortedAlbums.map(
-        (album: { thumbnail: string }) => album.thumbnail,
-      );
-      setDummyFolder(folderList);
+      getAlbumFolders('r');
     }
     if (sortMethod === '오래된순') {
-      const sortedAlbums = foldersData.albums.sort((a, b) => {
-        const dateA = new Date(a.createdTime);
-        const dateB = new Date(b.createdTime);
-
-        return dateA - dateB;
-      });
-      const folderList = sortedAlbums.map(
-        (album: { thumbnail: string }) => album.thumbnail,
-      );
-      setDummyFolder(folderList);
+      getAlbumFolders('o');
     }
     if (sortMethod === '제목순') {
-      const sortedAlbums = foldersData.albums.sort((a, b) => {
-        const titleA = a.title.toLowerCase(); // 대소문자 구분 없이 정렬하려면 소문자로 변환
-        const titleB = b.title.toLowerCase();
-
-        if (titleA < titleB) {
-          return -1; // a가 b보다 작으면 -1 반환 (a를 b보다 앞에 배치)
-        } else if (titleA > titleB) {
-          return 1; // a가 b보다 크면 1 반환 (a를 b보다 뒤에 배치)
-        } else {
-          return 0; // 같은 경우 0 반환 (순서 변경 없음)
-        }
-      });
-      const folderList = sortedAlbums.map(
-        (album: { thumbnail: string }) => album.thumbnail,
-      );
-      setDummyFolder(folderList);
+      getAlbumFolders('t');
     }
 
     if (sortMethod === '사진많은순') {
-      if (!Array.isArray(foldersData.albums)) {
-        return;
-      }
-      const sortedAlbums = foldersData.albums.sort((a, b) => {
-        const countA = a.count; // 대소문자 구분 없이 정렬하려면 소문자로 변환
-        const countB = b.count;
-
-        return countB - countA;
-      });
-      const folderList = sortedAlbums.map(
-        (album: { thumbnail: string }) => album.thumbnail,
-      );
-      setDummyFolder(folderList);
+      getAlbumFolders('im');
     }
 
     if (sortMethod === '사진적은순') {
-      const sortedAlbums = foldersData.albums.sort((a, b) => {
-        const countA = a.count; // 대소문자 구분 없이 정렬하려면 소문자로 변환
-        const countB = b.count;
-
-        return countA - countB;
-      });
-      const folderList = sortedAlbums.map(
-        (album: { thumbnail: string }) => album.thumbnail,
-      );
-      setDummyFolder(folderList);
+      getAlbumFolders('il');
     }
-    closeSortModal();
   };
 
   return (
@@ -372,7 +359,7 @@ export const Album = () => {
           }}>
           {
             <RenderAlbumHeader
-              selectedAlbums={selectedAlbums}
+              selectedAlbums={selectedAlbumIds}
               handleSelectAll={handleSelectAll}
               openSortModal={openSortModal}
             />
@@ -385,7 +372,7 @@ export const Album = () => {
           renderItem={({ item }) => (
             <RenderAlbum
               item={item}
-              selectedAlbums={selectedAlbums}
+              selectedAlbums={selectedAlbumIds}
               handleAlbumPress={() => handleAlbumPress(item)}
               handleLongPress={handleLongPress}
             />
@@ -531,7 +518,7 @@ export const Album = () => {
               <Text style={styles.modalContentTitle}>
                 앨범{' '}
                 <Text style={{ color: '#3675FB' }}>
-                  {selectedAlbums.length}
+                  {selectedAlbumIds.length}
                 </Text>
                 개를 다운로드 하시겠습니까?
               </Text>
@@ -568,7 +555,7 @@ export const Album = () => {
               <Text style={styles.modalContentTitle}>
                 앨범{' '}
                 <Text style={{ color: '#3675FB' }}>
-                  {selectedAlbums.length}
+                  {selectedAlbumIds.length}
                 </Text>
                 개를 합치겠습니까?
               </Text>
@@ -605,7 +592,7 @@ export const Album = () => {
               <Text style={styles.modalContentTitle}>
                 앨범{' '}
                 <Text style={{ color: '#3675FB' }}>
-                  {selectedAlbums.length}
+                  {selectedAlbumIds.length}
                 </Text>
                 개를 삭제 하시겠습니까?
               </Text>
@@ -619,7 +606,7 @@ export const Album = () => {
                 <Text>|</Text>
                 <Text
                   style={styles.modalButtonOk_red}
-                  onPress={() => closeDeleteModal()}>
+                  onPress={() => handleDelete()}>
                   삭제
                 </Text>
               </View>
@@ -641,8 +628,10 @@ export const Album = () => {
               <Text>새로운 앨범명</Text>
               <TextInput
                 style={styles.input}
-                onChangeText={() => {}}
-                defaultValue={'새로운 앨범'}
+                onChangeText={text => {
+                  setMergeAlbumTitle(text);
+                }}
+                defaultValue={'default'}
               />
               <View style={styles.buttonContainer}>
                 <Text
@@ -655,7 +644,7 @@ export const Album = () => {
                 <Text>|</Text>
                 <Text
                   style={styles.modalButtonOk}
-                  onPress={() => handleMerge('새로운 이름')}>
+                  onPress={() => handleMerge()}>
                   생성
                 </Text>
               </View>

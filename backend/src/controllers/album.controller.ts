@@ -125,7 +125,8 @@ class AlbumController {
     const albumFolder: Album | null = await this.albumService.select(albumId);
 
     if (!albumFolder) throw new NotFoundError("Not found album using albumId");
-    else if (albumFolder.cupId !== cupId) throw new ForbiddenError("The ID of the album folder and the body ID don't match.");
+    else if (albumFolder.cupId !== cupId)
+      throw new ForbiddenError("The ID of the album folder and the body ID don't match." + albumFolder.cupId + " :: " + cupId);
 
     try {
       transaction = await sequelize.transaction();

@@ -32,6 +32,10 @@ const titleSchema: joi.Schema = joi.object({
   title: joi.string().required()
 });
 
+const imageIdsSchema: joi.Schema = joi.object({
+  title: joi.number().required()
+});
+
 const mergeSchema: joi.Schema = joi.object({
   title: joi.string().required(),
   albumId: joi.number().required(),
@@ -47,7 +51,7 @@ router.get("/:cup_id", async (req: Request, res: Response, next: NextFunction) =
   const page: number = !isNaN(Number(req.query.page)) ? Number(req.query.page) : 1;
   const count: number = !isNaN(Number(req.query.count)) ? Number(req.query.count) : 50;
   const sort: SortItem = isSortItem(req.query.sort) ? req.query.sort : "r";
-
+  
   try {
     if (req.cupId !== req.params.cup_id) throw new ForbiddenError("You don't same token couple ID and path parameter couple ID");
 
@@ -142,7 +146,6 @@ router.post("/:cup_id/:album_id", async (req: Request, res: Response, next: Next
 // 앨범 합치기
 router.post("/merge", async (req: Request, res: Response, next: NextFunction) => {
   const contentType: ContentType = req.contentType;
-
   try {
     if (contentType === "form-data") throw new UnsupportedMediaTypeError("This API must have a content-type of 'json' unconditionally.");
 
@@ -228,7 +231,7 @@ router.delete("/:cup_id/:album_id", async (req: Request, res: Response, next: Ne
 });
 
 // 앨범 이미지 삭제
-router.delete("/:cup_id/:album_id/images", async (req: Request, res: Response, next: NextFunction) => {
+router.delete("/:cup_id/:album_id/image", async (req: Request, res: Response, next: NextFunction) => {
   const imageIds: string[] | undefined = Array.isArray(req.body.imageIds) ? [...req.body.imageIds] : undefined;
   const numImageIds: number[] | undefined = imageIds?.map(Number).filter((imageId: number) => {
     if (!isNaN(imageId)) return imageId;
