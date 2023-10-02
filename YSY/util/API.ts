@@ -53,6 +53,33 @@ export const API = {
     });
     return response;
   },
+  patch_formdata: async (url: string, data?: any) => {
+    try {
+      const formData = new FormData();
+
+      for (const [k, v] of data) {
+        formData.append(k, v);
+      }
+
+      const response = await apiClient.patch(url, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+        data: formData,
+      });
+
+      return response;
+    } catch (error) {
+      return error;
+    }
+  },
+  delete: async (url: string, data?: any) => {
+    console.log(data);
+    const response = await apiClient.delete(url, data).then(res => {
+      return res.data;
+    });
+    return response;
+  },
 };
 
 /*

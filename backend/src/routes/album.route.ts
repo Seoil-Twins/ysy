@@ -30,6 +30,10 @@ const titleSchema: joi.Schema = joi.object({
   title: joi.string().required()
 });
 
+const imageIdsSchema: joi.Schema = joi.object({
+  title: joi.number().required()
+});
+
 const mergeSchema: joi.Schema = joi.object({
   title: joi.string().required(),
   albumId: joi.number().required(),
@@ -61,6 +65,7 @@ router.get("/:cup_id", async (req: Request, res: Response, next: NextFunction) =
 
 // 한 앨범 정보 가져오기
 router.get("/:cup_id/:album_id", async (req: Request, res: Response, next: NextFunction) => {
+  req.cupId = req.params.cup_id; // 꼭! 지워야함! 테스트를 위한 코드
   try {
     const albumId: number = Number(req.params.album_id);
     const page: number = !isNaN(Number(req.query.page)) ? Number(req.query.page) : 1;
@@ -156,6 +161,7 @@ router.patch("/merge/:cupId", async (req: Request, res: Response, next: NextFunc
 
 // 앨범 제목 변경
 router.patch("/:cup_id/:album_id/title", async (req: Request, res: Response, next: NextFunction) => {
+  req.cupId = req.params.cup_id; // 꼭! 지워야함! 테스트를 위한 코드
   try {
     const albumId = Number(req.params.album_id);
     const { value, error }: ValidationResult = validator(req.body, titleSchema);
@@ -207,6 +213,7 @@ router.patch("/:cup_id/:album_id/thumbnail", multerUpload.single("thumbnail"), a
 
 // 앨범 삭제
 router.delete("/:cup_id/:album_id", async (req: Request, res: Response, next: NextFunction) => {
+  req.cupId = req.params.cup_id; // 꼭! 지워야함! 테스트를 위한 코드
   try {
     const albumId = Number(req.params.album_id);
 
@@ -222,13 +229,15 @@ router.delete("/:cup_id/:album_id", async (req: Request, res: Response, next: Ne
 });
 
 // 앨범 이미지 삭제
-router.delete("/:cup_id/:album_id/images", async (req: Request, res: Response, next: NextFunction) => {
+router.delete("/:cup_id/:album_id/image", async (req: Request, res: Response, next: NextFunction) => {
   const imageIds: string[] | undefined = Array.isArray(req.body.imageIds) ? [...req.body.imageIds] : undefined;
+  console.log(req.body);
   const numImageIds: number[] | undefined = imageIds?.map(Number).filter((imageId: number) => {
     if (!isNaN(imageId)) return imageId;
   });
 
   try {
+    req.cupId = req.params.cup_id; // 꼭! 지워야함! 테스트를 위한 코드
     const albumId = Number(req.params.album_id);
     const cupId: string | null = req.cupId;
 

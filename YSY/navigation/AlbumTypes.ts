@@ -1,5 +1,7 @@
 export type AlbumTypes = {
   AlbumDetail: {
-    albumName: string;
+    albumId: number;
+    albumTitle: string;
+    cupId: string;
   };
 };

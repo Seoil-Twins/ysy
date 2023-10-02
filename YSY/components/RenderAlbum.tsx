@@ -12,8 +12,14 @@ const screenWidth = wp('100%');
 const screenHeight = hp('100%');
 
 type RenderImageProps = {
-  selectedAlbums: string[];
-  item: string;
+  selectedAlbums: number[];
+  item: {
+    albumId: number;
+    thumbnail: string;
+    title: string;
+    total: number;
+    createdTime: Date;
+  };
   handleAlbumPress: (albumName: string) => void;
   handleLongPress: () => void;
 };
@@ -24,10 +30,11 @@ const RenderImage: React.FC<RenderImageProps> = ({
   handleAlbumPress,
   handleLongPress,
 }) => {
-  const isSelected = selectedAlbums.includes(item.thumbnail);
+  const isSelected = selectedAlbums.includes(item.albumId);
   const isAlbum = useAppSelector(
     (state: RootState) => state.albumStatus.isAlbum,
   );
+  console.log(item);
 
   return (
     <View style={{ flex: 1, alignItems: 'center' }}>
@@ -40,11 +47,11 @@ const RenderImage: React.FC<RenderImageProps> = ({
           style={{ width: screenWidth, height: screenHeight * 0.3 }}
         />
         <View style={{ position: 'absolute', bottom: 0, left: 0 }}>
-          <Text style={styles.albumTextLeftTitle}>앨범 이름</Text>
-          <Text style={styles.albumTextLeft}>(개수)</Text>
+          <Text style={styles.albumTextLeftTitle}>{item.title}</Text>
+          <Text style={styles.albumTextLeft}>{item.total}</Text>
         </View>
         <View style={{ position: 'absolute', bottom: 0, right: 0 }}>
-          <Text style={styles.albumTextRight}>2023-07-18</Text>
+          <Text style={styles.albumTextRight}>{item.createdTime}</Text>
         </View>
         {isAlbum && (
           <View

@@ -89,12 +89,24 @@ export const Album = () => {
       );
       const parsedData = JSON.parse(data);
 
+      const defaultThumbnail =
+        'https://dummyimage.com/600x400/000/fff&text=Im+Dummy'; // 적절한 기본 이미지 URL을 설정하세요.
+
       setFoldersData(parsedData);
       console.log(parsedData);
       const folderList = parsedData.albums.map(
-        (album: { albumId: number; thumbnail: string }) => ({
+        (album: {
+          albumId: number;
+          thumbnail: string;
+          title: string;
+          total: number;
+          createdTime: Date;
+        }) => ({
           albumId: album.albumId,
-          thumbnail: album.thumbnail,
+          thumbnail: album.thumbnail ? album.thumbnail : defaultThumbnail,
+          title: album.title,
+          total: album.total,
+          createdTime: album.createdTime,
         }),
       );
       setDummyFolder(folderList);
@@ -132,7 +144,7 @@ export const Album = () => {
   useEffect(() => {
     if (isFunc.includes('Album')) {
       if (isFunc.includes('Download')) {
-        if (selectedAlbums.length <= 0) {
+        if (selectedAlbumIds.length <= 0) {
           return;
         }
         setIsDownloadVisible(true);
@@ -141,7 +153,7 @@ export const Album = () => {
       }
 
       if (isFunc.includes('Merge')) {
-        if (selectedAlbums.length <= 0) {
+        if (selectedAlbumIds.length <= 0) {
           return;
         }
         setIsMergeVisible(true);
@@ -150,7 +162,7 @@ export const Album = () => {
       }
 
       if (isFunc.includes('Delete')) {
-        if (selectedAlbums.length <= 0) {
+        if (selectedAlbumIds.length <= 0) {
           return;
         }
         setIsDeleteVisible(true);
@@ -163,29 +175,26 @@ export const Album = () => {
 
   const handleSelectAll = () => {
     if (isAlbum) {
-      if (selectedAlbums.length > 0) {
+      if (selectedAlbumIds.length > 0) {
         // 이미 선택된 앨범이 있는 경우 전체 해제 동작 수행
-        setSelectedAlbums([]);
+        setSelectedAlbumIds([]);
       } else {
         // 선택된 앨범이 없는 경우 전체 선택 동작 수행
-        setSelectedAlbums(dummyFolder);
+        const Ids = dummyFolder.map(folder => folder.albumId);
+        console.log(Ids);
+        setSelectedAlbumIds(Ids);
       }
     }
   };
 
-  const handleAlbumPress = (item: string) => {
+  const handleAlbumPress = async (item: {
+    albumId: number;
+    thumbnail: string;
+    title: string;
+    total: number;
+    createdTime: Date;
+  }) => {
     if (isAlbum) {
-      setSelectedAlbums(prevSelectedAlbums => {
-        if (prevSelectedAlbums.includes(item.thumbnail)) {
-          // 이미 선택된 앨범인 경우 선택 해제
-          return prevSelectedAlbums.filter(
-            tartget => tartget !== item.thumbnail,
-          );
-        } else {
-          // 선택되지 않은 앨범인 경우 선택 추가
-          return [...prevSelectedAlbums, item.thumbnail];
-        }
-      });
       setSelectedAlbumIds(prevSelectedAlbums => {
         if (prevSelectedAlbums.includes(item.albumId)) {
           // 이미 선택된 앨범인 경우 선택 해제
@@ -200,7 +209,14 @@ export const Album = () => {
     } else {
       // 다중 선택 모드가 아닐 때는 단일 앨범을 선택하는 로직
       if (albumImages.length <= 0) {
-        navigation.navigate('AlbumDetail', { albumName: 'asdasd' });
+        const userData = JSON.stringify(await userAPI.getUserMe()); // login 정보 가져오기
+
+        const userParsedData = JSON.parse(userData);
+        navigation.navigate('AlbumDetail', {
+          albumId: item.albumId,
+          albumTitle: item.title,
+          cupId: userParsedData.cupId,
+        });
         dispatch(albumFunc('Image'));
         // loadMoreData();
       } else {
@@ -247,7 +263,7 @@ export const Album = () => {
   };
 
   const handleMerge = async () => {
-    renewMergeAlbum(selectedAlbums);
+    renewMergeAlbum();
     setIsMergeNameVisible(false);
     setIsMergeVisible(false);
   };
@@ -277,15 +293,29 @@ export const Album = () => {
     }
   };
 
-  const renewMergeAlbum = async (albumNames: string[]) => {
-    console.log('앙1');
-    const newData = await dummyFolder.filter(
-      item => !albumNames.includes(item.thumbnail),
-    ); // 데이터 삭제로직
-    console.log(newData);
+  const renewMergeAlbum = async () => {
     await createNewAlbumDetail(selectedAlbumIds);
     setSelectedAlbums([]);
     setSelectedAlbumIds([]);
+  };
+
+  const handleDelete = async () => {
+    try {
+      const userData = JSON.stringify(await userAPI.getUserMe()); // login 정보 가져오기
+
+      const userParsedData = JSON.parse(userData);
+      const res = await albumAPI.deleteAlbum(
+        userParsedData.cupId,
+        selectedAlbumIds,
+      );
+      setSelectedAlbums([]);
+      setSelectedAlbumIds([]);
+
+      return res;
+    } catch (error) {
+      console.log('patch error');
+      console.log(error);
+    }
   };
 
   const closeDeleteModal = () => {
@@ -329,7 +359,7 @@ export const Album = () => {
           }}>
           {
             <RenderAlbumHeader
-              selectedAlbums={selectedAlbums}
+              selectedAlbums={selectedAlbumIds}
               handleSelectAll={handleSelectAll}
               openSortModal={openSortModal}
             />
@@ -342,7 +372,7 @@ export const Album = () => {
           renderItem={({ item }) => (
             <RenderAlbum
               item={item}
-              selectedAlbums={selectedAlbums}
+              selectedAlbums={selectedAlbumIds}
               handleAlbumPress={() => handleAlbumPress(item)}
               handleLongPress={handleLongPress}
             />
@@ -488,7 +518,7 @@ export const Album = () => {
               <Text style={styles.modalContentTitle}>
                 앨범{' '}
                 <Text style={{ color: '#3675FB' }}>
-                  {selectedAlbums.length}
+                  {selectedAlbumIds.length}
                 </Text>
                 개를 다운로드 하시겠습니까?
               </Text>
@@ -525,7 +555,7 @@ export const Album = () => {
               <Text style={styles.modalContentTitle}>
                 앨범{' '}
                 <Text style={{ color: '#3675FB' }}>
-                  {selectedAlbums.length}
+                  {selectedAlbumIds.length}
                 </Text>
                 개를 합치겠습니까?
               </Text>
@@ -562,7 +592,7 @@ export const Album = () => {
               <Text style={styles.modalContentTitle}>
                 앨범{' '}
                 <Text style={{ color: '#3675FB' }}>
-                  {selectedAlbums.length}
+                  {selectedAlbumIds.length}
                 </Text>
                 개를 삭제 하시겠습니까?
               </Text>
@@ -576,7 +606,7 @@ export const Album = () => {
                 <Text>|</Text>
                 <Text
                   style={styles.modalButtonOk_red}
-                  onPress={() => closeDeleteModal()}>
+                  onPress={() => handleDelete()}>
                   삭제
                 </Text>
               </View>
