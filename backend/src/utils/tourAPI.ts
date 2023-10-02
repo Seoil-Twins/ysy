@@ -52,7 +52,7 @@ export interface ResponseDetailCommon {
   modifiedtime: string;
   tel: string;
   telname: string;
-  homepage: string;
+  homepage?: string;
   booktour: string;
   addr1: string;
   addr2: string;
@@ -173,6 +173,29 @@ const REGIONCODE_API_URL = `${ROOT_API_URL}/areaCode1`,
   DETAIL_COMMON_API_URL = `${ROOT_API_URL}/detailCommon1`,
   DETAIL_INTRO_API_URL = `${ROOT_API_URL}/detailIntro1`;
 
+const getHrefURL = (url: string): string => {
+  const regexPattern = /href="([^"]*)"/;
+
+  const match = url.match(regexPattern);
+
+  if (match && match.length > 1) {
+    const hrefValue = match[1];
+    return hrefValue;
+  } else {
+    return url;
+  }
+};
+
+const convertHomepage = (data: ResponseDetailCommon) => {
+  if (data.homepage) {
+    data.homepage = getHrefURL(data.homepage);
+  } else {
+    data.homepage = undefined;
+  }
+
+  return data;
+};
+
 const fetchTourAPI = async (url: string, customParams: any): Promise<any> => {
   try {
     const config = {
@@ -181,6 +204,7 @@ const fetchTourAPI = async (url: string, customParams: any): Promise<any> => {
         ...customParams
       }
     };
+
     const response: AxiosResponse<any, any> = await axios.get(url, config);
 
     if (response.status === 200) {
@@ -196,7 +220,7 @@ const fetchTourAPI = async (url: string, customParams: any): Promise<any> => {
             logger.error(`Tour API Error because invalid API Key. Please change tour API key ${JSON.stringify(response.data)}`);
             throw new InternalServerError(`Tour API Error because invalid API Key. Please change tour API key`);
           } else {
-            logger.error(`Tour API Error ${JSON.stringify(response.data)}`);
+            logger.error(`Tour API Error in global error ${JSON.stringify(response.data)}`);
             return undefined;
           }
         }
@@ -233,8 +257,16 @@ export const fetchAreaBased = async (customParams?: any): Promise<ResponsePlace[
     numOfRows: 100
   };
 
-  const results: ResponsePlace[] | undefined = await fetchTourAPI(AREABASED_API_URL, params);
-  return results ? results : [];
+  const response: ResponsePlace[] | undefined = await fetchTourAPI(AREABASED_API_URL, params);
+
+  if (response) {
+    const results: ResponsePlace[] = response.filter(
+      (result: ResponsePlace) => result.areacode.trim() !== "" && result.areacode && result.sigungucode.trim() !== "" && result.sigungucode
+    );
+    return results;
+  } else {
+    return [];
+  }
 };
 
 export const fetchDetailImage = async (contentId: string): Promise<ResponseDetailImage | undefined> => {
@@ -245,7 +277,7 @@ export const fetchDetailImage = async (contentId: string): Promise<ResponseDetai
   };
 
   const results: ResponseDetailImage[] | undefined = await fetchTourAPI(DETAIL_IMAGE_API_URL, params);
-  return results && results.length > 0 ? results[0] : undefined;
+  return results && results.length > 0 && results[0].originimgurl ? results[0] : undefined;
 };
 
 export const fetchDetailCommon = async (contentId: string): Promise<ResponseDetailCommon | undefined> => {
@@ -255,9 +287,20 @@ export const fetchDetailCommon = async (contentId: string): Promise<ResponseDeta
     addrinfoYN: "Y",
     overviewYN: "Y"
   };
+  const response: ResponseDetailCommon[] | undefined = await fetchTourAPI(DETAIL_COMMON_API_URL, params);
 
-  const results: ResponseDetailCommon[] | undefined = await fetchTourAPI(DETAIL_COMMON_API_URL, params);
-  return results && results.length > 0 ? results[0] : undefined;
+  if (response && response.length > 0) {
+    const isNotEmpty = response[0].overview && response[0].overview.trim() !== "" && (response[0].addr1.trim() !== "" || response[0].addr1 === null);
+
+    if (!isNotEmpty) {
+      return undefined;
+    }
+
+    const result: ResponseDetailCommon | undefined = convertHomepage(response[0]);
+    return result;
+  } else {
+    return undefined;
+  }
 };
 
 export const fetchDetailIntroWithRestaurant = async (contentId: string, contentTypeId: string): Promise<ResponseDetailIntroWithRestaurant | undefined> => {

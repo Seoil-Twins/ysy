@@ -1,11 +1,9 @@
 import { AlbumImage } from "../models/albumImage.model.js";
 import { Album } from "../models/album.model.js";
+import { CommonSortItem, commonSortItems } from "./sort.type.js";
 
-export const isSortItem = (item: any): item is SortItem => {
-  return ["r", "o", "t", "im", "il"].includes(item);
-};
-
-export type SortItem = "r" | "o" | "t" | "im" | "il";
+export type SortItem = CommonSortItem | "t" | "im" | "il";
+export const isSortItem = (item: any): item is SortItem => commonSortItems.includes(item) || ["t", "im", "il"].includes(item);
 
 export interface ResponseAlbumFolder {
   albums: Album[];
@@ -20,12 +18,6 @@ export interface ResponseAlbum {
   createdTime: Date;
   images: AlbumImage[];
   total: number;
-}
-
-export interface PageOptions {
-  count: number;
-  page: number;
-  sort: SortItem;
 }
 
 export interface SearchOptions {

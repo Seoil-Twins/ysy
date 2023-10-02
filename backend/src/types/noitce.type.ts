@@ -1,10 +1,11 @@
 import { Notice } from "../models/notice.model.js";
+import { CommonSortItem, commonSortItems } from "./sort.type.js";
 
 export const isSortItem = (item: any): item is SortItem => {
-  return ["r", "o"].includes(item);
+  return commonSortItems.includes(item);
 };
 
-export type SortItem = "r" | "o";
+export type SortItem = CommonSortItem;
 
 export interface CreateNoticeWithAdmin {
   title: string;

@@ -1,26 +1,22 @@
 import { DataTypes, Model, literal } from "sequelize";
+import { CreationOptional, InferAttributes, InferCreationAttributes } from "sequelize/types/model";
+
 import sequelize from "./index.js";
 
-import { CreationOptional, InferAttributes, InferCreationAttributes, NonAttribute } from "sequelize/types/model";
 import { User } from "./user.model.js";
-import { ContentType } from "./contentType.model.js";
 import { DatePlace } from "./datePlace.model.js";
 
-export class Favorite extends Model<InferAttributes<Favorite>, InferCreationAttributes<Favorite>> {
-  /** If you use include ContentType, You can use couple field. */
-  declare contentType?: NonAttribute<ContentType>;
-
-  declare favoriteId: CreationOptional<number>;
+export class DatePlaceView extends Model<InferAttributes<DatePlaceView>, InferCreationAttributes<DatePlaceView>> {
+  declare datePlaceViewId: CreationOptional<number>;
   declare userId: number;
   declare contentId: string;
-  declare contentTypeId: string;
-  declare createdTime: CreationOptional<string>;
+  declare createdTime: CreationOptional<Date>;
 }
 
-Favorite.init(
+DatePlaceView.init(
   {
-    favoriteId: {
-      field: "favorite_id",
+    datePlaceViewId: {
+      field: "date_place_view_id",
       type: DataTypes.INTEGER.UNSIGNED,
       primaryKey: true,
       autoIncrement: true
@@ -28,7 +24,6 @@ Favorite.init(
     userId: {
       field: "user_id",
       type: DataTypes.INTEGER.UNSIGNED,
-      allowNull: false,
       references: {
         model: User,
         key: "userId"
@@ -36,19 +31,11 @@ Favorite.init(
     },
     contentId: {
       field: "content_id",
-      type: DataTypes.STRING,
+      type: DataTypes.STRING(10),
       allowNull: false,
       references: {
         model: DatePlace,
         key: "contentId"
-      }
-    },
-    contentTypeId: {
-      field: "content_type_id",
-      type: DataTypes.CHAR(2),
-      references: {
-        model: ContentType,
-        key: "contentTypeId"
       }
     },
     createdTime: {
@@ -59,7 +46,7 @@ Favorite.init(
   },
   {
     sequelize: sequelize,
-    tableName: "favorite",
+    tableName: "date_place_view",
     timestamps: false
   }
 );

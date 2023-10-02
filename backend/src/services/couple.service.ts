@@ -84,24 +84,40 @@ class CoupleService extends Service {
    * @param thumbnail {@link Express.Multer.File}
    * @returns Promise\<{@link Couple}\>
    */
-  async create(transaction: Transaction | null, cupId: string, data: CreateCouple, thumbnail?: File): Promise<Couple> {
-    const path: string | null = thumbnail ? this.createProfile(cupId, thumbnail) : null;
+  async create(transaction: Transaction | null, cupId: string, data: CreateCouple): Promise<Couple> {
     const createdCouple = await Couple.create(
       {
         cupId: cupId,
         cupDay: data.cupDay,
-        thumbnail: path
+        thumbnail: null
       },
       { transaction }
     );
 
-    if (thumbnail && path)
-      await uploadFileWithGCP({
-        filename: path,
-        mimetype: thumbnail.mimetype,
-        buffer: thumbnail.buffer,
-        size: thumbnail.size
-      });
+    return createdCouple;
+  }
+
+  async createWithThumbnail(transaction: Transaction | null, cupId: string, data: CreateCouple, thumbnail: File): Promise<Couple> {
+    const path: string = this.createProfile(cupId, thumbnail);
+
+    const createdCouple = await Couple.create(
+      {
+        cupId: cupId,
+        cupDay: data.cupDay,
+        thumbnail: path,
+        thumbnailSize: thumbnail.size,
+        thumbnailType: thumbnail.mimetype
+      },
+      { transaction }
+    );
+
+    await uploadFileWithGCP({
+      filename: path,
+      mimetype: thumbnail.mimetype,
+      buffer: thumbnail.buffer,
+      size: thumbnail.size
+    });
+
     return createdCouple;
   }
 
@@ -136,7 +152,7 @@ class CoupleService extends Service {
    * @param thumbnail {@link Express.Multer.File}
    * @returns Promise\<{@link Couple}\>
    */
-  async updateWithThumbnail(transaction: Transaction | null, couple: Couple, data: UpdateCouple, thumbnail: File): Promise<Couple> {
+  async updateWithThumbnail(transaction: Transaction | null, couple: Couple, data: Partial<InferAttributes<Couple>>, thumbnail: File): Promise<Couple> {
     const path = this.createProfile(couple.cupId, thumbnail);
 
     await couple.update(

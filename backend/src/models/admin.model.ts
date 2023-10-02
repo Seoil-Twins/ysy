@@ -7,7 +7,7 @@ export class Admin extends Model<InferAttributes<Admin>, InferCreationAttributes
   declare adminId: CreationOptional<number>;
   declare userId: number;
   declare password: string;
-  declare createdTime: Date;
+  declare createdTime: CreationOptional<Date>;
 }
 
 Admin.init(

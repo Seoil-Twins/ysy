@@ -1,68 +1,79 @@
 import dayjs from "dayjs";
 import joi, { ValidationResult } from "joi";
 import express, { Router, Request, Response, NextFunction } from "express";
-import formidable, { File } from "formidable";
 import { boolean } from "boolean";
 
-import UserService from "../services/user.service";
-import CoupleService from "../services/couple.service";
-import CoupleAdminService from "../services/couple.admin.service";
-import AlbumService from "../services/album.service";
+import UserService from "../services/user.service.js";
+import CoupleService from "../services/couple.service.js";
+import CoupleAdminService from "../services/couple.admin.service.js";
+import CoupleAdminController from "../controllers/couple.admin.controller.js";
+
+import { Couple } from "../models/couple.model.js";
 
 import {
-  ICoupleResponseWithCount,
-  PageOptions as CouplePageOptions,
-  SearchOptions as CoupleSearchOptions,
-  FilterOptions as CoupleFilterOptions,
-  IRequestCreate,
-  IUpdateWithAdmin,
-  Couple
-} from "../models/couple.model";
-import CoupleAdminController from "../controllers/couple.admin.controller";
+  ResponseCouplesWithAdmin,
+  SearchOptions,
+  FilterOptions,
+  UpdateCoupleWithAdmin,
+  SortItem,
+  isSortItem,
+  CreateCoupleWithAdmin
+} from "../types/couple.type.js";
 
-import logger from "../logger/logger";
-import validator from "../utils/validator.util";
-import { STATUS_CODE } from "../constants/statusCode.constant";
-import { canModifyWithEditor, canView } from "../utils/checkRole.util";
+import logger from "../logger/logger.js";
+import validator from "../utils/validator.util.js";
+import { File } from "../utils/gcp.util.js";
+import { ContentType, convertBoolean } from "../utils/router.util.js";
+import { canModifyWithEditor, canView } from "../utils/checkRole.util.js";
+import { CreatePageOption, PageOptions, createPageOptions } from "../utils/pagination.util.js";
+import { MulterUpdateFile, MulterUploadFile, multerUpload, updateFileFunc, uploadFileFunc } from "../utils/multer.js";
 
-import BadRequestError from "../errors/badRequest.error";
-import InternalServerError from "../errors/internalServer.error";
+import { STATUS_CODE } from "../constants/statusCode.constant.js";
+
+import BadRequestError from "../errors/badRequest.error.js";
 
 const router: Router = express.Router();
 const userService: UserService = new UserService();
 const coupleService: CoupleService = new CoupleService();
 const coupleAdminService: CoupleAdminService = new CoupleAdminService();
-const albumService: AlbumService = new AlbumService();
-const coupleAdminController: CoupleAdminController = new CoupleAdminController(userService, coupleService, coupleAdminService, albumService);
+const coupleAdminController: CoupleAdminController = new CoupleAdminController(userService, coupleService, coupleAdminService);
 
-const signupSchema: joi.Schema = joi.object({
-  userId2: joi.number().required(),
-  title: joi.string().required(),
-  cupDay: joi.date().required()
+const createSchema: joi.Schema = joi.object({
+  code: joi.string().length(6).required(),
+  otherCode: joi.string().length(6).required(),
+  cupDay: joi.date().required(),
+  deleted: joi.boolean()
 });
 
 const updateSchema: joi.Schema = joi.object({
-  title: joi.string(),
-  cupDay: joi.date(),
-  deleted: joi.boolean(),
-  deletedTime: joi.when("deleted", { is: true, then: joi.required() })
+  cupDay: joi.date().required(),
+  deleted: joi.boolean()
 });
 
+const fileParamName = "thumbnail";
+const upload = multerUpload.single(fileParamName);
+
 router.get("/", canView, async (req: Request, res: Response, next: NextFunction) => {
-  const pageOptions: CouplePageOptions = {
-    count: Number(req.query.count) || 10,
-    page: Number(req.query.page) || 1,
-    sort: String(req.query.sort) || "r"
+  const createdPageOptions: CreatePageOption<SortItem> = {
+    count: Number(req.query.count),
+    page: Number(req.query.page),
+    sort: String(req.query.sort),
+    defaultValue: "r",
+    isSortItem: isSortItem
   };
-  const searchOptions: CoupleSearchOptions = { name: String(req.query.name) || undefined };
-  const filterOptions: CoupleFilterOptions = {
+  const pageOptions: PageOptions<SortItem> = createPageOptions<SortItem>(createdPageOptions);
+  const searchOptions: SearchOptions = {
+    cupId: req.query.cup_id ? String(req.query.cup_id) : undefined
+  };
+  const filterOptions: FilterOptions = {
     fromDate: req.query.from_date ? new Date(dayjs(String(req.query.from_date)).valueOf()) : undefined,
     toDate: req.query.to_date ? new Date(dayjs(String(req.query.to_date)).add(1, "day").valueOf()) : undefined,
-    isDeleted: boolean(req.query.deleted) || false
+    isDeleted: boolean(req.query.deleted) || false,
+    isThumbnail: boolean(req.query.thumbnail) || false
   };
 
   try {
-    const result: ICoupleResponseWithCount = await coupleAdminController.getCouples(pageOptions, searchOptions, filterOptions);
+    const result: ResponseCouplesWithAdmin = await coupleAdminController.getCouples(pageOptions, searchOptions, filterOptions);
 
     logger.debug(`Response Data => ${JSON.stringify(result)}`);
     return res.status(STATUS_CODE.OK).json(result);
@@ -71,58 +82,52 @@ router.get("/", canView, async (req: Request, res: Response, next: NextFunction)
   }
 });
 
-// Create Couple
 router.post("/", canModifyWithEditor, async (req: Request, res: Response, next: NextFunction) => {
-  const form = formidable({ multiples: false, maxFileSize: 5 * 1024 * 1024 });
+  const contentType: ContentType = req.contentType;
 
-  form.parse(req, async (err, fields, files) => {
+  const createFunc = async (thumbnail: File) => {
     try {
-      if (err) throw new InternalServerError(`Image Server Error : ${JSON.stringify(err)}`);
-
-      req.body = Object.assign({}, req.body, fields);
-
-      const { value, error }: ValidationResult = validator(req.body, signupSchema);
-      const file: File | undefined = !(files.file instanceof Array<formidable.File>) ? files.file : undefined;
-
+      const { value, error }: ValidationResult = validator(req.body, createSchema);
       if (error) throw new BadRequestError(error.message);
 
-      const data: IRequestCreate = {
-        userId: value.userId1,
-        userId2: value.userId2,
+      const data: CreateCoupleWithAdmin = {
+        code: value.code,
+        otherCode: value.otherCode,
         cupDay: value.cupDay,
-        title: value.title
+        deleted: convertBoolean(value.deleted)
       };
 
-      const url: string = await coupleAdminController.createCouple(data, file);
+      const url: string = await coupleAdminController.createCouple(data, thumbnail);
       return res.header({ Location: url }).status(STATUS_CODE.CREATED).json({});
     } catch (error) {
       next(error);
     }
+  };
+
+  upload(req, res, (err) => {
+    const info: MulterUploadFile = {
+      contentType,
+      req,
+      err,
+      next
+    };
+
+    uploadFileFunc(info, createFunc);
   });
 });
 
-// Update Couple Info
 router.patch("/:cup_id", canModifyWithEditor, async (req: Request, res: Response, next: NextFunction) => {
   const cupId: string = String(req.params.cup_id);
-  const form = formidable({ multiples: false, maxFileSize: 5 * 1024 * 1024 });
+  const contentType: ContentType = req.contentType;
 
-  form.parse(req, async (err, fields, files) => {
+  const updateFunc = async (thumbnail?: File | null) => {
     try {
-      if (err) throw new InternalServerError(`Image Server Error : ${JSON.stringify(err)}`);
-
-      req.body = Object.assign({}, req.body, fields);
-
       const { value, error }: ValidationResult = validator(req.body, updateSchema);
-      const thumbnail: File | undefined = !(files.thumbnail instanceof Array<formidable.File>) ? files.thumbnail : undefined;
-
       if (error) throw new BadRequestError(error.message);
-      else if (!thumbnail && !req.body.title && !req.body.cupDay) throw new BadRequestError("Request values is empty");
 
-      const data: IUpdateWithAdmin = {
+      const data: UpdateCoupleWithAdmin = {
         cupDay: value.cupDay,
-        title: value.title,
-        deleted: value.deleted,
-        deletedTime: value.deletedTime
+        deleted: convertBoolean(value.deleted)
       };
 
       const updatedCouple: Couple = await coupleAdminController.updateCouple(cupId, data, thumbnail);
@@ -130,6 +135,18 @@ router.patch("/:cup_id", canModifyWithEditor, async (req: Request, res: Response
     } catch (error) {
       next(error);
     }
+  };
+
+  upload(req, res, (err) => {
+    const info: MulterUpdateFile = {
+      contentType,
+      fieldname: fileParamName,
+      err,
+      next,
+      req
+    };
+
+    updateFileFunc(info, updateFunc);
   });
 });
 

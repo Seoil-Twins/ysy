@@ -1,4 +1,4 @@
-import AdminJS, { ActionContext, ActionRequest, AdminJSOptions, CurrentAdmin } from "adminjs";
+import AdminJS, { ActionContext, ActionRequest, ActionResponse, AdminJSOptions, CurrentAdmin } from "adminjs";
 import AdminJSExpress from "@adminjs/express";
 import * as AdminJSSequelize from "@adminjs/sequelize";
 import { dark, light } from "@adminjs/themes";
@@ -18,16 +18,10 @@ import { AlbumImage } from "../models/albumImage.model.js";
 import { InquiryImage } from "../models/inquiryImage.model.js";
 import { ContentType } from "../models/contentType.model.js";
 import { RegionCode } from "../models/regionCode.model.js";
-import { Restaurant } from "../models/restaurant.model.js";
-import { TouristSpot } from "../models/touristSpot.model.js";
-import { Culture } from "../models/culture.model.js";
-import { Sports } from "../models/sports.model.js";
-import { Shopping } from "../models/shopping.model.js";
-import { RestaurantImage } from "../models/restaurantImage.model.js";
-import { TouristSpotImage } from "../models/touristSpotImage.model.js";
-import { CultureImage } from "../models/cultureImage.model.js";
-import { SportsImage } from "../models/sportsImage.model.js";
-import { ShoppingImage } from "../models/shoppingImage.model.js";
+import { DatePlace } from "../models/datePlace.model.js";
+import { DatePlaceImage } from "../models/datePlaceImage.model.js";
+import { DatePlaceView } from "../models/datePlaceView.model.js";
+import { Favorite } from "../models/favorite.model.js";
 
 import { checkPassword } from "../utils/password.util.js";
 import RegionCodeController from "../controllers/regionCode.controller.js";
@@ -54,6 +48,26 @@ const actionOptions = {
   edit: { isAccessible: canModifyEditor },
   delete: { isAccessible: canModifyEditor },
   new: { isAccessible: canModifyEditor }
+};
+
+const convertSizeFilter = (request: ActionRequest, context: ActionContext) => {
+  console.log(context.resource);
+
+  // const records = originalResponse.records;
+  // const filteredRecords = records.map((item: any) => {
+  //   const newParams = {
+  //     ...item.params,
+  //     size: `${Math.floor((item.params.size / 1024 / 1024) * 100) / 100}MB`
+  //   };
+
+  //   item.params = newParams;
+  //   return item;
+  // });
+
+  // console.log(filteredRecords);
+
+  // originalResponse.records = filteredRecords;
+  return request;
 };
 
 const adminOptions: AdminJSOptions = {
@@ -122,7 +136,14 @@ const adminOptions: AdminJSOptions = {
     },
     {
       resource: AlbumImage,
-      options: actionOptions
+      options: {
+        ...actionOptions,
+        actions: {
+          list: {
+            before: [convertSizeFilter]
+          }
+        }
+      }
     },
     {
       resource: Calendar,
@@ -194,43 +215,19 @@ const adminOptions: AdminJSOptions = {
       }
     },
     {
-      resource: Restaurant,
+      resource: DatePlace,
       options: actionOptions
     },
     {
-      resource: RestaurantImage,
+      resource: DatePlaceImage,
       options: actionOptions
     },
     {
-      resource: TouristSpot,
+      resource: DatePlaceView,
       options: actionOptions
     },
     {
-      resource: TouristSpotImage,
-      options: actionOptions
-    },
-    {
-      resource: Culture,
-      options: actionOptions
-    },
-    {
-      resource: CultureImage,
-      options: actionOptions
-    },
-    {
-      resource: Sports,
-      options: actionOptions
-    },
-    {
-      resource: SportsImage,
-      options: actionOptions
-    },
-    {
-      resource: Shopping,
-      options: actionOptions
-    },
-    {
-      resource: ShoppingImage,
+      resource: Favorite,
       options: actionOptions
     }
   ]

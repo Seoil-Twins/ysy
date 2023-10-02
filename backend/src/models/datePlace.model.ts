@@ -1,11 +1,17 @@
 import { DataTypes, Model, literal } from "sequelize";
-import { CreationOptional, InferAttributes, InferCreationAttributes } from "sequelize/types/model";
+import { CreationOptional, InferAttributes, InferCreationAttributes, NonAttribute } from "sequelize/types/model";
 
 import sequelize, { applyDateHook } from "./index.js";
 import { ContentType } from "./contentType.model.js";
+import { DatePlaceView } from "./datePlaceView.model.js";
+import { Favorite } from "./favorite.model.js";
 
-export class TouristSpot extends Model<InferAttributes<TouristSpot>, InferCreationAttributes<TouristSpot>> {
-  declare contentId: number;
+export class DatePlace extends Model<InferAttributes<DatePlace>, InferCreationAttributes<DatePlace>> {
+  /** If you use include couple, You can use couple field. */
+  declare favorites?: NonAttribute<Favorite>;
+  declare datePlaceViews?: NonAttribute<DatePlaceView>;
+
+  declare contentId: string;
   declare contentTypeId: string;
   declare areaCode: string;
   declare sigunguCode: string;
@@ -16,20 +22,26 @@ export class TouristSpot extends Model<InferAttributes<TouristSpot>, InferCreati
   declare mapY: string;
   declare mapLevel: string;
   declare views: number;
-  declare thumbnail: CreationOptional<string>;
+  declare thumbnail: CreationOptional<string | null>;
   declare telephone: CreationOptional<string>;
   declare useTime: CreationOptional<string>;
   declare restDate: CreationOptional<string>;
   declare homepage: CreationOptional<string>;
   declare parking: CreationOptional<string>;
+  declare kidsFacility: CreationOptional<string>;
+  declare smoking: CreationOptional<string>;
+  declare signatureDish: CreationOptional<string>;
   declare babyCarriage: CreationOptional<string>;
   declare pet: CreationOptional<string>;
   declare useSeason: CreationOptional<string>;
+  declare useFee: CreationOptional<string>;
+  declare availableAge: CreationOptional<string>;
+  declare saleItem: CreationOptional<string>;
   declare registrationTime: Date;
   declare createdTime: CreationOptional<Date>;
 }
 
-TouristSpot.init(
+DatePlace.init(
   {
     contentId: {
       field: "content_id",
@@ -61,7 +73,8 @@ TouristSpot.init(
       allowNull: false
     },
     description: {
-      type: DataTypes.TEXT
+      type: DataTypes.TEXT,
+      allowNull: false
     },
     address: {
       type: DataTypes.STRING(100),
@@ -90,32 +103,55 @@ TouristSpot.init(
       type: DataTypes.STRING(200)
     },
     telephone: {
-      type: DataTypes.STRING(100)
+      type: DataTypes.STRING(300)
     },
     useTime: {
       field: "use_time",
-      type: DataTypes.STRING(200)
+      type: DataTypes.STRING(300)
     },
     restDate: {
       field: "rest_date",
-      type: DataTypes.STRING(100)
+      type: DataTypes.STRING(300)
     },
     homepage: {
-      type: DataTypes.STRING(200)
+      type: DataTypes.STRING(300)
     },
     parking: {
-      type: DataTypes.STRING(50)
+      type: DataTypes.STRING(300)
+    },
+    kidsFacility: {
+      field: "kids_facility",
+      type: DataTypes.STRING(100)
+    },
+    smoking: {
+      type: DataTypes.STRING(100)
+    },
+    signatureDish: {
+      field: "signature_dish",
+      type: DataTypes.STRING(200)
     },
     babyCarriage: {
       field: "baby_carriage",
-      type: DataTypes.STRING(50)
+      type: DataTypes.STRING(100)
     },
     pet: {
-      type: DataTypes.STRING(50)
+      type: DataTypes.STRING(100)
     },
     useSeason: {
       field: "use_season",
-      type: DataTypes.STRING(50)
+      type: DataTypes.STRING(400)
+    },
+    useFee: {
+      field: "use_fee",
+      type: DataTypes.TEXT
+    },
+    availableAge: {
+      field: "available_age",
+      type: DataTypes.STRING(400)
+    },
+    saleItem: {
+      field: "sale_item",
+      type: DataTypes.STRING(400)
     },
     registrationTime: {
       field: "registration_time",
@@ -131,9 +167,9 @@ TouristSpot.init(
   },
   {
     sequelize: sequelize,
-    tableName: "tourist_spot",
+    tableName: "date_place",
     timestamps: false
   }
 );
 
-applyDateHook(TouristSpot);
+applyDateHook(DatePlace);

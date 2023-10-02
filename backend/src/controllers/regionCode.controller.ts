@@ -16,6 +16,11 @@ class RegionCodeController {
     this.regionCodeService = regionCodeService;
   }
 
+  async getRegionCode(): Promise<RegionCode[]> {
+    const response = await this.regionCodeService.selectAll();
+    return response;
+  }
+
   async addRegionCode(): Promise<RegionCode[]> {
     let transaction: Transaction | undefined = undefined;
 

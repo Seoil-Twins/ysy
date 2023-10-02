@@ -6,21 +6,23 @@ import InquireService from "../services/inquiry.service.js";
 import InquireImageService from "../services/inquiryImage.service.js";
 
 import validator from "../utils/validator.util.js";
+import { MulterUploadFile, multerUpload, uploadFilesFunc } from "../utils/multer.js";
+import { ContentType } from "../utils/router.util.js";
+import { File } from "../utils/gcp.util.js";
+
 import { STATUS_CODE } from "../constants/statusCode.constant.js";
 
 import { CreateInquiry, ResponseInquiry, PageOptions } from "../types/inquiry.type.js";
 
 import BadRequestError from "../errors/badRequest.error.js";
 import ForbiddenError from "../errors/forbidden.error.js";
-import { multerUpload } from "../utils/multer.js";
-import { ContentType } from "../utils/router.util.js";
-import { File } from "../utils/gcp.util.js";
 
 const router: Router = express.Router();
 const inquireService: InquireService = new InquireService();
 const inquireImageService: InquireImageService = new InquireImageService();
 const inquireController: InquireController = new InquireController(inquireService, inquireImageService);
 const MAX_IMAGE_COUNT = 5;
+const upload = multerUpload.array("images", MAX_IMAGE_COUNT);
 
 const postSchema: joi.Schema = joi.object({
   title: joi.string().required(),
@@ -48,8 +50,9 @@ router.get("/", async (req: Request, res: Response, next: NextFunction) => {
   }
 });
 
-router.post("/", multerUpload.array("images", MAX_IMAGE_COUNT), async (req: Request, res: Response, next: NextFunction) => {
+router.post("/", async (req: Request, res: Response, next: NextFunction) => {
   const contentType: ContentType = req.contentType;
+
   const createFunc = async (images?: File[]) => {
     try {
       const userId: number = Number(req.userId);
@@ -62,6 +65,7 @@ router.post("/", multerUpload.array("images", MAX_IMAGE_COUNT), async (req: Requ
         title: value.title,
         contents: value.contents
       };
+
       const url: string = await inquireController.addInquire(data, images);
 
       res.header({ Location: url }).status(STATUS_CODE.CREATED).json({});
@@ -70,19 +74,16 @@ router.post("/", multerUpload.array("images", MAX_IMAGE_COUNT), async (req: Requ
     }
   };
 
-  try {
-    if (contentType === "form-data") {
-      if (!req.files) throw new BadRequestError("You must request images");
-      else if (req.originalFileNames?.length !== req.files.length)
-        throw new BadRequestError("The image is not uploaded properly. Please check if there are any damaged images.");
+  upload(req, res, (err) => {
+    const info: MulterUploadFile = {
+      contentType,
+      req,
+      err,
+      next
+    };
 
-      createFunc(req.files as File[]);
-    } else {
-      createFunc(undefined);
-    }
-  } catch (error) {
-    next(error);
-  }
+    uploadFilesFunc(info, createFunc);
+  });
 });
 
 export default router;

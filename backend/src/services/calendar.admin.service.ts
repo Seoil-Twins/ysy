@@ -1,11 +1,12 @@
 import { Op, OrderItem, Transaction, WhereOptions } from "sequelize";
 import dayjs from "dayjs";
 
-import { Service } from "./service";
+import { Service } from "./service.js";
 
-import { Calendar, FilterOptions, ICalendarResponseWithCount, PageOptions, SearchOptions } from "../models/calendar.model";
+import { Calendar } from "../models/calendar.model.js";
+import { FilterOptions, ResponseCalendarWithAdmin, PageOptions, SearchOptions } from "../types/calendar.type.js";
 
-import { API_ROOT } from "..";
+import { API_ROOT } from "../index.js";
 
 class CalendarAdminService extends Service {
   private createSort(sort: string): OrderItem {
@@ -55,7 +56,7 @@ class CalendarAdminService extends Service {
     ).formattedDate()}`;
   }
 
-  async select(pageOptions: PageOptions, searchOptions: SearchOptions, filterOptions: FilterOptions): Promise<ICalendarResponseWithCount> {
+  async select(pageOptions: PageOptions, searchOptions: SearchOptions, filterOptions: FilterOptions): Promise<ResponseCalendarWithAdmin> {
     const offset: number = (pageOptions.page - 1) * pageOptions.count;
     const sort: OrderItem = this.createSort(pageOptions.sort);
     const where: WhereOptions<Calendar> = this.createWhere(searchOptions, filterOptions);
@@ -66,9 +67,9 @@ class CalendarAdminService extends Service {
       order: [sort]
     });
     console.log("Where : ", where);
-    const result: ICalendarResponseWithCount = {
+    const result: ResponseCalendarWithAdmin = {
       calendars: rows,
-      count: count
+      total: count
     };
 
     return result;

@@ -65,7 +65,7 @@ dayjs.extend(formattedPlugin);
 const app: Application = express();
 const port = 3000;
 
-app.use(admin.options.rootPath, adminRouter);
+// app.use(admin.options.rootPath, adminRouter);
 app.use(express.json());
 app.use(boolParser());
 app.use(express.urlencoded({ extended: false }));
@@ -92,4 +92,9 @@ process.on("uncaughtException", (error) => {
 
 export const API_ROOT = process.env.API_ROOT || `http://localhost:${port}`;
 
-// job.fetchRestaurant.invoke();
+// await job.fetchRestaurant.invoke();
+// 나머지 4개 ㄱ
+// await job.fetchTouristSpot.invoke();
+// await job.fetchCulture.invoke();
+// await job.fetchSports.invoke();
+// await job.fetchShopping.invoke();

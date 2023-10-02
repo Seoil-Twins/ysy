@@ -2,19 +2,19 @@ import { DataTypes, Model, literal } from "sequelize";
 import { CreationOptional, InferAttributes, InferCreationAttributes } from "sequelize/types/model";
 
 import sequelize, { applyDateHook } from "./index.js";
-import { Culture } from "./culture.model.js";
+import { DatePlace } from "./datePlace.model.js";
 
-export class CultureImage extends Model<InferAttributes<CultureImage>, InferCreationAttributes<CultureImage>> {
-  declare cultureImageId: CreationOptional<number>;
+export class DatePlaceImage extends Model<InferAttributes<DatePlaceImage>, InferCreationAttributes<DatePlaceImage>> {
+  declare datePlaceImageId: CreationOptional<number>;
   declare contentId: string;
   declare path: string;
   declare createdTime: CreationOptional<Date>;
 }
 
-CultureImage.init(
+DatePlaceImage.init(
   {
-    cultureImageId: {
-      field: "culture_image_id",
+    datePlaceImageId: {
+      field: "date_place_image_id",
       type: DataTypes.INTEGER.UNSIGNED,
       autoIncrement: true,
       primaryKey: true
@@ -24,7 +24,7 @@ CultureImage.init(
       type: DataTypes.STRING,
       allowNull: false,
       references: {
-        model: Culture,
+        model: DatePlace,
         key: "contentId"
       }
     },
@@ -40,9 +40,9 @@ CultureImage.init(
   },
   {
     sequelize: sequelize,
-    tableName: "culture_image",
+    tableName: "date_place_image",
     timestamps: false
   }
 );
 
-applyDateHook(CultureImage);
+applyDateHook(DatePlaceImage);

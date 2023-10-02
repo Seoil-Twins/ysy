@@ -8,7 +8,8 @@ import AlbumImageService from "../services/albumImage.service.js";
 import logger from "../logger/logger.js";
 import validator from "../utils/validator.util.js";
 import { ContentType } from "../utils/router.util.js";
-import { isDefaultFile, multerUpload } from "../utils/multer.js";
+import { File } from "../utils/gcp.util.js";
+import { MulterUpdateFile, MulterUploadFile, multerUpload, updateFileFunc, uploadFilesFunc } from "../utils/multer.js";
 
 import { STATUS_CODE } from "../constants/statusCode.constant.js";
 
@@ -18,7 +19,8 @@ import UnsupportedMediaTypeError from "../errors/unsupportedMediaType.error.js";
 
 import { Album } from "../models/album.model.js";
 
-import { ResponseAlbumFolder, ResponseAlbum, PageOptions, SortItem, isSortItem } from "../types/album.type.js";
+import { ResponseAlbumFolder, ResponseAlbum, SortItem, isSortItem } from "../types/album.type.js";
+import { PageOptions } from "../utils/pagination.util.js";
 
 const router: Router = express.Router();
 const albumService = new AlbumService();
@@ -40,15 +42,20 @@ const mergeSchema: joi.Schema = joi.object({
   targetIds: joi.array().items(joi.number()).required()
 });
 
+const createUpload = multerUpload.array("images", MAX_IMAGE_COUNT);
+const updateParamName = "thumbnail";
+const updateUpload = multerUpload.single(updateParamName);
+
 // 앨범 정보 가져오기
 router.get("/:cup_id", async (req: Request, res: Response, next: NextFunction) => {
   const page: number = !isNaN(Number(req.query.page)) ? Number(req.query.page) : 1;
   const count: number = !isNaN(Number(req.query.count)) ? Number(req.query.count) : 50;
   const sort: SortItem = isSortItem(req.query.sort) ? req.query.sort : "r";
+  
   try {
     if (req.cupId !== req.params.cup_id) throw new ForbiddenError("You don't same token couple ID and path parameter couple ID");
 
-    const pageOptions: PageOptions = {
+    const pageOptions: PageOptions<SortItem> = {
       page: page,
       count: count,
       sort: sort
@@ -73,7 +80,7 @@ router.get("/:cup_id/:album_id", async (req: Request, res: Response, next: NextF
     if (req.cupId !== req.params.cup_id) throw new ForbiddenError("You don't same token couple ID and path parameter couple ID");
     else if (isNaN(albumId)) throw new BadRequestError("Album ID must be a number type");
 
-    const pageOptions: PageOptions = {
+    const pageOptions: PageOptions<SortItem> = {
       page: page,
       count: count,
       sort: sort
@@ -104,11 +111,13 @@ router.post("/:cup_id", async (req: Request, res: Response, next: NextFunction) 
 });
 
 // 앨범 사진 추가
-router.post("/:cup_id/:album_id", multerUpload.array("images", MAX_IMAGE_COUNT), async (req: Request, res: Response, next: NextFunction) => {
+router.post("/:cup_id/:album_id", async (req: Request, res: Response, next: NextFunction) => {
   const contentType: ContentType = req.contentType;
 
-  const createFunc = async (images: Express.Multer.File[]) => {
+  const createFunc = async (images?: File[]) => {
     try {
+      if (!images) throw new BadRequestError("Not found images parameter");
+
       const albumId = Number(req.params.album_id);
 
       if (req.cupId !== req.params.cup_id) throw new ForbiddenError("You don't same token couple ID and path parameter couple ID");
@@ -122,23 +131,20 @@ router.post("/:cup_id/:album_id", multerUpload.array("images", MAX_IMAGE_COUNT),
     }
   };
 
-  try {
-    if (contentType === "form-data") {
-      if (!req.files) throw new BadRequestError("You must request images");
-      else if (req.originalFileNames?.length !== req.files.length)
-        throw new BadRequestError("The image is not uploaded properly. Please check if there are any damaged images.");
+  createUpload(req, res, (err) => {
+    const info: MulterUploadFile = {
+      contentType,
+      req,
+      err,
+      next
+    };
 
-      createFunc(req.files as Express.Multer.File[]);
-    } else {
-      throw new UnsupportedMediaTypeError("This API must have a content-type of 'multipart/form-data' unconditionally.");
-    }
-  } catch (error) {
-    next(error);
-  }
+    uploadFilesFunc(info, createFunc);
+  });
 });
 
 // 앨범 합치기
-router.patch("/merge/:cup_id", async (req: Request, res: Response, next: NextFunction) => {
+router.post("/merge", async (req: Request, res: Response, next: NextFunction) => {
   const contentType: ContentType = req.contentType;
   try {
     if (contentType === "form-data") throw new UnsupportedMediaTypeError("This API must have a content-type of 'json' unconditionally.");
@@ -175,11 +181,11 @@ router.patch("/:cup_id/:album_id/title", async (req: Request, res: Response, nex
 });
 
 // 앨범 대표 사진 변경
-router.patch("/:cup_id/:album_id/thumbnail", multerUpload.single("thumbnail"), async (req: Request, res: Response, next: NextFunction) => {
+router.patch("/:cup_id/:album_id/thumbnail", async (req: Request, res: Response, next: NextFunction) => {
   const contentType: ContentType = req.contentType;
 
   try {
-    const updateThumbnailFunc = async (req: Request, thumbnail: Express.Multer.File | null) => {
+    const updateThumbnailFunc = async (thumbnail?: File | null) => {
       try {
         const albumId: number = Number(req.params.album_id);
         if (req.cupId !== req.params.cup_id) throw new ForbiddenError("You don't same token couple ID and path parameter couple ID");
@@ -192,16 +198,17 @@ router.patch("/:cup_id/:album_id/thumbnail", multerUpload.single("thumbnail"), a
       }
     };
 
-    if (contentType === "form-data") {
-      const thumbnail: Express.Multer.File | undefined = req.file;
-      if (!thumbnail) throw new BadRequestError("You must request only one thumbnail");
+    updateUpload(req, res, (err) => {
+      const info: MulterUpdateFile = {
+        contentType,
+        req,
+        err,
+        fieldname: updateParamName,
+        next
+      };
 
-      updateThumbnailFunc(req, thumbnail);
-    } else if (contentType === "json" && isDefaultFile(req.body.thumbnail)) {
-      updateThumbnailFunc(req, null);
-    } else {
-      throw new UnsupportedMediaTypeError("You must request any data");
-    }
+      updateFileFunc(info, updateThumbnailFunc);
+    });
   } catch (error) {
     next(error);
   }

@@ -9,7 +9,8 @@ import { SolutionImage } from "../models/solutionImage.model.js";
 
 import { Service } from "./service.js";
 import { CreateInquiry, PageOptions, ResponseInquiry } from "../types/inquiry.type.js";
-import { createSortOptions } from "../utils/sort.util.js";
+import { createSortOptions } from "../utils/pagination.util.js";
+import { CommonSortItem, commonSortOptions } from "../types/sort.type.js";
 
 class InquiryService extends Service {
   private FOLDER_NAME = "users";
@@ -34,7 +35,7 @@ class InquiryService extends Service {
    * @returns Promise\<{@link ResponseInquiry}\>
    */
   async selectForResponse(userId: number, pageOptions: PageOptions): Promise<ResponseInquiry> {
-    const sortOptions: OrderItem = createSortOptions(pageOptions.sort);
+    const sortOptions: OrderItem = createSortOptions<CommonSortItem>(pageOptions.sort, commonSortOptions);
     const offset: number = (pageOptions.page - 1) * pageOptions.count;
 
     const total = await Inquiry.count({ where: { userId } });

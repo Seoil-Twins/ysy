@@ -34,7 +34,6 @@ UserRole.init(
     roleId: {
       field: "role_id",
       type: DataTypes.SMALLINT,
-      allowNull: false,
       references: {
         model: Role,
         key: "roleId"

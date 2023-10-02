@@ -5,7 +5,8 @@ import { NoticeImage } from "../models/noticeImage.model.js";
 
 import { Service } from "./service.js";
 import { PageOptions, ResponseNotice } from "../types/noitce.type.js";
-import { createSortOptions } from "../utils/sort.util.js";
+import { createSortOptions } from "../utils/pagination.util.js";
+import { CommonSortItem, commonSortOptions } from "../types/sort.type.js";
 
 class NoticeSerivce extends Service {
   getURL(...args: any[]): string {
@@ -17,7 +18,7 @@ class NoticeSerivce extends Service {
   }
 
   async selectAll(pageOptions: PageOptions): Promise<ResponseNotice> {
-    const sortOptions: OrderItem = createSortOptions(pageOptions.sort);
+    const sortOptions: OrderItem = createSortOptions<CommonSortItem>(pageOptions.sort, commonSortOptions);
     const offset: number = (pageOptions.page - 1) * pageOptions.count;
 
     const { rows, count }: { rows: Notice[]; count: number } = await Notice.findAndCountAll({

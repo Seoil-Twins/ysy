@@ -27,7 +27,6 @@ Notice.init(
     uploaderId: {
       field: "uploader_id",
       type: DataTypes.INTEGER.UNSIGNED,
-      allowNull: false,
       references: {
         model: User,
         key: "userId"

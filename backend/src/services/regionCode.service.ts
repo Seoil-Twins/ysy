@@ -1,4 +1,4 @@
-import { InferAttributes, InferCreationAttributes, Optional, Transaction } from "sequelize";
+import { InferAttributes, InferCreationAttributes, Optional, Transaction, WhereOptions } from "sequelize";
 import { Service } from "./service.js";
 
 import { RegionCode } from "../models/regionCode.model.js";
@@ -9,8 +9,13 @@ class RegionCodeService extends Service {
     throw new Error("Method not implemented.");
   }
 
-  select(...args: any[]): Promise<any> {
+  async select(...args: any[]): Promise<any> {
     throw new Error("Method not implemented.");
+  }
+
+  async selectAll(): Promise<RegionCode[]> {
+    const response = await RegionCode.findAll();
+    return response;
   }
 
   create(transaction: Transaction | null, ...args: any[]): Promise<any> {

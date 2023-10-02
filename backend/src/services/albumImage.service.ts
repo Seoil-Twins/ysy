@@ -5,16 +5,15 @@ import { NullishPropertiesOf } from "sequelize/types/utils";
 import { UNKNOWN_NAME } from "../constants/file.constant.js";
 
 import logger from "../logger/logger.js";
-import { createSortOptions } from "../utils/sort.util.js";
+import { PageOptions, createSortOptions } from "../utils/pagination.util.js";
 import { File, UploadImageInfo, uploadFileWithGCP, uploadFilesWithGCP } from "../utils/gcp.util.js";
 
-import { PageOptions } from "../types/album.type.js";
+import { SortItem } from "../types/album.type.js";
 
 import { AlbumImage } from "../models/albumImage.model.js";
 
 import { Service } from "./service.js";
-
-import UploadError from "../errors/upload.error.js";
+import { albumSortOptions } from "../types/sort.type.js";
 
 class AlbumImageService extends Service {
   private FOLDER_NAME = "couples";
@@ -60,9 +59,9 @@ class AlbumImageService extends Service {
    * @param pageOptions {@link PageOptions}
    * @returns Promise<{ images: {@link AlbumImage AlbumImage[]}, total: number }>
    */
-  async selectAllWithOptions(albumId: number, pageOptions: PageOptions): Promise<{ images: AlbumImage[]; total: number }> {
+  async selectAllWithOptions(albumId: number, pageOptions: PageOptions<SortItem>): Promise<{ images: AlbumImage[]; total: number }> {
     const offset: number = (pageOptions.page - 1) * pageOptions.count;
-    const sortOptions: OrderItem = createSortOptions(pageOptions.sort);
+    const sortOptions: OrderItem = createSortOptions<SortItem>(pageOptions.sort, albumSortOptions);
 
     const { rows, count }: { rows: AlbumImage[]; count: number } = await AlbumImage.findAndCountAll({
       where: { albumId },
