@@ -15,6 +15,10 @@ export const albumAPI = {
     const data = await API.post(`/album/${cup_id}`, postData);
     return data;
   },
+  postNewImage: async (cup_id: string, album_id: number, data: any) => {
+    const res = await API.post_formdata(`/album/${cup_id}/${album_id}`, data);
+    return res;
+  },
   patchMergeAlbum: async (cup_id: string, data?: string[]) => {
     const resData = await API.patch(`/album/merge/${cup_id}`, data);
     //   console.log('aasdasdas' + JSON.stringify(data));
@@ -47,7 +51,9 @@ export const albumAPI = {
   deleteImage: async (cup_id: string, album_id: number, data: string[]) => {
     console.log(data);
     console.log(cup_id, album_id, data);
-    const rData = await API.delete(`/album/${cup_id}/${album_id}/image`, data);
+    const rData = await API.delete(`/album/${cup_id}/${album_id}/image`, {
+      data,
+    });
     return rData;
   },
 };

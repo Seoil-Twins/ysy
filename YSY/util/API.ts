@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axios, { AxiosRequestConfig } from 'axios';
 
 const API_BASE_URL = 'http://10.0.2.2:3000';
 
@@ -8,6 +8,13 @@ const headers = {
     // 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjQsImN1cElkIjpudWxsLCJyb2xlSWQiOjQsImlhdCI6MTY5NDUwMzM5MywiZXhwIjoxNjk3MDk1MzkzLCJpc3MiOiJ5c3l1c2VyIn0.6YEGd9PMlB43CHTjvOsRWVc11gr0ryiIzuEpMGJZNhk', // notebook
     'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjMsImN1cElkIjpudWxsLCJyb2xlSWQiOjQsImlhdCI6MTY5NDk2OTc2NSwiZXhwIjoxNjk3NTYxNzY1LCJpc3MiOiJ5c3l1c2VyIn0._Op578kn8MNoJLQjH4o0e7U0YuHeCkJGEpgwE-Mmic0', // Desktop
 };
+
+export interface File {
+  uri: string;
+  type: string;
+  size: number;
+  name: string;
+}
 
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
@@ -31,19 +38,24 @@ export const API = {
     try {
       const formData = new FormData();
 
-      for (const [k, v] of data) {
-        formData.append(k, v);
-      }
+      // data = [{ title: '제목', content: 'desc1', images: File[]  }];
+      formData.append('images', data);
 
-      const response = await apiClient.get(url, {
+      // formData = {
+      //   'thumbnail' : '',
+      //   'type' : '',
+
+      // }
+
+      const response = await apiClient.postForm(url, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
-        data: formData,
       });
 
       return response;
     } catch (error) {
+      console.log(error);
       return error;
     }
   },
@@ -73,9 +85,8 @@ export const API = {
       return error;
     }
   },
-  delete: async (url: string, data?: any) => {
-    console.log(data);
-    const response = await apiClient.delete(url, data).then(res => {
+  delete: async (url: string, config?: AxiosRequestConfig) => {
+    const response = await apiClient.delete(url, config).then(res => {
       return res.data;
     });
     return response;

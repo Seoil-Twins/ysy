@@ -35,6 +35,8 @@ import RenderImage from '../components/RenderImage';
 // import RNFS from 'react-native-fs';
 import { albumFunc } from '../features/albumSlice';
 import { albumAPI } from '../apis/albumAPI';
+import { assets } from '../react-native.config';
+import { File } from '../util/API';
 const screenWidth = wp('100%');
 let imageCount = 0;
 
@@ -209,7 +211,6 @@ export const AlbumDetail = () => {
     const options: ImageLibraryOptions = {
       mediaType: 'photo', // 이미지 타입 설정 (사진만 가져오려면 'photo'로 설정)
     };
-
     launchImageLibrary(options, async (response: ImagePickerResponse) => {
       if (response.didCancel) {
         console.log('User cancelled image picker');
@@ -217,7 +218,22 @@ export const AlbumDetail = () => {
         // 이미지가 선택된 경우 이미지 URI를 저장
         if (response.assets) {
           await setSelectedAddImage(response.assets[0].uri);
-          console.log(selectedAddImage);
+          // console.log(response.assets[0]);
+          const res = await fetch(response.assets[0].uri);
+          const blob = await res.blob();
+
+          if (!response.assets[0].uri || !response.assets[0].fileName) {
+            console.log('Image Data Not Found ! ');
+            return;
+          }
+          const newFile: File = {
+            uri: response.assets[0].uri,
+            type: blob.type,
+            size: blob.size,
+            name: response.assets[0].fileName,
+          };
+          const apiRes = await albumAPI.postNewImage(cupId, albumId, newFile);
+          console.log(apiRes);
         }
       }
     });
@@ -358,7 +374,7 @@ export const AlbumDetail = () => {
 
   const handleImageDelete = async () => {
     const data = { imageIds: selectedImageIds };
-    const res = albumAPI.deleteImage(cupId, albumId, { data });
+    const res = albumAPI.deleteImage(cupId, albumId, data);
     console.log(res);
     const newData = await albumImages.filter(
       item => !selectedImages.includes(item),
