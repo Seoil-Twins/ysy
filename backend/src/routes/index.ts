@@ -14,6 +14,7 @@ import datePlaceRouter from "./datePlace.route.js";
 import datePlaceViewRouter from "./datePlaceView.route.js";
 import favoriteRouter from "./favorite.route.js";
 import regionCodeRouter from "./region.route.js";
+import contentTypeRouter from "./contentType.route.js";
 
 import userAdminRouter from "./user.admin.route.js";
 import coupleAdminRouter from "./couple.admin.route.js";
@@ -38,6 +39,7 @@ router.use("/date-place", authMiddleware, datePlaceRouter);
 router.use("/date-place/views", authMiddleware, datePlaceViewRouter);
 router.use("/favorite", checkContentType, authMiddleware, favoriteRouter);
 router.use("/region-code", authMiddleware, regionCodeRouter);
+router.use("/content-type", authMiddleware, contentTypeRouter);
 
 router.use("/admin/user", checkContentType, authMiddleware, userAdminRouter);
 router.use("/admin/couple", checkContentType, authMiddleware, coupleAdminRouter);

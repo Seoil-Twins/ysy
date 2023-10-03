@@ -8,12 +8,20 @@ class ContentTypeService extends Service {
     throw new Error("Method not implemented.");
   }
 
-  async select(where: WhereOptions<ContentType>): Promise<ContentType | null> {
-    const contentType = await ContentType.findOne({
+  async select(where?: WhereOptions<ContentType>): Promise<ContentType | null> {
+    const contentType: ContentType | null = await ContentType.findOne({
       where
     });
 
     return contentType;
+  }
+
+  async selectAll(where?: WhereOptions<ContentType>): Promise<ContentType[]> {
+    const contentTypes: ContentType[] = await ContentType.findAll({
+      where
+    });
+
+    return contentTypes;
   }
 
   create(transaction: Transaction | null, ...args: any[]): Promise<any> {
