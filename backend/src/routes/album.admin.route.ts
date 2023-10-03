@@ -21,7 +21,7 @@ import InternalServerError from "../errors/internalServer.error.js";
 import { CreatePageOption, PageOptions, convertStringtoDate, createPageOptions } from "../utils/pagination.util.js";
 import { SortItem, isSortItem } from "../types/album.type.js";
 import { ContentType } from "../utils/router.util.js";
-import { MulterFieldUploadFile, multerUpload, uploadFieldsFunc } from "../utils/multer.js";
+import { MulterFieldUploadFile, MulterUpdateFile, multerUpload, updateFileFunc, uploadFieldsFunc } from "../utils/multer.js";
 import { File } from "../utils/gcp.util.js";
 import UnsupportedMediaTypeError from "../errors/unsupportedMediaType.error.js";
 import CoupleService from "../services/couple.service.js";
@@ -47,13 +47,15 @@ const mergeSchema: joi.Schema = joi.object({
 });
 
 const updateSchema: joi.Schema = joi.object({
-  cupId: joi.string(),
-  title: joi.string()
+  title: joi.string().required()
 });
 
 const thumbnailParamName = "thumbnail";
 const imageParamName = "images";
-const upload = multerUpload.fields([
+
+const uploadSingle = multerUpload.single(thumbnailParamName);
+
+const uploadMultiple = multerUpload.fields([
   { name: thumbnailParamName, maxCount: 1 },
   { name: imageParamName, maxCount: 300 }
 ]);
@@ -134,7 +136,7 @@ router.post("/:cup_id", canModifyWithEditor, async (req: Request, res: Response,
     }
   };
 
-  upload(req, res, (err) => {
+  uploadMultiple(req, res, (err) => {
     const info: MulterFieldUploadFile = {
       contentType,
       req,
@@ -190,52 +192,53 @@ router.post("/merge/:cup_id", async (req: Request, res: Response, next: NextFunc
 //   });
 // });
 
-// router.patch("/:cup_id/:album_id", canModifyWithEditor, async (req: Request, res: Response, next: NextFunction) => {
-//   const cupId: string | undefined = req.params.cup_id ? String(req.params.cup_id) : undefined;
-//   const albumId: number | undefined = req.params.album_id ? Number(req.params.album_id) : undefined;
-//   const form = formidable({ multiples: false, maxFieldsSize: 5 * 1024 * 1024, maxFiles: 100 });
+router.patch("/:cup_id/:album_id", canModifyWithEditor, async (req: Request, res: Response, next: NextFunction) => {
+  const contentType: ContentType = req.contentType;
+  const cupId: string | undefined = String(req.params.cup_id);
+  const albumId: number | undefined = Number(req.params.album_id);
 
-//   form.parse(req, async (err, fields, files) => {
-//     try {
-//       if (!cupId) throw new BadRequestError("Required Couple Id");
-//       else if (!albumId) throw new BadRequestError("You must be request album ID");
+  const updateFunc = async (thumbnail?: File | null) => {
+    try {
+      const { value, error }: ValidationResult = validator(req.body, updateSchema);
+      if (error) throw new BadRequestError(error.message);
 
-//       req.body = Object.assign({}, req.body, fields);
-//       req.body.cupId = req.params.cup_id ? String(req.params.cup_id) : undefined;
-//       const { error }: ValidationResult = validator(req.body, updateSchema);
-//       const thumbnail: File | File[] | undefined = files.thumbnail;
-//       const title: string | undefined = req.body.title ? String(req.body.title) : undefined;
+      const updatedAlbum: Album = await albumAdminController.updateAlbum(cupId, albumId, value.title, thumbnail);
+      res.status(STATUS_CODE.OK).json(updatedAlbum);
+    } catch (error) {
+      next(error);
+    }
+  };
 
-//       if (err) throw new InternalServerError(`Image Server Error : ${JSON.stringify(err)}`);
-//       else if (error) throw new BadRequestError(error.message);
-//       else if (!thumbnail && !title) throw new BadRequestError("Request values is empty");
-//       else if (thumbnail instanceof Array<formidable.File>) throw new BadRequestError("You must request only one thumbnail");
+  uploadSingle(req, res, (err) => {
+    const info: MulterUpdateFile = {
+      contentType,
+      fieldname: thumbnailParamName,
+      req,
+      err,
+      next
+    };
 
-//       const data: IUpdateWithAdmin = { title };
-//       const updatedAlbum: Album = await albumAdminController.updateAlbum(albumId, data, thumbnail);
+    updateFileFunc(info, updateFunc);
+  });
+});
 
-//       res.status(STATUS_CODE.OK).json(updatedAlbum);
-//     } catch (error) {
-//       next(error);
-//     }
-//   });
-// });
+router.delete("/:album_ids", canModifyWithEditor, async (req: Request, res: Response, next: NextFunction) => {
+  const albumIds: number[] = req.params.album_ids.split(",").map(Number);
+  const numAlbumIds: number[] = albumIds.filter((albumId: number) => {
+    if (!isNaN(albumId)) return albumId;
+  });
 
-// router.delete("/:album_ids", canModifyWithEditor, async (req: Request, res: Response, next: NextFunction) => {
-//   const albumIds: number[] = req.params.album_ids.split(",").map(Number);
-//   const numAlbumIds: number[] = albumIds.filter((albumId: number) => {
-//     if (!isNaN(albumId)) return albumId;
-//   });
+  try {
+    if (!numAlbumIds || numAlbumIds.length <= 0) throw new BadRequestError("Album ID must be a number type");
 
-//   try {
-//     if (!numAlbumIds || numAlbumIds.length <= 0) throw new BadRequestError("Album ID must be a number type");
+    await albumAdminController.deleteAlbums(numAlbumIds);
 
-//     await albumAdminController.deleteAlbums(numAlbumIds);
-//     res.status(STATUS_CODE.NO_CONTENT).json({});
-//   } catch (error) {
-//     next(error);
-//   }
-// });
+    logger.debug(`Success delete albums => ${albumIds}`);
+    res.status(STATUS_CODE.NO_CONTENT).json({});
+  } catch (error) {
+    next(error);
+  }
+});
 
 // router.delete("/image/:image_ids", canModifyWithEditor, async (req: Request, res: Response, next: NextFunction) => {
 //   const imageIds: number[] = req.params.image_ids.split(",").map(Number);
