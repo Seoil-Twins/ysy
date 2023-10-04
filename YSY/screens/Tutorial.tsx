@@ -41,6 +41,7 @@ import {
 import { setSecureValue } from '../util/jwt';
 import { TutorialNavType } from '../navigation/NavTypes';
 import { User } from '../types/user';
+import { storeStringData } from '../util/asyncStorage';
 
 const { width, height } = Dimensions.get('window');
 const slides = [
@@ -235,7 +236,6 @@ const Tutorial = () => {
           profile.profileImageUrl !== 'null' ? profile.profileImageUrl : null,
         eventNofi: false,
       };
-
       console.log('kakao data', data);
 
       if (!verifyLoginData(data)) {
@@ -243,11 +243,11 @@ const Tutorial = () => {
         navigation.navigate('AdditionalInformation', { info: data });
         return;
       }
-
       const token: AppToken = await appLogin(data);
 
       await setSecureValue('accessToken', token.accessToken);
       await setSecureValue('refreshToken', token.refreshToken);
+      storeStringData('accessToken', token.accessToken);
 
       const user: User = await getMyInfo(data);
 
@@ -255,8 +255,8 @@ const Tutorial = () => {
       navigation.navigate('ConnectCouple', { myCode: user.code });
     } catch (error) {
       if (!String(error).includes('user cancelled')) {
-        console.log('알 수 없는 에러');
       }
+      console.log(error);
     } finally {
       setIsLoggingIn(false);
     }
@@ -309,6 +309,7 @@ const Tutorial = () => {
 
         await setSecureValue('accessToken', token.accessToken);
         await setSecureValue('refreshToken', token.refreshToken);
+        storeStringData('accessToken', token.accessToken);
 
         // Get User API
         const user: User = await getMyInfo(data);
@@ -334,14 +335,18 @@ const Tutorial = () => {
     setIsLoggingIn(true);
 
     try {
+      console.log('앙1');
       const { idToken } = await GoogleSignin.signIn();
+      console.log('앙12');
       // GoogleOAuth를 통해 사용자 인증을 하면 더 많은 정보를 가져올 수 있음(phoneNumber).
       const googleCredential =
         GoogleOAuth.GoogleAuthProvider.credential(idToken);
+      console.log('앙13');
       const response = await GoogleOAuth().signInWithCredential(
         googleCredential,
       );
 
+      console.log('앙2');
       if (response.user) {
         const data: LoginOptions = {
           snsId: '0003',
@@ -356,6 +361,7 @@ const Tutorial = () => {
         };
 
         console.log('google data', data);
+        console.log('앙3');
 
         hideModal();
         navigation.navigate('AdditionalInformation', { info: data });
@@ -365,6 +371,7 @@ const Tutorial = () => {
     } catch (error) {
       if (!String(error).includes('Sign in action cancelled')) {
         console.log('알 수 없는 에러');
+        console.log(error);
       }
     } finally {
       setIsLoggingIn(false);

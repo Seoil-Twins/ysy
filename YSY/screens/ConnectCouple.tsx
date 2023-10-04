@@ -19,6 +19,7 @@ import { TutorialNavType } from '../navigation/NavTypes';
 import { getSecureValue } from '../util/jwt';
 import { useAppDispatch } from '../redux/hooks';
 import { login } from '../features/loginStatusSlice';
+import { getStringData, storeStringData } from '../util/asyncStorage';
 
 const ConnectCouple = () => {
   const navigation = useNavigation<StackNavigationProp<TutorialNavType>>();
@@ -91,6 +92,12 @@ const ConnectCouple = () => {
     console.log('Image : ', image);
     console.log('accessToken : ', accessToken);
     console.log('refreshToken : ', refreshToken);
+
+    if (await storeStringData('accessToken', accessToken)) {
+      console.log('Token Data Save Success ! ');
+      const res = accessToken === (await getStringData('accessToken'));
+      console.log('Save ? ' + res);
+    }
   };
 
   const clickShareBtn = async () => {
