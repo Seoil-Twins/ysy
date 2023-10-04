@@ -32,10 +32,10 @@ class CoupleAdminService extends Service {
     if (searchOptions.cupId && searchOptions.cupId !== "undefined") {
       result["cupId"] = { [Op.like]: `%${searchOptions.cupId}%` };
     }
-    if (boolean(filterOptions.isDeleted)) {
+    if (filterOptions.isDeleted) {
       result["deleted"] = true;
     }
-    if (boolean(filterOptions.isThumbnail)) {
+    if (filterOptions.isThumbnail) {
       result["thumbnail"] = { [Op.not]: null };
     }
     if (filterOptions.fromDate && filterOptions.toDate) {

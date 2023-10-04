@@ -31,8 +31,17 @@ class AlbumAdminService extends Service {
   private createWhere(searchOptions: SearchOptions, filterOptions: FilterOptions): WhereOptions {
     let result: WhereOptions = {};
 
-    if (searchOptions.cupId) result["cupId"] = { [Op.like]: `%${searchOptions.cupId}%` };
-    if (filterOptions.fromDate && filterOptions.toDate) result["createdTime"] = { [Op.between]: [filterOptions.fromDate, filterOptions.toDate] };
+    if (searchOptions.cupId)
+      result["cupId"] = {
+        [Op.like]: `%${searchOptions.cupId}%`
+      };
+    if (filterOptions.isThumbnail) {
+      result["thumbnail"] = { [Op.not]: null };
+    }
+    if (filterOptions.fromDate && filterOptions.toDate)
+      result["createdTime"] = {
+        [Op.between]: [filterOptions.fromDate, filterOptions.toDate]
+      };
 
     return result;
   }

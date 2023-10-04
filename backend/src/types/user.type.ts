@@ -1,8 +1,8 @@
 import { User } from "../models/user.model.js";
 import { CommonSortItem, commonSortItems } from "./sort.type.js";
 
-export type SortItem = CommonSortItem | "na" | "nd" | "dr" | "do";
-export const isSortItem = (item: any): item is SortItem => commonSortItems.includes(item) || ["na", "nd", "dr", "do"].includes(item);
+export type SortItem = CommonSortItem | "na" | "nd" | "dr" | "do" | "sb" | "ss";
+export const isSortItem = (item: any): item is SortItem => commonSortItems.includes(item) || ["na", "nd", "dr", "do", "sb", "ss"].includes(item);
 
 export interface CreateUser {
   snsId: string;
@@ -81,6 +81,8 @@ export interface SearchOptions {
 }
 
 export interface FilterOptions {
+  fromDate?: Date;
+  toDate?: Date;
   isProfile: boolean;
   isCouple: boolean;
   isDeleted: boolean;

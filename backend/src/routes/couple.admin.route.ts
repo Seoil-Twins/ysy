@@ -25,7 +25,7 @@ import validator from "../utils/validator.util.js";
 import { File } from "../utils/gcp.util.js";
 import { ContentType, convertBoolean } from "../utils/router.util.js";
 import { canModifyWithEditor, canView } from "../utils/checkRole.util.js";
-import { CreatePageOption, PageOptions, createPageOptions } from "../utils/pagination.util.js";
+import { CreatePageOption, PageOptions, convertStringtoDate, createPageOptions } from "../utils/pagination.util.js";
 import { MulterUpdateFile, MulterUploadFile, multerUpload, updateFileFunc, uploadFileFunc } from "../utils/multer.js";
 
 import { STATUS_CODE } from "../constants/statusCode.constant.js";
@@ -65,11 +65,16 @@ router.get("/", canView, async (req: Request, res: Response, next: NextFunction)
   const searchOptions: SearchOptions = {
     cupId: req.query.cup_id ? String(req.query.cup_id) : undefined
   };
+
+  const { fromDate, toDate }: { fromDate?: Date; toDate?: Date } = convertStringtoDate({
+    strStartDate: req.query.from_date,
+    strEndDate: req.query.to_date
+  });
   const filterOptions: FilterOptions = {
-    fromDate: req.query.from_date ? new Date(dayjs(String(req.query.from_date)).valueOf()) : undefined,
-    toDate: req.query.to_date ? new Date(dayjs(String(req.query.to_date)).add(1, "day").valueOf()) : undefined,
-    isDeleted: boolean(req.query.deleted) || false,
-    isThumbnail: boolean(req.query.thumbnail) || false
+    fromDate,
+    toDate,
+    isDeleted: convertBoolean(req.query.thumbnail) || false || false,
+    isThumbnail: convertBoolean(req.query.thumbnail) || false || false
   };
 
   try {

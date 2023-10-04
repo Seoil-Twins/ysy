@@ -54,6 +54,9 @@ class UserAdminService extends Service {
     if (filterOptions.isDeleted) {
       result["deleted"] = true;
     }
+    if (filterOptions.fromDate && filterOptions.toDate) {
+      result["createdTime"] = { [Op.between]: [filterOptions.fromDate, filterOptions.toDate] };
+    }
 
     return result;
   }

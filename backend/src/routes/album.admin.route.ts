@@ -17,10 +17,9 @@ import { canModifyWithEditor, canView } from "../utils/checkRole.util.js";
 import { STATUS_CODE } from "../constants/statusCode.constant.js";
 
 import BadRequestError from "../errors/badRequest.error.js";
-import InternalServerError from "../errors/internalServer.error.js";
 import { CreatePageOption, PageOptions, convertStringtoDate, createPageOptions } from "../utils/pagination.util.js";
 import { SortItem, isSortItem } from "../types/album.type.js";
-import { ContentType } from "../utils/router.util.js";
+import { ContentType, convertBoolean } from "../utils/router.util.js";
 import { MulterFieldUploadFile, MulterUpdateFile, multerUpload, updateFileFunc, uploadFieldsFunc } from "../utils/multer.js";
 import { File } from "../utils/gcp.util.js";
 import UnsupportedMediaTypeError from "../errors/unsupportedMediaType.error.js";
@@ -80,7 +79,8 @@ router.get("/", canView, async (req: Request, res: Response, next: NextFunction)
 
   const filterOptions: FilterOptions = {
     fromDate,
-    toDate
+    toDate,
+    isThumbnail: convertBoolean(req.query.thumbnail) || false
   };
 
   try {
