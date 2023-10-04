@@ -41,7 +41,6 @@ import {
 import { setSecureValue } from '../util/jwt';
 import { TutorialNavType } from '../navigation/NavTypes';
 import { User } from '../types/user';
-import { getStringData, storeStringData } from '../util/asyncStorage';
 
 const { width, height } = Dimensions.get('window');
 const slides = [
@@ -249,9 +248,6 @@ const Tutorial = () => {
 
       await setSecureValue('accessToken', token.accessToken);
       await setSecureValue('refreshToken', token.refreshToken);
-      storeStringData('accesToken', token.accessToken);
-
-      console.log(getStringData('accessToken'));
 
       const user: User = await getMyInfo(data);
 
