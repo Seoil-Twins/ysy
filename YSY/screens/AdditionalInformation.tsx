@@ -14,6 +14,7 @@ import { AppToken, LoginOptions, appLogin } from '../util/login';
 import { setSecureValue } from '../util/jwt';
 import { User } from '../types/user';
 import { StackNavigationProp } from '@react-navigation/stack';
+import { userAPI } from '../apis/userAPI';
 
 const AdditionalInformation = () => {
   const { info } =
@@ -117,12 +118,25 @@ const AdditionalInformation = () => {
 
     await login();
   };
+  const generateRandomCode = (length: number): string => {
+    const characters =
+      '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    let result = '';
+
+    for (let i = 0; i < length; i++) {
+      const randomIndex = Math.floor(Math.random() * characters.length);
+      result += characters.charAt(randomIndex);
+    }
+
+    return result;
+  };
 
   // Get User Info API
   const getMyInfo = async (data: LoginOptions) => {
     const user: User = {
       userId: 1,
-      snsId: '0002',
+      snsId: String(data.snsId),
+      snsKind: String(data.snsKind),
       name: String(data.name),
       email: String(data.email),
       phone: String(data.phone),
@@ -131,7 +145,7 @@ const AdditionalInformation = () => {
       dateNofi: false,
       primaryNofi: false,
       eventNofi: false,
-      code: 'DAS111',
+      code: await generateRandomCode(6),
       profile: data.profile,
     };
 
@@ -146,6 +160,7 @@ const AdditionalInformation = () => {
 
     const data: LoginOptions = {
       snsId: info.snsId,
+      snsKind: info.snsKind,
       name,
       email,
       phone,
@@ -161,6 +176,8 @@ const AdditionalInformation = () => {
 
     // Get User API
     const user: User = await getMyInfo(data);
+    const res = userAPI.postSignUp(data);
+    console.log(res);
     navigation.navigate('ConnectCouple', { myCode: user.code });
   };
 

@@ -1,5 +1,6 @@
 // import { useQuery } from 'react-query';
 import { API } from '../util/API';
+import { LoginOptions } from '../util/login';
 
 // function UseCallApiQuery(queryName: string, ResData: any) {
 //   const { data, error, isLoading } = useQuery(queryName, ResData);
@@ -18,9 +19,16 @@ import { API } from '../util/API';
 export const userAPI = {
   getUserMe: async () => {
     try {
-      // const data = await UseCallApiQuery('userme', API.get('/user/me')); // error 발생
-      const data = await API.get('/user/me'); // error 발생
-      // console.log('aasdasdas' + JSON.stringify(data));
+      const data = await API.get('/user/me');
+      return data;
+    } catch (error) {
+      console.log(error);
+      return error;
+    }
+  },
+  postSignUp: async (loginData: LoginOptions) => {
+    try {
+      const data = await API.post('/user', loginData);
       return data;
     } catch (error) {
       console.log(error);
