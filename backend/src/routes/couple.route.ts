@@ -72,6 +72,9 @@ router.post("/", async (req: Request, res: Response, next: NextFunction) => {
         cupDay: value.cupDay
       };
 
+      console.log(req);
+      console.log(req.userId);
+
       const [result, url]: [ResponseToken, string] = await coupleController.createCouple(req.userId!, data, thumbnail);
 
       logger.debug(`Response Data : ${JSON.stringify(data)}`);

@@ -21,6 +21,9 @@ import { useAppDispatch } from '../redux/hooks';
 import { login } from '../features/loginStatusSlice';
 import { getStringData, storeStringData } from '../util/asyncStorage';
 
+import { userAPI } from '../apis/userAPI';
+import { coupleAPI } from '../apis/coupleAPI';
+
 const ConnectCouple = () => {
   const navigation = useNavigation<StackNavigationProp<TutorialNavType>>();
   const { params } = useRoute<RouteProp<TutorialNavType, 'ConnectCouple'>>();
@@ -92,6 +95,14 @@ const ConnectCouple = () => {
     console.log('Image : ', image);
     console.log('accessToken : ', accessToken);
     console.log('refreshToken : ', refreshToken);
+
+    const data = {
+      otherCode: code,
+      cupDay: date,
+      thumbnail: image,
+    };
+
+    coupleAPI.postNewCouple(data);
 
     if (await storeStringData('accessToken', accessToken)) {
       console.log('Token Data Save Success ! ');

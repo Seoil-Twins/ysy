@@ -52,6 +52,13 @@ class CoupleController {
     const user1: User | null = await this.userService.select({ userId });
     const user2: User | null = await this.userService.select({ code: data.otherCode });
 
+    console.log("user1 :: " + user1);
+    console.log(userId);
+    //console.log(user2);
+    console.log(!user1);
+    console.log(!user2);
+    console.log(!user1 || !user2);
+
     if (!user1 || !user2) throw new BadRequestError("Bad Request");
     else if (user1.cupId || user2.cupId) throw new ConflictError("Duplicated Cup Id");
 
