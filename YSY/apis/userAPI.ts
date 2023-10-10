@@ -28,8 +28,15 @@ export const userAPI = {
   },
   postSignUp: async (loginData: LoginOptions) => {
     try {
+      // if (loginData.profile) {
+      //   console.log('1');
+      //   const data = await API.post_formdata('/user', loginData);
+      //   return data;
+      // } else {
+      console.log('2');
       const data = await API.post('/user', loginData);
       return data;
+      // }
     } catch (error) {
       console.log(error);
       return error;

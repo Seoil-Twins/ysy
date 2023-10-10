@@ -102,13 +102,15 @@ const ConnectCouple = () => {
       thumbnail: image,
     };
 
-    coupleAPI.postNewCouple(data);
-
-    if (await storeStringData('accessToken', accessToken)) {
+    if (await storeStringData('accessToken', `Bearer ${accessToken}`)) {
       console.log('Token Data Save Success ! ');
-      const res = accessToken === (await getStringData('accessToken'));
+      const res =
+        `Bearer ${accessToken}` === (await getStringData('accessToken'));
       console.log('Save ? ' + res);
+      console.log(await getStringData('accessToken'));
     }
+
+    coupleAPI.postNewCouple(data);
   };
 
   const clickShareBtn = async () => {

@@ -27,6 +27,8 @@ class AuthController {
 
   async login(data: Login): Promise<ResponseToken> {
     const user: User | null = await this.userService.select({ email: data.email, snsId: data.snsId, snsKind: data.snsKind });
+
+    console.log(user);
     if (!user) throw new NotFoundError("Not found user using request");
 
     const role: UserRole | null = await this.userRoleService.select(user.userId);

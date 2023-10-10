@@ -300,14 +300,14 @@ const Tutorial = () => {
           eventNofi: false,
         };
 
-        console.log('naver data', data);
-
         // false면 추가 정보 페이지로 이동
         if (!verifyLoginData(data)) {
           hideModal();
           navigation.navigate('AdditionalInformation', { info: data });
           return;
         }
+        const res = await userAPI.postSignUp(data);
+        console.log('=-=====================');
 
         const token: AppToken = await appLogin(data);
 
@@ -316,12 +316,10 @@ const Tutorial = () => {
         storeStringData('accessToken', token.accessToken);
 
         // Get User API
-        const user: User = await getMyInfo(data);
-        const res = userAPI.postSignUp(data);
-        console.log(res);
+        // const user: User = await getMyInfo(data);
 
         hideModal();
-        navigation.navigate('ConnectCouple', { myCode: user.code });
+        navigation.navigate('ConnectCouple', { myCode: res.code });
       } else {
         console.log('Failed get profile');
         console.log(profileResult);
