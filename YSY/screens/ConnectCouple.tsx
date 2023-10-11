@@ -113,11 +113,18 @@ const ConnectCouple = () => {
     console.log('2');
 
     if (params.loginOption) {
+      console.log('new Token');
       const token: AppToken = await appLogin(params.loginOption);
-      setAccessToken(token.accessToken);
-    }
+      await setAccessToken(token.accessToken);
 
-    await storeStringData('accessToken', `Bearer ${accessToken}`);
+      if (await storeStringData('accessToken', `Bearer ${accessToken}`)) {
+        console.log('Token Data Save Success part2 ! ');
+        const res =
+          `Bearer ${accessToken}` === (await getStringData('accessToken'));
+        console.log('Save ? ' + res);
+        console.log(await getStringData('accessToken'));
+      }
+    }
   };
 
   const clickShareBtn = async () => {
