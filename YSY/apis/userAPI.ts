@@ -20,6 +20,7 @@ export const userAPI = {
   getUserMe: async () => {
     try {
       const data = await API.get('/user/me');
+      console.log(data);
       return data;
     } catch (error) {
       console.log(error);

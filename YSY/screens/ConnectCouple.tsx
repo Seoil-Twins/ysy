@@ -21,8 +21,8 @@ import { useAppDispatch } from '../redux/hooks';
 import { login } from '../features/loginStatusSlice';
 import { getStringData, storeStringData } from '../util/asyncStorage';
 
-import { userAPI } from '../apis/userAPI';
 import { coupleAPI } from '../apis/coupleAPI';
+import { AppToken, appLogin } from '../util/login';
 
 const ConnectCouple = () => {
   const navigation = useNavigation<StackNavigationProp<TutorialNavType>>();
@@ -101,7 +101,6 @@ const ConnectCouple = () => {
       cupDay: date,
       thumbnail: image,
     };
-
     if (await storeStringData('accessToken', `Bearer ${accessToken}`)) {
       console.log('Token Data Save Success ! ');
       const res =
@@ -109,8 +108,16 @@ const ConnectCouple = () => {
       console.log('Save ? ' + res);
       console.log(await getStringData('accessToken'));
     }
+    console.log('1');
+    await coupleAPI.postNewCouple(data);
+    console.log('2');
 
-    coupleAPI.postNewCouple(data);
+    if (params.loginOption) {
+      const token: AppToken = await appLogin(params.loginOption);
+      setAccessToken(token.accessToken);
+    }
+
+    await storeStringData('accessToken', `Bearer ${accessToken}`);
   };
 
   const clickShareBtn = async () => {

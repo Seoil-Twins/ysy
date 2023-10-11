@@ -1,9 +1,8 @@
 import { API } from '../util/API';
 
 export const albumAPI = {
-  getAlbumFolder: async (cup_id: string, sort?: string) => {
-    const sortData = { sort: sort };
-    const data = await API.get(`/album/${cup_id}`, sortData);
+  getSchedule: async (cup_id: string, year: string) => {
+    const data = await API.get(`/calendar/${cup_id}/${year}`);
     return data;
   },
 };

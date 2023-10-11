@@ -309,17 +309,24 @@ const Tutorial = () => {
         const res = await userAPI.postSignUp(data);
         console.log('=-=====================');
 
-        const token: AppToken = await appLogin(data);
+        const token: AppToken = await appLogin(data); // cup_id가 없는 상태
 
         await setSecureValue('accessToken', token.accessToken);
         await setSecureValue('refreshToken', token.refreshToken);
-        storeStringData('accessToken', token.accessToken);
+        await storeStringData('accessToken', token.accessToken);
 
         // Get User API
         // const user: User = await getMyInfo(data);
 
         hideModal();
-        navigation.navigate('ConnectCouple', { myCode: res.code });
+        navigation.navigate('ConnectCouple', {
+          myCode: res.code,
+          loginOption: {
+            snsId: id,
+            snsKind: '1001',
+            email: email,
+          },
+        });
       } else {
         console.log('Failed get profile');
         console.log(profileResult);

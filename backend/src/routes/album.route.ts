@@ -51,7 +51,7 @@ router.get("/:cup_id", async (req: Request, res: Response, next: NextFunction) =
   const page: number = !isNaN(Number(req.query.page)) ? Number(req.query.page) : 1;
   const count: number = !isNaN(Number(req.query.count)) ? Number(req.query.count) : 50;
   const sort: SortItem = isSortItem(req.query.sort) ? req.query.sort : "r";
-  
+
   try {
     if (req.cupId !== req.params.cup_id) throw new ForbiddenError("You don't same token couple ID and path parameter couple ID");
 

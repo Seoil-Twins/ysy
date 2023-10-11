@@ -24,6 +24,8 @@ import DefaultPersonSVG from '../assets/icons/person.svg';
 import LoveSVG from '../assets/icons/small_love.svg';
 import CalendarSVG from '../assets/icons/calendar_lightgray.svg';
 import PickImageSVG from '../assets/icons/pick_image.svg';
+import { coupleAPI } from '../apis/coupleAPI';
+import { userAPI } from '../apis/userAPI';
 
 const { width, height } = Dimensions.get('window');
 
@@ -36,6 +38,11 @@ const Home = () => {
   const [modalVisible, setModalVisible] = useState<boolean>(false);
 
   const getCoupleInfo = async () => {
+    const userData = JSON.stringify(await userAPI.getUserMe()); // login 정보 가져오기
+    const userParsedData = JSON.parse(userData);
+    console.log(userParsedData.cupId);
+    const res: Couple = await coupleAPI.getCouple(userParsedData.cupId);
+    //console.log(res);
     const response: Couple = await {
       cupId: 'gPz9fLmw',
       cupDay: '2023-01-17',
