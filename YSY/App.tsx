@@ -153,7 +153,7 @@ const App = () => {
     };
 
     fetchAccessToken();
-    //removeValue('accessToken');
+    // removeValue('accessToken');
   }, []);
 
   useEffect(() => {

@@ -108,16 +108,18 @@ const ConnectCouple = () => {
       console.log('Save ? ' + res);
       console.log(await getStringData('accessToken'));
     }
-    console.log('1');
-    await coupleAPI.postNewCouple(data);
-    console.log('2');
+
+    const result = await coupleAPI.postNewCouple(data);
+    console.log(JSON.stringify(result));
 
     if (params.loginOption) {
       console.log('new Token');
       const token: AppToken = await appLogin(params.loginOption);
       await setAccessToken(token.accessToken);
 
-      if (await storeStringData('accessToken', `Bearer ${accessToken}`)) {
+      if (
+        await storeStringData('accessToken', `Bearer ${result.accessToken}`)
+      ) {
         console.log('Token Data Save Success part2 ! ');
         const res =
           `Bearer ${accessToken}` === (await getStringData('accessToken'));

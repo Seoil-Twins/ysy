@@ -13,4 +13,12 @@ export const coupleAPI = {
     const res = await API.get(`/couple/${cup_id}`);
     return res;
   },
+  patchCouple: async (cup_id: string, data?: any) => {
+    const res = await API.patch(`/couple/${cup_id}`, data);
+    return res;
+  },
+  patchFormdataCouple: async (cup_id: string, data?: any) => {
+    const res = await API.patch_formdata(`/couple/${cup_id}`, data);
+    return res;
+  },
 };

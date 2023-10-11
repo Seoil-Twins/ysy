@@ -97,12 +97,23 @@ export const API = {
   },
   patch_formdata: async (url: string, data?: any) => {
     try {
+      console.log('앙아아아아아아아앙');
       const formData = new FormData();
 
+      console.log('앙아아아아아아아앙');
       for (const [k, v] of data) {
+        console.log('앙아아아아아아아앙22');
         formData.append(k, v);
+        console.log('앙아아아아아아아앙22');
       }
-
+      console.log('앙아아아아아아아앙');
+      // const response = await axios.patch(`${API_BASE_URL}${url}`, {
+      //   headers: {
+      //     'Content-Type': 'multipart/form-data',
+      //   },
+      //   data: formData,
+      // });
+      console.log(url);
       const response = await apiClient.patch(url, {
         headers: {
           'Content-Type': 'multipart/form-data',

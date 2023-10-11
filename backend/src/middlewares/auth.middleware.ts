@@ -18,8 +18,6 @@ const checkToken = (req: Request, _res: Response, next: NextFunction) => {
   try {
     const user: JwtPayload | string = jwt.verify(token);
 
-    console.log(token);
-
     if (typeof user === "string") throw new UnauthorizedError("Invalid Token");
     req.userId = Number(user.userId);
     req.cupId = user.cupId;
