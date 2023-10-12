@@ -101,10 +101,9 @@ export const API = {
       const formData = new FormData();
 
       console.log('앙아아아아아아아앙');
-      for (const [k, v] of data) {
-        console.log('앙아아아아아아아앙22');
-        formData.append(k, v);
-        console.log('앙아아아아아아아앙22');
+      for (const [key, value] of Object.entries(data)) {
+        formData.append(key, value);
+        console.log(key + ' :: ' + value);
       }
       console.log('앙아아아아아아아앙');
       // const response = await axios.patch(`${API_BASE_URL}${url}`, {

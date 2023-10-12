@@ -105,7 +105,11 @@ router.patch("/:cup_id", async (req: Request, res: Response, next: NextFunction)
       const { value, error }: ValidationResult = validator(req.body, updateSchema);
       if (error) throw new BadRequestError(error.message);
       else if (req.cupId !== req.params.cup_id) throw new ForbiddenError("You don't same token couple ID and path parameter couple ID");
-      console.log(value);
+      thumbnail = {
+        path: value.data[0],
+        size: value.data[1],
+        mimetype: value.data[2]
+      };
       console.log(thumbnail);
       const data: UpdateCouple = {
         cupDay: value.cupDay
