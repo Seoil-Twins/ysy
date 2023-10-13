@@ -105,7 +105,7 @@ export const API = {
         formData.append(key, value);
         console.log(key + ' :: ' + value);
       }
-      console.log('앙아아아아아아아앙');
+      console.log(formData);
       // const response = await axios.patch(`${API_BASE_URL}${url}`, {
       //   headers: {
       //     'Content-Type': 'multipart/form-data',
@@ -113,11 +113,10 @@ export const API = {
       //   data: formData,
       // });
       console.log(url);
-      const response = await apiClient.patch(url, {
+      const response = await apiClient.patch(url, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
-        data: formData,
       });
 
       return response;
