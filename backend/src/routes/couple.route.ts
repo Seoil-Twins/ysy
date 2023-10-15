@@ -99,21 +99,16 @@ router.post("/", async (req: Request, res: Response, next: NextFunction) => {
 router.patch("/:cup_id", async (req: Request, res: Response, next: NextFunction) => {
   const contentType: ContentType = req.contentType;
 
-  console.log(contentType);
   const updateFunc = async (thumbnail?: File | null) => {
     try {
       const { value, error }: ValidationResult = validator(req.body, updateSchema);
       if (error) throw new BadRequestError(error.message);
       else if (req.cupId !== req.params.cup_id) throw new ForbiddenError("You don't same token couple ID and path parameter couple ID");
-      // thumbnail = {
-      //   path: value.data[0],
-      //   size: value.data[1],
-      //   mimetype: value.data[2]
-      // };
-      console.log(thumbnail);
+
       const data: UpdateCouple = {
         cupDay: value.cupDay
       };
+      console.log(req.userId!, req.cupId, data, thumbnail);
 
       const couple: Couple = await coupleController.updateCouple(req.userId!, req.cupId, data, thumbnail);
       return res.status(STATUS_CODE.OK).json(couple);

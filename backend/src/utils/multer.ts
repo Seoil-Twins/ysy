@@ -70,7 +70,9 @@ const errorHandling = (err: any) => {
 
 export const updateFileFunc = (info: MulterUpdateFile, callback: Function) => {
   const { contentType, req, err, fieldname, next } = info;
-
+  console.log(req.body);
+  console.log(req.file);
+  console.log(req.files);
   try {
     errorHandling(err);
 

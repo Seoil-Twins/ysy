@@ -2,6 +2,7 @@ import axios, { AxiosRequestConfig } from 'axios';
 import { getStringData } from './asyncStorage';
 
 const API_BASE_URL = 'http://10.0.2.2:3000';
+const FormData = require('form-data');
 
 // const headers = {
 //   'Content-Type': 'application/json', // 예시: JSON 형식의 데이터를 보낼 때
@@ -69,7 +70,7 @@ export const API = {
       Object.entries(data).map(([k, v]) => {
         formData.append(k, v);
       });
-      console.log(formData._parts);
+      // console.log(formData._parts);
 
       // formData = {
       //   'thumbnail' : '',
@@ -85,7 +86,7 @@ export const API = {
 
       return response;
     } catch (error) {
-      console.log(error.response);
+      console.log(error);
       return error;
     }
   },
@@ -97,26 +98,39 @@ export const API = {
   },
   patch_formdata: async (url: string, data?: any) => {
     try {
-      console.log('앙아아아아아아아앙');
       const formData = new FormData();
 
-      console.log('앙아아아아아아아앙');
-      for (const [key, value] of Object.entries(data)) {
-        formData.append(key, value);
-        console.log(key + ' :: ' + value);
-      }
-      console.log(formData);
-      // const response = await axios.patch(`${API_BASE_URL}${url}`, {
-      //   headers: {
-      //     'Content-Type': 'multipart/form-data',
-      //   },
-      //   data: formData,
-      // });
-      console.log(url);
-      const response = await apiClient.patch(url, formData, {
+      // RNFetchBlob.fs
+      //   .readFile(data.thumbnail, 'base64')
+      //   .then(readData => {
+      //     // 파일 데이터를 base64로 읽어옴
+      //     const formData = new FormData();
+      //     formData.append('thumbnail', data);
+      //     formData.append('thumbnail_size', data.length);
+      //     formData.append('thumbnail_type', 'image/jpeg');
+
+      //     // 이제 formData 변수에 원하는 데이터가 추가됨
+      //     console.log(formData);
+      //   })
+      //   .catch(error => {
+      //     console.error('d;;d' + error);
+      //   });
+
+      // for (const [key, value] of Object.entries(data)) {
+      //   formData.append(key, value);
+      //   console.log(key + ' :: ' + value);
+      // }
+
+      formData.append('thumbnail', {
+        thumbnail: data.thumbnail,
+        thumbnail_size: data.thumbnail_size,
+        thumnnail_type: data.thumnnail_type,
+      });
+      const response = await apiClient.patch(url, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
+        formData,
       });
 
       return response;
