@@ -98,6 +98,9 @@ router.post("/", async (req: Request, res: Response, next: NextFunction) => {
 // 커플 정보 수정
 router.patch("/:cup_id", async (req: Request, res: Response, next: NextFunction) => {
   const contentType: ContentType = req.contentType;
+  console.log(req.file);
+  console.log(req.files);
+  console.log(req.body);
 
   const updateFunc = async (thumbnail?: File | null) => {
     try {
@@ -108,7 +111,6 @@ router.patch("/:cup_id", async (req: Request, res: Response, next: NextFunction)
       const data: UpdateCouple = {
         cupDay: value.cupDay
       };
-      console.log(req.userId!, req.cupId, data, thumbnail);
 
       const couple: Couple = await coupleController.updateCouple(req.userId!, req.cupId, data, thumbnail);
       return res.status(STATUS_CODE.OK).json(couple);

@@ -164,7 +164,7 @@ const Home = () => {
       console.log(_image?.path);
       console.log(_image?.size);
       console.log(_image?.mime);
-      await coupleAPI.patchFormdataCouple(userParsedData.cupId, data);
+      await coupleAPI.patchFormdataCouple(userParsedData.cupId, _image);
     } catch (error) {
       console.log(error);
     }

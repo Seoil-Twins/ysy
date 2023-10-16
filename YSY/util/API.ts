@@ -100,37 +100,23 @@ export const API = {
     try {
       const formData = new FormData();
 
-      // RNFetchBlob.fs
-      //   .readFile(data.thumbnail, 'base64')
-      //   .then(readData => {
-      //     // 파일 데이터를 base64로 읽어옴
-      //     const formData = new FormData();
-      //     formData.append('thumbnail', data);
-      //     formData.append('thumbnail_size', data.length);
-      //     formData.append('thumbnail_type', 'image/jpeg');
+      // const file = new File([data.thumbnail], 'thumbnail.jpg', {
+      //   type: data.thumbnail_type,
+      // });
+      console.log(data);
 
-      //     // 이제 formData 변수에 원하는 데이터가 추가됨
-      //     console.log(formData);
-      //   })
-      //   .catch(error => {
-      //     console.error('d;;d' + error);
-      //   });
+      formData.append('thumbnail', data);
 
-      // for (const [key, value] of Object.entries(data)) {
-      //   formData.append(key, value);
-      //   console.log(key + ' :: ' + value);
-      // }
+      const blob =
+        formData instanceof Blob
+          ? formData
+          : new Blob([formData], { type: data.mimetype });
 
-      formData.append('thumbnail', {
-        thumbnail: data.thumbnail,
-        thumbnail_size: data.thumbnail_size,
-        thumnnail_type: data.thumnnail_type,
-      });
       const response = await apiClient.patch(url, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
-        formData,
+        blob,
       });
 
       return response;
