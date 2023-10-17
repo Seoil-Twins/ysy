@@ -2,7 +2,7 @@ import axios, { AxiosRequestConfig } from 'axios';
 import { getStringData } from './asyncStorage';
 
 const API_BASE_URL = 'http://10.0.2.2:3000';
-const FormData = require('form-data');
+// const FormData = require('form-data');
 
 // const headers = {
 //   'Content-Type': 'application/json', // 예시: JSON 형식의 데이터를 보낼 때
@@ -28,7 +28,7 @@ const getToken = async () => {
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
   headers: {
-    'Content-Type': 'application/json', // 예시: JSON 형식의 데이터를 보낼 때
+    'Content-Type': 'multipart/form-data', // 예시: JSON 형식의 데이터를 보낼 때
 
     // Authorization:
     // 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjQsImN1cElkIjpudWxsLCJyb2xlSWQiOjQsImlhdCI6MTY5NDUwMzM5MywiZXhwIjoxNjk3MDk1MzkzLCJpc3MiOiJ5c3l1c2VyIn0.6YEGd9PMlB43CHTjvOsRWVc11gr0ryiIzuEpMGJZNhk', // notebook
@@ -63,20 +63,9 @@ export const API = {
     try {
       const formData = new FormData();
 
-      // data = [{ title: '제목', content: 'desc1', images: File[]  }];
-      // formData.append('profile', data.profile);
-
-      console.log(data);
       Object.entries(data).map(([k, v]) => {
         formData.append(k, v);
       });
-      // console.log(formData._parts);
-
-      // formData = {
-      //   'thumbnail' : '',
-      //   'type' : '',
-
-      // }
 
       const response = await apiClient.postForm(url, formData, {
         headers: {
@@ -98,29 +87,34 @@ export const API = {
   },
   patch_formdata: async (url: string, data?: any) => {
     try {
-      const formData = new FormData();
+      // const formData = new FormData();
 
-      // const file = new File([data.thumbnail], 'thumbnail.jpg', {
+      // Object.entries(data).map(([k, v]) => {
+      //   formData.append(k, v);
+      // });
+      // formData.append('thumbnail', {
+      //   thumbnail: data.thumbnail,
+      //   size: data.thumbnail_size,
       //   type: data.thumbnail_type,
       // });
-      console.log(data);
+      // console.log(formData);
 
-      formData.append('thumbnail', data);
+      const formData = new FormData();
+      formData.append('thumbnail', {
+        uri: data.thumbnail,
+        size: data.thumbnail_size,
+        type: data.thumbnail_type,
+      });
 
-      const blob =
-        formData instanceof Blob
-          ? formData
-          : new Blob([formData], { type: data.mimetype });
-
-      const response = await apiClient.patch(url, {
+      const response = await apiClient.patch(url, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
-        blob,
       });
 
       return response;
     } catch (error) {
+      console.log(error);
       return error;
     }
   },

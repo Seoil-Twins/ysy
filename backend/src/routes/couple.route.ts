@@ -97,10 +97,11 @@ router.post("/", async (req: Request, res: Response, next: NextFunction) => {
 
 // 커플 정보 수정
 router.patch("/:cup_id", async (req: Request, res: Response, next: NextFunction) => {
+  console.log("asdasdsa");
   const contentType: ContentType = req.contentType;
-  console.log(req.file);
-  console.log(req.files);
-  console.log(req.body);
+  console.log("file :: " + req.file);
+  console.log("files :: " + req.files);
+  console.log("body :: " + req.body);
 
   const updateFunc = async (thumbnail?: File | null) => {
     try {

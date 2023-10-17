@@ -7,6 +7,7 @@ import {
   Pressable,
   Platform,
   Dimensions,
+  _Image,
 } from 'react-native';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
 import ImageCropPicker, { ImageOrVideo } from 'react-native-image-crop-picker';
@@ -28,6 +29,12 @@ import { coupleAPI } from '../apis/coupleAPI';
 import { userAPI } from '../apis/userAPI';
 
 const { width, height } = Dimensions.get('window');
+
+export interface File {
+  thumbnail: string;
+  thumbnail_size: number;
+  thumbnail_type: string;
+}
 
 const Home = () => {
   const [cupInfo, setCupInfo] = useState<Couple | undefined>(undefined);
@@ -161,10 +168,15 @@ const Home = () => {
         thumbnail_size: _image?.size,
         thumbnail_type: _image?.mime,
       };
-      console.log(_image?.path);
-      console.log(_image?.size);
-      console.log(_image?.mime);
-      await coupleAPI.patchFormdataCouple(userParsedData.cupId, _image);
+      const res = await fetch(_image!.path);
+      const blob = await res.blob();
+
+      const newFile: File = {
+        thumbnail: _image!.path,
+        thumbnail_size: blob.size,
+        thumbnail_type: blob.type,
+      };
+      await coupleAPI.patchFormdataCouple(userParsedData.cupId, newFile);
     } catch (error) {
       console.log(error);
     }

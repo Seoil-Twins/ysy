@@ -73,6 +73,7 @@ export const updateFileFunc = (info: MulterUpdateFile, callback: Function) => {
   console.log(req.body);
   console.log(req.file);
   console.log(req.files);
+  console.log(contentType);
   try {
     errorHandling(err);
 
