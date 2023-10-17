@@ -31,9 +31,10 @@ import { userAPI } from '../apis/userAPI';
 const { width, height } = Dimensions.get('window');
 
 export interface File {
-  thumbnail: string;
-  thumbnail_size: number;
-  thumbnail_type: string;
+  uri: string;
+  name: string;
+  size: number;
+  type: string;
 }
 
 const Home = () => {
@@ -139,7 +140,7 @@ const Home = () => {
     setDatePickerVisible(false);
   };
 
-  const updateCupDay = async (_date: Date) => {
+  const updateCupDay = async (_date: string) => {
     // 업데이트 커플 데이
     const userData = JSON.stringify(await userAPI.getUserMe()); // login 정보 가져오기
     const userParsedData = JSON.parse(userData);
@@ -150,10 +151,12 @@ const Home = () => {
 
   const handleConfirm = async (date: Date) => {
     try {
-      await updateCupDay(date);
+      await updateCupDay(
+        `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`,
+      );
       setCupDay(date);
     } catch (error) {
-      console.log(error);
+      console.log(error.response.data);
     }
 
     hideDatePicker();
@@ -163,22 +166,33 @@ const Home = () => {
     try {
       const userData = JSON.stringify(await userAPI.getUserMe()); // login 정보 가져오기
       const userParsedData = JSON.parse(userData);
-      const data = {
-        thumbnail: _image?.path,
-        thumbnail_size: _image?.size,
-        thumbnail_type: _image?.mime,
-      };
-      const res = await fetch(_image!.path);
-      const blob = await res.blob();
+      // const data = {
+      //   thumbnail: _image?.path,
+      //   thumbnail_size: _image?.size,
+      //   thumbnail_type: _image?.mime,
+      // };
+
+      console.log('-------------------------------------------');
+
+      // const res = await fetch(_image!.path);
+      // const blob = await res.blob();
+      const splitedFilename = _image!.path.split('/');
+      const filename = _image!.path.split('/')[splitedFilename!.length - 1];
 
       const newFile: File = {
-        thumbnail: _image!.path,
-        thumbnail_size: blob.size,
-        thumbnail_type: blob.type,
+        uri: _image!.path,
+        name: filename,
+        size: _image!.size,
+        type: _image!.mime,
       };
-      await coupleAPI.patchFormdataCouple(userParsedData.cupId, newFile);
-    } catch (error) {
-      console.log(error);
+
+      const response = await coupleAPI.patchFormdataCouple(
+        userParsedData.cupId,
+        newFile,
+      );
+      console.log(response);
+    } catch (error: any) {
+      console.log(error.response.data);
     }
   };
 

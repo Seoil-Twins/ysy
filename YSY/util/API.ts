@@ -54,9 +54,15 @@ export const API = {
   },
   post: async (url: string, data?: any) => {
     console.log(url);
-    const response = await apiClient.post(url, data).then(res => {
-      return res.data;
-    });
+    const response = await apiClient
+      .post(url, data, {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+      .then(res => {
+        return res.data;
+      });
     return response;
   },
   post_formdata: async (url: string, data?: any) => {
@@ -80,18 +86,21 @@ export const API = {
     }
   },
   patch: async (url: string, data?: any) => {
-    const response = await apiClient.patch(url, data).then(res => {
-      return res.data;
-    });
+    const response = await apiClient
+      .patch(url, data, {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+      .then(res => {
+        return res.data;
+      });
     return response;
   },
   patch_formdata: async (url: string, data?: any) => {
     try {
       // const formData = new FormData();
 
-      // Object.entries(data).map(([k, v]) => {
-      //   formData.append(k, v);
-      // });
       // formData.append('thumbnail', {
       //   thumbnail: data.thumbnail,
       //   size: data.thumbnail_size,
@@ -100,21 +109,31 @@ export const API = {
       // console.log(formData);
 
       const formData = new FormData();
+
+      // Object.entries(data).map(([k, v]) => {
+      //   formData.append(k, v);
+      // });
+
+      console.log('data : ', data);
+      console.log('url : ', url);
+
       formData.append('thumbnail', {
-        uri: data.thumbnail,
-        size: data.thumbnail_size,
-        type: data.thumbnail_type,
+        uri: data.uri,
+        name: data.name,
+        size: data.size,
+        type: data.type,
       });
 
       const response = await apiClient.patch(url, formData, {
+        data: formData,
         headers: {
           'Content-Type': 'multipart/form-data',
         },
       });
 
       return response;
-    } catch (error) {
-      console.log(error);
+    } catch (error: any) {
+      console.log(error.response.data);
       return error;
     }
   },

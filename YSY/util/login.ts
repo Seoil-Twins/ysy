@@ -7,7 +7,7 @@ export interface LoginOptions {
   email: string | null;
   phone: string | null;
   birthday: string | null;
-  profile: string | null;
+  profile?: string | null;
   eventNofi: boolean;
 }
 
@@ -37,7 +37,6 @@ export const verifyLoginData = (data: LoginOptions): boolean => {
     !data.name ||
     !data.phone ||
     !data.birthday ||
-    !data.profile ||
     birthdays?.length !== 3
   ) {
     return false;
