@@ -179,6 +179,8 @@ const Home = () => {
       const splitedFilename = _image!.path.split('/');
       const filename = _image!.path.split('/')[splitedFilename!.length - 1];
 
+      // uri, name, size, type 추가해서 formdata로 넘기면 알아서 buffer가 들어감.
+      // file 객체라는 것을 인지해서 buffer를 넣는지는 나도 잘 모르겠음.
       const newFile: File = {
         uri: _image!.path,
         name: filename,
