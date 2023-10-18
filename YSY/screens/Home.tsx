@@ -49,11 +49,12 @@ const Home = () => {
     const userData = JSON.stringify(await userAPI.getUserMe()); // login 정보 가져오기
     const userParsedData = JSON.parse(userData);
     const res: any = await coupleAPI.getCouple(userParsedData.cupId);
+    console.log(res.thumbnail);
     const response: Couple = {
       cupId: res.cupId,
       cupDay: res.cupDay,
       title: '커플 제목',
-      thumbnail: res.thumnnail ? res.thumnnai : null,
+      thumbnail: res.thumnnail ? res.thumnnail : null,
       createdTime: res.createdTime,
       users: [
         {
@@ -151,8 +152,9 @@ const Home = () => {
 
   const handleConfirm = async (date: Date) => {
     try {
+      console.log('date :: ' + date.getDate());
       await updateCupDay(
-        `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`,
+        `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate() + 1}`,
       );
       setCupDay(date);
     } catch (error) {

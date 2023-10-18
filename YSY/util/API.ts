@@ -28,7 +28,7 @@ const getToken = async () => {
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
   headers: {
-    'Content-Type': 'multipart/form-data', // 예시: JSON 형식의 데이터를 보낼 때
+    'Content-Type': 'application/json', // 예시: JSON 형식의 데이터를 보낼 때
 
     // Authorization:
     // 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjQsImN1cElkIjpudWxsLCJyb2xlSWQiOjQsImlhdCI6MTY5NDUwMzM5MywiZXhwIjoxNjk3MDk1MzkzLCJpc3MiOiJ5c3l1c2VyIn0.6YEGd9PMlB43CHTjvOsRWVc11gr0ryiIzuEpMGJZNhk', // notebook
@@ -99,23 +99,7 @@ export const API = {
   },
   patch_formdata: async (url: string, data?: any) => {
     try {
-      // const formData = new FormData();
-
-      // formData.append('thumbnail', {
-      //   thumbnail: data.thumbnail,
-      //   size: data.thumbnail_size,
-      //   type: data.thumbnail_type,
-      // });
-      // console.log(formData);
-
       const formData = new FormData();
-
-      // Object.entries(data).map(([k, v]) => {
-      //   formData.append(k, v);
-      // });
-
-      console.log('data : ', data);
-      console.log('url : ', url);
 
       formData.append('thumbnail', {
         uri: data.uri,
