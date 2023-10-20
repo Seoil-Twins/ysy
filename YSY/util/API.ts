@@ -114,7 +114,6 @@ export const API = {
           'Content-Type': 'multipart/form-data',
         },
       });
-
       return response;
     } catch (error: any) {
       console.log(error.response.data);

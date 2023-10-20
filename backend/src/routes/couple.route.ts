@@ -119,6 +119,7 @@ router.patch("/:cup_id", async (req: Request, res: Response, next: NextFunction)
       next(error);
     }
   };
+  console.log("aa1");
 
   upload(req, res, (err) => {
     const info: MulterUpdateFile = {
@@ -128,6 +129,7 @@ router.patch("/:cup_id", async (req: Request, res: Response, next: NextFunction)
       fieldname: fileParamName,
       next
     };
+    console.log("aa1");
 
     updateFileFunc(info, updateFunc);
   });

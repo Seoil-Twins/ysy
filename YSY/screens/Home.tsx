@@ -29,6 +29,7 @@ import { coupleAPI } from '../apis/coupleAPI';
 import { userAPI } from '../apis/userAPI';
 
 const { width, height } = Dimensions.get('window');
+const IMG_BASE_URL = 'https://storage.googleapis.com/ysy-bucket/';
 
 export interface File {
   uri: string;
@@ -49,12 +50,11 @@ const Home = () => {
     const userData = JSON.stringify(await userAPI.getUserMe()); // login 정보 가져오기
     const userParsedData = JSON.parse(userData);
     const res: any = await coupleAPI.getCouple(userParsedData.cupId);
-    console.log(res.thumbnail);
     const response: Couple = {
       cupId: res.cupId,
       cupDay: res.cupDay,
       title: '커플 제목',
-      thumbnail: res.thumnnail ? res.thumnnail : null,
+      thumbnail: res.thumbnail ? `${IMG_BASE_URL}${res.thumbnail}` : null,
       createdTime: res.createdTime,
       users: [
         {
@@ -91,6 +91,7 @@ const Home = () => {
         },
       ],
     };
+    console.log(response.thumbnail);
 
     setThumbnail(response.thumbnail);
     setCupDay(new Date(response.cupDay));
@@ -158,7 +159,7 @@ const Home = () => {
       );
       setCupDay(date);
     } catch (error) {
-      console.log(error.response.data);
+      console.log(error.response);
     }
 
     hideDatePicker();
@@ -168,35 +169,34 @@ const Home = () => {
     try {
       const userData = JSON.stringify(await userAPI.getUserMe()); // login 정보 가져오기
       const userParsedData = JSON.parse(userData);
-      // const data = {
-      //   thumbnail: _image?.path,
-      //   thumbnail_size: _image?.size,
-      //   thumbnail_type: _image?.mime,
-      // };
 
       console.log('-------------------------------------------');
+      if (_image) {
+        const splitedFilename = _image!.path.split('/');
+        const filename = _image!.path.split('/')[splitedFilename!.length - 1];
 
-      // const res = await fetch(_image!.path);
-      // const blob = await res.blob();
-      const splitedFilename = _image!.path.split('/');
-      const filename = _image!.path.split('/')[splitedFilename!.length - 1];
-
-      // uri, name, size, type 추가해서 formdata로 넘기면 알아서 buffer가 들어감.
-      // file 객체라는 것을 인지해서 buffer를 넣는지는 나도 잘 모르겠음.
-      const newFile: File = {
-        uri: _image!.path,
-        name: filename,
-        size: _image!.size,
-        type: _image!.mime,
-      };
-
-      const response = await coupleAPI.patchFormdataCouple(
-        userParsedData.cupId,
-        newFile,
-      );
-      console.log(response);
+        // uri, name, size, type 추가해서 formdata로 넘기면 알아서 buffer가 들어감.
+        // file 객체라는 것을 인지해서 buffer를 넣는지는 나도 잘 모르겠음.
+        const newFile: File = {
+          uri: _image!.path,
+          name: filename,
+          size: _image!.size,
+          type: _image!.mime,
+        };
+        const response = await coupleAPI.patchFormdataCouple(
+          userParsedData.cupId,
+          newFile,
+        );
+        console.log(response);
+      } else {
+        const response = await coupleAPI.patchFormdataCouple(
+          userParsedData.cupId,
+          undefined,
+        );
+        console.log(response);
+      }
     } catch (error: any) {
-      console.log(error.response.data);
+      console.log(error.response);
     }
   };
 
