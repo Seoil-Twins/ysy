@@ -70,21 +70,22 @@ const errorHandling = (err: any) => {
 
 export const updateFileFunc = (info: MulterUpdateFile, callback: Function) => {
   const { contentType, req, err, fieldname, next } = info;
-  console.log(req.body);
-  console.log(req.file);
-  console.log(req.files);
-  console.log(contentType);
   try {
     errorHandling(err);
 
     if (contentType === "form-data") {
+      console.log("fdfdfdfdfd");
+
       if (!req.file) throw new BadRequestError("You must request images");
 
       callback(req.file);
     } else if (contentType === "json") {
       let image: null | undefined = undefined;
+      console.log(req.body);
+      console.log(req.body[fieldname]);
 
       if (isDefaultFile(req.body[fieldname])) {
+        console.log("imaimamaimai");
         image = null;
       }
 

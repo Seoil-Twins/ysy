@@ -189,14 +189,16 @@ const Home = () => {
         );
         console.log(response);
       } else {
+        console.log('asdasd');
         const response = await coupleAPI.patchFormdataCouple(
           userParsedData.cupId,
-          undefined,
+          null,
         );
+        console.log('asdasd');
         console.log(response);
       }
     } catch (error: any) {
-      console.log(error.response);
+      console.log('error :: ' + error);
     }
   };
 

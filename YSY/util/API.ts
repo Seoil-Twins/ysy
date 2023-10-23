@@ -100,21 +100,34 @@ export const API = {
   patch_formdata: async (url: string, data?: any) => {
     try {
       const formData = new FormData();
+      if (data) {
+        formData.append('thumbnail', {
+          uri: data.uri,
+          name: data.name,
+          size: data.size,
+          type: data.type,
+        });
 
-      formData.append('thumbnail', {
-        uri: data.uri,
-        name: data.name,
-        size: data.size,
-        type: data.type,
-      });
-
-      const response = await apiClient.patch(url, formData, {
-        data: formData,
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
-      return response;
+        const response = await apiClient.patch(url, formData, {
+          data: formData,
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        });
+        return response;
+      } else {
+        const response = await apiClient
+          .patch(url, {
+            thumbnail: data,
+            headers: {
+              'Content-Type': 'application/json',
+            },
+          })
+          .then(res => {
+            return res.data;
+          });
+        return response;
+      }
     } catch (error: any) {
       console.log(error.response.data);
       return error;

@@ -121,6 +121,7 @@ router.patch("/:cup_id/:calendar_id", async (req: Request, res: Response, next: 
 
 router.delete("/:cup_id/:calendar_id", async (req: Request, res: Response, next: NextFunction) => {
   const calendarId: number = Number(req.params.calendar_id);
+  console.log(req.cupId + " :: " + req.params.cup_id);
 
   try {
     const cupId: string | null = req.cupId;

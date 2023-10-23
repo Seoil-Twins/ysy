@@ -20,6 +20,10 @@ import BackSvg from '../assets/icons/back.svg';
 import Input from './Input';
 import DatePicker from './DatePicker';
 import ColorPicker from './ColorPicker';
+import { userAPI } from '../apis/userAPI';
+import { calendarAPI } from '../apis/calendarAPI';
+import { fromHsv } from 'react-native-color-picker';
+import { HsvColor } from 'react-native-color-picker/dist/typeHelpers';
 
 const screenWidth = wp('100%');
 const screenHeight = hp('100%');
@@ -29,6 +33,7 @@ interface CalendarProps {
 }
 
 type Schedule = {
+  calendarId: string;
   startDate: string;
   endDate: string;
   startTime: string;
@@ -58,8 +63,11 @@ const MyCalendar: React.FC<CalendarProps> = ({ onDateSelect }) => {
   const [inputDesc, setInputDesc] = useState('');
   const [inputStartDate, setInputStartDate] = useState('');
   const [inputEndDate, setInputEndDate] = useState('');
+  const [inputColor, setInputColor] = useState('');
   const [isAdd, setIsAdd] = useState(false);
   const [swipeStart, setSwipeStart] = useState(0);
+
+  const [cupId, setCupId] = useState('');
   const today = new Date();
 
   const handlePrevMonth = () => {
@@ -67,7 +75,7 @@ const MyCalendar: React.FC<CalendarProps> = ({ onDateSelect }) => {
       setCurrentYear(currentYear - 1);
     }
     setCurrentMonth(prevMonth => (prevMonth === 0 ? 11 : prevMonth - 1));
-    getSchedule(currentMonth);
+    getSchedule();
     getMonthDates(currentYear, currentMonth);
   };
 
@@ -76,7 +84,7 @@ const MyCalendar: React.FC<CalendarProps> = ({ onDateSelect }) => {
       setCurrentYear(currentYear + 1);
     }
     setCurrentMonth(prevMonth => (prevMonth === 11 ? 0 : prevMonth + 1));
-    getSchedule(currentMonth);
+    getSchedule();
     getMonthDates(currentYear, currentMonth);
   };
 
@@ -115,76 +123,38 @@ const MyCalendar: React.FC<CalendarProps> = ({ onDateSelect }) => {
   const isSameYear = (date1: Date, date2: number) => {
     return date1.getFullYear() === date2;
   };
-  const getSchedule = (currentMonth: number) => {
-    // currentMonth를 통해 DB에서 현재 월의 일정을 가져옴
-    console.log(selectedDate + ' :: ' + currentMonth);
-    setScheduleList([
-      {
-        startDate: '2023-08-14',
-        endDate: '2023-08-14',
-        startTime: '7:30AM',
-        endTime: '7:30AM',
+  const getSchedule = async () => {
+    if (!cupId) {
+      const userData = JSON.stringify(await userAPI.getUserMe()); // login 정보 가져오기
+      const userParsedData = JSON.parse(userData);
+      await setCupId(userParsedData.cupId);
+    }
+
+    const response = await calendarAPI.getSchedule(cupId, currentYear);
+
+    const newScheduleList = [];
+
+    for (const item of response) {
+      const newScheduleItem = {
+        calendarId: item.calendarId,
+        startDate: item.fromDate.slice(0, 10),
+        endDate: item.toDate.slice(0, 10),
+        startTime: item.fromDate.slice(11, 16),
+        endTime: item.toDate.slice(11, 16),
         hl: '20m',
-        title: '중국집',
-        desc: '짜장면 먹기',
-        color: 'red',
-      },
-      {
-        startDate: '2023-09-14',
-        endDate: '2023-09-15',
-        startTime: '7:30AM',
-        endTime: '7:30AM',
-        hl: '20m',
-        title: '중국집',
-        desc: '짜장면 먹기',
-        color: '#00FF00',
-      },
-      {
-        startDate: '2023-09-24',
-        endDate: '2023-09-24',
-        startTime: '7:30AM',
-        endTime: '7:30AM',
-        hl: '20m',
-        title: '중국집',
-        desc: '짜장면 먹기',
-        color: '#00FF00',
-      },
-      {
-        startDate: '2023-09-07',
-        endDate: '2023-09-09',
-        startTime: '7:30AM',
-        endTime: '7:30AM',
-        hl: '20m',
-        title: '중국집',
-        desc: '짜장면 먹기',
-        color: '#00FF00',
-      },
-      {
-        startDate: '2023-09-01',
-        endDate: '2023-09-05',
-        startTime: '8:30AM',
-        endTime: '9:30AM',
-        hl: '20m',
-        title: '한식집',
-        desc: '짜장면 먹기',
-        color: '#FF00FF',
-      },
-      {
-        startDate: '2023-09-01',
-        endDate: '2023-09-03',
-        startTime: '8:30AM',
-        endTime: '9:30AM',
-        hl: '20m',
-        title: '한식집',
-        desc: '짜장면 먹기',
-        color: '#00FFFF',
-      }, // DB에서 이벤트 지속시간에 따라 내림차순 정렬을 해야함 아니면, 모양이 꼬임
-    ]);
+        title: item.title,
+        desc: item.description,
+        color: item.color,
+      };
+      newScheduleList.push(newScheduleItem);
+    }
+
+    setScheduleList(newScheduleList);
   };
 
   const getMonthDates = (year: number, month: number): Date[] => {
     if (scheduleList.length <= 0) {
-      getSchedule(month);
+      getSchedule();
     }
 
     const firstDay = new Date(year, month, 1);
@@ -379,9 +349,17 @@ const MyCalendar: React.FC<CalendarProps> = ({ onDateSelect }) => {
           }}>
           <View style={{ flexDirection: 'row', alignItems: 'center' }}>
             {drawCircle(schedule.color)}
-            <Text style={{ fontSize: 18, justifyContent: 'center' }}>
-              {schedule.title}
-            </Text>
+            <Pressable
+              onPress={() => {
+                calendarAPI.deleteSchedule(cupId, schedule.calendarId);
+                setShowDetailView(false);
+                getSchedule();
+                getMonthDates(currentYear, currentMonth);
+              }}>
+              <Text style={{ fontSize: 18, justifyContent: 'center' }}>
+                {schedule.title}
+              </Text>
+            </Pressable>
           </View>
           <Text style={{ paddingLeft: '3.5%', fontSize: 12 }}>
             {schedule.desc}
@@ -411,6 +389,11 @@ const MyCalendar: React.FC<CalendarProps> = ({ onDateSelect }) => {
     checkEmpty();
   };
 
+  const handleColor = async (color: HsvColor) => {
+    setInputColor(fromHsv(color));
+    checkEmpty();
+  };
+
   const checkEmpty = () => {
     if (inputTitle && inputDesc && inputStartDate && inputEndDate) {
       setIsAdd(true);
@@ -418,14 +401,32 @@ const MyCalendar: React.FC<CalendarProps> = ({ onDateSelect }) => {
       setIsAdd(false);
     }
   };
+  const handleAdd = async () => {
+    if (isAdd) {
+      const userData = JSON.stringify(await userAPI.getUserMe()); // login 정보 가져오기
+      const userParsedData = JSON.parse(userData);
+
+      const data = {
+        title: inputTitle,
+        description: inputDesc,
+        fromDate: inputStartDate,
+        toDate: inputEndDate,
+        color: inputColor,
+      };
+
+      await calendarAPI.postSchedule(userParsedData.cupId, data);
+      setAddScheVisible(false);
+      await getSchedule();
+    }
+  };
 
   const swipeEvent = (diff: number) => {
     console.log(diff);
     if (diff > 100) {
-      console.log('swipe1');
+      console.log('=========================================');
       handlePrevMonth();
     } else if (diff < -100) {
-      console.log('swipe2');
+      console.log('=========================================');
       handleNextMonth();
     }
     console.log('swipe');
@@ -584,14 +585,16 @@ const MyCalendar: React.FC<CalendarProps> = ({ onDateSelect }) => {
               alignItems: 'center',
             }}>
             <BackSvg onPress={() => setAddScheVisible(false)} height={100} />
-            <Text
-              style={
-                isAdd
-                  ? { fontSize: 18, color: '#3675FB' }
-                  : { fontSize: 18, color: '#CCCCCC' }
-              }>
-              추가
-            </Text>
+            <Pressable onPress={handleAdd}>
+              <Text
+                style={
+                  isAdd
+                    ? { fontSize: 18, color: '#3675FB' }
+                    : { fontSize: 18, color: '#CCCCCC' }
+                }>
+                추가
+              </Text>
+            </Pressable>
           </View>
           <View
             style={{
@@ -667,7 +670,10 @@ const MyCalendar: React.FC<CalendarProps> = ({ onDateSelect }) => {
                   width: '100%',
                   height: '100%',
                 }}>
-                <ColorPicker placeholder={'#FFFFFF'} />
+                <ColorPicker
+                  onColorChange={handleColor}
+                  placeholder={'#FFFFFF'}
+                />
               </View>
             </View>
           </View>

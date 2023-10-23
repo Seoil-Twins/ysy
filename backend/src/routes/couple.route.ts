@@ -97,11 +97,7 @@ router.post("/", async (req: Request, res: Response, next: NextFunction) => {
 
 // 커플 정보 수정
 router.patch("/:cup_id", async (req: Request, res: Response, next: NextFunction) => {
-  console.log("asdasdsa");
   const contentType: ContentType = req.contentType;
-  console.log("file :: " + req.file);
-  console.log("files :: " + req.files);
-  console.log("body :: " + req.body);
 
   const updateFunc = async (thumbnail?: File | null) => {
     try {
@@ -112,16 +108,16 @@ router.patch("/:cup_id", async (req: Request, res: Response, next: NextFunction)
       const data: UpdateCouple = {
         cupDay: value.cupDay
       };
-
       const couple: Couple = await coupleController.updateCouple(req.userId!, req.cupId, data, thumbnail);
       return res.status(STATUS_CODE.OK).json(couple);
     } catch (error) {
+      console.log(error);
       next(error);
     }
   };
-  console.log("aa1");
 
   upload(req, res, (err) => {
+    console.log(err);
     const info: MulterUpdateFile = {
       contentType,
       req,
@@ -129,7 +125,6 @@ router.patch("/:cup_id", async (req: Request, res: Response, next: NextFunction)
       fieldname: fileParamName,
       next
     };
-    console.log("aa1");
 
     updateFileFunc(info, updateFunc);
   });
