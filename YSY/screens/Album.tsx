@@ -289,7 +289,7 @@ export const Album = () => {
       const userData = JSON.stringify(await userAPI.getUserMe()); // login 정보 가져오기
 
       const userParsedData = JSON.parse(userData);
-      const res = await albumAPI.patchMergeAlbum(userParsedData.cupId, data);
+      const res = await albumAPI.postMergeAlbum(userParsedData.cupId, data);
       console.log(res);
 
       getAlbumFolders('r');

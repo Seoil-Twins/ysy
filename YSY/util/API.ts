@@ -101,6 +101,7 @@ export const API = {
       .then(res => {
         return res.data;
       });
+    console.log('아아아아아');
     return response;
   },
   patch_formdata: async (url: string, data?: any) => {

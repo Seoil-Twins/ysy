@@ -19,8 +19,8 @@ export const albumAPI = {
     const res = await API.post_formdata(`/album/${cup_id}/${album_id}`, data);
     return res;
   },
-  patchMergeAlbum: async (cup_id: string, data?: string[]) => {
-    const resData = await API.patch(`/album/merge/${cup_id}`, data);
+  postMergeAlbum: async (cup_id: string, data?: string[]) => {
+    const resData = await API.post('/album/merge', data);
     //   console.log('aasdasdas' + JSON.stringify(data));
     return resData;
   },
