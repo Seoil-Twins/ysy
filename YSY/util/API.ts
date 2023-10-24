@@ -68,20 +68,26 @@ export const API = {
   post_formdata: async (url: string, data?: any) => {
     try {
       const formData = new FormData();
+      console.log(url);
+      console.log(data);
+      if (data) {
+        formData.append('images', {
+          uri: data.uri,
+          name: data.name,
+          size: data.size,
+          type: data.type,
+        });
 
-      Object.entries(data).map(([k, v]) => {
-        formData.append(k, v);
-      });
-
-      const response = await apiClient.postForm(url, formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
-
-      return response;
+        const response = await apiClient.postForm(url, formData, {
+          data: formData,
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        });
+        return response;
+      }
     } catch (error) {
-      console.log(error);
+      console.log(error.response);
       return error;
     }
   },

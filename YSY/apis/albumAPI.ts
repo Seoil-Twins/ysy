@@ -11,7 +11,7 @@ export const albumAPI = {
     const resData = await API.get(`/album/${cup_id}/${album_id}`, data);
     return resData;
   },
-  postNewAlbum: async (cup_id: string, postData: string[]) => {
+  postNewAlbum: async (cup_id: string, postData: any) => {
     const data = await API.post(`/album/${cup_id}`, postData);
     return data;
   },

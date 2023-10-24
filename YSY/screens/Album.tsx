@@ -28,11 +28,12 @@ import { AlbumTypes } from '../navigation/AlbumTypes';
 
 import RenderAlbumHeader from '../components/RenderAlbumHeader';
 import RenderAlbum from '../components/RenderAlbum';
-import { QueryClient, useQuery } from 'react-query';
+import { QueryClient } from 'react-query';
 import { userAPI } from '../apis/userAPI';
 import { albumAPI } from '../apis/albumAPI';
 
 const screenWidth = wp('100%');
+const IMG_BASE_URL = 'https://storage.googleapis.com/ysy-bucket/';
 
 const handleAddAlbum = async (newAlbumTitle: string) => {
   const userData = JSON.stringify(await userAPI.getUserMe()); // login 정보 가져오기
@@ -87,13 +88,14 @@ export const Album = () => {
       const data = JSON.stringify(
         await albumAPI.getAlbumFolder(userParsedData.cupId, sort),
       );
+      console.log('앙122222222222222222211');
+      console.log('data ::: ' + data);
       const parsedData = JSON.parse(data);
 
       const defaultThumbnail =
         'https://dummyimage.com/600x400/000/fff&text=Im+Dummy'; // 적절한 기본 이미지 URL을 설정하세요.
 
       setFoldersData(parsedData);
-      console.log(parsedData);
       const folderList = parsedData.albums.map(
         (album: {
           albumId: number;
@@ -103,12 +105,15 @@ export const Album = () => {
           createdTime: Date;
         }) => ({
           albumId: album.albumId,
-          thumbnail: album.thumbnail ? album.thumbnail : defaultThumbnail,
+          thumbnail: album.thumbnail
+            ? `${IMG_BASE_URL}${album.thumbnail}`
+            : defaultThumbnail,
           title: album.title,
           total: album.total,
           createdTime: album.createdTime,
         }),
       );
+      console.log(folderList);
       setDummyFolder(folderList);
     } catch (error) {
       console.log(error);
@@ -285,6 +290,7 @@ export const Album = () => {
 
       const userParsedData = JSON.parse(userData);
       const res = await albumAPI.patchMergeAlbum(userParsedData.cupId, data);
+      console.log(res);
 
       getAlbumFolders('r');
     } catch (error) {
