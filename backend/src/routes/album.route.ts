@@ -192,8 +192,11 @@ router.patch("/:cup_id/:album_id/thumbnail", async (req: Request, res: Response,
   console.log("========================================================6");
   const contentType: ContentType = req.contentType;
 
+  console.log("========================================================6");
   try {
+    console.log("========================================================6");
     const updateThumbnailFunc = async (thumbnail?: File | null) => {
+      console.log("========================================================6");
       try {
         const albumId: number = Number(req.params.album_id);
         if (req.cupId !== req.params.cup_id) throw new ForbiddenError("You don't same token couple ID and path parameter couple ID");

@@ -66,6 +66,7 @@ const MyCalendar: React.FC<CalendarProps> = ({ onDateSelect }) => {
   const [inputColor, setInputColor] = useState('');
   const [isAdd, setIsAdd] = useState(false);
   const [swipeStart, setSwipeStart] = useState(0);
+  const [schFlag, setSchFlag] = useState(true);
 
   const [cupId, setCupId] = useState('');
   const today = new Date();
@@ -75,6 +76,7 @@ const MyCalendar: React.FC<CalendarProps> = ({ onDateSelect }) => {
       setCurrentYear(currentYear - 1);
     }
     setCurrentMonth(prevMonth => (prevMonth === 0 ? 11 : prevMonth - 1));
+    setSchFlag(true);
     getSchedule();
     getMonthDates(currentYear, currentMonth);
   };
@@ -84,6 +86,7 @@ const MyCalendar: React.FC<CalendarProps> = ({ onDateSelect }) => {
       setCurrentYear(currentYear + 1);
     }
     setCurrentMonth(prevMonth => (prevMonth === 11 ? 0 : prevMonth + 1));
+    setSchFlag(true);
     getSchedule();
     getMonthDates(currentYear, currentMonth);
   };
@@ -124,13 +127,19 @@ const MyCalendar: React.FC<CalendarProps> = ({ onDateSelect }) => {
     return date1.getFullYear() === date2;
   };
   const getSchedule = async () => {
+    let response;
+
     if (!cupId) {
       const userData = JSON.stringify(await userAPI.getUserMe()); // login 정보 가져오기
       const userParsedData = JSON.parse(userData);
-      await setCupId(userParsedData.cupId);
+      setCupId(userParsedData.cupId);
+      response = await calendarAPI.getSchedule(
+        userParsedData.cupId,
+        currentYear,
+      );
+    } else {
+      response = await calendarAPI.getSchedule(cupId, currentYear);
     }
-
-    const response = await calendarAPI.getSchedule(cupId, currentYear);
 
     const newScheduleList = [];
 
@@ -153,8 +162,10 @@ const MyCalendar: React.FC<CalendarProps> = ({ onDateSelect }) => {
   };
 
   const getMonthDates = (year: number, month: number): Date[] => {
-    if (scheduleList.length <= 0) {
+    if (scheduleList.length <= 0 && schFlag) {
+      console.log('키기기이기기333333311');
       getSchedule();
+      setSchFlag(false);
     }
 
     const firstDay = new Date(year, month, 1);

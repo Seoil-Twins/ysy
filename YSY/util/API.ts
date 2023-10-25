@@ -62,8 +62,6 @@ export const API = {
   post_formdata: async (url: string, data?: any) => {
     try {
       const formData = new FormData();
-      console.log(url);
-      console.log(data);
       if (data) {
         formData.append('images', {
           uri: data.uri,
@@ -101,6 +99,8 @@ export const API = {
   patch_formdata: async (url: string, data?: any) => {
     try {
       const formData = new FormData();
+      console.log(url);
+      console.log(data);
       if (data) {
         formData.append('thumbnail', {
           uri: data.uri,
@@ -108,6 +108,8 @@ export const API = {
           size: data.size,
           type: data.type,
         });
+        console.log('아아아아아1');
+        console.log(formData);
 
         const response = await apiClient.patch(url, formData, {
           data: formData,
@@ -115,6 +117,7 @@ export const API = {
             'Content-Type': 'multipart/form-data',
           },
         });
+        console.log('아아아아아2');
         return response;
       } else {
         const response = await apiClient
@@ -130,7 +133,7 @@ export const API = {
         return response;
       }
     } catch (error: any) {
-      console.log(error.response.data);
+      console.log(error);
       return error;
     }
   },

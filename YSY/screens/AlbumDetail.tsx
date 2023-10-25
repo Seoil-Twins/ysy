@@ -268,9 +268,30 @@ export const AlbumDetail = () => {
     setIsMoreModalVisible(true);
   };
 
-  const handleRepTrans = () => {
-    setRepImage(tmpRepImage);
+  const handleRepTrans = async () => {
+    await setRepImage(tmpRepImage);
     setIsRepImageSelMode(false);
+
+    try {
+      const imgList = await albumAPI.getAlbumImages(cupId, albumId);
+      const targetImg = imgList.images.filter(
+        (tartget: { albumImageId: number }) =>
+          tartget.albumImageId === tmpRepImage,
+      );
+      console.log(targetImg);
+      const newFile: File = {
+        uri: `${IMG_BASE_URL}${targetImg[0].path}`,
+        type: targetImg[0].type,
+        size: targetImg[0].size,
+        name: '4ac2af96-4d2c-4f43-a04d-41cc736ad273.jpg',
+      };
+      const data = JSON.stringify(
+        await albumAPI.patchRepImgAlbum(cupId, albumId, newFile),
+      );
+      console.log('ss' + data);
+    } catch (error) {
+      console.log(error);
+    }
   };
 
   const handleOptionPressIn = (option: any) => {
@@ -283,16 +304,6 @@ export const AlbumDetail = () => {
 
   const handleRepImage = async () => {
     setIsRepImageSelMode(true);
-    try {
-      const data = JSON.stringify(
-        await albumAPI.patchRepImgAlbum(cupId, albumId, {
-          thumbnail: 'https://dummyimage.com/600x400/000/fff&text=Im+Dummy',
-        }),
-      );
-      console.log(data);
-    } catch (error) {
-      console.log(error);
-    }
     // dispatch(imageSelectionOn());
     setIsMoreModalVisible(false);
   };
@@ -358,6 +369,11 @@ export const AlbumDetail = () => {
   const handleModName = () => {
     setIsModNameVisible(true);
     setIsMoreModalVisible(false);
+  };
+
+  const handleDeleteAlbum = () => {
+    albumAPI.deleteAlbum(cupId, albumId);
+    closeMoreModal();
   };
 
   const closeMoreModal = () => {
@@ -552,7 +568,7 @@ export const AlbumDetail = () => {
                 <Text style={styles.moreText}>앨범 이름 변경</Text>
               </TouchableOpacity>
               <TouchableOpacity
-                onPress={() => closeMoreModal()}
+                onPress={() => handleDeleteAlbum()}
                 onPressIn={() => handleOptionPressIn('option3')}
                 onPressOut={() => handleOptionPressOut('option3')}
                 activeOpacity={1}
