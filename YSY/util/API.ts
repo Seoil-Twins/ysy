@@ -54,15 +54,9 @@ export const API = {
   },
   post: async (url: string, data?: any) => {
     console.log(url);
-    const response = await apiClient
-      .post(url, data, {
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      })
-      .then(res => {
-        return res.data;
-      });
+    const response = await apiClient.post(url, data).then(res => {
+      return res.data;
+    });
     return response;
   },
   post_formdata: async (url: string, data?: any) => {
@@ -87,7 +81,7 @@ export const API = {
         return response;
       }
     } catch (error) {
-      console.log(error.response);
+      console.log(error);
       return error;
     }
   },

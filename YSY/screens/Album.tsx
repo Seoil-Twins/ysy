@@ -42,7 +42,8 @@ const handleAddAlbum = async (newAlbumTitle: string) => {
   const postData = { title: newAlbumTitle };
 
   try {
-    console.log(albumAPI.postNewAlbum(userParsedData.cupId, postData));
+    const res = await albumAPI.postNewAlbum(userParsedData.cupId, postData);
+    console.log(res);
   } catch (error) {
     console.log(error);
   }
@@ -88,8 +89,6 @@ export const Album = () => {
       const data = JSON.stringify(
         await albumAPI.getAlbumFolder(userParsedData.cupId, sort),
       );
-      console.log('앙122222222222222222211');
-      console.log('data ::: ' + data);
       const parsedData = JSON.parse(data);
 
       const defaultThumbnail =
@@ -113,7 +112,6 @@ export const Album = () => {
           createdTime: album.createdTime,
         }),
       );
-      console.log(folderList);
       setDummyFolder(folderList);
     } catch (error) {
       console.log(error);
@@ -277,20 +275,23 @@ export const Album = () => {
     // selectedAlbumNames와 NewAlbumName을 통해 제물들의 이미지들을 하나로 모은 테이블을 생성한는 sql을 날림.
     // selectedAlbum의 첫번째 인자가 머지의 주축이 되어야한다. 즉, 첫 번째 폴더의 이름을 mergeAlbumTitle로 바꾸고,
     // 타 앨범의 album_id를 첫번째 인자의 id로 바꾸어버리면 될 거 같다.
+    console.log('asdasdasdasdasdadasdasdasda==============');
     const album_id = seletedAlbumNames[0];
     const target_ids = seletedAlbumNames.slice(1);
 
-    const data = {
-      albumId: album_id,
-      targetIds: target_ids,
-      title: mergeAlbumTitle,
-    };
     try {
       const userData = JSON.stringify(await userAPI.getUserMe()); // login 정보 가져오기
 
       const userParsedData = JSON.parse(userData);
+      console.log(userParsedData.cupId);
+      const data = {
+        albumId: album_id,
+        targetIds: target_ids,
+        title: mergeAlbumTitle,
+        cup_id: userParsedData.cupId,
+      };
+      console.log(data);
       const res = await albumAPI.postMergeAlbum(userParsedData.cupId, data);
-      console.log(res);
 
       getAlbumFolders('r');
     } catch (error) {

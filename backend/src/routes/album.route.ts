@@ -48,6 +48,7 @@ const updateUpload = multerUpload.single(updateParamName);
 
 // 앨범 정보 가져오기
 router.get("/:cup_id", async (req: Request, res: Response, next: NextFunction) => {
+  console.log("========================================================1");
   const page: number = !isNaN(Number(req.query.page)) ? Number(req.query.page) : 1;
   const count: number = !isNaN(Number(req.query.count)) ? Number(req.query.count) : 50;
   const sort: SortItem = isSortItem(req.query.sort) ? req.query.sort : "r";
@@ -71,6 +72,7 @@ router.get("/:cup_id", async (req: Request, res: Response, next: NextFunction) =
 
 // 한 앨범 정보 가져오기
 router.get("/:cup_id/:album_id", async (req: Request, res: Response, next: NextFunction) => {
+  console.log("========================================================2");
   try {
     const albumId: number = Number(req.params.album_id);
     const page: number = !isNaN(Number(req.query.page)) ? Number(req.query.page) : 1;
@@ -94,8 +96,29 @@ router.get("/:cup_id/:album_id", async (req: Request, res: Response, next: NextF
   }
 });
 
+// 앨범 합치기
+router.post("/merge", async (req: Request, res: Response, next: NextFunction) => {
+  console.log("========================================================");
+  const contentType: ContentType = req.contentType;
+  try {
+    if (contentType === "form-data") throw new UnsupportedMediaTypeError("This API must have a content-type of 'json' unconditionally.");
+
+    const { value, error }: ValidationResult = validator(req.body, mergeSchema);
+    if (error) throw new BadRequestError(error);
+
+    const albumId: number = value.albumId;
+    const targerIds: number[] = value.targetIds;
+
+    const url: string = await albumController.mergeAlbum(req.cupId!, albumId, targerIds, value.title);
+    return res.header({ Location: url }).status(STATUS_CODE.NO_CONTENT).json({});
+  } catch (error) {
+    next(error);
+  }
+});
+
 // 앨범 추가
 router.post("/:cup_id", async (req: Request, res: Response, next: NextFunction) => {
+  console.log("========================================================3 " + req.params.cup_id);
   try {
     const { value, error }: ValidationResult = validator(req.body, titleSchema);
 
@@ -103,6 +126,7 @@ router.post("/:cup_id", async (req: Request, res: Response, next: NextFunction) 
     else if (req.cupId !== req.params.cup_id) throw new ForbiddenError("You don't same token couple ID and path parameter couple ID");
 
     const url: string = await albumController.addAlbumFolder(req.cupId!, value.title);
+    console.log("레쓰고~레쓰고~" + req.cupId + " :: " + value.title);
 
     return res.header({ Location: url }).status(STATUS_CODE.CREATED).json({});
   } catch (error) {
@@ -112,6 +136,7 @@ router.post("/:cup_id", async (req: Request, res: Response, next: NextFunction) 
 
 // 앨범 사진 추가
 router.post("/:cup_id/:album_id", async (req: Request, res: Response, next: NextFunction) => {
+  console.log("========================================================4");
   const contentType: ContentType = req.contentType;
 
   const createFunc = async (images?: File[]) => {
@@ -143,27 +168,9 @@ router.post("/:cup_id/:album_id", async (req: Request, res: Response, next: Next
   });
 });
 
-// 앨범 합치기
-router.post("/merge", async (req: Request, res: Response, next: NextFunction) => {
-  const contentType: ContentType = req.contentType;
-  try {
-    if (contentType === "form-data") throw new UnsupportedMediaTypeError("This API must have a content-type of 'json' unconditionally.");
-
-    const { value, error }: ValidationResult = validator(req.body, mergeSchema);
-    if (error) throw new BadRequestError(error);
-
-    const albumId: number = value.albumId;
-    const targerIds: number[] = value.targetIds;
-
-    const url: string = await albumController.mergeAlbum(req.cupId!, albumId, targerIds, value.title);
-    return res.header({ Location: url }).status(STATUS_CODE.NO_CONTENT).json({});
-  } catch (error) {
-    next(error);
-  }
-});
-
 // 앨범 제목 변경
 router.patch("/:cup_id/:album_id/title", async (req: Request, res: Response, next: NextFunction) => {
+  console.log("========================================================5");
   try {
     const albumId = Number(req.params.album_id);
     const { value, error }: ValidationResult = validator(req.body, titleSchema);
@@ -182,6 +189,7 @@ router.patch("/:cup_id/:album_id/title", async (req: Request, res: Response, nex
 
 // 앨범 대표 사진 변경
 router.patch("/:cup_id/:album_id/thumbnail", async (req: Request, res: Response, next: NextFunction) => {
+  console.log("========================================================6");
   const contentType: ContentType = req.contentType;
 
   try {
@@ -216,8 +224,10 @@ router.patch("/:cup_id/:album_id/thumbnail", async (req: Request, res: Response,
 
 // 앨범 삭제
 router.delete("/:cup_id/:album_id", async (req: Request, res: Response, next: NextFunction) => {
+  console.log("========================================================7");
   try {
     const albumId = Number(req.params.album_id);
+    console.log(req.params.album_id);
 
     if (req.cupId !== req.params.cup_id) throw new ForbiddenError("You don't same token couple ID and path parameter couple ID");
     else if (isNaN(albumId)) throw new BadRequestError("Album ID must be a number type");
@@ -232,6 +242,7 @@ router.delete("/:cup_id/:album_id", async (req: Request, res: Response, next: Ne
 
 // 앨범 이미지 삭제
 router.delete("/:cup_id/:album_id/image", async (req: Request, res: Response, next: NextFunction) => {
+  console.log("========================================================8");
   const imageIds: string[] | undefined = Array.isArray(req.body.imageIds) ? [...req.body.imageIds] : undefined;
   const numImageIds: number[] | undefined = imageIds?.map(Number).filter((imageId: number) => {
     if (!isNaN(imageId)) return imageId;
