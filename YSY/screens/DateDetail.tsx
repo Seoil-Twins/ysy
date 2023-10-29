@@ -31,6 +31,7 @@ import BackHeader from '../components/BackHeader';
 
 import { globalStyles } from '../style/global';
 import { getObjectData, storeObjectData } from '../util/asyncStorage';
+import { dateAPI } from '../apis/dateAPI';
 
 const width = Dimensions.get('window').width;
 const IconSize = 18;
@@ -46,48 +47,36 @@ const DateDetail = () => {
   const [rotation] = useState(new Animated.Value(0));
 
   const getDateDetail = useCallback(async () => {
-    console.log(detailId);
+    const dp = await dateAPI.getDateOne(detailId);
 
-    const response = {
-      id: 6,
-      contentId: '123456',
-      contentTypeId: 39,
-      areaCode: 1,
-      sigunguCode: 1,
-      view: 123456,
-      title: '대상해',
-      description:
-        '코리아나호텔 3층에 위치한 대상해는 사천식에 북경식을 가미한 독특한 북경 사천요리를 즐길 수 있고, 산지에서 직수입한 샥스핀 요리가 일품인 중식당이다. 30년 이상 경력을 가진 주방장의 손맛을 그대로 느낄 수 있는 샥스핀 요리 이외에도 보양식인 불도장이 있으며 드시는 분들에게 복을 준다는 전가복요리가 대표적이다. 그리고 대상해에서만 있는 것으로 평소 등소평이 장수 음식으로 즐겨 먹었던 마파두부와 딴딴면이 있다. 고급스러운 인테리어와 태평로가 내려다보이는 훌륭한 전망과 크고 작은 룸들이 준비되어 있어 상견례나 비즈니스 미팅, 세미나 및 가족모임까지 다양한 모임의 장소로도 많이 쓰이고 있으며, 호텔에 투숙하는 고객들도 많이 찾는 곳이다. 코리나아호텔의 장애인용 화장실과 엘리베이터를 이용할 수 있어 편리하다.',
-      thumbnails: [
-        'http://tong.visitkorea.or.kr/cms/resource/46/1290346_image2_1.jpg',
-        'http://tong.visitkorea.or.kr/cms/resource/38/1290338_image2_1.jpg',
-        'http://tong.visitkorea.or.kr/cms/resource/40/1290340_image2_1.jpg',
-      ],
-      address: '서울특별시 중구 세종대로 135',
-      mapX: '57.456',
-      mapY: '57.456',
-      phoneNumber: '02-2171-7869',
-      babyCarriage: '없음',
-      pet: '불가',
-      useTime: '11:30~22:00 (브레이크타임 15:00~17:00)',
-      parking: '없음',
-      restDate: '연중무휴',
-      homepage: 'https://sushikaisinofsato.modoo.at',
-      tags: [
-        '서울',
-        '상봉동',
-        '정통 이타리안 요리',
-        '노래방',
-        '주차가능',
-        '펫 보관 가능',
-        '언제나',
-        '환영',
-        '라쿠니차',
-      ],
+    const response: Date = {
+      id: Math.random(),
+      contentId: dp.contentId ? dp.contentId : 'null',
+      contentTypeId: dp.contentTypeId ? dp.contentTypeId : 'null',
+      areaCode: dp.areaCode ? dp.areaCode : 'null',
+      sigunguCode: dp.sigunguCode ? dp.sigunguCode : 'null',
+      view: dp.views ? dp.views : 'null',
+      title: dp.title ? dp.title : 'null',
+      description: dp.description ? dp.description : 'null',
+      thumbnails: [dp.thumbnail]
+        ? [dp.thumbnail]
+        : ['https://dummyimage.com/600x400/000/fff'],
+      address: dp.address ? dp.address : 'null',
+      mapX: dp.mapX ? dp.mapX : 'null',
+      mapY: dp.mapY ? dp.mapY : 'null',
+      phoneNumber: dp.phoneNumber ? dp.phoneNumber : 'null',
+      babyCarriage: dp.babyCarriage ? dp.babyCarriage : 'null',
+      pet: dp.pet ? dp.pet : 'null',
+      useTime: dp.useTime ? dp.useTime : 'null',
+      parking: dp.parking ? dp.parking : 'null',
+      restDate: dp.restDate ? dp.restDate : 'null',
+      homepage: dp.homepage ? dp.homepage : 'null',
+      tags: ['unused'],
       favoriteCount: 1234,
-      isFavorite: true,
+      isFavorite: false,
     };
 
+    console.log(response);
     setDateInfo(response);
   }, [detailId]);
 
@@ -96,15 +85,30 @@ const DateDetail = () => {
   }, 500);
 
   const addHistory = useCallback(async () => {
+    console.log(
+      '=================================================================================3호기',
+    );
     const historys = await getObjectData('dateHistory');
+    console.log(
+      '=================================================================================3.5호기',
+    );
 
     if (historys) {
+      console.log(
+        '=================================================================================3.6호기',
+      );
       const newItems = [...historys];
       newItems.push(detailId);
       await storeObjectData('dateHistory', newItems);
     } else {
+      console.log(
+        '=================================================================================3.6호기',
+      );
       await storeObjectData('dateHistory', [detailId]);
     }
+    console.log(
+      '=================================================================================4호기',
+    );
   }, [detailId]);
 
   const rotateAnimation = () => {

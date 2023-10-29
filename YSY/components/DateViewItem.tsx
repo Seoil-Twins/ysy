@@ -34,7 +34,8 @@ const DateViewItem: React.FC<DateViewItemProps> = ({
   }, 500);
 
   const emitDetail = () => {
-    onPressDetail(item.id);
+    const cid = parseInt(item.contentId, 10);
+    onPressDetail(cid);
   };
 
   return (
