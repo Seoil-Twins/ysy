@@ -67,53 +67,13 @@ router.get("/me", async (req: Request, res: Response, next: NextFunction) => {
     next(error);
   }
 });
-
-// 유저 생성
-router.post("/", async (req: Request, res: Response, next: NextFunction) => {
-  const contentType: ContentType | undefined = req.contentType;
-
-  const createFunc = async (profile?: File) => {
-    try {
-      const { value, error }: ValidationResult = validator(req.body, signupSchema);
-
-      if (error) throw new BadRequestError(error.message);
-
-      const data: CreateUser = {
-        snsKind: value.snsKind,
-        snsId: value.snsId,
-        name: value.name,
-        email: value.email,
-        birthday: new Date(value.birthday),
-        phone: value.phone,
-        eventNofi: boolean(value.eventNofi)
-      };
-
-      await userController.createUser(data, profile);
-
-      logger.debug(`Response Data : ${JSON.stringify(data)}`);
-      return res.status(STATUS_CODE.CREATED).json({});
-    } catch (error) {
-      next(error);
-    }
-  };
-
-  upload(req, res, (err) => {
-    const info: MulterUploadFile = {
-      contentType,
-      req,
-      err,
-      next
-    };
-
-    uploadFileFunc(info, createFunc);
-  });
-});
-
 // 유저 수정
 router.patch("/:user_id", async (req: Request, res: Response, next: NextFunction) => {
+  console.log("1111111111111111111");
   const contentType: ContentType | undefined = req.contentType;
 
   const updateFunc = async (profile?: File | null) => {
+    console.log("22222222222222");
     try {
       const { value, error }: ValidationResult = validator(req.body, updateSchema);
 
@@ -132,6 +92,48 @@ router.patch("/:user_id", async (req: Request, res: Response, next: NextFunction
     }
   };
 
+  // 유저 생성
+  router.post("/", async (req: Request, res: Response, next: NextFunction) => {
+    const contentType: ContentType | undefined = req.contentType;
+
+    const createFunc = async (profile?: File) => {
+      try {
+        const { value, error }: ValidationResult = validator(req.body, signupSchema);
+
+        if (error) throw new BadRequestError(error.message);
+
+        const data: CreateUser = {
+          snsKind: value.snsKind,
+          snsId: value.snsId,
+          name: value.name,
+          email: value.email,
+          birthday: new Date(value.birthday),
+          phone: value.phone,
+          eventNofi: boolean(value.eventNofi)
+        };
+
+        await userController.createUser(data, profile);
+
+        logger.debug(`Response Data : ${JSON.stringify(data)}`);
+        return res.status(STATUS_CODE.CREATED).json({});
+      } catch (error) {
+        next(error);
+      }
+    };
+
+    upload(req, res, (err) => {
+      const info: MulterUploadFile = {
+        contentType,
+        req,
+        err,
+        next
+      };
+
+      uploadFileFunc(info, createFunc);
+    });
+  });
+
+  console.log("3333333333333333");
   upload(req, res, (err) => {
     const info: MulterUpdateFile = {
       contentType,

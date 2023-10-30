@@ -43,4 +43,34 @@ export const userAPI = {
       return error;
     }
   },
+  patchUser: async (
+    user_id: number,
+    data?: {
+      name: string;
+      birthday: string;
+      phone: string;
+      email: string;
+    },
+  ) => {
+    try {
+      const res = await API.patch(`/user/${user_id}`, data);
+      console.log(res);
+      return res;
+    } catch (error) {
+      console.log(error);
+      return error;
+    }
+  },
+  patchUserProfile: async (
+    user_id: number,
+    fileParamName: string,
+    data?: any,
+  ) => {
+    const res = await API.patch_formdata(
+      `/user/${user_id}`,
+      data,
+      fileParamName,
+    );
+    return res;
+  },
 };

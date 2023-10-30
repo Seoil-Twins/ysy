@@ -96,13 +96,17 @@ export const API = {
     console.log('아아아아아');
     return response;
   },
-  patch_formdata: async (url: string, data?: any) => {
+  patch_formdata: async (url: string, data?: any, fileParamName?: string) => {
     try {
       const formData = new FormData();
       console.log(url);
       console.log(data);
+      console.log(fileParamName);
+      if (!fileParamName) {
+        fileParamName = 'thumbnail';
+      }
       if (data) {
-        formData.append('thumbnail', {
+        formData.append(fileParamName, {
           uri: data.uri,
           name: data.name,
           size: data.size,
