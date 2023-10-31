@@ -4,7 +4,16 @@ import { Op, Transaction } from "sequelize";
 import logger from "../logger/logger.js";
 import { createDigest } from "../utils/password.util.js";
 import { PageOptions } from "../utils/pagination.util.js";
-import { DeleteImageInfo, File, UploadImageInfo, deleteFileWithGCP, deleteFilesWithGCP, getFileBufferWithGCP, uploadFileWithGCP } from "../utils/gcp.util.js";
+import {
+  DeleteImageInfo,
+  File,
+  MimeType,
+  UploadImageInfo,
+  deleteFileWithGCP,
+  deleteFilesWithGCP,
+  getFileBufferWithGCP,
+  uploadFileWithGCP
+} from "../utils/gcp.util.js";
 
 import sequelize from "../models/index.js";
 import { User } from "../models/user.model.js";
@@ -262,7 +271,7 @@ class UserAdminController {
       const prevProfilePath: string | null = userByUserId.profile;
       const prevProfileSize: number = userByUserId.profileSize ? userByUserId.profileSize : 0;
       const prevProfileType: string = userByUserId.profileType ? userByUserId.profileType : UNKNOWN_NAME;
-      const prevBuffer = prevProfilePath ? await getFileBufferWithGCP(prevProfilePath) : null;
+      const prevBuffer = prevProfilePath && prevProfileType !== MimeType.URL ? await getFileBufferWithGCP(prevProfilePath) : null;
 
       if (prevProfilePath && prevBuffer) {
         prevFile = {
@@ -286,7 +295,7 @@ class UserAdminController {
         updateUser = await this.userService.update(transaction, userByUserId, data);
       }
 
-      if (prevProfilePath && (profile || profile === null)) {
+      if (prevProfilePath && (profile || profile === null) && prevProfileType !== MimeType.URL) {
         await deleteFileWithGCP({
           path: prevProfilePath,
           location: `${this.ERROR_LOCATION_PREFIX}/updateUser`,

@@ -72,7 +72,7 @@ router.get("/me", async (req: Request, res: Response, next: NextFunction) => {
 router.post("/", async (req: Request, res: Response, next: NextFunction) => {
   const contentType: ContentType | undefined = req.contentType;
 
-  const createFunc = async (profile?: File) => {
+  const createFunc = async (profile?: File | string) => {
     try {
       const { value, error }: ValidationResult = validator(req.body, signupSchema);
 
@@ -87,6 +87,10 @@ router.post("/", async (req: Request, res: Response, next: NextFunction) => {
         phone: value.phone,
         eventNofi: boolean(value.eventNofi)
       };
+
+      if (req.body.profile) {
+        profile = req.body.profile;
+      }
 
       await userController.createUser(data, profile);
 
