@@ -3,8 +3,8 @@ import express, { Router } from "express";
 import authMiddleware from "../middlewares/auth.middleware.js";
 import checkContentType from "../middlewares/contentType.middleware.js";
 
-import userRouter from "./user.route.js";
 import authRouter from "./auth.route.js";
+import userRouter from "./user.route.js";
 import coupleRouter from "./couple.route.js";
 import albumRouter from "./album.route.js";
 import calendarRouter from "./calendar.route.js";
@@ -16,6 +16,7 @@ import favoriteRouter from "./favorite.route.js";
 import regionCodeRouter from "./region.route.js";
 import contentTypeRouter from "./contentType.route.js";
 
+import authAdminRouter from "./auth.admin.route.js";
 import userAdminRouter from "./user.admin.route.js";
 import coupleAdminRouter from "./couple.admin.route.js";
 import albumAdminRouter from "./album.admin.route.js";
@@ -29,7 +30,6 @@ import albumImageAdminRouter from "./albumImage.admin.route.js";
 const router: Router = express.Router();
 
 router.use("/auth", authRouter);
-
 router.use("/user", checkContentType, authMiddleware, userRouter);
 router.use("/couple", checkContentType, authMiddleware, coupleRouter);
 router.use("/album", checkContentType, authMiddleware, albumRouter);
@@ -42,6 +42,7 @@ router.use("/favorite", checkContentType, authMiddleware, favoriteRouter);
 router.use("/region-code", authMiddleware, regionCodeRouter);
 router.use("/content-type", authMiddleware, contentTypeRouter);
 
+router.use("/admin/auth", authAdminRouter);
 router.use("/admin/user", checkContentType, authMiddleware, userAdminRouter);
 router.use("/admin/couple", checkContentType, authMiddleware, coupleAdminRouter);
 router.use("/admin/album", checkContentType, authMiddleware, albumAdminRouter);
@@ -51,11 +52,5 @@ router.use("/admin/album-image", checkContentType, authMiddleware, albumImageAdm
 // router.use("/admin/inquire-image", authMiddleware, InquireImageAdminRouter);
 // router.use("/admin/solution", authMiddleware, SolutionAdminRouter);
 // router.use("/admin/solution-image", authMiddleware, SolutionImageAdminRouter);
-
-// router.use("/admin/restaurant", authMiddleware, restaurantAdminRouter);
-// router.use("/admin/culture", authMiddleware, cultureAdminRouter);
-// router.use("/admin/shopping", authMiddleware, shoppingAdminRouter);
-// router.use("/admin/sports", authMiddleware, sportsAdminRouter);
-// router.use("/admin/tourist_spot", authMiddleware, touristSpotAdminRouter);
 
 export default router;

@@ -1,5 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import pkg, { JwtPayload } from "jsonwebtoken";
+import { boolean } from "boolean";
+
 import UnauthorizedError from "../errors/unauthorized.error.js";
 
 import logger from "../logger/logger.js";
@@ -23,8 +25,10 @@ const checkToken = (req: Request, _res: Response, next: NextFunction) => {
     req.userId = Number(user.userId);
     req.cupId = user.cupId;
     req.roleId = Number(user.roleId);
+    req.isAdmin = boolean(user.isAdmin);
 
     if (isNaN(req.userId) || isNaN(req.roleId)) throw new UnauthorizedError("Invalid Token");
+    if (req.baseUrl.includes("admin") && !req.isAdmin) throw new UnauthorizedError("You must login with admin account");
 
     logger.debug(`Authorization : ${JSON.stringify(user)}`);
 
@@ -32,7 +36,7 @@ const checkToken = (req: Request, _res: Response, next: NextFunction) => {
   } catch (error) {
     if (error instanceof TokenExpiredError) throw new UnauthorizedError("Token Expired");
     else if (error instanceof JsonWebTokenError) throw new UnauthorizedError("Invalid Token");
-    else throw new UnauthorizedError("Invalid Token");
+    else throw error;
   }
 };
 

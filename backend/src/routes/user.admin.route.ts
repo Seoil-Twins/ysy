@@ -149,6 +149,7 @@ router.post("/", canModifyWithEditor, async (req: Request, res: Response, next: 
       const { value, error }: ValidationResult = validator(req.body, createSchema);
 
       if (error) throw new BadRequestError(error.message);
+      else if (Number(req.roleId) !== 1 && value.role == 1) throw new BadRequestError("Invalida RoleId OR You don't set admin roleId");
 
       const data: CreateUserWithAdmin = {
         snsId: value.snsId,
@@ -199,6 +200,7 @@ router.patch("/:user_id", canModifyWithEditor, async (req: Request, res: Respons
       const { value, error }: ValidationResult = validator(req.body, updateSchema);
 
       if (error) throw new BadRequestError(error.message);
+      else if (Number(req.roleId) !== 1 && value.role == 1) throw new BadRequestError("You don't set admin roleId");
 
       const data: UpdateUserWithAdmin = {
         snsId: value.snsId,

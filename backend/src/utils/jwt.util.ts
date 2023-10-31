@@ -9,6 +9,8 @@ import { set } from "./redis.util.js";
 dotenv.config();
 
 const SECRET_KEY: string = String(process.env.AUTH_SECRET_KEY);
+const ADMIN_SECRET_KEY: string = String(process.env.AUTH_SECRET_KEY);
+
 const accessTokenOptions: object = {
   algorithm: process.env.ALGORITHM,
   expiresIn: process.env.DEVELOPMENT_ACCESSTOKEN_EXPIRES_IN,
@@ -20,25 +22,44 @@ const refreshTokenexpiresIn: object = {
   expiresIn: process.env.DEVELOPMENT_JWT_REFRESHTOKEN_EXPIRES_IN
 };
 
-const createAccessToken = (userId: number, cupId: string | null, roleId: number): string => {
+const accessTokenOptionsWithAdmin: object = {
+  algorithm: process.env.ALGORITHM,
+  expiresIn: process.env.ADMIN_ACCESSTOKEN_EXPIRES_IN,
+  issuer: process.env.ISSUER
+} as const;
+
+const refreshTokenexpiresInWithAdmin: object = {
+  algorithm: process.env.ALGORITHM,
+  expiresIn: process.env.ADMIN_JWT_REFRESHTOKEN_EXPIRES_IN
+};
+
+const createAccessToken = (userId: number, cupId: string | null, roleId: number, isAdmin: boolean): string => {
   let payload = {
     userId,
     cupId,
-    roleId
+    roleId,
+    isAdmin
   };
 
-  return jwt.sign(payload, SECRET_KEY, accessTokenOptions);
+  if (isAdmin) return jwt.sign(payload, ADMIN_SECRET_KEY, accessTokenOptionsWithAdmin);
+  else return jwt.sign(payload, SECRET_KEY, accessTokenOptions);
 };
 
-const createRefreshToken = (): string => {
-  return jwt.sign({}, SECRET_KEY, refreshTokenexpiresIn);
+const createRefreshToken = (isAdmin: boolean): string => {
+  if (isAdmin) return jwt.sign({}, ADMIN_SECRET_KEY, refreshTokenexpiresInWithAdmin);
+  else return jwt.sign({}, SECRET_KEY, refreshTokenexpiresIn);
 };
 
-const getExpired = (): number => {
+const getExpired = (isAdmin: boolean): number => {
   const now = dayjs();
-  const expiresIn = now.add(Number(process.env.DEVELOPMENT_EX_REFRESHTOKEN_EXPIRES_IN), "day");
 
-  return expiresIn.diff(now, "second");
+  if (isAdmin) {
+    const expiresIn = now.add(Number(process.env.ADMIN_EX_REFRESHTOKEN_EXPIRES_IN), "day");
+    return expiresIn.diff(now, "second");
+  } else {
+    const expiresIn = now.add(Number(process.env.DEVELOPMENT_EX_REFRESHTOKEN_EXPIRES_IN), "day");
+    return expiresIn.diff(now, "second");
+  }
 };
 
 export default {
@@ -48,10 +69,10 @@ export default {
    * @param cupId Couple Id
    * @returns A {@link ITokenResponse}
    */
-  createToken: async (userId: number, cupId: string | null, role: number): Promise<ResponseToken> => {
-    const accessToken: string = createAccessToken(userId, cupId, role);
-    const refreshToken: string = createRefreshToken();
-    const expiresIn = getExpired();
+  createToken: async (userId: number, cupId: string | null, role: number, isAdmin: boolean = false): Promise<ResponseToken> => {
+    const accessToken: string = createAccessToken(userId, cupId, role, isAdmin);
+    const refreshToken: string = createRefreshToken(isAdmin);
+    const expiresIn = getExpired(isAdmin);
     // redis database에 refreshToken 저장
     const isOk = await set(String(userId), refreshToken, expiresIn);
     const result: ResponseToken = {
@@ -77,12 +98,16 @@ export default {
    * @param ignoreExpiration 유효시간이 끝난 토큰의 정보도 가져올지에 대한 여부
    * @returns A {@link jwt.JwtPayload} or string
    */
-  verify: (token: string, ignoreExpiration: boolean = false): JwtPayload | string => {
+  verify: (token: string, ignoreExpiration: boolean = false, isAdmin: boolean = false): JwtPayload | string => {
     const [bearer, separatedToken] = token.split(" ");
     if (bearer !== "Bearer") throw new UnauthorizedError("Invalid Token");
 
-    const result: JwtPayload | string = jwt.verify(separatedToken, SECRET_KEY, { ignoreExpiration });
-
-    return result;
+    if (isAdmin) {
+      const result: JwtPayload | string = jwt.verify(separatedToken, ADMIN_SECRET_KEY, { ignoreExpiration });
+      return result;
+    } else {
+      const result: JwtPayload | string = jwt.verify(separatedToken, SECRET_KEY, { ignoreExpiration });
+      return result;
+    }
   }
 };
