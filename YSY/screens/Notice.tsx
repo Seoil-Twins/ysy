@@ -7,12 +7,28 @@ import NoticeAccord from '../components/NoticeAccord';
 import { globalStyles } from '../style/global';
 
 import { Notice as NoticeType } from '../types/noitce';
+import { noticeAPI } from '../apis/noticeAPI';
 
 const fetchNotice = async () => {
-  const response: NoticeType[] = [
-    {
-      noticeId: 1,
-      title: '공지 제목 1',
+  const data = { count: 10, page: 1 };
+  const res = await noticeAPI.getNotice(data);
+  console.log(res);
+
+  const newNoticeList: NoticeType[] = [];
+
+  for (const notice of res.notices) {
+    const newNotice: NoticeType = {
+      noticeId: notice.noticeId,
+      title: notice.title,
+      contents: notice.contents,
+      createdTime: notice.createdTime,
+    };
+    newNoticeList.push(newNotice);
+  }
+
+  return newNoticeList;
+
+  /*
       contents: `
         <div style='fontSize: 20px'>안녕하십니까 공지 제목 1입니다.</div>
         <img src="https://t1.daumcdn.net/friends/prod/editor/dc8b3d02-a15a-4afa-a88b-989cf2a50476.jpg" />
@@ -21,63 +37,7 @@ const fetchNotice = async () => {
         <br>
         <div>관리자 드림</div>
       `,
-      createdTime: '2023-02-08 05:03:24',
-    },
-    {
-      noticeId: 2,
-      title: '공지 제목 2',
-      contents: `
-        <div>안녕하십니까 공지 제목 2입니다.</div>
-        <img src="https://t1.daumcdn.net/friends/prod/editor/dc8b3d02-a15a-4afa-a88b-989cf2a50476.jpg" />
-        <div>안녕하십니까 공지 제목 2입니다.</div>
-        <div>안녕하십니까 공지 제목 2입니다.</div>
-        <br>
-        <div>관리자 드림</div>
-      `,
-      createdTime: '2023-02-08 05:03:24',
-    },
-    {
-      noticeId: 3,
-      title: '공지 제목 3',
-      contents: `
-        <div>안녕하십니까 공지 제목 3입니다.</div>
-        <img src="https://t1.daumcdn.net/friends/prod/editor/dc8b3d02-a15a-4afa-a88b-989cf2a50476.jpg" />
-        <div>안녕하십니까 공지 제목 3입니다.</div>
-        <div>안녕하십니까 공지 제목 3입니다.</div>
-        <br>
-        <div>관리자 드림</div>
-      `,
-      createdTime: '2023-02-08 05:03:24',
-    },
-    {
-      noticeId: 4,
-      title: '공지 제목 4',
-      contents: `
-        <div>안녕하십니까 공지 제목 4입니다.</div>
-        <img src="https://t1.daumcdn.net/friends/prod/editor/dc8b3d02-a15a-4afa-a88b-989cf2a50476.jpg" />
-        <div>안녕하십니까 공지 제목 4입니다.</div>
-        <div>안녕하십니까 공지 제목 4입니다.</div>
-        <br>
-        <div>관리자 드림</div>
-      `,
-      createdTime: '2023-02-08 05:03:24',
-    },
-    {
-      noticeId: 5,
-      title: '공지 제목 5',
-      contents: `
-        <div>안녕하십니까 공지 제목 5입니다.</div>
-        <img src="https://t1.daumcdn.net/friends/prod/editor/dc8b3d02-a15a-4afa-a88b-989cf2a50476.jpg" />
-        <div>안녕하십니까 공지 제목 5입니다.</div>
-        <div>안녕하십니까 공지 제목 5입니다.</div>
-        <br>
-        <div>관리자 드림</div>
-      `,
-      createdTime: '2023-02-08 05:03:24',
-    },
-  ];
-
-  return response;
+  */
 };
 
 const Notice = () => {
