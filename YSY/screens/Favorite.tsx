@@ -11,9 +11,11 @@ import ScrollLoading from '../components/ScrollLoading';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { DateNavType } from '../navigation/NavTypes';
+import { favoriteAPI } from '../apis/favoriteAPI';
 
 const fetchGetFavoriteDates = async (page: number, count: number) => {
   console.log('page : ', page, 'count : ', count);
+  console.log(favoriteAPI.getFavorite());
   const response: Date[] = [
     {
       id: Math.random(),

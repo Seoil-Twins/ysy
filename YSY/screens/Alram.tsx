@@ -5,6 +5,7 @@ import { globalStyles } from '../style/global';
 
 import BackHeader from '../components/BackHeader';
 import ToggleButton from '../components/ToggleButton';
+import { userAPI } from '../apis/userAPI';
 
 type AlramItem = {
   key: string;
@@ -17,25 +18,30 @@ type AlramResponse = {
 };
 
 const fetchGetAlram = async () => {
+  const userData = JSON.stringify(await userAPI.getUserMe()); // login 정보 가져오기
+  const userParsedData = JSON.parse(userData);
   const response: AlramResponse = {
-    noticeNofi: true,
-    eventNofi: false,
-    dateNofi: false,
-    coupleNofi: true,
-    albumNofi: false,
-    calendarNofi: false,
+    primaryNofi: userParsedData.primaryNofi,
+    eventNofi: userParsedData.eventNofi,
+    dateNofi: userParsedData.dateNofi,
+    coupleNofi: userParsedData.coupleNofi,
+    albumNofi: userParsedData.albumNofi,
+    calendarNofi: userParsedData.calendarNofi,
   };
 
   return response;
 };
 
 const fetchUpdateAlram = async (key: string, value: boolean) => {
-  console.log(key, value);
+  const userData = JSON.stringify(await userAPI.getUserMe()); // login 정보 가져오기
+  const userParsedData = JSON.parse(userData);
+  const data: { [key: string]: boolean } = { [key]: value };
+  await userAPI.patchUserNofi(userParsedData.userId, data);
 };
 
 const alramItems: AlramItem[] = [
   {
-    key: 'noticeNofi',
+    key: 'primaryNofi',
     title: '공지',
     explain: '새로운 공지 알림',
   },

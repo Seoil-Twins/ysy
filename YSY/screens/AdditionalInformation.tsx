@@ -12,8 +12,9 @@ import Input from '../components/Input';
 import { TutorialNavType } from '../navigation/NavTypes';
 import { AppToken, LoginOptions, appLogin } from '../util/login';
 import { setSecureValue } from '../util/jwt';
-import { User } from '../types/user';
+// import { User } from '../types/user';
 import { StackNavigationProp } from '@react-navigation/stack';
+import { userAPI } from '../apis/userAPI';
 
 const AdditionalInformation = () => {
   const { info } =
@@ -117,26 +118,39 @@ const AdditionalInformation = () => {
 
     await login();
   };
+  // const generateRandomCode = (length: number): string => {
+  //   const characters =
+  //     '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  //   let result = '';
+
+  //   for (let i = 0; i < length; i++) {
+  //     const randomIndex = Math.floor(Math.random() * characters.length);
+  //     result += characters.charAt(randomIndex);
+  //   }
+
+  //   return result;
+  // };
 
   // Get User Info API
-  const getMyInfo = async (data: LoginOptions) => {
-    const user: User = {
-      userId: 1,
-      snsId: '0002',
-      name: String(data.name),
-      email: String(data.email),
-      phone: String(data.phone),
-      birthday: String(data.birthday),
-      cupId: null,
-      dateNofi: false,
-      primaryNofi: false,
-      eventNofi: false,
-      code: 'DAS111',
-      profile: data.profile,
-    };
+  // const getMyInfo = async (data: LoginOptions) => {
+  //   const user: User = {
+  //     userId: 1,
+  //     snsId: String(data.snsId),
+  //     snsKind: String(data.snsKind),
+  //     name: String(data.name),
+  //     email: String(data.email),
+  //     phone: String(data.phone),
+  //     birthday: String(data.birthday),
+  //     cupId: null,
+  //     dateNofi: false,
+  //     primaryNofi: false,
+  //     eventNofi: false,
+  //     code: await generateRandomCode(6),
+  //     profile: data.profile,
+  //   };
 
-    return user;
-  };
+  //   return user;
+  // };
 
   const login = async () => {
     const convertBirth = `${birthday?.substring(0, 4)}-${birthday?.substring(
@@ -146,6 +160,7 @@ const AdditionalInformation = () => {
 
     const data: LoginOptions = {
       snsId: info.snsId,
+      snsKind: info.snsKind,
       name,
       email,
       phone,
@@ -154,14 +169,15 @@ const AdditionalInformation = () => {
       eventNofi: false,
     };
 
+    const res = await userAPI.postSignUp(data);
     const token: AppToken = await appLogin(data);
 
     await setSecureValue('accessToken', token.accessToken);
     await setSecureValue('refreshToken', token.refreshToken);
 
     // Get User API
-    const user: User = await getMyInfo(data);
-    navigation.navigate('ConnectCouple', { myCode: user.code });
+    // const user: User = await getMyInfo(data);
+    navigation.navigate('ConnectCouple', { myCode: res.code });
   };
 
   return (

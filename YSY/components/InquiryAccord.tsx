@@ -13,6 +13,8 @@ import { globalStyles } from '../style/global';
 import { Solution } from '../types/solution';
 import { InquiryImage } from '../types/inquiryImage';
 
+const IMG_BASE_URL = 'https://storage.googleapis.com/ysy-bucket/';
+
 type InquiryAccordProps = {
   title: string;
   content: string;
@@ -106,7 +108,7 @@ const InquiryAccord: React.FC<InquiryAccordProps> = ({
                     onPressImg(index);
                   }}>
                   <Image
-                    source={{ uri: image.image }}
+                    source={{ uri: `${IMG_BASE_URL}${image.path}` }}
                     width={60}
                     height={60}
                     resizeMode="cover"

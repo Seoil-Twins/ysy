@@ -31,10 +31,12 @@ import { SettingsNavType } from '../navigation/NavTypes';
 import { User } from '../types/user';
 
 import { checkPermission } from '../util/permission';
+import { userAPI } from '../apis/userAPI';
 
 const PROFILE_SIZE = 100;
 const CROP_SIZE = 300;
 const { width, height } = Dimensions.get('window');
+// const IMG_BASE_URL = 'https://storage.googleapis.com/ysy-bucket/';
 
 const fetchEditProfile = async (profile: string | null) => {
   console.log(profile);
@@ -86,30 +88,28 @@ const Profile = () => {
   };
 
   const onSuccess = async (image: ImageOrVideo) => {
-    // Formdata를 통해 전송
-    /**
-     * {
-        "cropRect":{
-            "height":2857,
-            "width":1713,
-            "x":1168,
-            "y":1
-        },
-        "height":600,
-        "mime":"image/jpeg",
-        "modificationDate":"1689677165000",
-        "path":"file:///storage/emulated/0/Android/data/com.ysy/files/Pictures/3526149c-84b9-4ab6-92ec-a3943e1bde4b.jpg",
-        "size":194997,
-        "width":360
-       }
-     */
-    const response = await fetchEditProfile(image.path);
+    const date = new Date();
+    const imageFile = {
+      uri: image.path,
+      name: `profile-${date.getMilliseconds()}`,
+      size: image.size,
+      type: image.mime,
+    };
+    try {
+      const response = await userAPI.patchUserProfile(
+        user.userId,
+        'profile',
+        imageFile,
+      );
 
-    if (response.statusCode === 204) {
-      user.profile = image.path;
-      setUser({ ...user });
-    } else {
-      console.log('Error!');
+      if (response.statusCode === 204) {
+        user.profile = image.path;
+        setUser({ ...user });
+      } else {
+        console.log('Error!');
+      }
+    } catch (error) {
+      console.log(error);
     }
   };
 

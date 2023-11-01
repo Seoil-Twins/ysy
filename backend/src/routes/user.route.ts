@@ -136,18 +136,6 @@ router.patch("/:user_id", async (req: Request, res: Response, next: NextFunction
     }
   };
 
-  upload(req, res, (err) => {
-    const info: MulterUpdateFile = {
-      contentType,
-      req,
-      err,
-      fieldname: fileParamName,
-      next
-    };
-
-    updateFileFunc(info, updateFunc);
-  });
-});
 
 // 유저 알림 수정
 router.patch("/nofi/:user_id", async (req: Request, res: Response, next: NextFunction) => {

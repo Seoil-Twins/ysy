@@ -2,6 +2,7 @@ export interface User {
   userId: number;
   cupId: string | null;
   snsId: string;
+  snsKind: string;
   code: string;
   name: string;
   email: string;

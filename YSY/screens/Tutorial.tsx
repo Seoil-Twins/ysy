@@ -41,6 +41,8 @@ import {
 import { setSecureValue } from '../util/jwt';
 import { TutorialNavType } from '../navigation/NavTypes';
 import { User } from '../types/user';
+import { storeStringData } from '../util/asyncStorage';
+import { userAPI } from '../apis/userAPI';
 
 const { width, height } = Dimensions.get('window');
 const slides = [
@@ -166,7 +168,8 @@ const Tutorial = () => {
   const getMyInfo = async (data: LoginOptions) => {
     const user: User = {
       userId: 1,
-      snsId: '0002',
+      snsId: String(data.snsId),
+      snsKind: String(data.snsKind),
       name: String(data.name),
       email: String(data.email),
       phone: String(data.phone),
@@ -220,7 +223,8 @@ const Tutorial = () => {
        */
       const profile: KakaoOAuth.KakaoProfile = await KakaoOAuth.getProfile();
       const data: LoginOptions = {
-        snsId: '0001',
+        snsId: 'WTwmzHiWBsZ8Nbetw43Q23gYKRf3zDR1wpHzZV8AUHoss',
+        snsKind: '1001',
         email: profile.email !== 'null' ? profile.email : null,
         name: profile.nickname !== 'null' ? profile.nickname : null,
         birthday:
@@ -235,7 +239,6 @@ const Tutorial = () => {
           profile.profileImageUrl !== 'null' ? profile.profileImageUrl : null,
         eventNofi: false,
       };
-
       console.log('kakao data', data);
 
       if (!verifyLoginData(data)) {
@@ -243,11 +246,11 @@ const Tutorial = () => {
         navigation.navigate('AdditionalInformation', { info: data });
         return;
       }
-
       const token: AppToken = await appLogin(data);
 
       await setSecureValue('accessToken', token.accessToken);
       await setSecureValue('refreshToken', token.refreshToken);
+      storeStringData('accessToken', token.accessToken);
 
       const user: User = await getMyInfo(data);
 
@@ -255,8 +258,8 @@ const Tutorial = () => {
       navigation.navigate('ConnectCouple', { myCode: user.code });
     } catch (error) {
       if (!String(error).includes('user cancelled')) {
-        console.log('알 수 없는 에러');
       }
+      console.log(error);
     } finally {
       setIsLoggingIn(false);
     }
@@ -283,20 +286,23 @@ const Tutorial = () => {
 
       if (profileResult.message === 'success') {
         // Naver는 모든 정보를 필수로 가져오게 할 수 있음.
-        const { name, birthyear, birthday, email, mobile, profile_image } =
+        // const { name, birthyear, birthday, email, mobile, profile_image, id } =
+        //   profileResult.response;
+        const { name, birthyear, birthday, email, mobile, id } =
           profileResult.response;
 
         const data: LoginOptions = {
-          snsId: '0002',
+          snsId: id,
+          snsKind: '1001',
           name,
           email,
-          phone: mobile,
-          profile: profile_image,
+          phone: mobile ? mobile.replace(/-/g, '') : 'Not Found',
+          // profile: profile_image,
           birthday: `${birthyear}-${birthday}`,
           eventNofi: false,
         };
 
-        console.log('naver data', data);
+        console.log(data);
 
         // false면 추가 정보 페이지로 이동
         if (!verifyLoginData(data)) {
@@ -304,17 +310,27 @@ const Tutorial = () => {
           navigation.navigate('AdditionalInformation', { info: data });
           return;
         }
+        const res = await userAPI.postSignUp(data);
+        console.log('=-=====================');
 
-        const token: AppToken = await appLogin(data);
+        const token: AppToken = await appLogin(data); // cup_id가 없는 상태
 
         await setSecureValue('accessToken', token.accessToken);
         await setSecureValue('refreshToken', token.refreshToken);
+        await storeStringData('accessToken', token.accessToken);
 
         // Get User API
-        const user: User = await getMyInfo(data);
+        // const user: User = await getMyInfo(data);
 
         hideModal();
-        navigation.navigate('ConnectCouple', { myCode: user.code });
+        navigation.navigate('ConnectCouple', {
+          myCode: res.code,
+          loginOption: {
+            snsId: id,
+            snsKind: '1001',
+            email: email,
+          },
+        });
       } else {
         console.log('Failed get profile');
         console.log(profileResult);
@@ -334,17 +350,22 @@ const Tutorial = () => {
     setIsLoggingIn(true);
 
     try {
+      console.log('앙1');
       const { idToken } = await GoogleSignin.signIn();
+      console.log('앙12');
       // GoogleOAuth를 통해 사용자 인증을 하면 더 많은 정보를 가져올 수 있음(phoneNumber).
       const googleCredential =
         GoogleOAuth.GoogleAuthProvider.credential(idToken);
+      console.log('앙13');
       const response = await GoogleOAuth().signInWithCredential(
         googleCredential,
       );
 
+      console.log('앙2');
       if (response.user) {
         const data: LoginOptions = {
-          snsId: '0003',
+          snsId: 'testId',
+          snsKind: '1002',
           name: response.user.displayName,
           // 나중에 이메일 인증이 생긴다면 response.user.emailVerified로 인증 여부 확인
           email: response.user.email,
@@ -356,6 +377,7 @@ const Tutorial = () => {
         };
 
         console.log('google data', data);
+        console.log('앙3');
 
         hideModal();
         navigation.navigate('AdditionalInformation', { info: data });
@@ -365,6 +387,7 @@ const Tutorial = () => {
     } catch (error) {
       if (!String(error).includes('Sign in action cancelled')) {
         console.log('알 수 없는 에러');
+        console.log(error);
       }
     } finally {
       setIsLoggingIn(false);

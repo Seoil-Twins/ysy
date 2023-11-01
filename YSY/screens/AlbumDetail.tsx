@@ -38,6 +38,7 @@ import { albumAPI } from '../apis/albumAPI';
 import { assets } from '../react-native.config';
 import { File } from '../util/API';
 const screenWidth = wp('100%');
+const IMG_BASE_URL = 'https://storage.googleapis.com/ysy-bucket/';
 let imageCount = 0;
 
 export const AlbumDetail = () => {
@@ -151,6 +152,7 @@ export const AlbumDetail = () => {
   }, [isFunc, selectedImages.length]);
 
   const loadImageFromDB = async (albumId: number, slice: number) => {
+    console.log('ss' + albumId);
     const data = JSON.stringify(
       await albumAPI.getAlbumImages(cupId, albumId, {
         page: imageCount / 40 + 1,
@@ -162,13 +164,14 @@ export const AlbumDetail = () => {
     const parsedData = JSON.parse(data);
     setTotalImage(parsedData.total);
     const thumb = parsedData.images.map(
-      (image: { path: string }) => image.path,
+      (image: { path: string }) => `${IMG_BASE_URL}${image.path}`,
     );
     // albumId을 이용한 Image 가져오는 코드 작성해야함
     const ImageArray = thumb.slice(
       albumImages.length,
       albumImages.length + slice,
     );
+    console.log(ImageArray);
 
     const imageList = parsedData.images.map(
       (image: {
@@ -181,7 +184,7 @@ export const AlbumDetail = () => {
         albumImageId: image.albumImageId,
         size: image.size,
         type: image.type,
-        path: image.path,
+        path: `${IMG_BASE_URL}${image.path}`,
         createdTime: image.createdTime,
       }),
     );
@@ -202,7 +205,7 @@ export const AlbumDetail = () => {
     // 이 예시에서는 setTimeout을 사용하여 1초 후에 새로운 데이터를 추가로 로딩합니다.
     setTimeout(async () => {
       const newData = await loadImageFromDB(albumId, 40);
-      setAlbumImages(prevData => [...prevData, ...newData]);
+      // setAlbumImages(prevData => [...prevData, ...newData]);
       setIsLoading(false);
     }, 1000);
   };
@@ -265,9 +268,30 @@ export const AlbumDetail = () => {
     setIsMoreModalVisible(true);
   };
 
-  const handleRepTrans = () => {
-    setRepImage(tmpRepImage);
+  const handleRepTrans = async () => {
+    await setRepImage(tmpRepImage);
     setIsRepImageSelMode(false);
+
+    try {
+      const imgList = await albumAPI.getAlbumImages(cupId, albumId);
+      const targetImg = imgList.images.filter(
+        (tartget: { albumImageId: number }) =>
+          tartget.albumImageId === tmpRepImage,
+      );
+      console.log(targetImg);
+      const newFile: File = {
+        uri: `${IMG_BASE_URL}${targetImg[0].path}`,
+        type: targetImg[0].type,
+        size: targetImg[0].size,
+        name: '4ac2af96-4d2c-4f43-a04d-41cc736ad273.jpg',
+      };
+      const data = JSON.stringify(
+        await albumAPI.patchRepImgAlbum(cupId, albumId, newFile),
+      );
+      console.log('ss' + data);
+    } catch (error) {
+      console.log(error);
+    }
   };
 
   const handleOptionPressIn = (option: any) => {
@@ -280,16 +304,6 @@ export const AlbumDetail = () => {
 
   const handleRepImage = async () => {
     setIsRepImageSelMode(true);
-    try {
-      const data = JSON.stringify(
-        await albumAPI.patchRepImgAlbum(cupId, albumId, {
-          thumbnail: 'https://dummyimage.com/600x400/000/fff&text=Im+Dummy',
-        }),
-      );
-      console.log(data);
-    } catch (error) {
-      console.log(error);
-    }
     // dispatch(imageSelectionOn());
     setIsMoreModalVisible(false);
   };
@@ -355,6 +369,11 @@ export const AlbumDetail = () => {
   const handleModName = () => {
     setIsModNameVisible(true);
     setIsMoreModalVisible(false);
+  };
+
+  const handleDeleteAlbum = () => {
+    albumAPI.deleteAlbum(cupId, albumId);
+    closeMoreModal();
   };
 
   const closeMoreModal = () => {
@@ -549,7 +568,7 @@ export const AlbumDetail = () => {
                 <Text style={styles.moreText}>앨범 이름 변경</Text>
               </TouchableOpacity>
               <TouchableOpacity
-                onPress={() => closeMoreModal()}
+                onPress={() => handleDeleteAlbum()}
                 onPressIn={() => handleOptionPressIn('option3')}
                 onPressOut={() => handleOptionPressOut('option3')}
                 activeOpacity={1}

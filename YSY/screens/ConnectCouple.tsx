@@ -19,6 +19,10 @@ import { TutorialNavType } from '../navigation/NavTypes';
 import { getSecureValue } from '../util/jwt';
 import { useAppDispatch } from '../redux/hooks';
 import { login } from '../features/loginStatusSlice';
+import { getStringData, storeStringData } from '../util/asyncStorage';
+
+import { coupleAPI } from '../apis/coupleAPI';
+import { AppToken, appLogin } from '../util/login';
 
 const ConnectCouple = () => {
   const navigation = useNavigation<StackNavigationProp<TutorialNavType>>();
@@ -91,6 +95,38 @@ const ConnectCouple = () => {
     console.log('Image : ', image);
     console.log('accessToken : ', accessToken);
     console.log('refreshToken : ', refreshToken);
+
+    const data = {
+      otherCode: code,
+      cupDay: date,
+      thumbnail: image,
+    };
+    if (await storeStringData('accessToken', `Bearer ${accessToken}`)) {
+      console.log('Token Data Save Success ! ');
+      const res =
+        `Bearer ${accessToken}` === (await getStringData('accessToken'));
+      console.log('Save ? ' + res);
+      console.log(await getStringData('accessToken'));
+    }
+
+    const result = await coupleAPI.postNewCouple(data);
+    console.log(JSON.stringify(result));
+
+    if (params.loginOption) {
+      console.log('new Token');
+      const token: AppToken = await appLogin(params.loginOption);
+      await setAccessToken(token.accessToken);
+
+      if (
+        await storeStringData('accessToken', `Bearer ${result.accessToken}`)
+      ) {
+        console.log('Token Data Save Success part2 ! ');
+        const res =
+          `Bearer ${accessToken}` === (await getStringData('accessToken'));
+        console.log('Save ? ' + res);
+        console.log(await getStringData('accessToken'));
+      }
+    }
   };
 
   const clickShareBtn = async () => {

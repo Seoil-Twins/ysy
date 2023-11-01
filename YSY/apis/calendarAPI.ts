@@ -1,9 +1,17 @@
 import { API } from '../util/API';
 
-export const albumAPI = {
-  getAlbumFolder: async (cup_id: string, sort?: string) => {
-    const sortData = { sort: sort };
-    const data = await API.get(`/album/${cup_id}`, sortData);
+export const calendarAPI = {
+  getSchedule: async (cup_id: string, year: number) => {
+    console.log(cup_id, year);
+    const data = await API.get(`/calendar/${cup_id}/${year}`);
     return data;
+  },
+  postSchedule: async (cup_id: string, data?: any) => {
+    const response = await API.post(`/calendar/${cup_id}`, data);
+    return response;
+  },
+  deleteSchedule: async (cup_id: string, calendar_id: string) => {
+    const response = await API.delete(`/calendar/${cup_id}/${calendar_id}`);
+    return response;
   },
 };

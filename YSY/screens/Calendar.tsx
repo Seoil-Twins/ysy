@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import MyCalendar from '../components/MyCalendar';
-import CalendarHeader from '../components/CalendarHeader';
+// import CalendarHeader from '../components/CalendarHeader';
 
 const Calendar = () => {
   const handleDayPress = (day: any) => {
