@@ -52,6 +52,7 @@ router.get("/", async (req: Request, res: Response, next: NextFunction) => {
 
 router.post("/", async (req: Request, res: Response, next: NextFunction) => {
   const contentType: ContentType = req.contentType;
+  console.log(req.files);
 
   const createFunc = async (images?: File[]) => {
     try {

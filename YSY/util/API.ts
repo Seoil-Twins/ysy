@@ -59,24 +59,46 @@ export const API = {
     });
     return response;
   },
-  post_formdata: async (url: string, data?: any) => {
+  post_formdata: async (url: string, data?: any, fileParamName?: string) => {
     try {
-      const formData = new FormData();
-      if (data) {
-        formData.append('images', {
-          uri: data.uri,
-          name: data.name,
-          size: data.size,
-          type: data.type,
-        });
+      if (fileParamName) {
+        const formData = new FormData();
+        const imageData = data.images;
+        if (imageData) {
+          for (const image of imageData) {
+            formData.append('images', image);
+          }
+          formData.append('title', data.title);
+          formData.append('contents', data.contents);
 
-        const response = await apiClient.postForm(url, formData, {
-          data: formData,
-          headers: {
-            'Content-Type': 'multipart/form-data',
-          },
-        });
-        return response;
+          const response = await apiClient.postForm(url, formData, {
+            data: formData,
+            headers: {
+              'Content-Type': 'multipart/form-data',
+            },
+          });
+          return response;
+        }
+      } else {
+        const formData = new FormData();
+        if (data) {
+          console.log(data);
+          formData.append('images', {
+            uri: data.uri,
+            name: data.name,
+            size: data.size,
+            type: data.type,
+          });
+          console.log(formData);
+
+          const response = await apiClient.postForm(url, formData, {
+            data: formData,
+            headers: {
+              'Content-Type': 'multipart/form-data',
+            },
+          });
+          return response;
+        }
       }
     } catch (error) {
       console.log(error);

@@ -12,8 +12,6 @@ import { noticeAPI } from '../apis/noticeAPI';
 const fetchNotice = async () => {
   const data = { count: 10, page: 1 };
   const res = await noticeAPI.getNotice(data);
-  console.log(res);
-
   const newNoticeList: NoticeType[] = [];
 
   for (const notice of res.notices) {

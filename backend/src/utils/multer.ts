@@ -118,6 +118,8 @@ export const uploadFileFunc = (info: MulterUploadFile, callback: Function) => {
 
 export const uploadFilesFunc = (info: MulterUploadFile, callback: Function) => {
   const { contentType, req, err, next } = info;
+  console.log(req.files);
+  console.log(req.file);
 
   try {
     errorHandling(err);

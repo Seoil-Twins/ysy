@@ -23,4 +23,8 @@ export const coupleAPI = {
     const res = await API.patch_formdata(`/couple/${cup_id}`, data);
     return res;
   },
+  deleteCouple: async (cup_id: string) => {
+    const res = await API.delete(`/couple/${cup_id}`);
+    return res;
+  },
 };

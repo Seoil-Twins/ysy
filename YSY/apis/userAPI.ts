@@ -61,6 +61,18 @@ export const userAPI = {
       return error;
     }
   },
+  patchUserNofi: async (
+    user_id: number,
+    data?: { key: string; value: boolean },
+  ) => {
+    try {
+      const res = await API.patch(`/user/nofi/${user_id}`, data);
+      return res;
+    } catch (error) {
+      console.log(error);
+      return error;
+    }
+  },
   patchUserProfile: async (
     user_id: number,
     fileParamName: string,
@@ -71,6 +83,10 @@ export const userAPI = {
       data,
       fileParamName,
     );
+    return res;
+  },
+  deleteUser: async (user_id: number) => {
+    const res = await API.delete(`/user/${user_id}`);
     return res;
   },
 };

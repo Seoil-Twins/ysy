@@ -152,6 +152,7 @@ router.patch("/nofi/:user_id", async (req: Request, res: Response, next: NextFun
   try {
     const { value, error }: ValidationResult = validator(req.body, updateNofiSchema);
     if (error) throw new BadRequestError(error.message);
+    console.log(value.primaryNofi);
 
     const data: UpdateUserNotification = {
       primaryNofi: value.primaryNofi,

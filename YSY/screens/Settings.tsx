@@ -32,6 +32,7 @@ import { logout } from '../features/loginStatusSlice';
 
 import { removeSecureValue } from '../util/jwt';
 import { userAPI } from '../apis/userAPI';
+import { coupleAPI } from '../apis/coupleAPI';
 
 const PROFILE_SIZE = 45;
 const { width, height } = Dimensions.get('window');
@@ -41,6 +42,10 @@ const fetchDisconnectCouple = async () => {
   const response = {
     statusCode: 204,
   };
+  const userData = JSON.stringify(await userAPI.getUserMe()); // login 정보 가져오기
+  const users = JSON.parse(userData);
+
+  await coupleAPI.deleteCouple(users.cupId);
 
   return response;
 };
@@ -49,6 +54,10 @@ const fetchWithdraw = async () => {
   const response = {
     statusCode: 204,
   };
+
+  const userData = JSON.stringify(await userAPI.getUserMe()); // login 정보 가져오기
+  const users = JSON.parse(userData);
+  await userAPI.deleteUser(users.userId);
 
   return response;
 };
@@ -87,27 +96,34 @@ const Settings = () => {
   }, [dispatch]);
 
   const disconnectCouple = useCallback(async () => {
-    const response = await fetchDisconnectCouple();
+    try {
+      await fetchDisconnectCouple();
 
-    if (response.statusCode === 204) {
+      //if (response.statusCode === 204) {
       await removeSecureValue('accessToken');
       await removeSecureValue('refreshToken');
       logoutApp();
+      closeDisconnectModal();
+    } catch (error) {
+      console.log(error);
     }
-
-    closeDisconnectModal();
+    //}
   }, [closeDisconnectModal, logoutApp]);
 
   const withdrawUser = useCallback(async () => {
-    const response = await fetchWithdraw();
+    try {
+      await fetchWithdraw();
 
-    if (response.statusCode === 204) {
+      // if (response.statusCode === 204) {
       await removeSecureValue('accessToken');
       await removeSecureValue('refreshToken');
       logoutApp();
-    }
+      //}
 
-    closeWithdrawModal();
+      closeWithdrawModal();
+    } catch (error) {
+      console.log(error);
+    }
   }, [closeWithdrawModal, logoutApp]);
 
   const moveProfile = () => {
