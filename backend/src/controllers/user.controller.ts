@@ -87,7 +87,7 @@ class UserController {
 
     if (data.phone) {
       const userByPhone: User | null = await this.userService.select({ phone: data.phone });
-      if (userByPhone) {
+      if (userByPhone && userByPhone.userId !== userByUserId.userId) {
         throw new ConflictError("Duplicated Phone");
       }
     }
