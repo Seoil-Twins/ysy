@@ -36,7 +36,7 @@ import { userAPI } from '../apis/userAPI';
 const PROFILE_SIZE = 100;
 const CROP_SIZE = 300;
 const { width, height } = Dimensions.get('window');
-const IMG_BASE_URL = 'https://storage.googleapis.com/ysy-bucket/';
+// const IMG_BASE_URL = 'https://storage.googleapis.com/ysy-bucket/';
 
 const fetchEditProfile = async (profile: string | null) => {
   console.log(profile);

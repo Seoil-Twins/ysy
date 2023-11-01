@@ -69,11 +69,9 @@ router.get("/me", async (req: Request, res: Response, next: NextFunction) => {
 });
 // 유저 수정
 router.patch("/:user_id", async (req: Request, res: Response, next: NextFunction) => {
-  console.log("1111111111111111111");
   const contentType: ContentType | undefined = req.contentType;
 
   const updateFunc = async (profile?: File | null) => {
-    console.log("22222222222222");
     try {
       const { value, error }: ValidationResult = validator(req.body, updateSchema);
 
@@ -133,7 +131,6 @@ router.patch("/:user_id", async (req: Request, res: Response, next: NextFunction
     });
   });
 
-  console.log("3333333333333333");
   upload(req, res, (err) => {
     const info: MulterUpdateFile = {
       contentType,
@@ -152,7 +149,6 @@ router.patch("/nofi/:user_id", async (req: Request, res: Response, next: NextFun
   try {
     const { value, error }: ValidationResult = validator(req.body, updateNofiSchema);
     if (error) throw new BadRequestError(error.message);
-    console.log(value.primaryNofi);
 
     const data: UpdateUserNotification = {
       primaryNofi: value.primaryNofi,

@@ -290,7 +290,7 @@ const MyCalendar: React.FC<CalendarProps> = ({ onDateSelect }) => {
     return (
       <View
         style={{
-          width: '110%', // 100%
+          width: '115%', // 100%
           height: totalBarHeight,
         }}>
         <FlatList

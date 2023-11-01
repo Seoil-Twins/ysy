@@ -50,29 +50,28 @@ const DateDetail = () => {
     const dp = await dateAPI.getDateOne(detailId);
 
     const response: Date = {
-      id: Math.random(),
-      contentId: dp.contentId ? dp.contentId : 'null',
-      contentTypeId: dp.contentTypeId ? dp.contentTypeId : 'null',
-      areaCode: dp.areaCode ? dp.areaCode : 'null',
-      sigunguCode: dp.sigunguCode ? dp.sigunguCode : 'null',
-      view: dp.views ? dp.views : 'null',
-      title: dp.title ? dp.title : 'null',
-      description: dp.description ? dp.description : 'null',
-      thumbnails: [dp.thumbnail]
-        ? [dp.thumbnail]
-        : ['https://dummyimage.com/600x400/000/fff'],
-      address: dp.address ? dp.address : 'null',
-      mapX: dp.mapX ? dp.mapX : 'null',
-      mapY: dp.mapY ? dp.mapY : 'null',
-      phoneNumber: dp.phoneNumber ? dp.phoneNumber : 'null',
-      babyCarriage: dp.babyCarriage ? dp.babyCarriage : 'null',
-      pet: dp.pet ? dp.pet : 'null',
-      useTime: dp.useTime ? dp.useTime : 'null',
-      parking: dp.parking ? dp.parking : 'null',
-      restDate: dp.restDate ? dp.restDate : 'null',
-      homepage: dp.homepage ? dp.homepage : 'null',
+      id: dp.contentId,
+      contentId: dp.contentId,
+      contentTypeId: dp.contentTypeId,
+      areaCode: dp.areaCode,
+      sigunguCode: dp.sigunguCode,
+      view: dp.views,
+      title: dp.title,
+      description: dp.description,
+      thumbnails: dp.thumbnail,
+      address: dp.address,
+      mapX: dp.mapX,
+      mapY: dp.mapY,
+      phoneNumber: dp.phoneNumber,
+      babyCarriage: dp.babyCarriage,
+      pet: dp.pet,
+      useTime: dp.useTime,
+      parking: dp.parking,
+      restDate: dp.restDate,
+      homepage: dp.homepage,
       tags: ['unused'],
       favoriteCount: 1234,
+      datePlaceImages: dp.datePlaceImages,
       isFavorite: false,
     };
 
@@ -225,13 +224,13 @@ const DateDetail = () => {
       {dateInfo ? (
         <>
           <BackHeader style={[globalStyles.plpr20, { marginBottom: 25 }]} />
-          <Carousel
+          {/* <Carousel
             loop
             width={width}
             height={(width / 2) * 1.2}
             autoPlay={false}
             scrollAnimationDuration={1000}
-            data={dateInfo.thumbnails}
+            data={dateInfo.datePlaceImages}
             pagingEnabled={true}
             renderItem={({ item }) => (
               <View style={styles.container}>
@@ -242,7 +241,7 @@ const DateDetail = () => {
                 />
               </View>
             )}
-          />
+          /> */}
           <View style={[globalStyles.plpr20, styles.contentBox]}>
             <View style={styles.titleBox}>
               <CustomText size={24} weight="medium">
@@ -302,7 +301,9 @@ const DateDetail = () => {
                     size={16}
                     weight="regular"
                     style={styles.infoText}>
-                    {dateInfo.phoneNumber}
+                    {dateInfo.phoneNumber === 'null'
+                      ? dateInfo.phoneNumber
+                      : '정보가 없습니다.'}
                   </CustomText>
                 </Pressable>
               </View>

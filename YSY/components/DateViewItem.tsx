@@ -42,8 +42,8 @@ const DateViewItem: React.FC<DateViewItemProps> = ({
     <Pressable style={styles.container} onPress={emitDetail}>
       <ImageBackground
         source={
-          item.thumbnails[0]
-            ? { uri: item.thumbnails[0] }
+          item.thumbnails
+            ? { uri: item.thumbnails }
             : require('../assets/images/date_image.png')
         }
         style={styles.background}>
