@@ -24,23 +24,21 @@ export const userAPI = {
       return data;
     } catch (error) {
       console.log(error);
-      return error;
+      throw error;
     }
   },
   postSignUp: async (loginData: LoginOptions) => {
     try {
-      // if (loginData.profile) {
-      //   console.log('1');
-      //   const data = await API.post_formdata('/user', loginData);
-      //   return data;
-      // } else {
-      console.log('2');
-      const data = await API.post('/user', loginData);
-      return data;
-      // }
+      if (loginData.profile) {
+        const data = await API.post_formdata('/user', loginData);
+        return data;
+      } else {
+        const data = await API.post('/user', loginData);
+        return data;
+      }
     } catch (error) {
       console.log(error);
-      return error;
+      throw error;
     }
   },
   patchUser: async (
@@ -58,7 +56,7 @@ export const userAPI = {
       return res;
     } catch (error) {
       console.log(error);
-      return error;
+      throw error;
     }
   },
   patchUserNofi: async (
@@ -70,7 +68,7 @@ export const userAPI = {
       return res;
     } catch (error) {
       console.log(error);
-      return error;
+      throw error;
     }
   },
   patchUserProfile: async (
