@@ -15,7 +15,7 @@ import NotFoundError from "../errors/notFound.error.js";
 import UnauthorizedError from "../errors/unauthorized.error.js";
 import ForbiddenError from "../errors/forbidden.error.js";
 import ConflictError from "../errors/conflict.error.js";
-import { File, UploadImageInfo, deleteFileWithGCP, getFileBufferWithGCP, uploadFileWithGCP } from "../utils/gcp.util.js";
+import { File, MimeType, UploadImageInfo, deleteFileWithGCP, getFileBufferWithGCP, uploadFileWithGCP } from "../utils/gcp.util.js";
 
 class UserController {
   private ERROR_LOCATION_PREFIX = "user";
@@ -37,7 +37,7 @@ class UserController {
     return result;
   }
 
-  async createUser(data: CreateUser, profile?: File): Promise<void> {
+  async createUser(data: CreateUser, profile?: File | string): Promise<void> {
     let transaction: Transaction | null = null;
     let createdUser: User | null = null;
 
@@ -50,7 +50,12 @@ class UserController {
 
     try {
       transaction = await sequelize.transaction();
-      createdUser = await this.userService.create(transaction, data, profile);
+
+      if (profile) {
+        createdUser = await this.userService.createWithProfile(transaction, data, profile);
+      } else {
+        createdUser = await this.userService.create(transaction, data);
+      }
 
       await this.userRoleService.create(transaction, createdUser.userId, 4);
       await transaction.commit();
@@ -84,7 +89,7 @@ class UserController {
 
     if (data.phone) {
       const userByPhone: User | null = await this.userService.select({ phone: data.phone });
-      if (userByPhone) {
+      if (userByPhone && userByPhone.userId !== userByUserId.userId) {
         throw new ConflictError("Duplicated Phone");
       }
     }
@@ -95,7 +100,7 @@ class UserController {
       const prevProfilePath: string | null = userByUserId.profile;
       const prevProfileSize: number = userByUserId.profileSize ? userByUserId.profileSize : 0;
       const prevProfileType: string = userByUserId.profileType ? userByUserId.profileType : UNKNOWN_NAME;
-      const prevBuffer = prevProfilePath ? await getFileBufferWithGCP(prevProfilePath) : null;
+      const prevBuffer = prevProfilePath && prevProfileType !== MimeType.URL ? await getFileBufferWithGCP(prevProfilePath) : null;
 
       if (prevProfilePath && prevBuffer) {
         prevFile = {
@@ -119,7 +124,7 @@ class UserController {
         updateUser = await this.userService.update(transaction, userByUserId, data);
       }
 
-      if (prevProfilePath && (profile || profile === null)) {
+      if (prevProfilePath && (profile || profile === null) && prevProfileType !== MimeType.URL) {
         await deleteFileWithGCP({
           path: prevProfilePath,
           location: `${this.ERROR_LOCATION_PREFIX}/updateUser`,

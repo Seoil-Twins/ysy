@@ -29,7 +29,7 @@ class UserAdminService extends Service {
    * @param file 사진 객체
    * @returns string | null - 프로필 사진 경로 또는 없음
    */
-  createProfile(userId: number, file: File): string {
+  createPath(userId: number, file: File): string {
     const reqFileName = file.originalname;
     const path: string = `${this.FOLDER_NAME}/${userId}/profile/${dayjs().valueOf()}.${reqFileName}`;
 
@@ -53,6 +53,9 @@ class UserAdminService extends Service {
     }
     if (filterOptions.isDeleted) {
       result["deleted"] = true;
+    }
+    if (filterOptions.fromDate && filterOptions.toDate) {
+      result["createdTime"] = { [Op.between]: [filterOptions.fromDate, filterOptions.toDate] };
     }
 
     return result;
@@ -139,7 +142,7 @@ class UserAdminService extends Service {
     let createdUser: User = await User.create(data, { transaction });
 
     if (profile) {
-      const path = this.createProfile(createdUser.userId, profile);
+      const path = this.createPath(createdUser.userId, profile);
 
       createdUser = await createdUser.update(
         {

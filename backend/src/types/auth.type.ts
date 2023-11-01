@@ -4,6 +4,11 @@ export interface Login {
   snsKind: string;
 }
 
+export interface LoginWithAdmin {
+  email: string;
+  password: string;
+}
+
 export interface ResponseToken {
   accessToken: string;
   // accessTokenExpiredAt: number; // unix timestamp

@@ -22,6 +22,13 @@ const bucket = storage.bucket(bucketname);
 
 export type File = Express.Multer.File;
 
+export const MimeType = {
+  JPG: "image/jpeg",
+  PNG: "image/png",
+  SVG: "image/svg+xml",
+  URL: "image/url"
+} as const;
+
 export interface UploadImageInfo {
   filename: string;
   buffer: Buffer;

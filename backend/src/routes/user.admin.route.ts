@@ -10,7 +10,7 @@ import logger from "../logger/logger.js";
 import validator from "../utils/validator.util.js";
 import { STATUS_CODE } from "../constants/statusCode.constant.js";
 import { canModifyWithEditor, canView } from "../utils/checkRole.util.js";
-import { CreatePageOption, createPageOptions, PageOptions } from "../utils/pagination.util.js";
+import { convertStringtoDate, CreatePageOption, createPageOptions, PageOptions } from "../utils/pagination.util.js";
 import { ContentType, convertBoolean } from "../utils/router.util.js";
 import { File } from "../utils/gcp.util.js";
 import { MulterUpdateFile, MulterUploadFile, multerUpload, updateFileFunc, uploadFileFunc } from "../utils/multer.js";
@@ -104,10 +104,17 @@ router.get("/", canView, async (req: Request, res: Response, next: NextFunction)
     name: String(req.query.name) || undefined,
     snsKind: String(req.query.sns_kind) || undefined
   };
+
+  const { fromDate, toDate }: { fromDate?: Date; toDate?: Date } = convertStringtoDate({
+    strStartDate: req.query.from_date,
+    strEndDate: req.query.to_date
+  });
   const filterOptions: FilterOptions = {
-    isProfile: boolean(req.query.profile) || false,
-    isCouple: boolean(req.query.couple) || false,
-    isDeleted: boolean(req.query.deleted) || false
+    fromDate,
+    toDate,
+    isProfile: convertBoolean(req.query.profile) || false,
+    isCouple: convertBoolean(req.query.couple) || false,
+    isDeleted: convertBoolean(req.query.deleted) || false
   };
 
   try {
@@ -142,6 +149,7 @@ router.post("/", canModifyWithEditor, async (req: Request, res: Response, next: 
       const { value, error }: ValidationResult = validator(req.body, createSchema);
 
       if (error) throw new BadRequestError(error.message);
+      else if (Number(req.roleId) !== 1 && value.role == 1) throw new BadRequestError("Invalida RoleId OR You don't set admin roleId");
 
       const data: CreateUserWithAdmin = {
         snsId: value.snsId,
@@ -192,6 +200,7 @@ router.patch("/:user_id", canModifyWithEditor, async (req: Request, res: Respons
       const { value, error }: ValidationResult = validator(req.body, updateSchema);
 
       if (error) throw new BadRequestError(error.message);
+      else if (Number(req.roleId) !== 1 && value.role == 1) throw new BadRequestError("You don't set admin roleId");
 
       const data: UpdateUserWithAdmin = {
         snsId: value.snsId,

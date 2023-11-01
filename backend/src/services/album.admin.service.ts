@@ -1,7 +1,7 @@
-import { GroupedCountResultItem, Op, OrderItem, Transaction, WhereOptions } from "sequelize";
+import { InferAttributes, Op, OrderItem, Transaction, WhereOptions } from "sequelize";
 import { Service } from "./service.js";
 import { Album } from "../models/album.model.js";
-import { ResponseAlbumFolder, ResponseAlbum, SearchOptions, FilterOptions, SortItem } from "../types/album.type.js";
+import { SearchOptions, FilterOptions, SortItem } from "../types/album.type.js";
 
 import { AlbumImage } from "../models/albumImage.model.js";
 import sequelize from "../models/index.js";
@@ -10,15 +10,9 @@ import { API_ROOT } from "../index.js";
 import { PageOptions, createSortOptions } from "../utils/pagination.util.js";
 import { albumSortOptions } from "../types/sort.type.js";
 import { File, uploadFileWithGCP } from "../utils/gcp.util.js";
+import { UNKNOWN_NAME } from "../constants/file.constant.js";
 
 class AlbumAdminService extends Service {
-  update(transaction: Transaction | null, ...args: any[]): Promise<any> {
-    throw new Error("Method not implemented.");
-  }
-  delete(transaction: Transaction | null, ...args: any[]): Promise<any> {
-    throw new Error("Method not implemented.");
-  }
-
   private FOLDER_NAME = "couples";
 
   getURL(cupId: string): string {
@@ -37,8 +31,17 @@ class AlbumAdminService extends Service {
   private createWhere(searchOptions: SearchOptions, filterOptions: FilterOptions): WhereOptions {
     let result: WhereOptions = {};
 
-    if (searchOptions.cupId) result["cupId"] = { [Op.like]: `%${searchOptions.cupId}%` };
-    if (filterOptions.fromDate && filterOptions.toDate) result["createdTime"] = { [Op.between]: [filterOptions.fromDate, filterOptions.toDate] };
+    if (searchOptions.cupId)
+      result["cupId"] = {
+        [Op.like]: `%${searchOptions.cupId}%`
+      };
+    if (filterOptions.isThumbnail) {
+      result["thumbnail"] = { [Op.not]: null };
+    }
+    if (filterOptions.fromDate && filterOptions.toDate)
+      result["createdTime"] = {
+        [Op.between]: [filterOptions.fromDate, filterOptions.toDate]
+      };
 
     return result;
   }
@@ -114,54 +117,57 @@ class AlbumAdminService extends Service {
     return createdAlbum;
   }
 
-  // async selectAll(albumIds: number[]): Promise<Album[]> {
-  //   const albums: Album[] = await Album.findAll({ where: { albumId: albumIds } });
-  //   return albums;
-  // }
+  async selectAll(albumIds: number[]): Promise<Album[]> {
+    const albums: Album[] = await Album.findAll({
+      where: { albumId: albumIds },
+      include: {
+        model: AlbumImage,
+        as: "albumImages"
+      }
+    });
+    return albums;
+  }
 
-  // async create(transaction: Transaction | null = null, data: ICreate): Promise<Album> {
-  //   const createdAlbum: Album = await Album.create(data, { transaction });
-  //   return createdAlbum;
-  // }
+  async update(transaction: Transaction | null, album: Album, data: Partial<InferAttributes<Album>>): Promise<Album> {
+    const updatedAlbum: Album = await album.update(data, { transaction });
 
-  // async update(transaction: Transaction | null = null, album: Album, data: IUpdateWithAdmin, thumbnail?: File): Promise<Album> {
-  //   if (thumbnail) {
-  //     const reqFileName = thumbnail.originalFilename!;
-  //     const isDefault = isDefaultFile(reqFileName);
+    return updatedAlbum;
+  }
 
-  //     if (isDefault) {
-  //       data.thumbnail = null;
-  //     } else {
-  //       data.thumbnail = `${this.getAlbumThumbnailPath(album.cupId, album.albumId)}/${dayjs().valueOf()}.${reqFileName}`;
-  //     }
-  //   }
+  async updateWithThumbnail(transaction: Transaction | null, album: Album, data: Partial<InferAttributes<Album>>, thumbnail: File): Promise<Album> {
+    const path: string = this.createThumbnailPath(album.cupId, album.albumId, thumbnail);
+    const updatedAlbum: Album = await album.update(
+      {
+        ...data,
+        thumbnail: path,
+        thumbnailSize: thumbnail.size,
+        thumbnailType: thumbnail.mimetype ? thumbnail.mimetype : UNKNOWN_NAME
+      },
+      { transaction }
+    );
 
-  //   const updatedAlbum: Album = await album.update(data, { transaction });
-  //   if (thumbnail && data.thumbnail) await uploadFile(data.thumbnail, thumbnail.filepath);
+    await uploadFileWithGCP({
+      filename: path,
+      buffer: thumbnail.buffer,
+      mimetype: thumbnail.mimetype,
+      size: thumbnail.size
+    });
 
-  //   return updatedAlbum;
-  // }
+    return updatedAlbum;
+  }
 
-  // async updateThumbnail(transaction: Transaction | null = null, album: Album, thumbnail: File): Promise<Album> {
-  //   let path: string | null = null;
-  //   const reqFileName = thumbnail.originalFilename!;
-  //   const isDefault = isDefaultFile(reqFileName);
+  delete(transaction: Transaction | null, ...args: any[]): Promise<any> {
+    throw new Error("Method not implemented.");
+  }
 
-  //   if (isDefault) {
-  //     path = null;
-  //   } else {
-  //     path = `${this.getAlbumThumbnailPath(album.cupId, album.albumId)}/${dayjs().valueOf()}.${reqFileName}`;
-  //   }
-
-  //   const updatedAlbum: Album = await album.update({ thumbnail: path }, { transaction });
-  //   if (path) await uploadFile(path, thumbnail.filepath);
-
-  //   return updatedAlbum;
-  // }
-
-  // delete(transaction: Transaction | null = null, ...args: any[]): Promise<any> {
-  //   throw new Error("Method not implemented.");
-  // }
+  async deleteAll(transaction: Transaction | null, albumIds: number[]): Promise<void> {
+    await Album.destroy({
+      where: {
+        albumId: albumIds
+      },
+      transaction
+    });
+  }
 }
 
 export default AlbumAdminService;

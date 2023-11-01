@@ -13,7 +13,7 @@ import AlbumAdminService from "../services/album.admin.service.js";
 import AlbumService from "../services/album.service.js";
 import AlbumImageService from "../services/albumImage.service.js";
 import { PageOptions } from "../utils/pagination.util.js";
-import { DeleteImageInfo, File, deleteFileWithGCP, deleteFilesWithGCP } from "../utils/gcp.util.js";
+import { DeleteImageInfo, File, UploadImageInfo, deleteFileWithGCP, deleteFilesWithGCP, getFileBufferWithGCP, uploadFileWithGCP } from "../utils/gcp.util.js";
 import { Couple } from "../models/couple.model.js";
 import CoupleService from "../services/couple.service.js";
 import { UNKNOWN_NAME } from "../constants/file.constant.js";
@@ -190,67 +190,133 @@ class AlbumAdminController {
   //   }
   // }
 
-  // async updateAlbum(albumId: number, data: IUpdateWithAdmin, thumbnail?: File): Promise<Album> {
-  //   const album: Album | null = await this.albumService.select(albumId);
-  //   if (!album) throw new NotFoundError(`Not found album with using ${albumId}`);
+  async updateAlbum(cupId: string, albumId: number, title: string, thumbnail?: File | null): Promise<Album> {
+    let transaction: Transaction | undefined = undefined;
+    let updatedAlbum: Album | null = null;
+    let prevFile: UploadImageInfo | null = null;
 
-  //   let updatedAlbum: Album | undefined = undefined;
-  //   let transaction: Transaction | undefined = undefined;
-  //   const prevThumbnail: string | null = album.thumbnail;
+    const albumFolder = await this.albumService.select(albumId);
+    if (!albumFolder) throw new NotFoundError("Not found album using query parameter album ID");
 
-  //   try {
-  //     transaction = await sequelize.transaction();
+    try {
+      const prevAlbumPath: string | null = albumFolder.thumbnail;
+      const prevAlbumSize: number = albumFolder.thumbnailSize ? albumFolder.thumbnailSize : 0;
+      const prevAlbumType: string = albumFolder.thumbnailType ? albumFolder.thumbnailType : UNKNOWN_NAME;
+      const prevBuffer = prevAlbumPath ? await getFileBufferWithGCP(prevAlbumPath) : null;
 
-  //     updatedAlbum = await this.albumAdminService.update(transaction, album, data, thumbnail);
-  //     await transaction.commit();
+      if (prevAlbumPath && prevBuffer) {
+        prevFile = {
+          filename: prevAlbumPath,
+          buffer: prevBuffer,
+          mimetype: prevAlbumType,
+          size: prevAlbumSize
+        };
+      }
 
-  //     if (prevThumbnail) await deleteFile(prevThumbnail);
+      transaction = await sequelize.transaction();
 
-  //     return updatedAlbum;
-  //   } catch (error) {
-  //     if (updatedAlbum?.thumbnail) await deleteFile(updatedAlbum?.thumbnail);
-  //     if (transaction) await transaction.rollback();
+      if (thumbnail) {
+        updatedAlbum = await this.albumAdminService.updateWithThumbnail(transaction, albumFolder, { title }, thumbnail);
+      } else if (thumbnail === null) {
+        updatedAlbum = await this.albumAdminService.update(transaction, albumFolder, {
+          thumbnail: null,
+          thumbnailSize: null,
+          thumbnailType: null
+        });
+      } else {
+        updatedAlbum = await this.albumAdminService.update(transaction, albumFolder, {
+          title
+        });
+      }
 
-  //     logger.error(`Update album error in admin api => ${JSON.stringify(error)}`);
-  //     throw error;
-  //   }
-  // }
+      if (prevAlbumPath) {
+        await deleteFileWithGCP({
+          path: prevAlbumPath,
+          location: `${this.ERROR_LOCATION_PREFIX}/updateThumbnail`,
+          size: prevAlbumSize!,
+          type: prevAlbumType!
+        });
+      }
 
-  // async deleteAlbums(albumIds: number[]): Promise<void> {
-  //   const albums: Album[] = await this.albumAdminService.selectMutiple(albumIds);
-  //   if (!albums.length || albums.length <= 0) throw new NotFoundError("Not found albums");
-  //   let transaction: Transaction | undefined = undefined;
+      await transaction.commit();
+      return updatedAlbum!;
+    } catch (error) {
+      logger.error(`Album update thumbnail error => ${JSON.stringify(error)}`);
 
-  //   try {
-  //     const thumbnailPaths: string[] = [];
-  //     const albumPaths: string[] = [];
+      if (transaction) await transaction.rollback();
 
-  //     transaction = await sequelize.transaction();
+      if (updatedAlbum?.thumbnail) {
+        await deleteFileWithGCP({
+          path: updatedAlbum.thumbnail,
+          location: `${this.ERROR_LOCATION_PREFIX}/updateThumbnail`,
+          size: updatedAlbum.thumbnailSize ? updatedAlbum.thumbnailSize : 0,
+          type: updatedAlbum.thumbnailType ? updatedAlbum.thumbnailType : UNKNOWN_NAME
+        });
 
-  //     for (const album of albums) {
-  //       await album.destroy({ transaction });
+        try {
+          if (prevFile) {
+            await uploadFileWithGCP({
+              filename: prevFile.filename,
+              buffer: prevFile.buffer,
+              mimetype: prevFile.mimetype,
+              size: prevFile.size
+            });
+          }
+        } catch (error) {
+          logger.error(`Previous thumbnail upload error : ${JSON.stringify(error)}`);
+        }
 
-  //       if (album.thumbnail) thumbnailPaths.push(album.thumbnail);
+        logger.error(`After updating the gcp, a db error occurred and the gcp thumbnail is deleted => ${updatedAlbum.thumbnail}`);
+      }
 
-  //       const albumPath = `${this.albumAdminService.getAlbumFolderPath(album.cupId, album.albumId)}`;
-  //       albumPaths.push(albumPath);
-  //     }
+      throw error;
+    }
+  }
 
-  //     await transaction.commit();
+  async deleteAlbums(albumIds: number[]): Promise<void> {
+    let transaction: Transaction | undefined = undefined;
 
-  //     const promises = [];
+    const deleteFiles: DeleteImageInfo[] = [];
+    const albumFolders: Album[] = await this.albumAdminService.selectAll(albumIds);
 
-  //     promises.push(deleteFiles(thumbnailPaths));
-  //     for (const albumPath of albumPaths) promises.push(deleteFolder(albumPath));
+    if (!albumFolders) throw new NotFoundError("Not found album using query parameter album ID");
 
-  //     await Promise.allSettled(promises);
-  //   } catch (error) {
-  //     logger.error(`Delete album error => ${JSON.stringify(error)}`);
-  //     if (transaction) await transaction.rollback();
+    try {
+      transaction = await sequelize.transaction();
 
-  //     throw error;
-  //   }
-  // }
+      for (const album of albumFolders) {
+        if (album.thumbnail) {
+          deleteFiles.push({
+            location: `${this.ERROR_LOCATION_PREFIX}/deleteUsers`,
+            path: album.thumbnail,
+            size: album.thumbnailSize!,
+            type: album.thumbnailType!
+          });
+        }
+
+        if (album.albumImages) {
+          for (const image of album.albumImages) {
+            deleteFiles.push({
+              location: `${this.ERROR_LOCATION_PREFIX}/deleteUsers`,
+              path: image.path,
+              size: image.size,
+              type: image.type
+            });
+          }
+        }
+      }
+
+      await this.albumAdminService.deleteAll(transaction, albumIds);
+      await transaction.commit();
+
+      deleteFilesWithGCP(deleteFiles);
+    } catch (error) {
+      logger.error(`Album deletes error in album admin api => ${JSON.stringify(error)}`);
+
+      if (transaction) await transaction.rollback();
+      throw error;
+    }
+  }
 
   // async deleteAlbumImages(imageIds: number[]): Promise<void> {
   //   const images: AlbumImage[] = await this.albumImageService.select(imageIds);

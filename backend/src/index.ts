@@ -46,6 +46,7 @@ declare global {
       userId?: number;
       cupId: string | null;
       roleId?: number;
+      isAdmin: boolean;
       contentType?: ContentType;
       originalFileNames?: string[];
     }

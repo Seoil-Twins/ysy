@@ -15,7 +15,7 @@ import { Couple } from "../models/couple.model.js";
 
 import NotFoundError from "../errors/notFound.error.js";
 
-import { File, uploadFileWithGCP } from "../utils/gcp.util.js";
+import { File, MimeType, uploadFileWithGCP } from "../utils/gcp.util.js";
 
 class UserService extends Service {
   private readonly FOLDER_NAME: string = "users";
@@ -30,7 +30,7 @@ class UserService extends Service {
    * @param file 사진 객체
    * @returns string | null - 프로필 사진 경로 또는 없음
    */
-  createProfile(userId: number, file: File): string {
+  createPath(userId: number, file: File): string {
     const reqFileName = file.originalname;
     const path: string = `${this.FOLDER_NAME}/${userId}/profile/${dayjs().valueOf()}.${reqFileName}`;
 
@@ -128,7 +128,7 @@ class UserService extends Service {
    * @param data {@link CreateUser}
    * @returns Promise\<{@link User}\>
    */
-  async create(transaction: Transaction | null, data: CreateUser, profile?: File): Promise<User> {
+  async create(transaction: Transaction | null, data: CreateUser): Promise<User> {
     const code = await this.createCode();
     let createdUser: User = await User.create(
       {
@@ -144,8 +144,44 @@ class UserService extends Service {
       { transaction }
     );
 
-    if (profile) {
-      const path = this.createProfile(createdUser.userId, profile);
+    return createdUser;
+  }
+
+  /**
+   * 사용자를 생성합니다.
+   *
+   * @param transaction 현재 사용 중인 트랜잭션
+   * @param data {@link CreateUser}
+   * @param profile {@link File}
+   * @returns Promise\<{@link User}\>
+   */
+  async createWithProfile(transaction: Transaction | null, data: CreateUser, profile: File | string): Promise<User> {
+    const code = await this.createCode();
+    let createdUser: User = await User.create(
+      {
+        snsKind: data.snsKind,
+        snsId: data.snsId,
+        code: code,
+        name: data.name,
+        email: data.email,
+        birthday: new Date(data.birthday),
+        phone: data.phone,
+        eventNofi: data.eventNofi
+      },
+      { transaction }
+    );
+
+    if (typeof profile === "string") {
+      createdUser = await createdUser.update(
+        {
+          profile: profile,
+          profileSize: 0,
+          profileType: MimeType.URL
+        },
+        { transaction }
+      );
+    } else {
+      const path = this.createPath(createdUser.userId, profile);
 
       createdUser = await createdUser.update(
         {
@@ -199,7 +235,7 @@ class UserService extends Service {
    * @returns Promise\<{@link User}\>
    */
   async updateWithProfile(transaction: Transaction | null, user: User, data: Partial<InferAttributes<User>>, profile: File): Promise<User> {
-    const path = this.createProfile(user.userId, profile);
+    const path = this.createPath(user.userId, profile);
     const updatedUser = await user.update(
       {
         ...data,
@@ -216,6 +252,7 @@ class UserService extends Service {
       mimetype: profile.mimetype,
       size: profile.size
     });
+
     return updatedUser;
   }
 
