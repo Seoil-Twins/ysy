@@ -11,7 +11,7 @@ export const albumAPI = {
     const resData = await API.get(`/album/${cup_id}/${album_id}`, data);
     return resData;
   },
-  postNewAlbum: async (cup_id: string, postData: string[]) => {
+  postNewAlbum: async (cup_id: string, postData: any) => {
     const data = await API.post(`/album/${cup_id}`, postData);
     return data;
   },
@@ -19,8 +19,9 @@ export const albumAPI = {
     const res = await API.post_formdata(`/album/${cup_id}/${album_id}`, data);
     return res;
   },
-  patchMergeAlbum: async (cup_id: string, data?: string[]) => {
-    const resData = await API.patch(`/album/merge/${cup_id}`, data);
+  postMergeAlbum: async (cup_id: string, data?: any) => {
+    console.log(data);
+    const resData = await API.post('/album/merge/', data);
     //   console.log('aasdasdas' + JSON.stringify(data));
     return resData;
   },
@@ -32,23 +33,26 @@ export const albumAPI = {
     const resData = await API.patch(`/album/${cup_id}/${album_id}/title`, data);
     return resData;
   },
-  patchRepImgAlbum: async (
-    cup_id: string,
-    album_id: number,
-    data?: FormData,
-  ) => {
+  patchRepImgAlbum: async (cup_id: string, album_id: number, data?: any) => {
     const resData = await API.patch_formdata(
       `/album/${cup_id}/${album_id}/thumbnail`,
       data,
     );
-    console.log(resData);
+    console.log('asdasdasdasd');
     return resData;
   },
-  deleteAlbum: async (cup_id: string, album_id: number[]) => {
-    const resData = await API.delete(`/album/${cup_id}/${album_id}`);
-    return resData;
+  deleteAlbum: async (cup_id: string, album_id: number[] | number) => {
+    if (Array.isArray(album_id)) {
+      for (const target_id of album_id) {
+        const resData = await API.delete(`/album/${cup_id}/${target_id}`);
+        console.log(resData);
+      }
+    } else {
+      const resData = await API.delete(`/album/${cup_id}/${album_id}`);
+      console.log(resData);
+    }
   },
-  deleteImage: async (cup_id: string, album_id: number, data: string[]) => {
+  deleteImage: async (cup_id: string, album_id: number, data: number[]) => {
     console.log(data);
     console.log(cup_id, album_id, data);
     const rData = await API.delete(`/album/${cup_id}/${album_id}/image`, {

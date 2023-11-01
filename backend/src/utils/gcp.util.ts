@@ -73,6 +73,7 @@ export const uploadFileWithGCP = async (file: UploadImageInfo): Promise<void> =>
     });
   } catch (error) {
     logger.error(`GCP Upload Error : ${JSON.stringify(error)}`);
+    console.log(error);
     throw error;
   }
 };

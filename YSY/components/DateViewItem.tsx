@@ -34,15 +34,16 @@ const DateViewItem: React.FC<DateViewItemProps> = ({
   }, 500);
 
   const emitDetail = () => {
-    onPressDetail(item.id);
+    const cid = parseInt(item.contentId, 10);
+    onPressDetail(cid);
   };
 
   return (
     <Pressable style={styles.container} onPress={emitDetail}>
       <ImageBackground
         source={
-          item.thumbnails[0]
-            ? { uri: item.thumbnails[0] }
+          item.thumbnails
+            ? { uri: item.thumbnails }
             : require('../assets/images/date_image.png')
         }
         style={styles.background}>

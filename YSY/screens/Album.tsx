@@ -28,11 +28,12 @@ import { AlbumTypes } from '../navigation/AlbumTypes';
 
 import RenderAlbumHeader from '../components/RenderAlbumHeader';
 import RenderAlbum from '../components/RenderAlbum';
-import { QueryClient, useQuery } from 'react-query';
+import { QueryClient } from 'react-query';
 import { userAPI } from '../apis/userAPI';
 import { albumAPI } from '../apis/albumAPI';
 
 const screenWidth = wp('100%');
+const IMG_BASE_URL = 'https://storage.googleapis.com/ysy-bucket/';
 
 const handleAddAlbum = async (newAlbumTitle: string) => {
   const userData = JSON.stringify(await userAPI.getUserMe()); // login 정보 가져오기
@@ -41,7 +42,8 @@ const handleAddAlbum = async (newAlbumTitle: string) => {
   const postData = { title: newAlbumTitle };
 
   try {
-    console.log(albumAPI.postNewAlbum(userParsedData.cupId, postData));
+    const res = await albumAPI.postNewAlbum(userParsedData.cupId, postData);
+    console.log(res);
   } catch (error) {
     console.log(error);
   }
@@ -93,7 +95,6 @@ export const Album = () => {
         'https://dummyimage.com/600x400/000/fff&text=Im+Dummy'; // 적절한 기본 이미지 URL을 설정하세요.
 
       setFoldersData(parsedData);
-      console.log(parsedData);
       const folderList = parsedData.albums.map(
         (album: {
           albumId: number;
@@ -103,7 +104,9 @@ export const Album = () => {
           createdTime: Date;
         }) => ({
           albumId: album.albumId,
-          thumbnail: album.thumbnail ? album.thumbnail : defaultThumbnail,
+          thumbnail: album.thumbnail
+            ? `${IMG_BASE_URL}${album.thumbnail}`
+            : defaultThumbnail,
           title: album.title,
           total: album.total,
           createdTime: album.createdTime,
@@ -272,19 +275,23 @@ export const Album = () => {
     // selectedAlbumNames와 NewAlbumName을 통해 제물들의 이미지들을 하나로 모은 테이블을 생성한는 sql을 날림.
     // selectedAlbum의 첫번째 인자가 머지의 주축이 되어야한다. 즉, 첫 번째 폴더의 이름을 mergeAlbumTitle로 바꾸고,
     // 타 앨범의 album_id를 첫번째 인자의 id로 바꾸어버리면 될 거 같다.
+    console.log('asdasdasdasdasdadasdasdasda==============');
     const album_id = seletedAlbumNames[0];
     const target_ids = seletedAlbumNames.slice(1);
 
-    const data = {
-      albumId: album_id,
-      targetIds: target_ids,
-      title: mergeAlbumTitle,
-    };
     try {
       const userData = JSON.stringify(await userAPI.getUserMe()); // login 정보 가져오기
 
       const userParsedData = JSON.parse(userData);
-      const res = await albumAPI.patchMergeAlbum(userParsedData.cupId, data);
+      console.log(userParsedData.cupId);
+      const data = {
+        albumId: album_id,
+        targetIds: target_ids,
+        title: mergeAlbumTitle,
+        cup_id: userParsedData.cupId,
+      };
+      console.log(data);
+      const res = await albumAPI.postMergeAlbum(userParsedData.cupId, data);
 
       getAlbumFolders('r');
     } catch (error) {

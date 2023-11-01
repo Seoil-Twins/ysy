@@ -7,6 +7,7 @@ import {
   Pressable,
   Platform,
   Dimensions,
+  _Image,
 } from 'react-native';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
 import ImageCropPicker, { ImageOrVideo } from 'react-native-image-crop-picker';
@@ -24,8 +25,18 @@ import DefaultPersonSVG from '../assets/icons/person.svg';
 import LoveSVG from '../assets/icons/small_love.svg';
 import CalendarSVG from '../assets/icons/calendar_lightgray.svg';
 import PickImageSVG from '../assets/icons/pick_image.svg';
+import { coupleAPI } from '../apis/coupleAPI';
+import { userAPI } from '../apis/userAPI';
 
 const { width, height } = Dimensions.get('window');
+const IMG_BASE_URL = 'https://storage.googleapis.com/ysy-bucket/';
+
+export interface File {
+  uri: string;
+  name: string;
+  size: number;
+  type: string;
+}
 
 const Home = () => {
   const [cupInfo, setCupInfo] = useState<Couple | undefined>(undefined);
@@ -36,44 +47,51 @@ const Home = () => {
   const [modalVisible, setModalVisible] = useState<boolean>(false);
 
   const getCoupleInfo = async () => {
-    const response: Couple = await {
-      cupId: 'gPz9fLmw',
-      cupDay: '2023-01-17',
-      title: '커플 제목2',
-      thumbnail: null,
-      createdTime: '2023-01-23T05:03:49.000Z',
+    const userData = JSON.stringify(await userAPI.getUserMe()); // login 정보 가져오기
+    const userParsedData = JSON.parse(userData);
+    const res: any = await coupleAPI.getCouple(userParsedData.cupId);
+    const response: Couple = {
+      cupId: res.cupId,
+      cupDay: res.cupDay,
+      title: '커플 제목',
+      thumbnail: res.thumbnail ? `${IMG_BASE_URL}${res.thumbnail}` : null,
+      createdTime: res.createdTime,
       users: [
         {
-          userId: 21,
-          cupId: 'gPz9fLmw',
-          snsId: '1001',
-          code: 'lEVDgJ',
-          name: '김승용10',
-          email: 'seungyong23@naver.com',
-          birthday: '2000-11-26',
-          phone: '01085297196',
-          profile:
-            'https://t1.daumcdn.net/friends/prod/editor/dc8b3d02-a15a-4afa-a88b-989cf2a50476.jpg',
-          primaryNofi: true,
-          dateNofi: false,
-          eventNofi: false,
+          userId: res.users[0].userId,
+          cupId: res.users[0].cupId,
+          snsId: res.users[0].snsId,
+          snsKind: res.users[0].snsKind,
+          code: res.users[0].code,
+          name: res.users[0].name,
+          email: res.users[0].email,
+          birthday: res.users[0].birthday,
+          phone: res.users[0].phone,
+          profile: res.users[0].profile ? res.users[0].profile : null,
+          // 'https://t1.daumcdn.net/friends/prod/editor/dc8b3d02-a15a-4afa-a88b-989cf2a50476.jpg',
+          primaryNofi: res.users[0].primaryNofi,
+          dateNofi: res.users[0].dateNofi,
+          eventNofi: res.users[0].eventNofi,
         },
         {
-          userId: 22,
-          cupId: 'gPz9fLmw',
-          snsId: '1001',
-          code: 'X8iTjE',
-          name: '김승용22',
-          email: 'seungyong20@naver.com',
-          birthday: '2000-11-26',
-          phone: '01085297194',
-          profile: null,
-          primaryNofi: true,
-          dateNofi: true,
-          eventNofi: false,
+          userId: res.users[1].userId,
+          cupId: res.users[1].cupId,
+          snsId: res.users[1].snsId,
+          snsKind: res.users[1].snsKind,
+          code: res.users[1].code,
+          name: res.users[1].name,
+          email: res.users[1].email,
+          birthday: res.users[1].birthday,
+          phone: res.users[1].phone,
+          profile: res.users[1].profile ? res.users[1].profile : null,
+          // 'https://t1.daumcdn.net/friends/prod/editor/dc8b3d02-a15a-4afa-a88b-989cf2a50476.jpg',
+          primaryNofi: res.users[1].primaryNofi,
+          dateNofi: res.users[1].dateNofi,
+          eventNofi: res.users[1].eventNofi,
         },
       ],
     };
+    console.log(response.thumbnail);
 
     setThumbnail(response.thumbnail);
     setCupDay(new Date(response.cupDay));
@@ -81,7 +99,7 @@ const Home = () => {
   };
 
   const getServerTime = async () => {
-    const serverTime = new Date('2023-07-26 15:55');
+    const serverTime = new Date();
     const response = new Date(
       `${serverTime.getFullYear()}-${
         serverTime.getMonth() + 1
@@ -124,27 +142,64 @@ const Home = () => {
     setDatePickerVisible(false);
   };
 
-  const updateCupDay = async (_date: Date) => {
+  const updateCupDay = async (_date: string) => {
     // 업데이트 커플 데이
-    const response = 201;
+    const userData = JSON.stringify(await userAPI.getUserMe()); // login 정보 가져오기
+    const userParsedData = JSON.parse(userData);
+    const data = { cupDay: _date };
+    const response = coupleAPI.patchCouple(userParsedData.cupId, data);
     return response;
   };
 
   const handleConfirm = async (date: Date) => {
-    const response = await updateCupDay(date);
-
-    if (response === 201) {
+    try {
+      console.log('date :: ' + date.getDate());
+      await updateCupDay(
+        `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate() + 1}`,
+      );
       setCupDay(date);
-    } else {
-      console.log('error');
+    } catch (error) {
+      console.log(error.response);
     }
 
     hideDatePicker();
   };
 
   const updateThumbnail = async (_image: ImageOrVideo | null) => {
-    const response = 201;
-    return response;
+    try {
+      const userData = JSON.stringify(await userAPI.getUserMe()); // login 정보 가져오기
+      const userParsedData = JSON.parse(userData);
+
+      console.log('-------------------------------------------');
+      if (_image) {
+        const splitedFilename = _image!.path.split('/');
+        const filename = _image!.path.split('/')[splitedFilename!.length - 1];
+
+        // uri, name, size, type 추가해서 formdata로 넘기면 알아서 buffer가 들어감.
+        // file 객체라는 것을 인지해서 buffer를 넣는지는 나도 잘 모르겠음.
+        const newFile: File = {
+          uri: _image!.path,
+          name: filename,
+          size: _image!.size,
+          type: _image!.mime,
+        };
+        const response = await coupleAPI.patchFormdataCouple(
+          userParsedData.cupId,
+          newFile,
+        );
+        console.log(response);
+      } else {
+        console.log('asdasd');
+        const response = await coupleAPI.patchFormdataCouple(
+          userParsedData.cupId,
+          null,
+        );
+        console.log('asdasd');
+        console.log(response);
+      }
+    } catch (error: any) {
+      console.log('error :: ' + error);
+    }
   };
 
   const showModal = async () => {

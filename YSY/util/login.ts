@@ -1,11 +1,20 @@
+import { authAPI } from '../apis/authAPI';
+
 export interface LoginOptions {
   snsId: string;
+  snsKind: string;
   name: string | null;
   email: string | null;
   phone: string | null;
   birthday: string | null;
-  profile: string | null;
+  profile?: string | null;
   eventNofi: boolean;
+}
+
+export interface Login {
+  snsId: string;
+  snsKind: string;
+  email: string | null;
 }
 
 export interface AppToken {
@@ -28,7 +37,6 @@ export const verifyLoginData = (data: LoginOptions): boolean => {
     !data.name ||
     !data.phone ||
     !data.birthday ||
-    !data.profile ||
     birthdays?.length !== 3
   ) {
     return false;
@@ -39,15 +47,10 @@ export const verifyLoginData = (data: LoginOptions): boolean => {
   return true;
 };
 
-export const appLogin = async (data: LoginOptions): Promise<AppToken> => {
+export const appLogin = async (data: Login): Promise<AppToken> => {
   console.log(data);
 
-  const token: AppToken = {
-    accessToken:
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjI1LCJjdXBJZCI6bnVsbCwicm9sZSI6MSwiaWF0IjoxNjgyOTI1MzUzLCJleHAiOjE2ODU1MTczNTMsImlzcyI6InlzeXVzZXIifQ.QwbRdP-l9ZGdx2lPWSPWDkKDEuP0CbxP1seHkYgOLVs',
-    refreshToken:
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjU1LCJjdXBJZCI6IjViOGhob3RmIiwicm9sZSI6NCwiaWF0IjoxNjc3Mzg3MjIwLCJleHAiOjE2Nzk5NzkyMjAsImlzcyI6InlzeXVzZXIifQ.pLz3RtqGVj49LR_FyOZa4nozxiaqMeYvhM5IL0fnXTI',
-  };
+  const token: AppToken = authAPI.login(data);
 
   return token;
 };
