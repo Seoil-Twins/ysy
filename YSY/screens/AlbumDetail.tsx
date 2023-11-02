@@ -312,7 +312,6 @@ export const AlbumDetail = () => {
     const data = JSON.stringify(
       await albumAPI.patchTitleAlbum(cupId, albumId, { title: changeTitle }),
     );
-    console.log(data);
     setIsModNameVisible(false);
   };
 

@@ -9,6 +9,7 @@ export const albumAPI = {
   },
   getAlbumImages: async (cup_id: string, album_id: number, data?: string[]) => {
     const resData = await API.get(`/album/${cup_id}/${album_id}`, data);
+    console.log(resData);
     return resData;
   },
   postNewAlbum: async (cup_id: string, postData: any) => {

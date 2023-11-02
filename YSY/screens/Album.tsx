@@ -32,22 +32,11 @@ import { QueryClient } from 'react-query';
 import { userAPI } from '../apis/userAPI';
 import { albumAPI } from '../apis/albumAPI';
 
+import NoItem from '../components/NoItem';
+import AlbumNoneSVG from '../assets/icons/album_none.svg';
+
 const screenWidth = wp('100%');
 const IMG_BASE_URL = 'https://storage.googleapis.com/ysy-bucket/';
-
-const handleAddAlbum = async (newAlbumTitle: string) => {
-  const userData = JSON.stringify(await userAPI.getUserMe()); // login 정보 가져오기
-
-  const userParsedData = JSON.parse(userData);
-  const postData = { title: newAlbumTitle };
-
-  try {
-    const res = await albumAPI.postNewAlbum(userParsedData.cupId, postData);
-    console.log(res);
-  } catch (error) {
-    console.log(error);
-  }
-};
 
 export const Album = () => {
   const [isAddModalVisible, setIsAddModalVisible] = useState(false);
@@ -62,13 +51,14 @@ export const Album = () => {
 
   const [selectedAlbums, setSelectedAlbums] = useState<string[]>([]);
   const [selectedAlbumIds, setSelectedAlbumIds] = useState<number[]>([]);
+  const [selectedAlbumTitle, setSelectedAlbumTitle] = useState('');
   const [albumImages, setAlbumImages] = useState<string[]>([]);
   const [dummyFolder, setDummyFolder] = useState<string[]>([]);
   const [foldersData, setFoldersData] = useState<string[]>([]);
 
-  const navigation = useNavigation<StackNavigationProp<AlbumTypes>>();
+  const [cupId, setCupId] = useState('');
 
-  const queryClient = new QueryClient();
+  const navigation = useNavigation<StackNavigationProp<AlbumTypes>>();
 
   const isAlbum = useAppSelector(
     (state: RootState) => state.albumStatus.isAlbum,
@@ -90,6 +80,7 @@ export const Album = () => {
         await albumAPI.getAlbumFolder(userParsedData.cupId, sort),
       );
       const parsedData = JSON.parse(data);
+      setCupId(parsedData.cupId);
 
       const defaultThumbnail =
         'https://dummyimage.com/600x400/000/fff&text=Im+Dummy'; // 적절한 기본 이미지 URL을 설정하세요.
@@ -118,6 +109,21 @@ export const Album = () => {
     }
   };
 
+  const handleAddAlbum = async (newAlbumTitle: string) => {
+    const userData = JSON.stringify(await userAPI.getUserMe()); // login 정보 가져오기
+
+    const userParsedData = JSON.parse(userData);
+    const postData = { title: newAlbumTitle };
+
+    try {
+      const res = await albumAPI.postNewAlbum(userParsedData.cupId, postData);
+      await getAlbumFolders('r');
+      console.log(res);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
   useEffect(() => {
     getAlbumFolders(); // f
   }, []);
@@ -136,6 +142,7 @@ export const Album = () => {
   useFocusEffect(
     React.useCallback(() => {
       BackHandler.addEventListener('hardwareBackPress', backAction);
+      getAlbumFolders('r');
       return () => {
         // 화면 이동 시 핸들러 언마운트
         BackHandler.removeEventListener('hardwareBackPress', backAction);
@@ -207,8 +214,13 @@ export const Album = () => {
           return [...prevSelectedAlbums, item.albumId];
         }
       });
-      console.log(selectedAlbumIds);
-      console.log(selectedAlbumIds);
+
+      if (selectedAlbumIds[0]) {
+        const data = dummyFolder.filter(
+          item => item.albumId === selectedAlbumIds[0],
+        );
+        setSelectedAlbumTitle(data[0].title);
+      }
     } else {
       // 다중 선택 모드가 아닐 때는 단일 앨범을 선택하는 로직
       if (albumImages.length <= 0) {
@@ -262,6 +274,7 @@ export const Album = () => {
 
   const openMergeNameModal = () => {
     closeMergeModal();
+    setMergeAlbumTitle(selectedAlbumTitle);
     setIsMergeNameVisible(true);
   };
 
@@ -275,7 +288,6 @@ export const Album = () => {
     // selectedAlbumNames와 NewAlbumName을 통해 제물들의 이미지들을 하나로 모은 테이블을 생성한는 sql을 날림.
     // selectedAlbum의 첫번째 인자가 머지의 주축이 되어야한다. 즉, 첫 번째 폴더의 이름을 mergeAlbumTitle로 바꾸고,
     // 타 앨범의 album_id를 첫번째 인자의 id로 바꾸어버리면 될 거 같다.
-    console.log('asdasdasdasdasdadasdasdasda==============');
     const album_id = seletedAlbumNames[0];
     const target_ids = seletedAlbumNames.slice(1);
 
@@ -290,10 +302,8 @@ export const Album = () => {
         title: mergeAlbumTitle,
         cup_id: userParsedData.cupId,
       };
-      console.log(data);
-      const res = await albumAPI.postMergeAlbum(userParsedData.cupId, data);
-
-      getAlbumFolders('r');
+      await albumAPI.postMergeAlbum(userParsedData.cupId, data);
+      await getAlbumFolders('r');
     } catch (error) {
       console.log('patch error');
       console.log(error);
@@ -315,6 +325,8 @@ export const Album = () => {
         userParsedData.cupId,
         selectedAlbumIds,
       );
+      await getAlbumFolders('r');
+      closeDeleteModal();
       setSelectedAlbums([]);
       setSelectedAlbumIds([]);
 
@@ -372,19 +384,29 @@ export const Album = () => {
             />
           }
         </View>
+        {dummyFolder.length > 0 ? (
+          <FlatList
+            data={dummyFolder}
+            keyExtractor={(item, index) => String(index)}
+            renderItem={({ item }) => (
+              <RenderAlbum
+                item={item}
+                selectedAlbums={selectedAlbumIds}
+                handleAlbumPress={() => handleAlbumPress(item)}
+                handleLongPress={handleLongPress}
+              />
+            )}
+          />
+        ) : (
+          <NoItem
+            icon={AlbumNoneSVG}
+            descriptions={[
+              '이런, 아직 앨범이 없어요.',
+              '소중한 추억을 담을 앨범을 만들어보세요.',
+            ]}
+          />
+        )}
 
-        <FlatList
-          data={dummyFolder}
-          keyExtractor={(item, index) => String(index)}
-          renderItem={({ item }) => (
-            <RenderAlbum
-              item={item}
-              selectedAlbums={selectedAlbumIds}
-              handleAlbumPress={() => handleAlbumPress(item)}
-              handleLongPress={handleLongPress}
-            />
-          )}
-        />
         <View style={styles.container}>
           <TouchableOpacity
             style={styles.button}
@@ -638,7 +660,7 @@ export const Album = () => {
                 onChangeText={text => {
                   setMergeAlbumTitle(text);
                 }}
-                defaultValue={'default'}
+                defaultValue={selectedAlbumTitle}
               />
               <View style={styles.buttonContainer}>
                 <Text
