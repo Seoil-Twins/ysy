@@ -19,11 +19,13 @@ import ForbiddenError from "../errors/forbidden.error.js";
 import UserController from "../controllers/user.controller.js";
 import UserService from "../services/user.service.js";
 import UserRoleService from "../services/userRole.service.js";
+import CoupleService from "../services/couple.service.js";
 
 const router: Router = express.Router();
 const userService = new UserService();
 const userRoleService = new UserRoleService();
-const userController = new UserController(userService, userRoleService);
+const coupleService = new CoupleService();
+const userController = new UserController(userService, userRoleService, coupleService);
 
 const phonePattern = /^[0-9]+$/;
 const signupSchema: joi.Schema = joi.object({
@@ -174,9 +176,7 @@ router.patch("/nofi/:user_id", async (req: Request, res: Response, next: NextFun
 // 유저 삭제
 router.delete("/:user_id", async (req: Request, res: Response, next: NextFunction) => {
   try {
-    // Couple 정보를 삭제 후 요청
-    if (req.cupId) throw new BadRequestError("You must first delete couple.");
-    else if (Number(req.params.user_id) != req.userId) throw new ForbiddenError("You don't same token user ID and path parameter user ID");
+    if (Number(req.params.user_id) != req.userId) throw new ForbiddenError("You don't same token user ID and path parameter user ID");
 
     await userController.deleteUser(req.userId!);
 

@@ -10,21 +10,26 @@ import { CreateUser, UpdateUser, ResponseUser, UpdateUserNotification } from "..
 
 import UserService from "../services/user.service.js";
 import UserRoleService from "../services/userRole.service.js";
+import CoupleService from "../services/couple.service.js";
 
 import NotFoundError from "../errors/notFound.error.js";
 import UnauthorizedError from "../errors/unauthorized.error.js";
 import ForbiddenError from "../errors/forbidden.error.js";
 import ConflictError from "../errors/conflict.error.js";
+
 import { File, MimeType, UploadImageInfo, deleteFileWithGCP, getFileBufferWithGCP, uploadFileWithGCP } from "../utils/gcp.util.js";
+import { Couple } from "../models/couple.model.js";
 
 class UserController {
   private ERROR_LOCATION_PREFIX = "user";
   private userService: UserService;
   private userRoleService: UserRoleService;
+  private coupleService: CoupleService;
 
-  constructor(userService: UserService, userRoleService: UserRoleService) {
+  constructor(userService: UserService, userRoleService: UserRoleService, coupleService: CoupleService) {
     this.userService = userService;
     this.userRoleService = userRoleService;
+    this.coupleService = coupleService;
   }
 
   async getUser(userId: number): Promise<ResponseUser> {
@@ -178,13 +183,25 @@ class UserController {
   async deleteUser(userId: number): Promise<void> {
     let transaction: Transaction | null = null;
 
-    const user: User | null = await this.userService.select({ userId });
+    const user: User | null = await this.userService.select(
+      { userId },
+      {
+        model: Couple,
+        as: "couple"
+      }
+    );
     if (!user) throw new NotFoundError("Not found user using user ID");
     else if (user.deleted) return;
 
     try {
       transaction = await sequelize.transaction();
+
+      if (user.cupId && user.couple) {
+        await this.coupleService.delete(transaction, user.couple);
+      }
+
       await this.userService.delete(transaction, user);
+
       await transaction.commit();
     } catch (error) {
       if (transaction) await transaction.rollback();
