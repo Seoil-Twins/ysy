@@ -85,29 +85,30 @@ const DateDetail = () => {
 
   const addHistory = useCallback(async () => {
     console.log(
-      '=================================================================================3호기',
+      '내마음속에 저장 =========================================1',
+      detailId,
     );
     const historys = await getObjectData('dateHistory');
-    console.log(
-      '=================================================================================3.5호기',
-    );
-
     if (historys) {
-      console.log(
-        '=================================================================================3.6호기',
-      );
       const newItems = [...historys];
-      newItems.push(detailId);
+
+      const index = newItems.indexOf(detailId); // 새로운 11의 인덱스를 찾음
+      if (index !== -1) {
+        // 새로운 11이 이미 배열에 존재하면 제거
+        newItems.splice(index, 1);
+      }
+
+      if (newItems.length > 20) {
+        newItems.pop();
+      }
+
+      newItems.unshift(detailId);
       await storeObjectData('dateHistory', newItems);
+      console.log('내마음속에 저장 =========================================2');
     } else {
-      console.log(
-        '=================================================================================3.6호기',
-      );
       await storeObjectData('dateHistory', [detailId]);
+      console.log('내마음속에 저장 =========================================3');
     }
-    console.log(
-      '=================================================================================4호기',
-    );
   }, [detailId]);
 
   const rotateAnimation = () => {
@@ -165,10 +166,11 @@ const DateDetail = () => {
       },
     ];
 
+    console.log(dateInfo);
     await KakaoShareLink.sendFeed({
       content: {
         title: dateInfo.title,
-        imageUrl: dateInfo.thumbnails[0],
+        imageUrl: dateInfo.thumbnails,
         link: {
           androidExecutionParams: androidExecutionParams,
           iosExecutionParams: iosExecutionParams,

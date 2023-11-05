@@ -14,12 +14,24 @@ import { RequestFavorite } from "../types/favorite.type.js";
 
 import BadRequestError from "../errors/badRequest.error.js";
 import UnsupportedMediaTypeError from "../errors/unsupportedMediaType.error.js";
+import { Favorite } from "../models/favorite.model.js";
 
 const router: Router = express.Router();
 
 const favoriteService: FavoriteService = new FavoriteService();
 const datePlaceService: DatePlaceService = new DatePlaceService();
 const favoriteController: FavoriteController = new FavoriteController(favoriteService, datePlaceService);
+
+router.get("/", async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const results: Favorite[] | null = await favoriteController.getFavorites();
+
+    logger.debug(`Response Data : ${JSON.stringify(results)}`);
+    return res.status(STATUS_CODE.OK).json(results);
+  } catch (error) {
+    next(error);
+  }
+});
 
 router.patch("/:content_id/:content_type_id", async (req: Request, res: Response, next: NextFunction) => {
   const contentType: ContentType = req.contentType;
@@ -38,7 +50,7 @@ router.patch("/:content_id/:content_type_id", async (req: Request, res: Response
       contentTypeId: contentTypeId
     };
 
-    if (isFavorite) {
+    if (!isFavorite) {
       await favoriteController.addFavorite(data);
 
       logger.debug(`Success add favorite`);

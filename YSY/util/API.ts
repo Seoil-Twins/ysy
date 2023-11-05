@@ -106,24 +106,18 @@ export const API = {
     }
   },
   patch: async (url: string, data?: any) => {
+    console.log(url);
+    console.log(JSON.stringify(apiClient));
     const response = await apiClient
-      .patch(url, data, {
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      })
+      .patch(url, data, { headers: { 'Content-Type': 'application/json' } })
       .then(res => {
         return res.data;
       });
-    console.log('아아아아아');
     return response;
   },
   patch_formdata: async (url: string, data?: any, fileParamName?: string) => {
     try {
       const formData = new FormData();
-      console.log(url);
-      console.log(data);
-      console.log(fileParamName);
       if (!fileParamName) {
         fileParamName = 'thumbnail';
       }
@@ -134,8 +128,6 @@ export const API = {
           size: data.size,
           type: data.type,
         });
-        console.log('아아아아아1');
-        console.log(formData);
 
         const response = await apiClient.patch(url, formData, {
           data: formData,
@@ -143,7 +135,6 @@ export const API = {
             'Content-Type': 'multipart/form-data',
           },
         });
-        console.log('아아아아아2');
         return response;
       } else {
         const response = await apiClient

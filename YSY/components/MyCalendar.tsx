@@ -144,17 +144,33 @@ const MyCalendar: React.FC<CalendarProps> = ({ onDateSelect }) => {
     const newScheduleList = [];
 
     for (const item of response) {
+      let diff = new Date(item.toDate) - new Date(item.fromDate);
+      const day = Math.floor(diff / (1000 * 60 * 60 * 24));
+      diff = Math.floor(diff % (1000 * 60 * 60 * 24));
+      const hour = Math.floor(diff / (1000 * 60 * 60));
+      diff = Math.floor(diff % (1000 * 60 * 60));
+      const min = Math.floor(diff / (1000 * 60));
+
+      let hl;
+      if (day > 0) {
+        hl = `${day}일 ${hour}시간 ${min}분`;
+      } else if (hour <= 0) {
+        hl = `${min}분`;
+      } else {
+        hl = `${hour}시간 ${min}분`;
+      }
       const newScheduleItem = {
         calendarId: item.calendarId,
         startDate: item.fromDate.slice(0, 10),
         endDate: item.toDate.slice(0, 10),
         startTime: item.fromDate.slice(11, 16),
         endTime: item.toDate.slice(11, 16),
-        hl: '20m',
+        hl: hl,
         title: item.title,
         desc: item.description,
         color: item.color,
       };
+
       newScheduleList.push(newScheduleItem);
     }
 
@@ -297,6 +313,7 @@ const MyCalendar: React.FC<CalendarProps> = ({ onDateSelect }) => {
           data={filtedSchedule}
           keyExtractor={(item, index) => String(index)}
           renderItem={({ item }) => RenderBar(item, day)}
+          scrollEnabled={false}
         />
       </View>
     );
@@ -361,9 +378,8 @@ const MyCalendar: React.FC<CalendarProps> = ({ onDateSelect }) => {
           <View style={{ flexDirection: 'row', alignItems: 'center' }}>
             {drawCircle(schedule.color)}
             <Pressable
-              onPress={() => {
+              onLongPress={() => {
                 calendarAPI.deleteSchedule(cupId, schedule.calendarId);
-                setShowDetailView(false);
                 getSchedule();
                 getMonthDates(currentYear, currentMonth);
               }}>
@@ -442,6 +458,8 @@ const MyCalendar: React.FC<CalendarProps> = ({ onDateSelect }) => {
     }
     console.log('swipe');
   };
+
+  const handleLongPress = (id: string) => {};
 
   return (
     <React.Fragment>
@@ -663,7 +681,8 @@ const MyCalendar: React.FC<CalendarProps> = ({ onDateSelect }) => {
                   onInputChange={handleSD}
                   // maximumDate2={false}
                   placeholder={
-                    selectedDate.toISOString().slice(0, 10) + ' 07:30 AM'
+                    '시작 날짜'
+                    // selectedDate.toISOString().slice(0, 10) + ' 07:30 AM'
                   }
                 />
               </View>
@@ -671,8 +690,8 @@ const MyCalendar: React.FC<CalendarProps> = ({ onDateSelect }) => {
                 <DatePicker
                   onInputChange={handleED}
                   mode={'datetime'}
-                  // maximumDate2={false}
-                  minimumDateValue={selectedDate}
+                  // minimumDate={true}
+                  minimumDateValue={new Date(inputStartDate)}
                   placeholder={'종료 날짜'}
                 />
               </View>
@@ -683,7 +702,8 @@ const MyCalendar: React.FC<CalendarProps> = ({ onDateSelect }) => {
                 }}>
                 <ColorPicker
                   onColorChange={handleColor}
-                  placeholder={'#FFFFFF'}
+                  placeholder={'#00FF00'}
+                  defaultValue="#00FF00"
                 />
               </View>
             </View>
@@ -733,7 +753,13 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-start',
   },
   selectedDateCell: {
-    borderWidth: 1,
+    // shadowColor: '#000',
+    // shadowOffset: { width: 0, height: 2 },
+    // shadowOpacity: 0.5,
+    // shadowRadius: 3.84,
+    borderLeftWidth: 1,
+    borderRightWidth: 1,
+    borderBottomWidth: 2,
     borderRadius: 10,
     borderColor: 'gray',
   },

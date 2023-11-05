@@ -48,7 +48,9 @@ const Home = () => {
   const getCoupleInfo = async () => {
     const userData = JSON.stringify(await userAPI.getUserMe()); // login 정보 가져오기
     const userParsedData = JSON.parse(userData);
+    console.log('==============', userParsedData);
     const res: any = await coupleAPI.getCouple(userParsedData.cupId);
+    console.log(res);
     const response: Couple = {
       cupId: res.cupId,
       cupDay: res.cupDay,

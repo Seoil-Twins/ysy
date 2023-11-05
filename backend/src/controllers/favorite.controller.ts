@@ -23,6 +23,11 @@ class FavoriteController {
     this.datePlaceService = datePlaceService;
   }
 
+  async getFavorites(): Promise<Favorite[] | null> {
+    const response: Favorite[] | null = await this.favoriteService.selectAll();
+    return response;
+  }
+
   async addFavorite(data: RequestFavorite): Promise<void> {
     let transaction: Transaction | undefined = undefined;
 
@@ -35,7 +40,7 @@ class FavoriteController {
       contentTypeId: data.contentTypeId
     });
     if (favorite) return;
-
+    console.log("cecekckcasdlkcasjdlksajkldjsadsad12312312312321");
     try {
       transaction = await sequelize.transaction();
 

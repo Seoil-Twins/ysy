@@ -9,6 +9,9 @@ import { globalStyles } from '../style/global';
 import { Notice as NoticeType } from '../types/noitce';
 import { noticeAPI } from '../apis/noticeAPI';
 
+import NoItem from '../components/NoItem';
+import SearchSVG from '../assets/icons/search.svg';
+
 const fetchNotice = async () => {
   const data = { count: 10, page: 1 };
   const res = await noticeAPI.getNotice(data);
@@ -53,20 +56,30 @@ const Notice = () => {
   return (
     <View style={styles.container}>
       <BackHeader style={globalStyles.plpr20} />
-      <ScrollView
-        horizontal={false}
-        showsHorizontalScrollIndicator={false}
-        showsVerticalScrollIndicator={false}>
-        {notices &&
-          notices.map((notice: any) => (
-            <NoticeAccord
-              key={notice.noticeId}
-              title={notice.title}
-              content={notice.contents}
-              createdTime={notice.createdTime}
-            />
-          ))}
-      </ScrollView>
+      {notices.length > 0 ? (
+        <ScrollView
+          horizontal={false}
+          showsHorizontalScrollIndicator={false}
+          showsVerticalScrollIndicator={false}>
+          {notices &&
+            notices.map((notice: any) => (
+              <NoticeAccord
+                key={notice.noticeId}
+                title={notice.title}
+                content={notice.contents}
+                createdTime={notice.createdTime}
+              />
+            ))}
+        </ScrollView>
+      ) : (
+        <NoItem
+          icon={SearchSVG}
+          descriptions={[
+            '이런, 아직 공지가 없어요.',
+            '금방 새로운 소식으로 찾아올게요!',
+          ]}
+        />
+      )}
     </View>
   );
 };

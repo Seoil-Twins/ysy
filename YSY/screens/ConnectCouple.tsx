@@ -16,13 +16,14 @@ import CustomText from '../components/CustomText';
 
 import { TutorialNavType } from '../navigation/NavTypes';
 
-import { getSecureValue } from '../util/jwt';
+import { getSecureValue, setSecureValue } from '../util/jwt';
 import { useAppDispatch } from '../redux/hooks';
 import { login } from '../features/loginStatusSlice';
 import { getStringData, storeStringData } from '../util/asyncStorage';
 
 import { coupleAPI } from '../apis/coupleAPI';
-import { AppToken, appLogin } from '../util/login';
+import { AppToken, LoginOptions, appLogin } from '../util/login';
+import { userAPI } from '../apis/userAPI';
 
 const ConnectCouple = () => {
   const navigation = useNavigation<StackNavigationProp<TutorialNavType>>();
@@ -111,6 +112,26 @@ const ConnectCouple = () => {
 
     const result = await coupleAPI.postNewCouple(data);
     console.log(JSON.stringify(result));
+
+    const userData = JSON.stringify(await userAPI.getUserMe()); // login 정보 가져오기
+    const userParsedData = JSON.parse(userData);
+
+    const userTokenData: LoginOptions = {
+      snsId: userParsedData.snsId,
+      snsKind: userParsedData.snsKind,
+      name: userParsedData.name,
+      email: userParsedData.email,
+      phone: userParsedData.phone,
+      profile: userParsedData.profile,
+      birthday: userParsedData.birthday,
+      eventNofi: userParsedData.eventNofi,
+    };
+
+    const token: AppToken = await appLogin(userTokenData);
+
+    await setSecureValue('accessToken', token.accessToken);
+    await setSecureValue('refreshToken', token.refreshToken);
+    await storeStringData('accessToken', `Bearer ${token.accessToken}`);
 
     if (params.loginOption) {
       console.log('new Token');
