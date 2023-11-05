@@ -38,8 +38,7 @@ router.use("/inquiry", checkContentType, authMiddleware, inquireRouter);
 router.use("/notice", authMiddleware, noticeRouter);
 router.use("/date-place", authMiddleware, datePlaceRouter);
 router.use("/date-place/views", authMiddleware, datePlaceViewRouter);
-router.use("/favorite", authMiddleware, favoriteRouter);
-// router.use("/favorite", checkContentType, authMiddleware, favoriteRouter);
+router.use("/favorite", checkContentType, authMiddleware, favoriteRouter);
 router.use("/region-code", authMiddleware, regionCodeRouter);
 router.use("/content-type", authMiddleware, contentTypeRouter);
 

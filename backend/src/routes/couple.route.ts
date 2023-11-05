@@ -45,8 +45,6 @@ const upload = multerUpload.single(fileParamName);
 router.get("/:cup_id", async (req: Request, res: Response, next: NextFunction) => {
   try {
     const cupId: string | null = req.cupId;
-    console.log(req.cupId);
-    console.log(req.params.cup_id);
 
     if (!cupId) throw new ForbiddenError("You must request couple ID");
     else if (cupId !== req.params.cup_id) throw new ForbiddenError("You don't same token couple ID and path parameter couple ID");

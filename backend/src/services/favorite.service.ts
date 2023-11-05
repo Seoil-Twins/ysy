@@ -9,11 +9,6 @@ class FavoriteService extends Service {
     throw new Error("Method not implemented.");
   }
 
-  async selectAll(): Promise<Favorite[] | null> {
-    const favorite: Favorite[] | null = await Favorite.findAll();
-    return favorite;
-  }
-
   async select(where: WhereOptions<Favorite>): Promise<Favorite | null> {
     const favorite: Favorite | null = await Favorite.findOne({ where });
     return favorite;
