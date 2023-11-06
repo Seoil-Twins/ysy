@@ -6,6 +6,7 @@ import {
   Pressable,
   FlatList,
   Modal,
+  TouchableWithoutFeedback,
 } from 'react-native';
 import { isSameDay } from 'date-fns';
 import {
@@ -65,6 +66,8 @@ const MyCalendar: React.FC<CalendarProps> = ({ onDateSelect }) => {
   const [inputEndDate, setInputEndDate] = useState('');
   const [inputColor, setInputColor] = useState('');
   const [isAdd, setIsAdd] = useState(false);
+  const [isDeleteModal, setIsDeleteModal] = useState(false);
+  const [deleteSchedule, setDeleteSchedule] = useState('');
   const [swipeStart, setSwipeStart] = useState(0);
   const [schFlag, setSchFlag] = useState(true);
 
@@ -363,7 +366,7 @@ const MyCalendar: React.FC<CalendarProps> = ({ onDateSelect }) => {
             justifyContent: 'center',
           }}>
           <Text style={{ fontSize: 18 }}>{schedule.startTime}</Text>
-          <Text>{schedule.hl}</Text>
+          <Text style={{ fontSize: 12 }}>{schedule.hl}</Text>
         </View>
         <View
           style={{
@@ -379,9 +382,8 @@ const MyCalendar: React.FC<CalendarProps> = ({ onDateSelect }) => {
             {drawCircle(schedule.color)}
             <Pressable
               onLongPress={() => {
-                calendarAPI.deleteSchedule(cupId, schedule.calendarId);
-                getSchedule();
-                getMonthDates(currentYear, currentMonth);
+                setIsDeleteModal(true);
+                setDeleteSchedule(schedule.calendarId);
               }}>
               <Text style={{ fontSize: 18, justifyContent: 'center' }}>
                 {schedule.title}
@@ -709,6 +711,57 @@ const MyCalendar: React.FC<CalendarProps> = ({ onDateSelect }) => {
             </View>
           </View>
         </View>
+      </Modal>
+
+      <Modal // 스케줄 삭제
+        visible={isDeleteModal}
+        animationType="slide"
+        transparent={true}>
+        <TouchableWithoutFeedback
+          onPress={() => {
+            setIsDeleteModal(false);
+          }}>
+          <View
+            style={{
+              flex: 1,
+              justifyContent: 'flex-end',
+              alignItems: 'center',
+              backgroundColor: 'rgba(0, 0, 0, 0.0)',
+            }}>
+            <View
+              style={{
+                backgroundColor: 'lightgray',
+                width: '100%',
+                padding: 20,
+                borderRadius: 15,
+                borderColor: 'black',
+              }}>
+              <Text style={{ textAlign: 'center' }}>
+                해당 스케줄을 삭제하시겠습니까?
+              </Text>
+              <View
+                style={{
+                  flexDirection: 'row',
+                  justifyContent: 'space-evenly',
+                  marginTop: 20,
+                }}>
+                <Text onPress={() => setIsDeleteModal(false)}>취소</Text>
+                <Text>|</Text>
+                <Text
+                  onPress={async () => {
+                    await calendarAPI.deleteSchedule(cupId, deleteSchedule);
+                    await getMonthDates(currentYear, currentMonth);
+                    await getSchedule();
+                    setIsDeleteModal(false);
+                    setShowDetailView(!showDetailView);
+                    setDateCellFlex(!dateCellFlex);
+                  }}>
+                  삭제
+                </Text>
+              </View>
+            </View>
+          </View>
+        </TouchableWithoutFeedback>
       </Modal>
     </React.Fragment>
   );

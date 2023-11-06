@@ -204,7 +204,7 @@ export const AlbumDetail = () => {
     // 모의 API 호출 또는 기타 데이터 로딩 로직 구현
     // 이 예시에서는 setTimeout을 사용하여 1초 후에 새로운 데이터를 추가로 로딩합니다.
     setTimeout(async () => {
-      const newData = await loadImageFromDB(albumId, 40);
+      await loadImageFromDB(albumId, 40);
       // setAlbumImages(prevData => [...prevData, ...newData]);
       setIsLoading(false);
     }, 1000);

@@ -244,6 +244,11 @@ const DateDetail = () => {
               </View>
             )}
           /> */}
+
+          <Image
+            source={{ uri: dateInfo.thumbnails }}
+            style={{ width: width, height: (width / 2) * 1.2 }}
+          />
           <View style={[globalStyles.plpr20, styles.contentBox]}>
             <View style={styles.titleBox}>
               <CustomText size={24} weight="medium">
