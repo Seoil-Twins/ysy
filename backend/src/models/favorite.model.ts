@@ -9,6 +9,8 @@ import { DatePlace } from "./datePlace.model.js";
 export class Favorite extends Model<InferAttributes<Favorite>, InferCreationAttributes<Favorite>> {
   /** If you use include ContentType, You can use couple field. */
   declare contentType?: NonAttribute<ContentType>;
+  /** If you use include DatePlace, You can use couple field. */
+  declare datePlace?: NonAttribute<DatePlace>;
 
   declare favoriteId: CreationOptional<number>;
   declare userId: number;
