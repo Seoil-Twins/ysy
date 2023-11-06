@@ -14,6 +14,7 @@ export const albumAPI = {
   },
   postNewAlbum: async (cup_id: string, postData: any) => {
     const data = await API.post(`/album/${cup_id}`, postData);
+
     return data;
   },
   postNewImage: async (cup_id: string, album_id: number, data: any) => {

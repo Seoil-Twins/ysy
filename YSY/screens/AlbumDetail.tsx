@@ -236,7 +236,32 @@ export const AlbumDetail = () => {
             name: response.assets[0].fileName,
           };
           const apiRes = await albumAPI.postNewImage(cupId, albumId, newFile);
-          console.log(apiRes);
+          console.log(JSON.stringify(apiRes));
+          const ress = await albumAPI.getAlbumImages(cupId, albumId, {
+            page: 1,
+            count: 1,
+            sort: 'r',
+          });
+          const parsedData = JSON.stringify(ress.images[0]);
+
+          const imageList: {
+            albumImageId: number;
+            size: number;
+            type: string;
+            path: string;
+            createdTime: Date;
+          } = {
+            albumImageId: parsedData.albumImageId,
+            size: parsedData.size,
+            type: parsedData.type,
+            path: newFile.uri,
+            createdTime: parsedData.createdTime,
+          };
+
+          await albumImages.unshift(imageList);
+          setAlbumImages(prev => {
+            return [...prev];
+          });
         }
       }
     });
