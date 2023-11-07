@@ -11,6 +11,7 @@ import ImagePicker from '../components/ImagePicker';
 
 import { globalStyles } from '../style/global';
 import { SettingsNavType } from '../navigation/NavTypes';
+import { inquiryAPI } from '../apis/inquiryAPI';
 
 const descriptions = [
   '불편하신 또는 버그 등을',
@@ -20,10 +21,30 @@ const descriptions = [
 const fetchAddInquiry = async (
   title: string,
   description: string,
-  images: ImageOrVideo | ImageOrVideo[] | null,
+  images: ImageOrVideo[] | null,
 ) => {
-  console.log(title, description);
-  console.log(images);
+  const imageList: any[] = [];
+  const date = new Date();
+
+  if (images) {
+    for (const image of images) {
+      const imageFile = {
+        uri: image.path,
+        name: `profile-${date.getMilliseconds()}`,
+        size: image.size,
+        type: image.mime,
+      };
+      imageList.push(imageFile);
+    }
+
+    const dataJson = {
+      title: title,
+      contents: description,
+      images: imageList,
+    };
+
+    await inquiryAPI.postFormInquiry(dataJson);
+  }
 
   const response = {
     statusCode: 201,
@@ -135,6 +156,7 @@ const Inquiry = () => {
           placeholder="20자 이상의 설명을 입력해주세요."
           onInputChange={changeDescription}
           multipleLine={true}
+          textAlignVertical="top"
           isError={isErrorDescription}
           errorMessage={errorMsgDescription}
         />

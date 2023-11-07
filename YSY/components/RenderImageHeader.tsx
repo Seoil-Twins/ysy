@@ -33,10 +33,8 @@ const RenderImageHeader: React.FC<RenderImageHeaderProps> = ({
     (state: RootState) => state.imageStatus.isImage,
   );
 
-  console.log('1');
   if (isImage) {
     const numSelected = selectedImages.length;
-    console.log('2');
     return (
       <View>
         <TouchableOpacity onPress={handleSelectAll}>
@@ -58,7 +56,6 @@ const RenderImageHeader: React.FC<RenderImageHeaderProps> = ({
       </View>
     );
   } else if (isRepImageSelMode) {
-    console.log('3');
     return (
       <View style={{ flexDirection: 'row', flex: 1, alignItems: 'center' }}>
         <View style={{ flex: 1, flexDirection: 'row' }}>
@@ -86,7 +83,6 @@ const RenderImageHeader: React.FC<RenderImageHeaderProps> = ({
       </View>
     );
   } else {
-    console.log('4');
     return (
       <View style={{ flexDirection: 'row', flex: 1 }}>
         <View style={{ flex: 1, flexDirection: 'row' }}>
@@ -102,13 +98,13 @@ const RenderImageHeader: React.FC<RenderImageHeaderProps> = ({
             onPress={() => {
               selectImageFromGallery();
             }}>
-            <BAddSvg style={{ width: 70, height: 70, margin: 18 }} />
+            <BAddSvg style={{ margin: 15 }} width={20} height={20} />
           </TouchableOpacity>
           <TouchableOpacity
             onPress={() => {
               handleMoreBtn();
             }}>
-            <MoreSvg style={{ width: 70, height: 70, margin: 18 }} />
+            <MoreSvg style={{ margin: 15 }} width={20} height={20} />
           </TouchableOpacity>
         </View>
       </View>

@@ -7,6 +7,7 @@ export type TutorialNavType = {
   ConnectCouple: {
     myCode: string;
     otherCode?: string;
+    loginOption?: { snsId: string; snsKind: string; email: string };
   };
   AdditionalInformation: {
     info: LoginOptions;

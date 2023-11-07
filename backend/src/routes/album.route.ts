@@ -1,193 +1,256 @@
 import express, { Router, Request, Response, NextFunction } from "express";
 import joi, { ValidationResult } from "joi";
-import formidable, { File } from "formidable";
 
-import AlbumController from "../controller/album.controller";
-import AlbumService from "../service/album.service";
-import AlbumImageService from "../service/albumImage.service";
+import AlbumController from "../controllers/album.controller.js";
+import AlbumService from "../services/album.service.js";
+import AlbumImageService from "../services/albumImage.service.js";
 
-import logger from "../logger/logger";
-import validator from "../util/validator.util";
-import { STATUS_CODE } from "../constant/statusCode.constant";
+import logger from "../logger/logger.js";
+import validator from "../utils/validator.util.js";
+import { ContentType } from "../utils/router.util.js";
+import { File } from "../utils/gcp.util.js";
+import { MulterUpdateFile, MulterUploadFile, multerUpload, updateFileFunc, uploadFilesFunc } from "../utils/multer.js";
 
-import BadRequestError from "../error/badRequest.error";
-import ForbiddenError from "../error/forbidden.error";
-import InternalServerError from "../error/internalServer.error";
+import { STATUS_CODE } from "../constants/statusCode.constant.js";
 
-import { Album, ICreate, IRequestGet, IRequestUpadteThumbnail, IRequestUpadteTitle, IResponse } from "../model/album.model";
+import BadRequestError from "../errors/badRequest.error.js";
+import ForbiddenError from "../errors/forbidden.error.js";
+import UnsupportedMediaTypeError from "../errors/unsupportedMediaType.error.js";
+
+import { Album } from "../models/album.model.js";
+
+import { ResponseAlbumFolder, ResponseAlbum, SortItem, isSortItem } from "../types/album.type.js";
+import { PageOptions } from "../utils/pagination.util.js";
 
 const router: Router = express.Router();
 const albumService = new AlbumService();
 const albumImageService = new AlbumImageService();
 const albumController = new AlbumController(albumService, albumImageService);
+const MAX_IMAGE_COUNT = 100;
 
 const titleSchema: joi.Schema = joi.object({
-    userId: joi.number().required(),
-    cupId: joi.string().required(),
-    title: joi.string().required()
+  title: joi.string().required()
 });
 
+const imageIdsSchema: joi.Schema = joi.object({
+  title: joi.number().required()
+});
+
+const mergeSchema: joi.Schema = joi.object({
+  title: joi.string().required(),
+  albumId: joi.number().required(),
+  targetIds: joi.array().items(joi.number()).required()
+});
+
+const createUpload = multerUpload.array("images", MAX_IMAGE_COUNT);
+const updateParamName = "thumbnail";
+const updateUpload = multerUpload.single(updateParamName);
+
+// 앨범 정보 가져오기
 router.get("/:cup_id", async (req: Request, res: Response, next: NextFunction) => {
-    try {
-        if (req.body.cupId !== req.params.cup_id) throw new ForbiddenError("You don't same token couple ID and path parameter couple ID");
+  const page: number = !isNaN(Number(req.query.page)) ? Number(req.query.page) : 1;
+  const count: number = !isNaN(Number(req.query.count)) ? Number(req.query.count) : 50;
+  const sort: SortItem = isSortItem(req.query.sort) ? req.query.sort : "r";
 
-        const results: Album[] = await albumController.getAlbumsFolder(req.body.cupId);
+  try {
+    if (req.cupId !== req.params.cup_id) throw new ForbiddenError("You don't same token couple ID and path parameter couple ID");
 
-        logger.debug(`Response Data : ${JSON.stringify(results)}`);
-        return res.status(STATUS_CODE.OK).json(results);
-    } catch (error) {
-        next(error);
-    }
+    const pageOptions: PageOptions<SortItem> = {
+      page: page,
+      count: count,
+      sort: sort
+    };
+    const results: ResponseAlbumFolder = await albumController.getAlbumsFolder(req.cupId!, pageOptions);
+
+    logger.debug(`Response Data : ${JSON.stringify(results)}`);
+    return res.status(STATUS_CODE.OK).json(results);
+  } catch (error) {
+    next(error);
+  }
 });
 
+// 한 앨범 정보 가져오기
 router.get("/:cup_id/:album_id", async (req: Request, res: Response, next: NextFunction) => {
-    try {
-        const albumId = Number(req.params.album_id);
-        const page = !isNaN(Number(req.query.page)) ? Number(req.query.page) : 1;
-        const count = !isNaN(Number(req.query.count)) ? Number(req.query.count) : 50;
+  try {
+    const albumId: number = Number(req.params.album_id);
+    const page: number = !isNaN(Number(req.query.page)) ? Number(req.query.page) : 1;
+    const count: number = !isNaN(Number(req.query.count)) ? Number(req.query.count) : 50;
+    const sort: SortItem = "r";
 
-        if (req.body.cupId !== req.params.cup_id) throw new ForbiddenError("You don't same token couple ID and path parameter couple ID");
-        else if (isNaN(albumId)) throw new BadRequestError("Album ID must be a number type");
+    if (req.cupId !== req.params.cup_id) throw new ForbiddenError("You don't same token couple ID and path parameter couple ID");
+    else if (isNaN(albumId)) throw new BadRequestError("Album ID must be a number type");
 
-        const data: IRequestGet = {
-            albumId: albumId,
-            page: page,
-            count: count
-        };
-        const result: IResponse = await albumController.getAlbums(data);
+    const pageOptions: PageOptions<SortItem> = {
+      page: page,
+      count: count,
+      sort: sort
+    };
+    const result: ResponseAlbum = await albumController.getAlbums(albumId, pageOptions);
 
-        logger.debug(`Response Data : ${JSON.stringify(result)}`);
-        return res.status(STATUS_CODE.OK).json(result);
-    } catch (error) {
-        next(error);
-    }
+    logger.debug(`Response Data : ${JSON.stringify(result)}`);
+    return res.status(STATUS_CODE.OK).json(result);
+  } catch (error) {
+    next(error);
+  }
 });
 
+// 앨범 합치기
+router.post("/merge", async (req: Request, res: Response, next: NextFunction) => {
+  const contentType: ContentType = req.contentType;
+  try {
+    if (contentType === "form-data") throw new UnsupportedMediaTypeError("This API must have a content-type of 'json' unconditionally.");
+
+    const { value, error }: ValidationResult = validator(req.body, mergeSchema);
+    if (error) throw new BadRequestError(error);
+
+    const albumId: number = value.albumId;
+    const targerIds: number[] = value.targetIds;
+
+    const url: string = await albumController.mergeAlbum(req.cupId!, albumId, targerIds, value.title);
+    return res.header({ Location: url }).status(STATUS_CODE.NO_CONTENT).json({});
+  } catch (error) {
+    next(error);
+  }
+});
+
+// 앨범 추가
 router.post("/:cup_id", async (req: Request, res: Response, next: NextFunction) => {
-    try {
-        const { value, error }: ValidationResult = validator(req.body, titleSchema);
+  try {
+    const { value, error }: ValidationResult = validator(req.body, titleSchema);
 
-        if (error) throw new BadRequestError(error.message);
-        else if (req.body.cupId !== req.params.cup_id) throw new ForbiddenError("You don't same token couple ID and path parameter couple ID");
+    if (error) throw new BadRequestError(error.message);
+    else if (req.cupId !== req.params.cup_id) throw new ForbiddenError("You don't same token couple ID and path parameter couple ID");
 
-        const data: ICreate = {
-            cupId: value.cupId,
-            title: value.title
-        };
-        const url: string = await albumController.addAlbumFolder(data);
+    const url: string = await albumController.addAlbumFolder(req.cupId!, value.title);
 
-        return res.header({ Location: url }).status(STATUS_CODE.CREATED).json({});
-    } catch (error) {
-        next(error);
-    }
+    return res.header({ Location: url }).status(STATUS_CODE.CREATED).json({});
+  } catch (error) {
+    next(error);
+  }
 });
 
+// 앨범 사진 추가
 router.post("/:cup_id/:album_id", async (req: Request, res: Response, next: NextFunction) => {
-    const form = formidable({ multiples: true, maxFileSize: 5 * 1024 * 1024, maxFiles: 100 });
+  const contentType: ContentType = req.contentType;
 
-    form.parse(req, async (err, fields, files) => {
-        try {
-            if (err) throw new InternalServerError(`Image Server Error : ${JSON.stringify(err)}`);
-            const albumId = Number(req.params.album_id);
+  const createFunc = async (images?: File[]) => {
+    try {
+      if (!images) throw new BadRequestError("Not found images parameter");
 
-            if (req.body.cupId !== req.params.cup_id) throw new ForbiddenError("You don't same token couple ID and path parameter couple ID");
-            else if (isNaN(albumId)) throw new BadRequestError("Album ID must be a number type");
-            else if (!files.images) throw new BadRequestError("You must request images");
+      const albumId = Number(req.params.album_id);
 
-            const url: string = await albumController.addImages(req.body.cupId, albumId, files.images);
+      if (req.cupId !== req.params.cup_id) throw new ForbiddenError("You don't same token couple ID and path parameter couple ID");
+      else if (isNaN(albumId)) throw new BadRequestError("Album ID must be a number type");
 
-            return res.header({ Location: url }).status(STATUS_CODE.CREATED).json({});
-        } catch (error) {
-            next(error);
-        }
-    });
+      const url: string = await albumController.addImages(req.cupId!, albumId, images);
+
+      return res.header({ Location: url }).status(STATUS_CODE.CREATED).json({});
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  createUpload(req, res, (err) => {
+    const info: MulterUploadFile = {
+      contentType,
+      req,
+      err,
+      next
+    };
+
+    uploadFilesFunc(info, createFunc);
+  });
 });
 
+// 앨범 제목 변경
 router.patch("/:cup_id/:album_id/title", async (req: Request, res: Response, next: NextFunction) => {
-    try {
-        const albumId = Number(req.params.album_id);
-        const { value, error }: ValidationResult = validator(req.body, titleSchema);
-        if (error) throw new BadRequestError(error.message);
+  try {
+    const albumId = Number(req.params.album_id);
+    const { value, error }: ValidationResult = validator(req.body, titleSchema);
+    if (error) throw new BadRequestError(error.message);
 
-        if (req.body.cupId !== req.params.cup_id) throw new ForbiddenError("You don't same token couple ID and path parameter couple ID");
-        else if (isNaN(albumId)) throw new BadRequestError("Album ID must be a number type");
+    if (req.cupId !== req.params.cup_id) throw new ForbiddenError("You don't same token couple ID and path parameter couple ID");
+    else if (isNaN(albumId)) throw new BadRequestError("Album ID must be a number type");
 
-        const data: IRequestUpadteTitle = {
-            albumId: albumId,
-            cupId: req.body.cupId,
-            title: value.title
-        };
+    const album: Album = await albumController.updateTitle(albumId, req.cupId!, value.title);
 
-        const album: Album = await albumController.updateTitle(data);
-
-        return res.status(STATUS_CODE.OK).json(album);
-    } catch (error) {
-        next(error);
-    }
+    return res.status(STATUS_CODE.OK).json(album);
+  } catch (error) {
+    next(error);
+  }
 });
 
+// 앨범 대표 사진 변경
 router.patch("/:cup_id/:album_id/thumbnail", async (req: Request, res: Response, next: NextFunction) => {
-    const form = formidable({ multiples: false, maxFileSize: 5 * 1024 * 1024 });
+  const contentType: ContentType = req.contentType;
 
-    form.parse(req, async (err, fields, files) => {
-        try {
-            if (err) throw new InternalServerError(`Image Server Error : ${JSON.stringify(err)}`);
-            const albumId = Number(req.params.album_id);
-
-            if (req.body.cupId !== req.params.cup_id) throw new ForbiddenError("You don't same token couple ID and path parameter couple ID");
-            else if (isNaN(albumId)) throw new BadRequestError("Album ID must be a number type");
-            else if (!files.thumbnail) new BadRequestError("You must request only one thumbnail");
-            else if (files.thumbnail instanceof Array<formidable.File>) throw new BadRequestError("You must request only one thumbnail");
-
-            const data: IRequestUpadteThumbnail = {
-                albumId: albumId,
-                cupId: req.body.cupId
-            };
-            const thumbnail: File = files.thumbnail;
-            const album: Album = await albumController.updateThumbnail(data, thumbnail);
-
-            return res.status(STATUS_CODE.OK).json(album);
-        } catch (error) {
-            next(error);
-        }
-    });
-});
-
-router.delete("/:cup_id/:album_id", async (req: Request, res: Response, next: NextFunction) => {
-    try {
-        const albumId = Number(req.params.album_id);
-
-        if (req.body.cupId !== req.params.cup_id) throw new ForbiddenError("You don't same token couple ID and path parameter couple ID");
+  try {
+    const updateThumbnailFunc = async (thumbnail?: File | null) => {
+      try {
+        const albumId: number = Number(req.params.album_id);
+        if (req.cupId !== req.params.cup_id) throw new ForbiddenError("You don't same token couple ID and path parameter couple ID");
         else if (isNaN(albumId)) throw new BadRequestError("Album ID must be a number type");
 
-        await albumController.deleteAlbum(req.body.cupId, albumId);
-
-        return res.status(STATUS_CODE.NO_CONTENT).json({});
-    } catch (error) {
+        const album: Album = await albumController.updateThumbnail(albumId, req.cupId!, thumbnail);
+        return res.status(STATUS_CODE.OK).json(album);
+      } catch (error) {
         next(error);
-    }
+      }
+    };
+
+    updateUpload(req, res, (err) => {
+      const info: MulterUpdateFile = {
+        contentType,
+        req,
+        err,
+        fieldname: updateParamName,
+        next
+      };
+
+      updateFileFunc(info, updateThumbnailFunc);
+    });
+  } catch (error) {
+    next(error);
+  }
 });
 
-router.delete("/:cup_id/:album_id/image/:image_ids", async (req: Request, res: Response, next: NextFunction) => {
-    const imageIds: number[] = req.params.image_ids.split(",").map(Number);
-    const numImageIds: number[] = imageIds.filter((imageId: number) => {
-        if (!isNaN(imageId)) return imageId;
-    });
+// 앨범 삭제
+router.delete("/:cup_id/:album_id", async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const albumId = Number(req.params.album_id);
 
-    try {
-        const albumId = Number(req.params.album_id);
-        const cupId: string | undefined = req.body.cupId;
+    if (req.cupId !== req.params.cup_id) throw new ForbiddenError("You don't same token couple ID and path parameter couple ID");
+    else if (isNaN(albumId)) throw new BadRequestError("Album ID must be a number type");
 
-        if (!numImageIds || numImageIds.length <= 0) throw new BadRequestError("No album ids");
-        else if (!cupId) throw new ForbiddenError("You don't have couple ID in request body");
-        else if (cupId !== req.params.cup_id) throw new ForbiddenError("You don't same token couple ID and path parameter couple ID");
-        else if (isNaN(albumId)) throw new BadRequestError("Album Id must be a number type");
+    await albumController.deleteAlbum(req.cupId, albumId);
 
-        await albumController.deleteAlbumImages(cupId, albumId, numImageIds);
-        res.status(STATUS_CODE.NO_CONTENT).json({});
-    } catch (error) {
-        next(error);
-    }
+    return res.status(STATUS_CODE.NO_CONTENT).json({});
+  } catch (error) {
+    next(error);
+  }
+});
+
+// 앨범 이미지 삭제
+router.delete("/:cup_id/:album_id/image", async (req: Request, res: Response, next: NextFunction) => {
+  const imageIds: string[] | undefined = Array.isArray(req.body.imageIds) ? [...req.body.imageIds] : undefined;
+  const numImageIds: number[] | undefined = imageIds?.map(Number).filter((imageId: number) => {
+    if (!isNaN(imageId)) return imageId;
+  });
+
+  try {
+    const albumId = Number(req.params.album_id);
+    const cupId: string | null = req.cupId;
+
+    if (!numImageIds || numImageIds.length <= 0) throw new BadRequestError("No album ids");
+    else if (!cupId) throw new ForbiddenError("You don't have couple ID in request body");
+    else if (cupId !== req.params.cup_id) throw new ForbiddenError("You don't same token couple ID and path parameter couple ID");
+    else if (isNaN(albumId)) throw new BadRequestError("Album Id must be a number type");
+
+    await albumController.deleteAlbumImages(cupId, albumId, numImageIds);
+    res.status(STATUS_CODE.NO_CONTENT).json({});
+  } catch (error) {
+    next(error);
+  }
 });
 
 export default router;

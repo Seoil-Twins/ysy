@@ -1,18 +1,26 @@
 import React from 'react';
-import { StyleSheet, TouchableOpacity, View, Image, Text } from 'react-native';
+import { StyleSheet, TouchableOpacity, View, Image } from 'react-native';
 import { useAppSelector } from '../redux/hooks';
 import { RootState } from '../redux/store';
 import { widthPercentageToDP as wp } from 'react-native-responsive-screen';
 
-import WCheckBigSvg from '../assets/icons/white_check_big.svg';
+import { Darkroom } from 'react-native-image-filter-kit';
+
 import WCheckSvg from '../assets/icons/white_check.svg';
+import WCheckBigSvg from '../assets/icons/white_check_big.svg';
 
 const screenWidth = wp('100%');
 
 type RenderImageProps = {
-  selectedImages: string[];
-  tmpRepImage: string;
-  item: string;
+  selectedImages: number[];
+  tmpRepImage: number;
+  item: {
+    albumImageId: number;
+    size: number;
+    type: string;
+    path: string;
+    createdTime: Date;
+  };
   isRepImageSelMode: boolean;
   handleImagePress: (imageName: string) => void;
   handleImageLongPress: () => void;
@@ -26,29 +34,36 @@ const RenderImage: React.FC<RenderImageProps> = ({
   handleImagePress,
   handleImageLongPress,
 }) => {
-  const isSelected = selectedImages.includes(item);
-  const isTmpRepImage = tmpRepImage.includes(item);
+  const isSelected = selectedImages.includes(item.albumImageId);
+  const isTmpRepImage = tmpRepImage == item.albumImageId;
   const isImage = useAppSelector(
     (state: RootState) => state.imageStatus.isImage,
   );
-
   return (
-    <View style={{ flex: 1, paddingTop: 1, alignItems: 'center' }}>
+    <View style={{ flex: 1, paddingTop: 1, alignItems: 'flex-start' }}>
       <TouchableOpacity
         style={{
           flex: 1,
           paddingTop: 1,
           paddingRight: 1,
-          position: 'relative',
-          alignItems: 'center',
         }}
-        onPress={() => handleImagePress(item)}
+        onPress={() => handleImagePress(item.path)}
         onLongPress={() => handleImageLongPress()}>
-        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+        <View style={{ flexDirection: 'row' }}>
           <Image
-            source={{ uri: item }}
+            source={{ uri: item.path }}
             style={{ width: screenWidth / 4 - 2, height: 100 }}
           />
+          {isTmpRepImage && (
+            <View
+              style={{
+                position: 'absolute',
+                width: screenWidth / 4 - 2,
+                height: 100,
+                backgroundColor: 'rgba(0, 0, 0, 0.4)',
+              }}
+            />
+          )}
 
           {isImage && (
             <View
@@ -59,23 +74,18 @@ const RenderImage: React.FC<RenderImageProps> = ({
             </View>
           )}
 
-          {/* {isRepImageSelMode && isTmpRepImage && (
+          {isRepImageSelMode && isTmpRepImage && (
             <View
               style={{
                 position: 'absolute',
-                top: 0,
-                right: 0,
-                width: 60,
-                height: 60,
-                borderRadius: 20,
                 justifyContent: 'center',
                 alignItems: 'center',
-                marginTop: 15,
-                marginRight: 20,
+                width: screenWidth / 4 - 2,
+                height: 100,
               }}>
-              <WCheckBigSvg />
+              <WCheckBigSvg width={80} height={80} />
             </View>
-          )} */}
+          )}
         </View>
       </TouchableOpacity>
     </View>
@@ -108,6 +118,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 5,
     marginRight: 5,
+  },
+  darkImage: {
+    tintColor: 'rgba(0, 0, 0, 0.5)', // 어두운 효과 생성 (투명도 조절 가능)
   },
 });
 

@@ -14,14 +14,17 @@ import Input from '../components/Input';
 import DatePicker from '../components/DatePicker';
 
 import { isVaildEmail, isVaildPhone } from '../util/validation';
+import { userAPI } from '../apis/userAPI';
 
 const fetchUpdateUser = async (
   name: string,
   birthday: string,
   phone: string,
   email: string,
+  user: User,
 ) => {
-  console.log(name, birthday, phone, email);
+  const data = { name: name, birthday: birthday, phone: phone, email: email };
+  userAPI.patchUser(user.userId, data);
 
   return { statusCode: 204 };
 };
@@ -140,7 +143,7 @@ const EditProfile = () => {
       return;
     }
 
-    const response = await fetchUpdateUser(name, birthday, phone, email);
+    const response = await fetchUpdateUser(name, birthday, phone, email, user);
 
     if (response.statusCode === 204) {
       const newUser = { ...user };

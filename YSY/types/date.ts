@@ -7,7 +7,7 @@ export interface Date {
   view: number;
   title: string;
   description: string;
-  thumbnails: string[];
+  thumbnails: string;
   address: string;
   mapX: string;
   mapY: string;
@@ -25,5 +25,6 @@ export interface Date {
   homepage: string;
   tags: string[];
   favoriteCount: number;
+  datePlaceImages: string[];
   isFavorite: boolean;
 }

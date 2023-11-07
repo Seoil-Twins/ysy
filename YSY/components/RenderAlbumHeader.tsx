@@ -1,5 +1,5 @@
 import React from 'react';
-import { TouchableOpacity, View, Text, StyleSheet } from 'react-native';
+import { TouchableOpacity, View, Text } from 'react-native';
 import { useAppSelector } from '../redux/hooks';
 import { RootState } from '../redux/store';
 
@@ -9,7 +9,7 @@ import BCheckSvg from '../assets/icons/check.svg';
 import UCheckSvg from '../assets/icons/un-check.svg';
 
 type RenderAlbumHeaderProps = {
-  selectedAlbums: string[];
+  selectedAlbums: number[];
   handleSelectAll: () => void;
   openSortModal: () => void;
 };
@@ -30,14 +30,16 @@ const RenderAlbumHeader: React.FC<RenderAlbumHeaderProps> = ({
         <TouchableOpacity onPress={handleSelectAll}>
           <View style={{ flexDirection: 'row', alignItems: 'center' }}>
             {numSelected > 0 ? (
-              <BCheckSvg style={{ marginRight: 5 }} />
+              <BCheckSvg style={{ marginRight: 7 }} />
             ) : (
-              <UCheckSvg style={{ marginRight: 5 }} />
+              <UCheckSvg style={{ marginRight: 7 }} />
             )}
             <Text
               style={{
                 color: numSelected > 0 ? '#3675FB' : '#999999',
-                marginRight: 15,
+                marginRight: 20,
+                marginTop: 15,
+                marginBottom: 15,
               }}>
               {numSelected > 0 ? '선택 해제' : '모두 선택'}
             </Text>
@@ -47,27 +49,31 @@ const RenderAlbumHeader: React.FC<RenderAlbumHeaderProps> = ({
     );
   } else {
     return (
-      <View style={{ flexDirection: 'row' }}>
+      <View
+        style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+        }}>
         <TouchableOpacity
           onPress={() => {
             openSortModal();
           }}>
-          <SortSvg style={styles.imgBox} />
+          <SortSvg
+            style={{ marginTop: 40, marginBottom: 15, marginRight: 5 }}
+            height={50}
+            width={50}
+          />
         </TouchableOpacity>
         <TouchableOpacity onPress={() => {}}>
-          <SettingSvg style={{ marginTop: 21 }} height={29} />
+          <SettingSvg
+            style={{ marginTop: 10, marginBottom: 15, marginRight: 20 }}
+            width={30}
+            height={30}
+          />
         </TouchableOpacity>
       </View>
     );
   }
 };
-
-const styles = StyleSheet.create({
-  imgBox: {
-    width: 48,
-    height: 48,
-    marginTop: 25,
-  },
-});
 
 export default RenderAlbumHeader;

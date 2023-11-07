@@ -31,6 +31,7 @@ import BackHeader from '../components/BackHeader';
 
 import { globalStyles } from '../style/global';
 import { getObjectData, storeObjectData } from '../util/asyncStorage';
+import { dateAPI } from '../apis/dateAPI';
 
 const width = Dimensions.get('window').width;
 const IconSize = 18;
@@ -46,46 +47,34 @@ const DateDetail = () => {
   const [rotation] = useState(new Animated.Value(0));
 
   const getDateDetail = useCallback(async () => {
-    console.log(detailId);
+    const dp = await dateAPI.getDateOne(detailId);
 
-    const response = {
-      id: 6,
-      contentId: '123456',
-      contentTypeId: 39,
-      areaCode: 1,
-      sigunguCode: 1,
-      view: 123456,
-      title: '대상해',
-      description:
-        '코리아나호텔 3층에 위치한 대상해는 사천식에 북경식을 가미한 독특한 북경 사천요리를 즐길 수 있고, 산지에서 직수입한 샥스핀 요리가 일품인 중식당이다. 30년 이상 경력을 가진 주방장의 손맛을 그대로 느낄 수 있는 샥스핀 요리 이외에도 보양식인 불도장이 있으며 드시는 분들에게 복을 준다는 전가복요리가 대표적이다. 그리고 대상해에서만 있는 것으로 평소 등소평이 장수 음식으로 즐겨 먹었던 마파두부와 딴딴면이 있다. 고급스러운 인테리어와 태평로가 내려다보이는 훌륭한 전망과 크고 작은 룸들이 준비되어 있어 상견례나 비즈니스 미팅, 세미나 및 가족모임까지 다양한 모임의 장소로도 많이 쓰이고 있으며, 호텔에 투숙하는 고객들도 많이 찾는 곳이다. 코리나아호텔의 장애인용 화장실과 엘리베이터를 이용할 수 있어 편리하다.',
-      thumbnails: [
-        'http://tong.visitkorea.or.kr/cms/resource/46/1290346_image2_1.jpg',
-        'http://tong.visitkorea.or.kr/cms/resource/38/1290338_image2_1.jpg',
-        'http://tong.visitkorea.or.kr/cms/resource/40/1290340_image2_1.jpg',
-      ],
-      address: '서울특별시 중구 세종대로 135',
-      mapX: '57.456',
-      mapY: '57.456',
-      phoneNumber: '02-2171-7869',
-      babyCarriage: '없음',
-      pet: '불가',
-      useTime: '11:30~22:00 (브레이크타임 15:00~17:00)',
-      parking: '없음',
-      restDate: '연중무휴',
-      homepage: 'https://sushikaisinofsato.modoo.at',
-      tags: [
-        '서울',
-        '상봉동',
-        '정통 이타리안 요리',
-        '노래방',
-        '주차가능',
-        '펫 보관 가능',
-        '언제나',
-        '환영',
-        '라쿠니차',
-      ],
+    const response: Date = {
+      id: dp.contentId,
+      contentId: dp.contentId,
+      contentTypeId: dp.contentTypeId,
+      areaCode: dp.areaCode,
+      sigunguCode: dp.sigunguCode,
+      view: dp.views,
+      title: dp.title,
+      description: dp.description,
+      thumbnails: dp.thumbnail
+        ? dp.thumbnail
+        : 'https://fastly.picsum.photos/id/237/200/300.jpg?hmac=TmmQSbShHz9CdQm0NkEjx1Dyh_Y984R9LpNrpvH2D_U',
+      address: dp.address,
+      mapX: dp.mapX,
+      mapY: dp.mapY,
+      phoneNumber: dp.phoneNumber,
+      babyCarriage: dp.babyCarriage,
+      pet: dp.pet,
+      useTime: dp.useTime,
+      parking: dp.parking,
+      restDate: dp.restDate,
+      homepage: dp.homepage,
+      tags: ['unused'],
       favoriteCount: 1234,
-      isFavorite: true,
+      datePlaceImages: dp.datePlaceImages,
+      isFavorite: false,
     };
 
     setDateInfo(response);
@@ -97,10 +86,20 @@ const DateDetail = () => {
 
   const addHistory = useCallback(async () => {
     const historys = await getObjectData('dateHistory');
-
     if (historys) {
       const newItems = [...historys];
-      newItems.push(detailId);
+
+      const index = newItems.indexOf(detailId); // 새로운 11의 인덱스를 찾음
+      if (index !== -1) {
+        // 새로운 11이 이미 배열에 존재하면 제거
+        newItems.splice(index, 1);
+      }
+
+      if (newItems.length > 20) {
+        newItems.pop();
+      }
+
+      newItems.unshift(detailId);
       await storeObjectData('dateHistory', newItems);
     } else {
       await storeObjectData('dateHistory', [detailId]);
@@ -165,7 +164,7 @@ const DateDetail = () => {
     await KakaoShareLink.sendFeed({
       content: {
         title: dateInfo.title,
-        imageUrl: dateInfo.thumbnails[0],
+        imageUrl: dateInfo.thumbnails,
         link: {
           androidExecutionParams: androidExecutionParams,
           iosExecutionParams: iosExecutionParams,
@@ -221,13 +220,13 @@ const DateDetail = () => {
       {dateInfo ? (
         <>
           <BackHeader style={[globalStyles.plpr20, { marginBottom: 25 }]} />
-          <Carousel
+          {/* <Carousel
             loop
             width={width}
             height={(width / 2) * 1.2}
             autoPlay={false}
             scrollAnimationDuration={1000}
-            data={dateInfo.thumbnails}
+            data={dateInfo.datePlaceImages}
             pagingEnabled={true}
             renderItem={({ item }) => (
               <View style={styles.container}>
@@ -238,6 +237,11 @@ const DateDetail = () => {
                 />
               </View>
             )}
+          /> */}
+
+          <Image
+            source={{ uri: dateInfo.thumbnails }}
+            style={{ width: width, height: (width / 2) * 1.2 }}
           />
           <View style={[globalStyles.plpr20, styles.contentBox]}>
             <View style={styles.titleBox}>
@@ -298,7 +302,9 @@ const DateDetail = () => {
                     size={16}
                     weight="regular"
                     style={styles.infoText}>
-                    {dateInfo.phoneNumber}
+                    {dateInfo.phoneNumber === 'null'
+                      ? dateInfo.phoneNumber
+                      : '정보가 없습니다.'}
                   </CustomText>
                 </Pressable>
               </View>

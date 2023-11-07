@@ -9,23 +9,15 @@ type CalendarHeaderProps = {
 
 const CalendarHeader: React.FC<CalendarHeaderProps> = ({ openAddModal }) => {
   return (
-    <View style={{ flexDirection: 'row' }}>
+    <View style={{ flexDirection: 'row', height: 48 }}>
       <TouchableOpacity onPress={openAddModal}>
-        <AddSvg style={styles.imgBox} />
+        <AddSvg style={{ marginTop: 15 }} height={20} />
       </TouchableOpacity>
       <TouchableOpacity onPress={() => {}}>
-        <SettingSvg style={{ marginTop: 21 }} height={29} />
+        <SettingSvg style={{ marginTop: 15 }} height={20} />
       </TouchableOpacity>
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  imgBox: {
-    width: 48,
-    height: 48,
-    marginTop: 25,
-  },
-});
 
 export default CalendarHeader;

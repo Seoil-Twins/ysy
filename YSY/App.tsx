@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Linking,
   SafeAreaView,
@@ -45,6 +45,7 @@ import InquiryHistory from './screens/InquiryHistory';
 import FAQ from './screens/FAQ';
 import Favorite from './screens/Favorite';
 import Recent from './screens/Recent';
+import { getStringData, removeValue } from './util/asyncStorage';
 
 const AppWrapper = () => {
   return (
@@ -57,6 +58,8 @@ const AppWrapper = () => {
 const Stack = createStackNavigator();
 
 const App = () => {
+  const [accessToken, setAccessToken] = useState<string | null>('');
+
   const isLogin = useAppSelector(
     (state: RootState) => state.loginStatus.isLogin,
   );
@@ -70,6 +73,7 @@ const App = () => {
   const isImage = useAppSelector(
     (state: RootState) => state.imageStatus.isImage,
   );
+
   const dispatch = useAppDispatch();
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -102,7 +106,6 @@ const App = () => {
 
     subscribe(listener: any) {
       const onReceiveURL = (event: { url: string }) => {
-        console.log(event.url);
         const convertURL = new URL(event.url);
         const params = new URLSearchParams(convertURL.search);
         let result = '';
@@ -143,14 +146,32 @@ const App = () => {
   // 로그인 상태가 변할 때 마다
   useEffect(() => {
     // onLogin();
+    const fetchAccessToken = async () => {
+      const token = await getStringData('accessToken');
+      setAccessToken(token);
+    };
+
+    fetchAccessToken();
+    // removeValue('accessToken');
   }, []);
+
+  useEffect(() => {
+    // onLogin();
+    const fetchAccessToken = async () => {
+      const token = await getStringData('accessToken');
+
+      setAccessToken(token);
+    };
+
+    fetchAccessToken();
+  }, [isLogin]);
 
   return (
     <View style={styles.container}>
       <StatusBar backgroundColor="#dddddd" />
       <SafeAreaView style={styles.safeContainer}>
         <NavigationContainer linking={linking}>
-          {isLogin ? (
+          {accessToken ? (
             <Stack.Navigator
               initialRouteName="Home"
               screenOptions={{

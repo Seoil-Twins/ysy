@@ -31,14 +31,23 @@ import { SettingsNavType } from '../navigation/NavTypes';
 import { logout } from '../features/loginStatusSlice';
 
 import { removeSecureValue } from '../util/jwt';
+import { userAPI } from '../apis/userAPI';
+import { coupleAPI } from '../apis/coupleAPI';
+import { removeValue } from '../util/asyncStorage';
 
 const PROFILE_SIZE = 45;
 const { width, height } = Dimensions.get('window');
+const IMG_BASE_URL = 'https://storage.googleapis.com/ysy-bucket/';
 
 const fetchDisconnectCouple = async () => {
   const response = {
     statusCode: 204,
   };
+  const userData = JSON.stringify(await userAPI.getUserMe()); // login 정보 가져오기
+  const users = JSON.parse(userData);
+
+  await coupleAPI.deleteCouple(users.cupId);
+  await removeValue('accessToken');
 
   return response;
 };
@@ -47,6 +56,11 @@ const fetchWithdraw = async () => {
   const response = {
     statusCode: 204,
   };
+
+  const userData = JSON.stringify(await userAPI.getUserMe()); // login 정보 가져오기
+  const users = JSON.parse(userData);
+  await userAPI.deleteUser(users.userId);
+  await removeValue('accessToken');
 
   return response;
 };
@@ -85,27 +99,34 @@ const Settings = () => {
   }, [dispatch]);
 
   const disconnectCouple = useCallback(async () => {
-    const response = await fetchDisconnectCouple();
+    try {
+      await fetchDisconnectCouple();
 
-    if (response.statusCode === 204) {
+      //if (response.statusCode === 204) {
       await removeSecureValue('accessToken');
       await removeSecureValue('refreshToken');
       logoutApp();
+      closeDisconnectModal();
+    } catch (error) {
+      console.log(error);
     }
-
-    closeDisconnectModal();
+    //}
   }, [closeDisconnectModal, logoutApp]);
 
   const withdrawUser = useCallback(async () => {
-    const response = await fetchWithdraw();
+    try {
+      await fetchWithdraw();
 
-    if (response.statusCode === 204) {
+      // if (response.statusCode === 204) {
       await removeSecureValue('accessToken');
       await removeSecureValue('refreshToken');
       logoutApp();
-    }
+      //}
 
-    closeWithdrawModal();
+      closeWithdrawModal();
+    } catch (error) {
+      console.log(error);
+    }
   }, [closeWithdrawModal, logoutApp]);
 
   const moveProfile = () => {
@@ -116,6 +137,9 @@ const Settings = () => {
 
   useEffect(() => {
     const fetchUserInfo = async () => {
+      const userData = JSON.stringify(await userAPI.getUserMe()); // login 정보 가져오기
+      const users = JSON.parse(userData);
+      console.log(users);
       const response: Couple = {
         cupId: 'gPz9fLmw',
         cupDay: '2023-01-17',
@@ -124,33 +148,38 @@ const Settings = () => {
         createdTime: '2023-01-23T05:03:49.000Z',
         users: [
           {
-            userId: 21,
-            cupId: 'gPz9fLmw',
-            snsId: '1001',
-            code: 'lEVDgJ',
-            name: '김승용10',
-            email: 'seungyong23@naver.com',
-            birthday: '2000-11-26',
-            phone: '01085297196',
-            profile:
-              'https://t1.daumcdn.net/friends/prod/editor/dc8b3d02-a15a-4afa-a88b-989cf2a50476.jpg',
-            primaryNofi: true,
-            dateNofi: false,
-            eventNofi: false,
+            userId: users.userId,
+            cupId: users.cupId,
+            snsKind: users.snsKind,
+            snsId: users.snsId,
+            code: users.code,
+            name: users.name,
+            email: users.email,
+            birthday: users.birthday,
+            phone: users.phone,
+            profile: users.profile
+              ? `${IMG_BASE_URL}${users.profile}`
+              : 'https://t1.daumcdn.net/friends/prod/editor/dc8b3d02-a15a-4afa-a88b-989cf2a50476.jpg',
+            primaryNofi: users.primaryNofi,
+            dateNofi: users.dateNofi,
+            eventNofi: users.eventNofi,
           },
           {
-            userId: 22,
-            cupId: 'gPz9fLmw',
-            snsId: '1001',
-            code: 'X8iTjE',
-            name: '김승용22',
-            email: 'seungyong20@naver.com',
-            birthday: '2000-11-26',
-            phone: '01085297194',
-            profile: null,
-            primaryNofi: true,
-            dateNofi: true,
-            eventNofi: false,
+            userId: users.couple.userId,
+            cupId: users.couple.cupId,
+            snsKind: users.couple.snsKind,
+            snsId: users.couple.snsId,
+            code: users.couple.code,
+            name: users.couple.name,
+            email: users.couple.email,
+            birthday: users.couple.birthday,
+            phone: users.couple.phone,
+            profile: users.couple.profile
+              ? `${IMG_BASE_URL}${users.couple.profile}`
+              : 'https://t1.daumcdn.net/friends/prod/editor/dc8b3d02-a15a-4afa-a88b-989cf2a50476.jpg',
+            primaryNofi: users.couple.primaryNofi,
+            dateNofi: users.couple.dateNofi,
+            eventNofi: users.couple.eventNofi,
           },
         ],
       };
