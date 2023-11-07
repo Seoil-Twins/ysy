@@ -17,7 +17,7 @@ const globalErrorHandler: ErrorRequestHandler = (e: any, req: Request, res: Resp
       errorCode: e.errorCode
     });
   } else {
-    logger.error(`Server Error : ${JSON.stringify(e)} ${e.stack}`);
+    logger.error(`${JSON.stringify(e)} ${e.stack}`);
 
     if (e.status && e.status === 400) {
       const { status, body } = e;

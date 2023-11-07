@@ -1,6 +1,6 @@
 import dayjs from "dayjs";
 import randomString from "randomstring";
-import { FindAttributeOptions, InferAttributes, Op, Transaction, WhereOptions } from "sequelize";
+import { FindAttributeOptions, IncludeOptions, InferAttributes, Op, Transaction, WhereOptions } from "sequelize";
 
 import { UNKNOWN_NAME } from "../constants/file.constant.js";
 
@@ -69,8 +69,8 @@ class UserService extends Service {
    * @param where {@link WhereOptions}
    * @returns Promise\<{@link User} | null\>
    */
-  async select(where: WhereOptions<User>): Promise<User | null> {
-    const user: User | null = await User.findOne({ where });
+  async select(where: WhereOptions<User>, include?: IncludeOptions): Promise<User | null> {
+    const user: User | null = await User.findOne({ where, include });
     return user;
   }
 
@@ -268,8 +268,6 @@ class UserService extends Service {
    * @param user {@link User}
    */
   async delete(transaction: Transaction | null, user: User): Promise<void> {
-    if (!user) throw new NotFoundError("Not Found User");
-
     await user.update(
       {
         deleted: true,

@@ -12,7 +12,7 @@ import FavoriteService from "../services/favorite.service.js";
 
 import logger from "../logger/logger.js";
 
-import { RequestFavorite } from "../types/favorite.type.js";
+import { PageOptions, RequestFavorite, ResponseFavorite } from "../types/favorite.type.js";
 
 class FavoriteController {
   private favoriteService: FavoriteService;
@@ -21,6 +21,11 @@ class FavoriteController {
   constructor(favoriteService: FavoriteService, datePlaceService: DatePlaceService) {
     this.favoriteService = favoriteService;
     this.datePlaceService = datePlaceService;
+  }
+
+  async getFavorites(userId: number, pageOptions: PageOptions): Promise<ResponseFavorite> {
+    const favorites: ResponseFavorite = await this.favoriteService.selectForResponse(userId, pageOptions);
+    return favorites;
   }
 
   async addFavorite(data: RequestFavorite): Promise<void> {
