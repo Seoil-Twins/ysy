@@ -65,13 +65,6 @@ export const Album = () => {
   );
   const isFunc = useAppSelector((state: RootState) => state.albumStatus.isFunc);
 
-  // const getMe = async () => {
-  //   const data = JSON.stringify(await userAPI.getUserMe()); // login 정보 가져오기
-  //   const parsedData = JSON.parse(data);
-  //   console.log(parsedData);
-  //   return parsedData;
-  // };
-
   const getAlbumFolders = async (sort?: string) => {
     try {
       const userData = JSON.stringify(await userAPI.getUserMe()); // login 정보 가져오기
@@ -116,9 +109,8 @@ export const Album = () => {
     const postData = { title: newAlbumTitle };
 
     try {
-      const res = await albumAPI.postNewAlbum(userParsedData.cupId, postData);
+      await albumAPI.postNewAlbum(userParsedData.cupId, postData);
       await getAlbumFolders('r');
-      console.log(res);
     } catch (error) {
       console.log(error);
     }
@@ -128,16 +120,10 @@ export const Album = () => {
     getAlbumFolders(); // f
   }, []);
 
-  // const flatListKey = activeTab === 'AlbumModal' ? 'AlbumModal' : 'Default';
   const backAction = () => {
     dispatch(albumSelectionOff());
     return true; // true를 반환하면 앱이 종료되지 않습니다.
   };
-
-  // const data = useQuery('userme', userAPI.getUserMe());
-  // 내 전화번호 변경 -> 화면에 재렌더링
-  // queryClient.invalidateQueries('userme');
-  // console.log('useQuery 1 : ' + JSON.stringify(data));
 
   useFocusEffect(
     React.useCallback(() => {
@@ -191,7 +177,6 @@ export const Album = () => {
       } else {
         // 선택된 앨범이 없는 경우 전체 선택 동작 수행
         const Ids = dummyFolder.map(folder => folder.albumId);
-        console.log(Ids);
         setSelectedAlbumIds(Ids);
       }
     }
@@ -295,7 +280,6 @@ export const Album = () => {
       const userData = JSON.stringify(await userAPI.getUserMe()); // login 정보 가져오기
 
       const userParsedData = JSON.parse(userData);
-      console.log(userParsedData.cupId);
       const data = {
         albumId: album_id,
         targetIds: target_ids,
@@ -305,7 +289,6 @@ export const Album = () => {
       await albumAPI.postMergeAlbum(userParsedData.cupId, data);
       await getAlbumFolders('r');
     } catch (error) {
-      console.log('patch error');
       console.log(error);
     }
   };
@@ -332,7 +315,6 @@ export const Album = () => {
 
       return res;
     } catch (error) {
-      console.log('patch error');
       console.log(error);
     }
   };

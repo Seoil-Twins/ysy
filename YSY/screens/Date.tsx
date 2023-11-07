@@ -264,7 +264,6 @@ const getSubCitys = async (mainCode?: string) => {
     }
   }
 
-  console.log(newRegionList);
   return newRegionList;
 };
 
@@ -276,9 +275,6 @@ const getDateAPI = async (
   page: number,
   count: number,
 ) => {
-  console.log(sort, address1, address2, kind, page, count);
-  console.log(address1);
-
   const data = {
     sort: sort,
     areaCode: address1,
@@ -405,7 +401,6 @@ const Date = () => {
     if (isLoading) {
       return;
     }
-    console.log('우가우가1');
     setIsLoading(true);
 
     const response = await getDateAPI(
@@ -453,14 +448,11 @@ const Date = () => {
         config,
       );
 
-      console.log(response);
-
       if (response.status === 200 && response.data) {
         const address = response.data.documents[0].address;
 
         // address 없으면 error Modal
 
-        console.log('우가우가1-==============================================');
         handleTitleChange([
           { index: 1, newTitle: address.region_1depth_name },
           { index: 2, newTitle: address.region_2depth_name },
@@ -468,9 +460,7 @@ const Date = () => {
         const foundCity1 = citys.find(
           item => item.title === address.region_1depth_name,
         );
-        console.log('우가우가1-==============================================');
         _setSubCitys(await getSubCitys(foundCity1?.value));
-        console.log('우가우가2=============================================-=');
       }
     } catch (error: any) {
       console.log(error.message);
@@ -484,7 +474,6 @@ const Date = () => {
       await dateAPI.patchFavorite(res.contentId, res.contentTypeId, {
         isFavorite: res.isFavorite,
       });
-      // console.log(res);
       const response = 204;
 
       if (response === 204) {
@@ -650,9 +639,11 @@ const Date = () => {
     setSortHeaderItems(newSortHeaderObject);
     closeAddress1Modal();
 
-    handlePressChange([
-      { index: 0, isActive: !sortHeaderActiveItems[0].isActive },
-    ]);
+    handlePressChange([{ index: 0, isActive: false }]);
+    setLatitude(0);
+    prevLatitude.current = 0;
+    setLongitude(0);
+    prevLongitude.current = 0;
   };
 
   const onPressAddress2Modal = (item: SortItem) => {

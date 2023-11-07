@@ -34,7 +34,6 @@ const RenderImage: React.FC<RenderImageProps> = ({
   const isAlbum = useAppSelector(
     (state: RootState) => state.albumStatus.isAlbum,
   );
-  console.log(item);
 
   return (
     <View style={{ flex: 1, alignItems: 'center' }}>

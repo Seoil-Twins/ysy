@@ -222,7 +222,6 @@ const Tutorial = () => {
        * }
        */
       const profile: KakaoOAuth.KakaoProfile = await KakaoOAuth.getProfile();
-      console.log('profile :: ', profile);
       const data: LoginOptions = {
         snsId: profile.id,
         snsKind: '1000',
@@ -240,7 +239,6 @@ const Tutorial = () => {
           profile.profileImageUrl !== 'null' ? profile.profileImageUrl : null,
         eventNofi: false,
       };
-      console.log('kakao data', data);
 
       if (!verifyLoginData(data)) {
         hideModal();
@@ -310,7 +308,6 @@ const Tutorial = () => {
           return;
         }
         const res = await userAPI.postSignUp(data);
-        console.log('=-=====================');
 
         const token: AppToken = await appLogin(data); // cup_id가 없는 상태
 
@@ -332,7 +329,6 @@ const Tutorial = () => {
         });
       } else {
         console.log('Failed get profile');
-        console.log(profileResult);
       }
     } else if (!failureResponse?.isCancel) {
       console.log('Failed! : ', failureResponse);
@@ -370,9 +366,6 @@ const Tutorial = () => {
           birthday: null,
           eventNofi: false,
         };
-
-        console.log('google data', data);
-        console.log('앙3');
 
         hideModal();
         navigation.navigate('AdditionalInformation', { info: data });

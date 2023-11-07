@@ -19,12 +19,10 @@ const errorDesc = [
 const fetchInquiry = async () => {
   const data = { count: 10, page: 1 };
   const res = await inquiryAPI.getInquiry(data);
-  console.log(res.inquires[0].solution);
 
   const newInquiryList: Inquiry[] = [];
 
   for (const inquiry of res.inquires!) {
-    console.log('===========================================================');
     const newInquiry: Inquiry = {
       inquireId: inquiry.inquiryId,
       userId: inquiry.userId,
@@ -41,8 +39,6 @@ const fetchInquiry = async () => {
         : undefined,
       createdTime: inquiry.createdTime,
     };
-    console.log('===========================================================');
-    console.log(newInquiry);
     newInquiryList.push(newInquiry);
   }
 

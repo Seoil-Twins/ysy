@@ -170,7 +170,7 @@ const AdditionalInformation = () => {
     };
 
     const res = await userAPI.postSignUp(data);
-    const token: AppToken = await appLogin(data);
+    const token: AppToken = await appLogin(data); // 커플이 맺어지기전 토큰 -> 커플아이디가 없음
 
     await setSecureValue('accessToken', token.accessToken);
     await setSecureValue('refreshToken', token.refreshToken);

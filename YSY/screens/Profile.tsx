@@ -39,8 +39,6 @@ const { width, height } = Dimensions.get('window');
 // const IMG_BASE_URL = 'https://storage.googleapis.com/ysy-bucket/';
 
 const fetchEditProfile = async (profile: string | null) => {
-  console.log(profile);
-
   const response = {
     statusCode: 204,
   };

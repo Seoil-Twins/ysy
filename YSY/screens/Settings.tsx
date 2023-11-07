@@ -47,7 +47,8 @@ const fetchDisconnectCouple = async () => {
   const users = JSON.parse(userData);
 
   await coupleAPI.deleteCouple(users.cupId);
-  removeValue('accessToken');
+  await removeValue('accessToken');
+
   return response;
 };
 
@@ -59,7 +60,7 @@ const fetchWithdraw = async () => {
   const userData = JSON.stringify(await userAPI.getUserMe()); // login 정보 가져오기
   const users = JSON.parse(userData);
   await userAPI.deleteUser(users.userId);
-  removeValue('accessToken');
+  await removeValue('accessToken');
 
   return response;
 };

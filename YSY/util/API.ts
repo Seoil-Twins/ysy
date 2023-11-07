@@ -53,7 +53,6 @@ export const API = {
     return response;
   },
   post: async (url: string, data?: any) => {
-    console.log(url);
     const response = await apiClient.post(url, data).then(res => {
       return res.data;
     });
@@ -82,14 +81,12 @@ export const API = {
       } else {
         const formData = new FormData();
         if (data) {
-          console.log(data);
           formData.append('images', {
             uri: data.uri,
             name: data.name,
             size: data.size,
             type: data.type,
           });
-          console.log(formData);
 
           const response = await apiClient.postForm(url, formData, {
             data: formData,
@@ -106,8 +103,6 @@ export const API = {
     }
   },
   patch: async (url: string, data?: any) => {
-    console.log(url);
-    console.log(JSON.stringify(apiClient));
     const response = await apiClient
       .patch(url, data, { headers: { 'Content-Type': 'application/json' } })
       .then(res => {
@@ -161,44 +156,3 @@ export const API = {
     return response;
   },
 };
-
-/*
-function MyComponent() {
-  const callAPI = async () => {
-    const response = await axios
-      .get(`${API_BASE_URL}${'/user/me'}`, {
-        headers: headers, // 설정한 헤더를 여기에 전달합니다.
-      })
-      .then(response => {
-        // 성공적으로 데이터를 받아왔을 때 처리
-        console.log(response.data);
-      })
-      .catch(error => {
-        // 오류 처리
-        console.error(error);
-      });
-
-    return response;
-  };
-
-  const { data, error, isLoading } = useQuery('userme', callAPI);
-
-  const callQuery = () => {
-    // 데이터 확인은 이 함수 내에서 수행
-    if (!isLoading) {
-      if (error) {
-        console.error(error);
-      } else {
-        console.log(data);
-      }
-    }
-  };
-
-  const openSortModal = () => {
-    callQuery(); // callQuery 함수 호출
-  };
-
-  openSortModal();
-}
-
-*/

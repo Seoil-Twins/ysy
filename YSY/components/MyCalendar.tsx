@@ -96,19 +96,15 @@ const MyCalendar: React.FC<CalendarProps> = ({ onDateSelect }) => {
 
   const handleDateSelect = (date: Date) => {
     if (isSameDay(selectedDate, date)) {
-      console.log('more Click');
       setDateCellFlex(!dateCellFlex);
       setShowDetailView(!showDetailView);
       filterSchedule();
-      const dateCk = new Date(date);
-      console.log('요일 : ' + dateCk.getDay());
     } else {
       if (dateCellFlex && showDetailView) {
         setDateCellFlex(!dateCellFlex);
         setShowDetailView(!showDetailView);
       }
       if (isSameMonth(date, currentMonth) && isSameYear(date, currentYear)) {
-        console.log(date.getMonth() + ' :: ' + today.getMonth());
         setSelectedDate(date);
         onDateSelect(date);
       } else {
@@ -182,7 +178,6 @@ const MyCalendar: React.FC<CalendarProps> = ({ onDateSelect }) => {
 
   const getMonthDates = (year: number, month: number): Date[] => {
     if (scheduleList.length <= 0 && schFlag) {
-      console.log('키기기이기기333333311');
       getSchedule();
       setSchFlag(false);
     }
@@ -305,7 +300,6 @@ const MyCalendar: React.FC<CalendarProps> = ({ onDateSelect }) => {
     } else {
       totalBarHeight = screenHeight * 0.08;
     }
-    // console.log(parseInt(day.toISOString().slice(8, 10), 10));
     return (
       <View
         style={{
@@ -450,18 +444,12 @@ const MyCalendar: React.FC<CalendarProps> = ({ onDateSelect }) => {
   };
 
   const swipeEvent = (diff: number) => {
-    console.log(diff);
     if (diff > 100) {
-      console.log('=========================================');
       handlePrevMonth();
     } else if (diff < -100) {
-      console.log('=========================================');
       handleNextMonth();
     }
-    console.log('swipe');
   };
-
-  const handleLongPress = (id: string) => {};
 
   return (
     <React.Fragment>
@@ -478,18 +466,8 @@ const MyCalendar: React.FC<CalendarProps> = ({ onDateSelect }) => {
       <View style={styles.container}>
         <View style={{ flex: 1 }}>
           <View style={styles.titleContainer}>
-            {/* 이전 달로 이동하는 버튼 */}
-            {/* <Pressable onPress={handlePrevMonth}>
-              <Text style={styles.button}>Prev</Text>
-            </Pressable> */}
-
             {/* 선택된 달과 년도 표시 */}
             <Text style={styles.title}>{currentMonth + 1 + '월'}</Text>
-
-            {/* 다음 달로 이동하는 버튼 */}
-            {/* <Pressable onPress={handleNextMonth}>
-              <Text style={styles.button}>Next</Text>
-            </Pressable> */}
           </View>
 
           {/* 달력의 날짜들 */}
@@ -681,11 +659,7 @@ const MyCalendar: React.FC<CalendarProps> = ({ onDateSelect }) => {
                 <DatePicker
                   mode={'datetime'}
                   onInputChange={handleSD}
-                  // maximumDate2={false}
-                  placeholder={
-                    '시작 날짜'
-                    // selectedDate.toISOString().slice(0, 10) + ' 07:30 AM'
-                  }
+                  placeholder={'시작 날짜'}
                 />
               </View>
               <View style={{ width: '100%' }}>
@@ -806,10 +780,6 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-start',
   },
   selectedDateCell: {
-    // shadowColor: '#000',
-    // shadowOffset: { width: 0, height: 2 },
-    // shadowOpacity: 0.5,
-    // shadowRadius: 3.84,
     borderLeftWidth: 1,
     borderRightWidth: 1,
     borderBottomWidth: 2,
@@ -824,7 +794,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.5,
   },
   todayCell: {
-    // backgroundColor: 'green',
     borderRadius: 10,
   },
   weekLabelsContainer: {

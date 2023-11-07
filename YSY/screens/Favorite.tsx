@@ -24,7 +24,6 @@ const fetchGetFavoriteDates = async (page: number, count: number) => {
 
   for (const id of favoriteIds) {
     const dp = await dateAPI.getDateOne(id);
-    console.log(dp);
 
     const place: Date = {
       id: dp.contentId,
@@ -54,9 +53,6 @@ const fetchGetFavoriteDates = async (page: number, count: number) => {
 
     response.push(place);
   }
-
-  console.log('page : ', page, 'count : ', count);
-  console.log(response);
 
   return response;
 };

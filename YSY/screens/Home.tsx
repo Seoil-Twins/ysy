@@ -48,9 +48,7 @@ const Home = () => {
   const getCoupleInfo = async () => {
     const userData = JSON.stringify(await userAPI.getUserMe()); // login 정보 가져오기
     const userParsedData = JSON.parse(userData);
-    console.log('==============', userParsedData);
     const res: any = await coupleAPI.getCouple(userParsedData.cupId);
-    console.log(res);
     const response: Couple = {
       cupId: res.cupId,
       cupDay: res.cupDay,
@@ -96,7 +94,6 @@ const Home = () => {
         },
       ],
     };
-    console.log(response.thumbnail);
 
     setThumbnail(response.thumbnail);
     setCupDay(new Date(response.cupDay));
@@ -158,7 +155,6 @@ const Home = () => {
 
   const handleConfirm = async (date: Date) => {
     try {
-      console.log('date :: ' + date.getDate());
       await updateCupDay(
         `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate() + 1}`,
       );
@@ -175,7 +171,6 @@ const Home = () => {
       const userData = JSON.stringify(await userAPI.getUserMe()); // login 정보 가져오기
       const userParsedData = JSON.parse(userData);
 
-      console.log('-------------------------------------------');
       if (_image) {
         const splitedFilename = _image!.path.split('/');
         const filename = _image!.path.split('/')[splitedFilename!.length - 1];
@@ -192,14 +187,11 @@ const Home = () => {
           userParsedData.cupId,
           newFile,
         );
-        console.log(response);
       } else {
-        console.log('asdasd');
         const response = await coupleAPI.patchFormdataCouple(
           userParsedData.cupId,
           null,
         );
-        console.log('asdasd');
         console.log(response);
       }
     } catch (error: any) {
@@ -259,7 +251,6 @@ const Home = () => {
 
   const showAlbumPicker = () => {
     hideModal();
-    console.log('album picker');
   };
 
   const setDefaultThumbnail = async () => {

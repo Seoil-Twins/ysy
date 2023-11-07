@@ -91,11 +91,6 @@ const ConnectCouple = () => {
 
   const connectCouple = async () => {
     // Couple POST API
-    console.log('Code : ', code);
-    console.log('Date : ', date);
-    console.log('Image : ', image);
-    console.log('accessToken : ', accessToken);
-    console.log('refreshToken : ', refreshToken);
 
     const data = {
       otherCode: code,
@@ -103,15 +98,10 @@ const ConnectCouple = () => {
       thumbnail: image,
     };
     if (await storeStringData('accessToken', `Bearer ${accessToken}`)) {
-      console.log('Token Data Save Success ! ');
-      const res =
-        `Bearer ${accessToken}` === (await getStringData('accessToken'));
-      console.log('Save ? ' + res);
-      console.log(await getStringData('accessToken'));
+      await getStringData('accessToken');
     }
 
     const result = await coupleAPI.postNewCouple(data);
-    console.log(JSON.stringify(result));
 
     const userData = JSON.stringify(await userAPI.getUserMe()); // login 정보 가져오기
     const userParsedData = JSON.parse(userData);
@@ -134,18 +124,15 @@ const ConnectCouple = () => {
     await storeStringData('accessToken', `Bearer ${token.accessToken}`);
 
     if (params.loginOption) {
-      console.log('new Token');
       const token: AppToken = await appLogin(params.loginOption);
       await setAccessToken(token.accessToken);
 
       if (
         await storeStringData('accessToken', `Bearer ${result.accessToken}`)
       ) {
-        console.log('Token Data Save Success part2 ! ');
         const res =
           `Bearer ${accessToken}` === (await getStringData('accessToken'));
-        console.log('Save ? ' + res);
-        console.log(await getStringData('accessToken'));
+        await getStringData('accessToken');
       }
     }
   };

@@ -15,8 +15,6 @@ export const coupleAPI = {
   },
   patchCouple: async (cup_id: string, data?: any) => {
     const res = await API.patch(`/couple/${cup_id}`, data);
-    console.log('cd:: ' + data);
-    console.log(data);
     return res;
   },
   patchFormdataCouple: async (cup_id: string, data?: any) => {

@@ -42,7 +42,7 @@ const fetchNotice = async () => {
 };
 
 const Notice = () => {
-  const [notices, setNotices] = useState<NoticeType[] | null>(null);
+  const [notices, setNotices] = useState<NoticeType[] | null>([]);
 
   const getNotices = async () => {
     const response: NoticeType[] = await fetchNotice();

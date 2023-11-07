@@ -29,8 +29,6 @@ const DateSearchResult = () => {
       return;
     }
 
-    console.log(keyword, page, PAGE_COUNT);
-
     setIsLoading(true);
 
     const data = {

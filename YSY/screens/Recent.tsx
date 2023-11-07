@@ -21,7 +21,6 @@ import { dateAPI } from '../apis/dateAPI';
 const descriptions = ['최근에 본 데이트 장소가 없습니다.'];
 
 const fetchGetDates = async (page: number, ids: number[]) => {
-  console.log(page, ids);
   const response: Date[] = [];
 
   for (const id of ids) {

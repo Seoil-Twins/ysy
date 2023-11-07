@@ -58,7 +58,9 @@ const DateDetail = () => {
       view: dp.views,
       title: dp.title,
       description: dp.description,
-      thumbnails: dp.thumbnail,
+      thumbnails: dp.thumbnail
+        ? dp.thumbnail
+        : 'https://fastly.picsum.photos/id/237/200/300.jpg?hmac=TmmQSbShHz9CdQm0NkEjx1Dyh_Y984R9LpNrpvH2D_U',
       address: dp.address,
       mapX: dp.mapX,
       mapY: dp.mapY,
@@ -75,7 +77,6 @@ const DateDetail = () => {
       isFavorite: false,
     };
 
-    console.log(response);
     setDateInfo(response);
   }, [detailId]);
 
@@ -84,10 +85,6 @@ const DateDetail = () => {
   }, 500);
 
   const addHistory = useCallback(async () => {
-    console.log(
-      '내마음속에 저장 =========================================1',
-      detailId,
-    );
     const historys = await getObjectData('dateHistory');
     if (historys) {
       const newItems = [...historys];
@@ -104,10 +101,8 @@ const DateDetail = () => {
 
       newItems.unshift(detailId);
       await storeObjectData('dateHistory', newItems);
-      console.log('내마음속에 저장 =========================================2');
     } else {
       await storeObjectData('dateHistory', [detailId]);
-      console.log('내마음속에 저장 =========================================3');
     }
   }, [detailId]);
 
@@ -166,7 +161,6 @@ const DateDetail = () => {
       },
     ];
 
-    console.log(dateInfo);
     await KakaoShareLink.sendFeed({
       content: {
         title: dateInfo.title,

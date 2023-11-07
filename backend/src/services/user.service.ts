@@ -20,7 +20,7 @@ import { File, MimeType, uploadFileWithGCP } from "../utils/gcp.util.js";
 class UserService extends Service {
   private readonly FOLDER_NAME: string = "users";
   readonly EXCLUDE_FOR_RESPONSE: FindAttributeOptions = {
-    exclude: ["snsId", "deleted", "deleted_time"]
+    exclude: ["deleted", "deleted_time"]
   };
 
   /**

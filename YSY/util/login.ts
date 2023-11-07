@@ -48,9 +48,7 @@ export const verifyLoginData = (data: LoginOptions): boolean => {
 };
 
 export const appLogin = async (data: Login): Promise<AppToken> => {
-  console.log(data);
-
-  const token: AppToken = authAPI.login(data);
+  const token: AppToken = await authAPI.login(data);
 
   return token;
 };
