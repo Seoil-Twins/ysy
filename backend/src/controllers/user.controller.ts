@@ -46,8 +46,6 @@ class UserController {
     let transaction: Transaction | null = null;
     let createdUser: User | null = null;
 
-    console.log(data);
-
     const user: User | null = await this.userService.select({
       [Op.or]: [{ email: data.email }, { phone: data.phone }]
     });

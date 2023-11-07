@@ -109,13 +109,11 @@ router.patch("/:cup_id", async (req: Request, res: Response, next: NextFunction)
       const couple: Couple = await coupleController.updateCouple(req.userId!, req.cupId, data, thumbnail);
       return res.status(STATUS_CODE.OK).json(couple);
     } catch (error) {
-      console.log(error);
       next(error);
     }
   };
 
   upload(req, res, (err) => {
-    console.log(err);
     const info: MulterUpdateFile = {
       contentType,
       req,

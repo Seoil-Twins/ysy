@@ -46,8 +46,6 @@ class CalendarService extends Service {
    * @returns Promise\<{@link Calendar Calendar[]}\>
    */
   async selectAll(cupId: string, startDate: string, endDate: string): Promise<Calendar[]> {
-    console.log(startDate, endDate);
-
     const calendars: Calendar[] = await Calendar.findAll({
       attributes: { exclude: ["cupId"] },
       where: {

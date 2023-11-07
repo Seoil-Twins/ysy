@@ -74,18 +74,13 @@ export const updateFileFunc = (info: MulterUpdateFile, callback: Function) => {
     errorHandling(err);
 
     if (contentType === "form-data") {
-      console.log("fdfdfdfdfd");
-
       if (!req.file) throw new BadRequestError("You must request images");
 
       callback(req.file);
     } else if (contentType === "json") {
       let image: null | undefined = undefined;
-      console.log(req.body);
-      console.log(req.body[fieldname]);
 
       if (isDefaultFile(req.body[fieldname])) {
-        console.log("imaimamaimai");
         image = null;
       }
 
@@ -118,8 +113,6 @@ export const uploadFileFunc = (info: MulterUploadFile, callback: Function) => {
 
 export const uploadFilesFunc = (info: MulterUploadFile, callback: Function) => {
   const { contentType, req, err, next } = info;
-  console.log(req.files);
-  console.log(req.file);
 
   try {
     errorHandling(err);

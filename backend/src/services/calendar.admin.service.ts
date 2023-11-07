@@ -66,7 +66,6 @@ class CalendarAdminService extends Service {
       limit: pageOptions.count,
       order: [sort]
     });
-    console.log("Where : ", where);
     const result: ResponseCalendarWithAdmin = {
       calendars: rows,
       total: count
