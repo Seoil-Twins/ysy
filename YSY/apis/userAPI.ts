@@ -1,29 +1,12 @@
-// import { useQuery } from 'react-query';
 import { API } from '../util/API';
 import { LoginOptions } from '../util/login';
-
-// function UseCallApiQuery(queryName: string, ResData: any) {
-//   const { data, error, isLoading } = useQuery(queryName, ResData);
-
-//   if (!isLoading) {
-//     if (error) {
-//       console.error('앙' + error);
-//     } else {
-//       console.log(data);
-//     }
-//   }
-
-//   return data;
-// }
 
 export const userAPI = {
   getUserMe: async () => {
     try {
       const data = await API.get('/user/me');
-      console.log(data);
       return data;
     } catch (error) {
-      console.log(error);
       throw error;
     }
   },
@@ -37,7 +20,6 @@ export const userAPI = {
         return data;
       }
     } catch (error) {
-      console.log(error);
       throw error;
     }
   },
@@ -52,10 +34,8 @@ export const userAPI = {
   ) => {
     try {
       const res = await API.patch(`/user/${user_id}`, data);
-      console.log(res);
       return res;
     } catch (error) {
-      console.log(error);
       throw error;
     }
   },
@@ -67,7 +47,6 @@ export const userAPI = {
       const res = await API.patch(`/user/nofi/${user_id}`, data);
       return res;
     } catch (error) {
-      console.log(error);
       throw error;
     }
   },

@@ -223,8 +223,8 @@ const Tutorial = () => {
        */
       const profile: KakaoOAuth.KakaoProfile = await KakaoOAuth.getProfile();
       const data: LoginOptions = {
-        snsId: 'WTwmzHiWBsZ8Nbetw43Q23gYKRf3zDR1wpHzZV8AUHoss',
-        snsKind: '1001',
+        snsId: profile.id,
+        snsKind: '1000',
         email: profile.email !== 'null' ? profile.email : null,
         name: profile.nickname !== 'null' ? profile.nickname : null,
         birthday:
@@ -239,7 +239,6 @@ const Tutorial = () => {
           profile.profileImageUrl !== 'null' ? profile.profileImageUrl : null,
         eventNofi: false,
       };
-      console.log('kakao data', data);
 
       if (!verifyLoginData(data)) {
         hideModal();
@@ -330,7 +329,6 @@ const Tutorial = () => {
         });
       } else {
         console.log('Failed get profile');
-        console.log(profileResult);
       }
     } else if (!failureResponse?.isCancel) {
       console.log('Failed! : ', failureResponse);
@@ -347,21 +345,17 @@ const Tutorial = () => {
     setIsLoggingIn(true);
 
     try {
-      console.log('앙1');
       const { idToken } = await GoogleSignin.signIn();
-      console.log('앙12');
       // GoogleOAuth를 통해 사용자 인증을 하면 더 많은 정보를 가져올 수 있음(phoneNumber).
       const googleCredential =
         GoogleOAuth.GoogleAuthProvider.credential(idToken);
-      console.log('앙13');
       const response = await GoogleOAuth().signInWithCredential(
         googleCredential,
       );
 
-      console.log('앙2');
       if (response.user) {
         const data: LoginOptions = {
-          snsId: 'testId',
+          snsId: response.user.uid,
           snsKind: '1002',
           name: response.user.displayName,
           // 나중에 이메일 인증이 생긴다면 response.user.emailVerified로 인증 여부 확인
@@ -372,9 +366,6 @@ const Tutorial = () => {
           birthday: null,
           eventNofi: false,
         };
-
-        console.log('google data', data);
-        console.log('앙3');
 
         hideModal();
         navigation.navigate('AdditionalInformation', { info: data });

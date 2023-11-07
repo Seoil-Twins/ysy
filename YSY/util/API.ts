@@ -53,7 +53,6 @@ export const API = {
     return response;
   },
   post: async (url: string, data?: any) => {
-    console.log(url);
     const response = await apiClient.post(url, data).then(res => {
       return res.data;
     });
@@ -109,23 +108,15 @@ export const API = {
   },
   patch: async (url: string, data?: any) => {
     const response = await apiClient
-      .patch(url, data, {
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      })
+      .patch(url, data, { headers: { 'Content-Type': 'application/json' } })
       .then(res => {
         return res.data;
       });
-    console.log('아아아아아');
     return response;
   },
   patch_formdata: async (url: string, data?: any, fileParamName?: string) => {
     try {
       const formData = new FormData();
-      console.log(url);
-      console.log(data);
-      console.log(fileParamName);
       if (!fileParamName) {
         fileParamName = 'thumbnail';
       }
@@ -136,8 +127,6 @@ export const API = {
           size: data.size,
           type: data.type,
         });
-        console.log('아아아아아1');
-        console.log(formData);
 
         const response = await apiClient.patch(url, formData, {
           data: formData,
@@ -145,7 +134,6 @@ export const API = {
             'Content-Type': 'multipart/form-data',
           },
         });
-        console.log('아아아아아2');
         return response;
       } else {
         const response = await apiClient
@@ -172,44 +160,3 @@ export const API = {
     return response;
   },
 };
-
-/*
-function MyComponent() {
-  const callAPI = async () => {
-    const response = await axios
-      .get(`${API_BASE_URL}${'/user/me'}`, {
-        headers: headers, // 설정한 헤더를 여기에 전달합니다.
-      })
-      .then(response => {
-        // 성공적으로 데이터를 받아왔을 때 처리
-        console.log(response.data);
-      })
-      .catch(error => {
-        // 오류 처리
-        console.error(error);
-      });
-
-    return response;
-  };
-
-  const { data, error, isLoading } = useQuery('userme', callAPI);
-
-  const callQuery = () => {
-    // 데이터 확인은 이 함수 내에서 수행
-    if (!isLoading) {
-      if (error) {
-        console.error(error);
-      } else {
-        console.log(data);
-      }
-    }
-  };
-
-  const openSortModal = () => {
-    callQuery(); // callQuery 함수 호출
-  };
-
-  openSortModal();
-}
-
-*/

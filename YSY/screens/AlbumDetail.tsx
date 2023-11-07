@@ -93,21 +93,11 @@ export const AlbumDetail = () => {
   useEffect(() => {}, [isImage]);
 
   const backAction = React.useCallback(() => {
-    console.log('if밖 : ' + isImage);
     if (isImage) {
       dispatch(imageSelectionOff());
-      console.log('if안 : ' + isImage);
       return true; // true를 반환하면 앱이 종료되지 않습니다.
     }
   }, [dispatch, isImage]);
-  // const backAction = () => {
-  //   console.log('if밖 : ' + isImage);
-  //   if (isImage) {
-  //     dispatch(imageSelectionOff());
-  //     console.log('if안 : ' + isImage);
-  //     return true; // true를 반환하면 앱이 종료되지 않습니다.
-  //   }
-  // };
 
   useFocusEffect(
     React.useCallback(() => {
@@ -120,7 +110,6 @@ export const AlbumDetail = () => {
   );
 
   useEffect(() => {
-    console.log(isFunc);
     if (isFunc.includes('Image')) {
       if (isFunc.includes('Download')) {
         if (selectedImages.length <= 0) {
@@ -152,7 +141,6 @@ export const AlbumDetail = () => {
   }, [isFunc, selectedImages.length]);
 
   const loadImageFromDB = async (albumId: number, slice: number) => {
-    console.log('ss' + albumId);
     const data = JSON.stringify(
       await albumAPI.getAlbumImages(cupId, albumId, {
         page: imageCount / 40 + 1,
@@ -160,7 +148,6 @@ export const AlbumDetail = () => {
       }),
     );
     imageCount += slice;
-    console.log(imageCount);
     const parsedData = JSON.parse(data);
     setTotalImage(parsedData.total);
     const thumb = parsedData.images.map(
@@ -171,7 +158,6 @@ export const AlbumDetail = () => {
       albumImages.length,
       albumImages.length + slice,
     );
-    console.log(ImageArray);
 
     const imageList = parsedData.images.map(
       (image: {
@@ -200,12 +186,10 @@ export const AlbumDetail = () => {
 
     // 데이터 로딩 시작
     setIsLoading(true);
-    console.log('로딩시이이이작' + imageCount);
     // 모의 API 호출 또는 기타 데이터 로딩 로직 구현
     // 이 예시에서는 setTimeout을 사용하여 1초 후에 새로운 데이터를 추가로 로딩합니다.
     setTimeout(async () => {
-      const newData = await loadImageFromDB(albumId, 40);
-      // setAlbumImages(prevData => [...prevData, ...newData]);
+      await loadImageFromDB(albumId, 40);
       setIsLoading(false);
     }, 1000);
   };
@@ -216,17 +200,14 @@ export const AlbumDetail = () => {
     };
     launchImageLibrary(options, async (response: ImagePickerResponse) => {
       if (response.didCancel) {
-        console.log('User cancelled image picker');
       } else {
         // 이미지가 선택된 경우 이미지 URI를 저장
         if (response.assets) {
           await setSelectedAddImage(response.assets[0].uri);
-          // console.log(response.assets[0]);
           const res = await fetch(response.assets[0].uri);
           const blob = await res.blob();
 
           if (!response.assets[0].uri || !response.assets[0].fileName) {
-            console.log('Image Data Not Found ! ');
             return;
           }
           const newFile: File = {
@@ -235,8 +216,32 @@ export const AlbumDetail = () => {
             size: blob.size,
             name: response.assets[0].fileName,
           };
-          const apiRes = await albumAPI.postNewImage(cupId, albumId, newFile);
-          console.log(apiRes);
+          await albumAPI.postNewImage(cupId, albumId, newFile);
+          const ress = await albumAPI.getAlbumImages(cupId, albumId, {
+            page: 1,
+            count: 1,
+            sort: 'r',
+          });
+          const parsedData = JSON.stringify(ress.images[0]);
+
+          const imageList: {
+            albumImageId: number;
+            size: number;
+            type: string;
+            path: string;
+            createdTime: Date;
+          } = {
+            albumImageId: parsedData.albumImageId,
+            size: parsedData.size,
+            type: parsedData.type,
+            path: newFile.uri,
+            createdTime: parsedData.createdTime,
+          };
+
+          await albumImages.unshift(imageList);
+          setAlbumImages(prev => {
+            return [...prev];
+          });
         }
       }
     });
@@ -278,7 +283,6 @@ export const AlbumDetail = () => {
         (tartget: { albumImageId: number }) =>
           tartget.albumImageId === tmpRepImage,
       );
-      console.log(targetImg);
       const newFile: File = {
         uri: `${IMG_BASE_URL}${targetImg[0].path}`,
         type: targetImg[0].type,
@@ -288,7 +292,6 @@ export const AlbumDetail = () => {
       const data = JSON.stringify(
         await albumAPI.patchRepImgAlbum(cupId, albumId, newFile),
       );
-      console.log('ss' + data);
     } catch (error) {
       console.log(error);
     }
@@ -312,7 +315,6 @@ export const AlbumDetail = () => {
     const data = JSON.stringify(
       await albumAPI.patchTitleAlbum(cupId, albumId, { title: changeTitle }),
     );
-    console.log(data);
     setIsModNameVisible(false);
   };
 
@@ -394,7 +396,6 @@ export const AlbumDetail = () => {
   const handleImageDelete = async () => {
     const data = { imageIds: selectedImageIds };
     const res = albumAPI.deleteImage(cupId, albumId, data);
-    console.log(res);
     const newData = await albumImages.filter(
       item => !selectedImages.includes(item),
     );
@@ -412,40 +413,6 @@ export const AlbumDetail = () => {
 
   const ImageDownload = async () => {
     closeImageDownloadModal();
-    console.log('Download');
-    // const downloadDest = `${RNFS.DocumentDirectoryPath}/sss`;
-    // const { promise } = RNFS.downloadFile({
-    //   fromUrl:
-    //     'https://fastly.picsum.photos/id/179/200/200.jpg?hmac=I0g6Uht7h-y3NHqWA4e2Nzrnex7m-RceP1y732tc4Lw',
-    //   toFile: downloadDest,
-    // });
-    // const { statusCode } = await promise;
-    // console.log(statusCode);
-    // const { config, fs } = RNFetchBlob;
-    // let date = new Date();
-    // let PictureDir = fs.dirs.DocumentDir;
-    // let options = {
-    //   fileCache: true,
-    //   addAndroidDownloads: {
-    //     //Related to the Android only
-    //     useDownloadManager: true,
-    //     notification: true,
-    //     path:
-    //       PictureDir +
-    //       '/image_' +
-    //       Math.floor(date.getTime() + date.getSeconds() / 2),
-    //     description: 'Image',
-    //   },
-    // };
-    // config(options)
-    //   .fetch(
-    //     'GET',
-    //     'https://fastly.picsum.photos/id/179/200/200.jpg?hmac=I0g6Uht7h-y3NHqWA4e2Nzrnex7m-RceP1y732tc4Lw',
-    //   )
-    //   .then(res => {
-    //     //Showing alert after successful downloading
-    //     console.log('res -> ', JSON.stringify(res));
-    //   });
   };
 
   const closeImageShareModal = () => {
@@ -464,14 +431,11 @@ export const AlbumDetail = () => {
       if (result.action === Share.sharedAction) {
         if (result.activityType) {
           // shared with activity type of result.activityType
-          console.log('type1');
         } else {
           // shared
-          console.log('type2');
         }
       } else if (result.action === Share.dismissedAction) {
         // dismissed
-        console.log('type3');
       }
     } catch (error: any) {
       console.log(error.message);

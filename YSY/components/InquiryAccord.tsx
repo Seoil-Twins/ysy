@@ -63,7 +63,7 @@ const InquiryAccord: React.FC<InquiryAccordProps> = ({
         style={[styles.titleBox, globalStyles.plpr20]}
         onPress={onPressMore}>
         <View>
-          <CustomText size={18} weight="regular">
+          <CustomText size={24} weight="regular">
             {title}
           </CustomText>
           <View style={styles.bottom}>
@@ -124,6 +124,9 @@ const InquiryAccord: React.FC<InquiryAccordProps> = ({
         <View style={[styles.solution, globalStyles.plpr20]}>
           <CustomText size={16} weight="medium">
             A.
+          </CustomText>
+          <CustomText size={24} weight="regular">
+            {solution.title}
           </CustomText>
           <RenderHtml html={solution.contents} />
         </View>

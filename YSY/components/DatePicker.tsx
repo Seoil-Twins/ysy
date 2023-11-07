@@ -113,7 +113,7 @@ const DatePicker: React.FC<DatePickerProps> = ({
           locale="ko_KR"
           date={selectedDate || new Date()}
           // maximumDate={maximumDateValue ? new Date() : null}
-          // minimumDate={minimumDateValue ? minimumDateValue : undefined}
+          minimumDate={minimumDateValue ? minimumDateValue : undefined}
         />
       </Pressable>
       {isError ? (

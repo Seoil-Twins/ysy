@@ -23,9 +23,6 @@ const fetchAddInquiry = async (
   description: string,
   images: ImageOrVideo[] | null,
 ) => {
-  console.log(title, description);
-  console.log(images);
-
   const imageList: any[] = [];
   const date = new Date();
 
@@ -46,23 +43,7 @@ const fetchAddInquiry = async (
       images: imageList,
     };
 
-    // const dataForm = imageList;
-
-    console.log('이꾸죠');
     await inquiryAPI.postFormInquiry(dataJson);
-    console.log('이꾸죠');
-    // await inquiryAPI.postFormInquiry(dataForm);
-
-    // else {
-    //   const imageFile = {
-    //     uri: images.path,
-    //     name: `profile-${date.getMilliseconds()}`,
-    //     size: images.size,
-    //     type: images.mime,
-    //   };
-
-    //   inquiryAPI.postInquiry(title, description, imageFile);
-    // }
   }
 
   const response = {

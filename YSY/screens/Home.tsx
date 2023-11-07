@@ -7,7 +7,6 @@ import {
   Pressable,
   Platform,
   Dimensions,
-  _Image,
 } from 'react-native';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
 import ImageCropPicker, { ImageOrVideo } from 'react-native-image-crop-picker';
@@ -67,7 +66,9 @@ const Home = () => {
           email: res.users[0].email,
           birthday: res.users[0].birthday,
           phone: res.users[0].phone,
-          profile: res.users[0].profile ? res.users[0].profile : null,
+          profile: res.users[0].profile
+            ? `${IMG_BASE_URL}${res.users[0].profile}`
+            : null,
           // 'https://t1.daumcdn.net/friends/prod/editor/dc8b3d02-a15a-4afa-a88b-989cf2a50476.jpg',
           primaryNofi: res.users[0].primaryNofi,
           dateNofi: res.users[0].dateNofi,
@@ -83,7 +84,9 @@ const Home = () => {
           email: res.users[1].email,
           birthday: res.users[1].birthday,
           phone: res.users[1].phone,
-          profile: res.users[1].profile ? res.users[1].profile : null,
+          profile: res.users[1].profile
+            ? `${IMG_BASE_URL}${res.users[1].profile}`
+            : null,
           // 'https://t1.daumcdn.net/friends/prod/editor/dc8b3d02-a15a-4afa-a88b-989cf2a50476.jpg',
           primaryNofi: res.users[1].primaryNofi,
           dateNofi: res.users[1].dateNofi,
@@ -91,7 +94,6 @@ const Home = () => {
         },
       ],
     };
-    console.log(response.thumbnail);
 
     setThumbnail(response.thumbnail);
     setCupDay(new Date(response.cupDay));
@@ -153,13 +155,12 @@ const Home = () => {
 
   const handleConfirm = async (date: Date) => {
     try {
-      console.log('date :: ' + date.getDate());
       await updateCupDay(
         `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate() + 1}`,
       );
       setCupDay(date);
     } catch (error) {
-      console.log(error.response);
+      console.log(error);
     }
 
     hideDatePicker();
@@ -170,7 +171,6 @@ const Home = () => {
       const userData = JSON.stringify(await userAPI.getUserMe()); // login 정보 가져오기
       const userParsedData = JSON.parse(userData);
 
-      console.log('-------------------------------------------');
       if (_image) {
         const splitedFilename = _image!.path.split('/');
         const filename = _image!.path.split('/')[splitedFilename!.length - 1];
@@ -187,14 +187,11 @@ const Home = () => {
           userParsedData.cupId,
           newFile,
         );
-        console.log(response);
       } else {
-        console.log('asdasd');
         const response = await coupleAPI.patchFormdataCouple(
           userParsedData.cupId,
           null,
         );
-        console.log('asdasd');
         console.log(response);
       }
     } catch (error: any) {
@@ -254,7 +251,6 @@ const Home = () => {
 
   const showAlbumPicker = () => {
     hideModal();
-    console.log('album picker');
   };
 
   const setDefaultThumbnail = async () => {
@@ -274,14 +270,26 @@ const Home = () => {
       resizeMode="cover"
       style={[styles.container, globalStyles.mlmr20]}>
       <View style={styles.titleBox}>
-        <CustomText size={22} weight="regular" color="#FFFFFF">
+        <CustomText
+          style={styles.textShadowTitle}
+          size={22}
+          weight="regular"
+          color="#FFFFFF">
           우리 사랑한지
         </CustomText>
         <View style={styles.titleRow}>
-          <CustomText size={30} weight="medium" color="#FF6D70">
+          <CustomText
+            style={styles.textShadowTitle}
+            size={30}
+            weight="medium"
+            color="#FF6D70">
             {day}
           </CustomText>
-          <CustomText size={30} weight="regular" color="#FFFFFF">
+          <CustomText
+            style={styles.textShadowTitle}
+            size={30}
+            weight="regular"
+            color="#FFFFFF">
             일
           </CustomText>
         </View>
@@ -298,7 +306,11 @@ const Home = () => {
               <DefaultPersonSVG style={styles.profileDefaultImg} />
             )}
           </View>
-          <CustomText size={18} weight="regular" color="#FFFFFF">
+          <CustomText
+            style={styles.textShadowContents}
+            size={18}
+            weight="regular"
+            color="#FFFFFF">
             {cupInfo?.users[0].name}
           </CustomText>
         </View>
@@ -314,7 +326,11 @@ const Home = () => {
               <DefaultPersonSVG style={styles.profileDefaultImg} />
             )}
           </View>
-          <CustomText size={18} weight="regular" color="#FFFFFF">
+          <CustomText
+            style={styles.textShadowContents}
+            size={18}
+            weight="regular"
+            color="#FFFFFF">
             {cupInfo?.users[1].name}
           </CustomText>
         </View>
@@ -440,6 +456,16 @@ const styles = StyleSheet.create({
   modalItem: {
     height: 40,
     justifyContent: 'center',
+  },
+  textShadowTitle: {
+    textShadowColor: 'rgba(0, 0, 0, 0.75)',
+    textShadowOffset: { width: -2, height: 1 },
+    textShadowRadius: 10,
+  },
+  textShadowContents: {
+    textShadowColor: 'rgba(0, 0, 0, 0.75)',
+    textShadowOffset: { width: -1, height: 1 },
+    textShadowRadius: 10,
   },
 });
 

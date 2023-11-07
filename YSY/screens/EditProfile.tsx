@@ -23,7 +23,6 @@ const fetchUpdateUser = async (
   email: string,
   user: User,
 ) => {
-  console.log(name, birthday, phone, email);
   const data = { name: name, birthday: birthday, phone: phone, email: email };
   userAPI.patchUser(user.userId, data);
 

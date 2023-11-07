@@ -106,7 +106,6 @@ const App = () => {
 
     subscribe(listener: any) {
       const onReceiveURL = (event: { url: string }) => {
-        console.log(event.url);
         const convertURL = new URL(event.url);
         const params = new URLSearchParams(convertURL.search);
         let result = '';

@@ -264,7 +264,6 @@ const getSubCitys = async (mainCode?: string) => {
     }
   }
 
-  console.log(newRegionList);
   return newRegionList;
 };
 
@@ -276,7 +275,6 @@ const getDateAPI = async (
   page: number,
   count: number,
 ) => {
-  console.log(sort, address1, address2, kind, page, count);
   const data = {
     sort: sort,
     areaCode: address1,
@@ -310,10 +308,10 @@ const getDateAPI = async (
       parking: dp.parking,
       restDate: dp.restDate,
       homepage: dp.homepage,
-      tags: ['unused'],
+      tags: [],
       favoriteCount: 1234,
       datePlaceImages: dp.datePlaceImages,
-      isFavorite: false,
+      isFavorite: dp.isFavorite,
     };
     newDateList.push(newPlaceItem);
   }
@@ -391,6 +389,7 @@ const Date = () => {
   const [latitude, setLatitude] = useState<number>(0);
   const [longitude, setLongitude] = useState<number>(0);
   const [dateItems, setDateItems] = useState<DateType[] | undefined>(undefined);
+  const [hasMoreToLoad, setHasMoreToLoad] = useState(true);
 
   const prevLatitude = useRef(latitude);
   const prevLongitude = useRef(longitude);
@@ -402,7 +401,6 @@ const Date = () => {
     if (isLoading) {
       return;
     }
-
     setIsLoading(true);
 
     const response = await getDateAPI(
@@ -415,6 +413,7 @@ const Date = () => {
     );
 
     setDateItems(response);
+    setHasMoreToLoad(true);
     page.current += 1;
     setIsLoading(false);
   }, [sort, address1, address2, kind]);
@@ -449,14 +448,11 @@ const Date = () => {
         config,
       );
 
-      console.log(response);
-
       if (response.status === 200 && response.data) {
         const address = response.data.documents[0].address;
 
         // address 없으면 error Modal
 
-        console.log('우가우가1-==============================================');
         handleTitleChange([
           { index: 1, newTitle: address.region_1depth_name },
           { index: 2, newTitle: address.region_2depth_name },
@@ -464,22 +460,28 @@ const Date = () => {
         const foundCity1 = citys.find(
           item => item.title === address.region_1depth_name,
         );
-        console.log('우가우가1-==============================================');
         _setSubCitys(await getSubCitys(foundCity1?.value));
-        console.log('우가우가2=============================================-=');
       }
     } catch (error: any) {
       console.log(error.message);
     }
   }, [latitude, longitude]);
 
-  const onPressFavorite = useCallback((id: number, isFavorite: boolean) => {
-    const response = 204;
+  const onPressFavorite = useCallback(
+    async (id: number, isFavorite: boolean) => {
+      const res = await dateAPI.getDateOne(id);
 
-    if (response === 204) {
-      handleDateItemChange(id, !isFavorite);
-    }
-  }, []);
+      await dateAPI.patchFavorite(res.contentId, res.contentTypeId, {
+        isFavorite: res.isFavorite,
+      });
+      const response = 204;
+
+      if (response === 204) {
+        handleDateItemChange(id, !isFavorite);
+      }
+    },
+    [],
+  );
 
   const moreDateViews = useCallback(async () => {
     if (isLoading || dateItems!.length <= 0) {
@@ -496,6 +498,10 @@ const Date = () => {
       page.current,
       count.current,
     );
+
+    if (response.length < 10) {
+      setHasMoreToLoad(false);
+    }
 
     setDateItems(prevItems => [...prevItems!, ...response]);
 
@@ -573,8 +579,8 @@ const Date = () => {
     }
   };
 
-  const moveDateDetail = (id: number) => {
-    console.log('id :: ' + id);
+  const moveDateDetail = async (id: number) => {
+    await dateAPI.patchViews(id);
     navigation.navigate('DateDetail', {
       dateId: id,
     });
@@ -627,11 +633,17 @@ const Date = () => {
     const newSortHeaderObject = [...sortHeaderItems];
     newSortHeaderObject[1].title = item.title;
     newSortHeaderObject[2].title = '전체';
-    _setSubCitys(await getSubCitys(item.value));
     setAddress2({ title: '전체', value: undefined });
     setAddress1(newSortObject);
+    _setSubCitys(await getSubCitys(item.value));
     setSortHeaderItems(newSortHeaderObject);
     closeAddress1Modal();
+
+    handlePressChange([{ index: 0, isActive: false }]);
+    setLatitude(0);
+    prevLatitude.current = 0;
+    setLongitude(0);
+    prevLongitude.current = 0;
   };
 
   const onPressAddress2Modal = (item: SortItem) => {
@@ -753,8 +765,8 @@ const Date = () => {
         data={dateItems}
         extraData={isLoading}
         keyExtractor={item => String(item.id)}
-        onEndReached={moreDateViews}
-        onEndReachedThreshold={0.1}
+        onEndReached={hasMoreToLoad ? moreDateViews : null}
+        onEndReachedThreshold={0.4}
         renderItem={({ item }) => (
           <DateViewItem
             item={item}

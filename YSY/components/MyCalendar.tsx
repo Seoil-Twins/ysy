@@ -6,6 +6,7 @@ import {
   Pressable,
   FlatList,
   Modal,
+  TouchableWithoutFeedback,
 } from 'react-native';
 import { isSameDay } from 'date-fns';
 import {
@@ -65,6 +66,8 @@ const MyCalendar: React.FC<CalendarProps> = ({ onDateSelect }) => {
   const [inputEndDate, setInputEndDate] = useState('');
   const [inputColor, setInputColor] = useState('');
   const [isAdd, setIsAdd] = useState(false);
+  const [isDeleteModal, setIsDeleteModal] = useState(false);
+  const [deleteSchedule, setDeleteSchedule] = useState('');
   const [swipeStart, setSwipeStart] = useState(0);
   const [schFlag, setSchFlag] = useState(true);
 
@@ -93,19 +96,15 @@ const MyCalendar: React.FC<CalendarProps> = ({ onDateSelect }) => {
 
   const handleDateSelect = (date: Date) => {
     if (isSameDay(selectedDate, date)) {
-      console.log('more Click');
       setDateCellFlex(!dateCellFlex);
       setShowDetailView(!showDetailView);
       filterSchedule();
-      const dateCk = new Date(date);
-      console.log('요일 : ' + dateCk.getDay());
     } else {
       if (dateCellFlex && showDetailView) {
         setDateCellFlex(!dateCellFlex);
         setShowDetailView(!showDetailView);
       }
       if (isSameMonth(date, currentMonth) && isSameYear(date, currentYear)) {
-        console.log(date.getMonth() + ' :: ' + today.getMonth());
         setSelectedDate(date);
         onDateSelect(date);
       } else {
@@ -144,17 +143,33 @@ const MyCalendar: React.FC<CalendarProps> = ({ onDateSelect }) => {
     const newScheduleList = [];
 
     for (const item of response) {
+      let diff = new Date(item.toDate) - new Date(item.fromDate);
+      const day = Math.floor(diff / (1000 * 60 * 60 * 24));
+      diff = Math.floor(diff % (1000 * 60 * 60 * 24));
+      const hour = Math.floor(diff / (1000 * 60 * 60));
+      diff = Math.floor(diff % (1000 * 60 * 60));
+      const min = Math.floor(diff / (1000 * 60));
+
+      let hl;
+      if (day > 0) {
+        hl = `${day}일 ${hour}시간 ${min}분`;
+      } else if (hour <= 0) {
+        hl = `${min}분`;
+      } else {
+        hl = `${hour}시간 ${min}분`;
+      }
       const newScheduleItem = {
         calendarId: item.calendarId,
         startDate: item.fromDate.slice(0, 10),
         endDate: item.toDate.slice(0, 10),
         startTime: item.fromDate.slice(11, 16),
         endTime: item.toDate.slice(11, 16),
-        hl: '20m',
+        hl: hl,
         title: item.title,
         desc: item.description,
         color: item.color,
       };
+
       newScheduleList.push(newScheduleItem);
     }
 
@@ -163,7 +178,6 @@ const MyCalendar: React.FC<CalendarProps> = ({ onDateSelect }) => {
 
   const getMonthDates = (year: number, month: number): Date[] => {
     if (scheduleList.length <= 0 && schFlag) {
-      console.log('키기기이기기333333311');
       getSchedule();
       setSchFlag(false);
     }
@@ -286,7 +300,6 @@ const MyCalendar: React.FC<CalendarProps> = ({ onDateSelect }) => {
     } else {
       totalBarHeight = screenHeight * 0.08;
     }
-    // console.log(parseInt(day.toISOString().slice(8, 10), 10));
     return (
       <View
         style={{
@@ -297,6 +310,7 @@ const MyCalendar: React.FC<CalendarProps> = ({ onDateSelect }) => {
           data={filtedSchedule}
           keyExtractor={(item, index) => String(index)}
           renderItem={({ item }) => RenderBar(item, day)}
+          scrollEnabled={false}
         />
       </View>
     );
@@ -346,7 +360,7 @@ const MyCalendar: React.FC<CalendarProps> = ({ onDateSelect }) => {
             justifyContent: 'center',
           }}>
           <Text style={{ fontSize: 18 }}>{schedule.startTime}</Text>
-          <Text>{schedule.hl}</Text>
+          <Text style={{ fontSize: 12 }}>{schedule.hl}</Text>
         </View>
         <View
           style={{
@@ -361,11 +375,9 @@ const MyCalendar: React.FC<CalendarProps> = ({ onDateSelect }) => {
           <View style={{ flexDirection: 'row', alignItems: 'center' }}>
             {drawCircle(schedule.color)}
             <Pressable
-              onPress={() => {
-                calendarAPI.deleteSchedule(cupId, schedule.calendarId);
-                setShowDetailView(false);
-                getSchedule();
-                getMonthDates(currentYear, currentMonth);
+              onLongPress={() => {
+                setIsDeleteModal(true);
+                setDeleteSchedule(schedule.calendarId);
               }}>
               <Text style={{ fontSize: 18, justifyContent: 'center' }}>
                 {schedule.title}
@@ -432,15 +444,11 @@ const MyCalendar: React.FC<CalendarProps> = ({ onDateSelect }) => {
   };
 
   const swipeEvent = (diff: number) => {
-    console.log(diff);
     if (diff > 100) {
-      console.log('=========================================');
       handlePrevMonth();
     } else if (diff < -100) {
-      console.log('=========================================');
       handleNextMonth();
     }
-    console.log('swipe');
   };
 
   return (
@@ -458,18 +466,8 @@ const MyCalendar: React.FC<CalendarProps> = ({ onDateSelect }) => {
       <View style={styles.container}>
         <View style={{ flex: 1 }}>
           <View style={styles.titleContainer}>
-            {/* 이전 달로 이동하는 버튼 */}
-            {/* <Pressable onPress={handlePrevMonth}>
-              <Text style={styles.button}>Prev</Text>
-            </Pressable> */}
-
             {/* 선택된 달과 년도 표시 */}
             <Text style={styles.title}>{currentMonth + 1 + '월'}</Text>
-
-            {/* 다음 달로 이동하는 버튼 */}
-            {/* <Pressable onPress={handleNextMonth}>
-              <Text style={styles.button}>Next</Text>
-            </Pressable> */}
           </View>
 
           {/* 달력의 날짜들 */}
@@ -661,18 +659,15 @@ const MyCalendar: React.FC<CalendarProps> = ({ onDateSelect }) => {
                 <DatePicker
                   mode={'datetime'}
                   onInputChange={handleSD}
-                  // maximumDate2={false}
-                  placeholder={
-                    selectedDate.toISOString().slice(0, 10) + ' 07:30 AM'
-                  }
+                  placeholder={'시작 날짜'}
                 />
               </View>
               <View style={{ width: '100%' }}>
                 <DatePicker
                   onInputChange={handleED}
                   mode={'datetime'}
-                  // maximumDate2={false}
-                  minimumDateValue={selectedDate}
+                  // minimumDate={true}
+                  minimumDateValue={new Date(inputStartDate)}
                   placeholder={'종료 날짜'}
                 />
               </View>
@@ -683,12 +678,64 @@ const MyCalendar: React.FC<CalendarProps> = ({ onDateSelect }) => {
                 }}>
                 <ColorPicker
                   onColorChange={handleColor}
-                  placeholder={'#FFFFFF'}
+                  placeholder={'#00FF00'}
+                  defaultValue="#00FF00"
                 />
               </View>
             </View>
           </View>
         </View>
+      </Modal>
+
+      <Modal // 스케줄 삭제
+        visible={isDeleteModal}
+        animationType="slide"
+        transparent={true}>
+        <TouchableWithoutFeedback
+          onPress={() => {
+            setIsDeleteModal(false);
+          }}>
+          <View
+            style={{
+              flex: 1,
+              justifyContent: 'flex-end',
+              alignItems: 'center',
+              backgroundColor: 'rgba(0, 0, 0, 0.0)',
+            }}>
+            <View
+              style={{
+                backgroundColor: 'lightgray',
+                width: '100%',
+                padding: 20,
+                borderRadius: 15,
+                borderColor: 'black',
+              }}>
+              <Text style={{ textAlign: 'center' }}>
+                해당 스케줄을 삭제하시겠습니까?
+              </Text>
+              <View
+                style={{
+                  flexDirection: 'row',
+                  justifyContent: 'space-evenly',
+                  marginTop: 20,
+                }}>
+                <Text onPress={() => setIsDeleteModal(false)}>취소</Text>
+                <Text>|</Text>
+                <Text
+                  onPress={async () => {
+                    await calendarAPI.deleteSchedule(cupId, deleteSchedule);
+                    await getMonthDates(currentYear, currentMonth);
+                    await getSchedule();
+                    setIsDeleteModal(false);
+                    setShowDetailView(!showDetailView);
+                    setDateCellFlex(!dateCellFlex);
+                  }}>
+                  삭제
+                </Text>
+              </View>
+            </View>
+          </View>
+        </TouchableWithoutFeedback>
       </Modal>
     </React.Fragment>
   );
@@ -733,7 +780,9 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-start',
   },
   selectedDateCell: {
-    borderWidth: 1,
+    borderLeftWidth: 1,
+    borderRightWidth: 1,
+    borderBottomWidth: 2,
     borderRadius: 10,
     borderColor: 'gray',
   },
@@ -745,7 +794,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.5,
   },
   todayCell: {
-    // backgroundColor: 'green',
     borderRadius: 10,
   },
   weekLabelsContainer: {

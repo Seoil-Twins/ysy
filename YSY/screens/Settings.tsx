@@ -33,6 +33,7 @@ import { logout } from '../features/loginStatusSlice';
 import { removeSecureValue } from '../util/jwt';
 import { userAPI } from '../apis/userAPI';
 import { coupleAPI } from '../apis/coupleAPI';
+import { removeValue } from '../util/asyncStorage';
 
 const PROFILE_SIZE = 45;
 const { width, height } = Dimensions.get('window');
@@ -46,6 +47,7 @@ const fetchDisconnectCouple = async () => {
   const users = JSON.parse(userData);
 
   await coupleAPI.deleteCouple(users.cupId);
+  await removeValue('accessToken');
 
   return response;
 };
@@ -58,6 +60,7 @@ const fetchWithdraw = async () => {
   const userData = JSON.stringify(await userAPI.getUserMe()); // login 정보 가져오기
   const users = JSON.parse(userData);
   await userAPI.deleteUser(users.userId);
+  await removeValue('accessToken');
 
   return response;
 };

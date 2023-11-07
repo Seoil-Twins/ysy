@@ -2,7 +2,6 @@ import { API } from '../util/API';
 
 export const calendarAPI = {
   getSchedule: async (cup_id: string, year: number) => {
-    console.log(cup_id, year);
     const data = await API.get(`/calendar/${cup_id}/${year}`);
     return data;
   },
