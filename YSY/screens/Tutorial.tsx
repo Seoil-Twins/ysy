@@ -285,10 +285,10 @@ const Tutorial = () => {
 
       if (profileResult.message === 'success') {
         // Naver는 모든 정보를 필수로 가져오게 할 수 있음.
-        // const { name, birthyear, birthday, email, mobile, profile_image, id } =
-        //   profileResult.response;
-        const { name, birthyear, birthday, email, mobile, id } =
+        const { name, birthyear, birthday, email, mobile, profile_image, id } =
           profileResult.response;
+        // const { name, birthyear, birthday, email, mobile, id } =
+        //   profileResult.response;
 
         const data: LoginOptions = {
           snsId: id,
@@ -296,7 +296,7 @@ const Tutorial = () => {
           name,
           email,
           phone: mobile ? mobile.replace(/-/g, '') : 'Not Found',
-          // profile: profile_image,
+          profile: profile_image,
           birthday: `${birthyear}-${birthday}`,
           eventNofi: false,
         };

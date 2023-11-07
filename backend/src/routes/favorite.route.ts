@@ -10,7 +10,7 @@ import FavoriteService from "../services/favorite.service.js";
 import DatePlaceService from "../services/datePlace.service.js";
 import FavoriteController from "../controllers/favorite.controller.js";
 
-import { RequestFavorite } from "../types/favorite.type.js";
+import { PageOptions, RequestFavorite, ResponseFavorite } from "../types/favorite.type.js";
 
 import BadRequestError from "../errors/badRequest.error.js";
 import UnsupportedMediaTypeError from "../errors/unsupportedMediaType.error.js";
@@ -20,6 +20,24 @@ const router: Router = express.Router();
 const favoriteService: FavoriteService = new FavoriteService();
 const datePlaceService: DatePlaceService = new DatePlaceService();
 const favoriteController: FavoriteController = new FavoriteController(favoriteService, datePlaceService);
+
+router.get("/", async (req: Request, res: Response, next: NextFunction) => {
+  const page: number = !isNaN(Number(req.query.page)) ? Number(req.query.page) : 1;
+  const count: number = !isNaN(Number(req.query.count)) ? Number(req.query.count) : 10;
+
+  try {
+    const pageOptions: PageOptions = {
+      count,
+      page,
+      sort: "r"
+    };
+    const results: ResponseFavorite = await favoriteController.getFavorites(req.userId!, pageOptions);
+
+    return res.status(STATUS_CODE.OK).json(results);
+  } catch (error) {
+    next(error);
+  }
+});
 
 router.patch("/:content_id/:content_type_id", async (req: Request, res: Response, next: NextFunction) => {
   const contentType: ContentType = req.contentType;

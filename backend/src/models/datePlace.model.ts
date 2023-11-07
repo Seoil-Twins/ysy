@@ -7,8 +7,9 @@ import { DatePlaceView } from "./datePlaceView.model.js";
 import { Favorite } from "./favorite.model.js";
 
 export class DatePlace extends Model<InferAttributes<DatePlace>, InferCreationAttributes<DatePlace>> {
-  /** If you use include couple, You can use couple field. */
+  /** If you use include Favorite, You can use couple field. */
   declare favorites?: NonAttribute<Favorite>;
+  /** If you use include DatePlaceView, You can use couple field. */
   declare datePlaceViews?: NonAttribute<DatePlaceView>;
 
   declare contentId: string;

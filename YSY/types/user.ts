@@ -8,7 +8,7 @@ export interface User {
   email: string;
   birthday: string;
   phone: string;
-  profile: string | null;
+  profile?: string | null;
   primaryNofi: boolean;
   dateNofi: boolean;
   eventNofi: boolean;

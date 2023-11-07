@@ -7,15 +7,20 @@ export const userAPI = {
       const data = await API.get('/user/me');
       return data;
     } catch (error) {
-      return error;
+      throw error;
     }
   },
   postSignUp: async (loginData: LoginOptions) => {
     try {
-      const data = await API.post('/user', loginData);
-      return data;
+      if (loginData.profile) {
+        const data = await API.post_formdata('/user', loginData);
+        return data;
+      } else {
+        const data = await API.post('/user', loginData);
+        return data;
+      }
     } catch (error) {
-      return error;
+      throw error;
     }
   },
   patchUser: async (
@@ -31,7 +36,7 @@ export const userAPI = {
       const res = await API.patch(`/user/${user_id}`, data);
       return res;
     } catch (error) {
-      return error;
+      throw error;
     }
   },
   patchUserNofi: async (
@@ -42,7 +47,7 @@ export const userAPI = {
       const res = await API.patch(`/user/nofi/${user_id}`, data);
       return res;
     } catch (error) {
-      return error;
+      throw error;
     }
   },
   patchUserProfile: async (

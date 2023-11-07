@@ -1,4 +1,4 @@
-import axios, { AxiosRequestConfig } from 'axios';
+import axios, { AxiosError, AxiosRequestConfig } from 'axios';
 import { getStringData } from './asyncStorage';
 
 const API_BASE_URL = 'http://10.0.2.2:3000';
@@ -80,6 +80,7 @@ export const API = {
         }
       } else {
         const formData = new FormData();
+
         if (data) {
           formData.append('images', {
             uri: data.uri,
@@ -89,17 +90,20 @@ export const API = {
           });
 
           const response = await apiClient.postForm(url, formData, {
-            data: formData,
             headers: {
               'Content-Type': 'multipart/form-data',
             },
           });
+
           return response;
         }
       }
     } catch (error) {
-      console.log(error);
-      return error;
+      if (error instanceof AxiosError) {
+        console.log('error! : ', error.message);
+      }
+
+      throw error;
     }
   },
   patch: async (url: string, data?: any) => {
@@ -146,7 +150,7 @@ export const API = {
       }
     } catch (error: any) {
       console.log(error);
-      return error;
+      throw error;
     }
   },
   delete: async (url: string, config?: AxiosRequestConfig) => {
