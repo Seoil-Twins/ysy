@@ -42,7 +42,7 @@ YSY 프로젝트는 커플들 간의 앨범, 일정 등을 공유하고 데이�
 * `Express v4.18.2`
 
 ## 디자인
-<img src="/images/xd.png" width="360" height="640" />
+<div align="center"><img src="/images/xd.png" width="240" height="420" /></div>
 상세한 디자인 정보는 (https://xd.adobe.com/view/fddf2559-a602-43bb-8210-22f3d686dd5a-a88c/grid/) 확인하시면 됩니다.
 
 ## 주요 기능
@@ -51,6 +51,13 @@ YSY 프로젝트는 커플들 간의 앨범, 일정 등을 공유하고 데이�
 * Kakao Login
 * Naver Login
 * Google Login
+  
+<div align="center">
+  <img src="/images/tutorial.jpg" width="240" height="420" />
+  <img src="/images/snslogin.jpg" width="240" height="420" />
+  <img src="/images/signup.jpg" width="240" height="420" />
+  <img src="/images/home.jpg" width="240" height="420" />
+</div>
 
 ### Album
 * GCS(Google Cloud Storage)를 통한 단일, 다중 업로드
@@ -59,15 +66,16 @@ YSY 프로젝트는 커플들 간의 앨범, 일정 등을 공유하고 데이�
 * 앨범 이미지 추가, 삭제
 
 <div align="center">
-  <img src="/images/album.png" width="360" height="640" />
-  <img src="/images/album_detail.png" width="360" height="640" />
+  <img src="/images/album.jpg" width="240" height="420" />
+  <img src="/images/album_detail.jpg" width="240" height="420" />
 </div>
 
 ### 일정 관리
 * 캘린더 추가, 수정, 삭제
   
 <div align="center">
-  <img src="/images/calendar.png" width="360" height="640" />
+  <img src="/images/calendar.jpg" width="240" height="420" />
+  <img src="/images/calendar_detail.jpg" width="240" height="420" />
 </div>
 
 ### 데이트 장소 추천
@@ -76,6 +84,6 @@ YSY 프로젝트는 커플들 간의 앨범, 일정 등을 공유하고 데이�
 * 조회수, 제목순으로 정렬 및 찜 기능 제공
   
 <div align="center">
-  <img src="/images/date.png" width="360" height="640" />
-  <img src="/images/date_detail.png" width="360" height="640" />
+  <img src="/images/date.jpg" width="240" height="420" />
+  <img src="/images/date_detail.jpg" width="240" height="420" />
 </div>
